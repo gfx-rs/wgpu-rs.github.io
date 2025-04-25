@@ -1826,12 +1826,10 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
 <span class="kw">struct </span>Swapchain {
     raw: vk::SwapchainKHR,
-    raw_flags: vk::SwapchainCreateFlagsKHR,
     functor: khr::swapchain::Device,
     device: Arc&lt;DeviceShared&gt;,
     images: Vec&lt;vk::Image&gt;,
     config: <span class="kw">crate</span>::SurfaceConfiguration,
-    view_formats: Vec&lt;wgt::TextureFormat&gt;,
     <span class="doccomment">/// One wait semaphore per swapchain image. This will be associated with the
     /// surface texture, and later collected during submission.
     ///
@@ -1974,11 +1972,6 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 /// device geometry, but affect the code paths taken internally.
 </span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">struct </span>PrivateCapabilities {
-    <span class="doccomment">/// Y-flipping is implemented with either `VK_AMD_negative_viewport_height` or `VK_KHR_maintenance1`/1.1+. The AMD extension for negative viewport height does not require a Y shift.
-    ///
-    /// This flag is `true` if the device has `VK_KHR_maintenance1`/1.1+ and `false` otherwise (i.e. in the case of `VK_AMD_negative_viewport_height`).
-    </span>flip_y_requires_shift: bool,
-    imageless_framebuffers: bool,
     image_view_usage: bool,
     timeline_semaphores: bool,
     texture_d24: bool,
@@ -2095,23 +2088,6 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
 }
 
-<span class="attr">#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-</span><span class="kw">struct </span>FramebufferAttachment {
-    <span class="doccomment">/// Can be NULL if the framebuffer is image-less
-    </span>raw: vk::ImageView,
-    raw_image_flags: vk::ImageCreateFlags,
-    view_usage: wgt::TextureUses,
-    view_format: wgt::TextureFormat,
-    raw_view_formats: Vec&lt;vk::Format&gt;,
-}
-
-<span class="attr">#[derive(Clone, Eq, Hash, PartialEq)]
-</span><span class="kw">struct </span>FramebufferKey {
-    attachments: ArrayVec&lt;FramebufferAttachment, { MAX_TOTAL_ATTACHMENTS }&gt;,
-    extent: wgt::Extent3d,
-    sample_count: u32,
-}
-
 <span class="kw">struct </span>DeviceShared {
     raw: ash::Device,
     family_index: u32,
@@ -2129,7 +2105,6 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     workarounds: Workarounds,
     features: wgt::Features,
     render_passes: Mutex&lt;FastHashMap&lt;RenderPassKey, vk::RenderPass&gt;&gt;,
-    framebuffers: Mutex&lt;FastHashMap&lt;FramebufferKey, vk::Framebuffer&gt;&gt;,
     sampler_cache: Mutex&lt;sampler::SamplerCache&gt;,
     memory_allocations_counter: InternalCounter,
 }
@@ -2138,9 +2113,6 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span><span class="kw-2">&amp;</span>raw <span class="kw">in </span><span class="self">self</span>.render_passes.lock().values() {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.destroy_render_pass(raw, <span class="prelude-val">None</span>) };
-        }
-        <span class="kw">for </span><span class="kw-2">&amp;</span>raw <span class="kw">in </span><span class="self">self</span>.framebuffers.lock().values() {
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.destroy_framebuffer(raw, <span class="prelude-val">None</span>) };
         }
         <span class="kw">if </span><span class="self">self</span>.drop_guard.is_none() {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.destroy_device(<span class="prelude-val">None</span>) };
@@ -2287,11 +2259,8 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
     external_memory: <span class="prelude-ty">Option</span>&lt;vk::DeviceMemory&gt;,
     block: <span class="prelude-ty">Option</span>&lt;gpu_alloc::MemoryBlock&lt;vk::DeviceMemory&gt;&gt;,
-    usage: wgt::TextureUses,
     format: wgt::TextureFormat,
-    raw_flags: vk::ImageCreateFlags,
     copy_size: <span class="kw">crate</span>::CopyExtent,
-    view_formats: Vec&lt;wgt::TextureFormat&gt;,
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::DynTexture <span class="kw">for </span>Texture {}
@@ -2307,9 +2276,13 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>TextureView {
+    raw_texture: vk::Image,
     raw: vk::ImageView,
     layers: NonZeroU32,
-    attachment: FramebufferAttachment,
+    format: wgt::TextureFormat,
+    raw_format: vk::Format,
+    base_mip_level: u32,
+    dimension: wgt::TextureViewDimension,
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::DynTextureView <span class="kw">for </span>TextureView {}
@@ -2380,6 +2353,21 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     }
 }
 
+<span class="attr">#[derive(Clone, Eq, Hash, PartialEq)]
+</span><span class="kw">struct </span>FramebufferKey {
+    raw_pass: vk::RenderPass,
+    attachments: ArrayVec&lt;vk::ImageView, { MAX_TOTAL_ATTACHMENTS }&gt;,
+    extent: wgt::Extent3d,
+}
+
+<span class="attr">#[derive(Clone, Eq, Hash, PartialEq)]
+</span><span class="kw">struct </span>TempTextureViewKey {
+    texture: vk::Image,
+    format: vk::Format,
+    mip_level: u32,
+    depth_slice: u32,
+}
+
 <span class="kw">pub struct </span>CommandEncoder {
     raw: vk::CommandPool,
     device: Arc&lt;DeviceShared&gt;,
@@ -2416,6 +2404,9 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     /// the given pool &amp; location.
     </span>end_of_pass_timer_query: <span class="prelude-ty">Option</span>&lt;(vk::QueryPool, u32)&gt;,
 
+    framebuffers: FastHashMap&lt;FramebufferKey, vk::Framebuffer&gt;,
+    temp_texture_views: FastHashMap&lt;TempTextureViewKey, vk::ImageView&gt;,
+
     counters: Arc&lt;wgt::HalCounters&gt;,
 }
 
@@ -2437,6 +2428,15 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
             // fields.
             </span><span class="self">self</span>.device.raw.destroy_command_pool(<span class="self">self</span>.raw, <span class="prelude-val">None</span>);
         }
+
+        <span class="kw">for </span>(<span class="kw">_</span>, fb) <span class="kw">in </span><span class="self">self</span>.framebuffers.drain() {
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.destroy_framebuffer(fb, <span class="prelude-val">None</span>) };
+        }
+
+        <span class="kw">for </span>(<span class="kw">_</span>, view) <span class="kw">in </span><span class="self">self</span>.temp_texture_views.drain() {
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.destroy_image_view(view, <span class="prelude-val">None</span>) };
+        }
+
         <span class="self">self</span>.counters.command_encoders.sub(<span class="number">1</span>);
     }
 }

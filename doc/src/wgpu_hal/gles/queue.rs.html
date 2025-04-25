@@ -1878,7 +1878,22 @@
 <a href="#1877" id="1877">1877</a>
 <a href="#1878" id="1878">1878</a>
 <a href="#1879" id="1879">1879</a>
-<a href="#1880" id="1880">1880</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::sync::Arc;
+<a href="#1880" id="1880">1880</a>
+<a href="#1881" id="1881">1881</a>
+<a href="#1882" id="1882">1882</a>
+<a href="#1883" id="1883">1883</a>
+<a href="#1884" id="1884">1884</a>
+<a href="#1885" id="1885">1885</a>
+<a href="#1886" id="1886">1886</a>
+<a href="#1887" id="1887">1887</a>
+<a href="#1888" id="1888">1888</a>
+<a href="#1889" id="1889">1889</a>
+<a href="#1890" id="1890">1890</a>
+<a href="#1891" id="1891">1891</a>
+<a href="#1892" id="1892">1892</a>
+<a href="#1893" id="1893">1893</a>
+<a href="#1894" id="1894">1894</a>
+<a href="#1895" id="1895">1895</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::sync::Arc;
 <span class="kw">use </span>alloc::vec;
 <span class="kw">use </span>core::sync::atomic::Ordering;
 
@@ -1978,6 +1993,7 @@
         fbo_target: u32,
         attachment: u32,
         view: <span class="kw-2">&amp;</span><span class="kw">super</span>::TextureView,
+        depth_slice: <span class="prelude-ty">Option</span>&lt;u32&gt;,
     ) {
         <span class="kw">match </span>view.inner {
             <span class="kw">super</span>::TextureInner::Renderbuffer { raw } =&gt; {
@@ -2006,13 +2022,18 @@
                         )
                     };
                 } <span class="kw">else if </span>is_layered_target(target) {
+                    <span class="kw">let </span>layer = <span class="kw">if </span>target == glow::TEXTURE_3D {
+                        depth_slice.unwrap() <span class="kw">as </span>i32
+                    } <span class="kw">else </span>{
+                        view.array_layers.start <span class="kw">as </span>i32
+                    };
                     <span class="kw">unsafe </span>{
                         gl.framebuffer_texture_layer(
                             fbo_target,
                             attachment,
                             <span class="prelude-val">Some</span>(raw),
                             view.mip_levels.start <span class="kw">as </span>i32,
-                            view.array_layers.start <span class="kw">as </span>i32,
+                            layer,
                         )
                     };
                 } <span class="kw">else </span>{
@@ -2976,8 +2997,11 @@
             C::BindAttachment {
                 attachment,
                 <span class="kw-2">ref </span>view,
+                depth_slice,
             } =&gt; {
-                <span class="kw">unsafe </span>{ <span class="self">self</span>.set_attachment(gl, glow::DRAW_FRAMEBUFFER, attachment, view) };
+                <span class="kw">unsafe </span>{
+                    <span class="self">self</span>.set_attachment(gl, glow::DRAW_FRAMEBUFFER, attachment, view, depth_slice)
+                };
             }
             C::ResolveAttachment {
                 attachment,
@@ -2988,7 +3012,13 @@
                 <span class="kw">unsafe </span>{ gl.read_buffer(attachment) };
                 <span class="kw">unsafe </span>{ gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.copy_fbo)) };
                 <span class="kw">unsafe </span>{
-                    <span class="self">self</span>.set_attachment(gl, glow::DRAW_FRAMEBUFFER, glow::COLOR_ATTACHMENT0, dst)
+                    <span class="self">self</span>.set_attachment(
+                        gl,
+                        glow::DRAW_FRAMEBUFFER,
+                        glow::COLOR_ATTACHMENT0,
+                        dst,
+                        <span class="prelude-val">None</span>,
+                    )
                 };
                 <span class="kw">unsafe </span>{
                     gl.blit_framebuffer(

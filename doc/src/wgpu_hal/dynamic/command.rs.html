@@ -747,7 +747,8 @@
 <a href="#746" id="746">746</a>
 <a href="#747" id="747">747</a>
 <a href="#748" id="748">748</a>
-<a href="#749" id="749">749</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
 <span class="kw">use </span>core::ops::Range;
 
 <span class="kw">use crate</span>::{
@@ -843,7 +844,7 @@
     <span class="kw">unsafe fn </span>begin_render_pass(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>RenderPassDescriptor&lt;<span class="kw">dyn </span>DynQuerySet, <span class="kw">dyn </span>DynTextureView&gt;,
-    );
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt;;
     <span class="kw">unsafe fn </span>end_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
 
     <span class="kw">unsafe fn </span>set_render_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span><span class="kw">dyn </span>DynRenderPipeline);
@@ -1143,7 +1144,7 @@
     <span class="kw">unsafe fn </span>begin_render_pass(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>RenderPassDescriptor&lt;<span class="kw">dyn </span>DynQuerySet, <span class="kw">dyn </span>DynTextureView&gt;,
-    ) {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="kw">let </span>color_attachments = desc
             .color_attachments
             .iter()
@@ -1173,7 +1174,7 @@
                     .occlusion_query_set
                     .map(|set| set.expect_downcast_ref()),
             };
-        <span class="kw">unsafe </span>{ C::begin_render_pass(<span class="self">self</span>, <span class="kw-2">&amp;</span>desc) };
+        <span class="kw">unsafe </span>{ C::begin_render_pass(<span class="self">self</span>, <span class="kw-2">&amp;</span>desc) }
     }
 
     <span class="kw">unsafe fn </span>end_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -1479,6 +1480,7 @@
     <span class="kw">pub fn </span>expect_downcast&lt;B: DynTextureView&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ColorAttachment&lt;<span class="lifetime">'a</span>, B&gt; {
         ColorAttachment {
             target: <span class="self">self</span>.target.expect_downcast(),
+            depth_slice: <span class="self">self</span>.depth_slice,
             resolve_target: <span class="self">self</span>.resolve_target.as_ref().map(|rt| rt.expect_downcast()),
             ops: <span class="self">self</span>.ops,
             clear_value: <span class="self">self</span>.clear_value,

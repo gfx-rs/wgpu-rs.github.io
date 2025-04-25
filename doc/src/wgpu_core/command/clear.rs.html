@@ -501,7 +501,12 @@
 <a href="#500" id="500">500</a>
 <a href="#501" id="501">501</a>
 <a href="#502" id="502">502</a>
-<a href="#503" id="503">503</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 <span class="kw">use </span>core::ops::Range;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -827,11 +832,11 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             dst_raw,
         ),
         TextureClearMode::Surface { .. } =&gt; {
-            clear_texture_via_render_passes(dst_texture, range, <span class="bool-val">true</span>, encoder)
-        }
+            clear_texture_via_render_passes(dst_texture, range, <span class="bool-val">true</span>, encoder)<span class="question-mark">?
+        </span>}
         TextureClearMode::RenderPass { is_color, .. } =&gt; {
-            clear_texture_via_render_passes(dst_texture, range, is_color, encoder)
-        }
+            clear_texture_via_render_passes(dst_texture, range, is_color, encoder)<span class="question-mark">?
+        </span>}
         TextureClearMode::None =&gt; {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::NoValidTextureClearMode(
                 dst_texture.error_ident(),
@@ -940,7 +945,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     range: TextureInitRange,
     is_color: bool,
     encoder: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>hal::DynCommandEncoder,
-) {
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
     <span class="macro">assert_eq!</span>(dst_texture.desc.dimension, wgt::TextureDimension::D2);
 
     <span class="kw">let </span>extent_base = wgt::Extent3d {
@@ -964,6 +969,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
                         ),
                         usage: wgt::TextureUses::COLOR_TARGET,
                     },
+                    depth_slice: <span class="prelude-val">None</span>,
                     resolve_target: <span class="prelude-val">None</span>,
                     ops: hal::AttachmentOps::STORE,
                     clear_value: wgt::Color::TRANSPARENT,
@@ -989,19 +995,23 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
                 )
             };
             <span class="kw">unsafe </span>{
-                encoder.begin_render_pass(<span class="kw-2">&amp;</span>hal::RenderPassDescriptor {
-                    label: <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) clear_texture clear pass"</span>),
-                    extent,
-                    sample_count: dst_texture.desc.sample_count,
-                    color_attachments,
-                    depth_stencil_attachment,
-                    multiview: <span class="prelude-val">None</span>,
-                    timestamp_writes: <span class="prelude-val">None</span>,
-                    occlusion_query_set: <span class="prelude-val">None</span>,
-                });
+                encoder
+                    .begin_render_pass(<span class="kw-2">&amp;</span>hal::RenderPassDescriptor {
+                        label: <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) clear_texture clear pass"</span>),
+                        extent,
+                        sample_count: dst_texture.desc.sample_count,
+                        color_attachments,
+                        depth_stencil_attachment,
+                        multiview: <span class="prelude-val">None</span>,
+                        timestamp_writes: <span class="prelude-val">None</span>,
+                        occlusion_query_set: <span class="prelude-val">None</span>,
+                    })
+                    .map_err(|e| dst_texture.device.handle_hal_error(e))<span class="question-mark">?</span>;
                 encoder.end_render_pass();
             }
         }
     }
+
+    <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div></section></main></body></html>

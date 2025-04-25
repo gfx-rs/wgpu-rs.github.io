@@ -1295,12 +1295,63 @@
 <a href="#1294" id="1294">1294</a>
 <a href="#1295" id="1295">1295</a>
 <a href="#1296" id="1296">1296</a>
-<a href="#1297" id="1297">1297</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
-
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::vk;
-
 <span class="kw">use </span>core::{mem, ops::Range};
+<span class="kw">use </span>hashbrown::hash_map::Entry;
 
 <span class="kw">const </span>ALLOCATION_GRANULARITY: u32 = <span class="number">16</span>;
 <span class="kw">const </span>DST_IMAGE_LAYOUT: vk::ImageLayout = vk::ImageLayout::TRANSFER_DST_OPTIMAL;
@@ -1348,6 +1399,64 @@
                 );
             }
         }
+    }
+
+    <span class="kw">fn </span>make_framebuffer(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        key: <span class="kw">super</span>::FramebufferKey,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;vk::Framebuffer, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self</span>.framebuffers.entry(key) {
+            Entry::Occupied(e) =&gt; <span class="kw-2">*</span>e.get(),
+            Entry::Vacant(e) =&gt; {
+                <span class="kw">let </span><span class="kw">super</span>::FramebufferKey {
+                    raw_pass,
+                    <span class="kw-2">ref </span>attachments,
+                    extent,
+                } = <span class="kw-2">*</span>e.key();
+
+                <span class="kw">let </span>vk_info = vk::FramebufferCreateInfo::default()
+                    .render_pass(raw_pass)
+                    .width(extent.width)
+                    .height(extent.height)
+                    .layers(extent.depth_or_array_layers)
+                    .attachments(attachments);
+
+                <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.create_framebuffer(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>).unwrap() };
+                <span class="kw-2">*</span>e.insert(raw)
+            }
+        })
+    }
+
+    <span class="kw">fn </span>make_temp_texture_view(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        key: <span class="kw">super</span>::TempTextureViewKey,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;vk::ImageView, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self</span>.temp_texture_views.entry(key) {
+            Entry::Occupied(e) =&gt; <span class="kw-2">*</span>e.get(),
+            Entry::Vacant(e) =&gt; {
+                <span class="kw">let </span><span class="kw">super</span>::TempTextureViewKey {
+                    texture,
+                    format,
+                    mip_level,
+                    depth_slice,
+                } = <span class="kw-2">*</span>e.key();
+
+                <span class="kw">let </span>vk_info = vk::ImageViewCreateInfo::default()
+                    .image(texture)
+                    .view_type(vk::ImageViewType::TYPE_2D)
+                    .format(format)
+                    .subresource_range(vk::ImageSubresourceRange {
+                        aspect_mask: vk::ImageAspectFlags::COLOR,
+                        base_mip_level: mip_level,
+                        level_count: <span class="number">1</span>,
+                        base_array_layer: depth_slice,
+                        layer_count: <span class="number">1</span>,
+                    });
+                <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.create_image_view(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }
+                    .map_err(<span class="kw">super</span>::map_host_device_oom_and_ioca_err)<span class="question-mark">?</span>;
+                <span class="kw-2">*</span>e.insert(raw)
+            }
+        })
     }
 }
 
@@ -2008,37 +2117,51 @@
     </span><span class="kw">unsafe fn </span>begin_render_pass(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="kw">super</span>::QuerySet, <span class="kw">super</span>::TextureView&gt;,
-    ) {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>vk_clear_values =
             ArrayVec::&lt;vk::ClearValue, { <span class="kw">super</span>::MAX_TOTAL_ATTACHMENTS }&gt;::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_image_views = ArrayVec::&lt;vk::ImageView, { <span class="kw">super</span>::MAX_TOTAL_ATTACHMENTS }&gt;::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>rp_key = <span class="kw">super</span>::RenderPassKey::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>rp_key = <span class="kw">super</span>::RenderPassKey {
+            colors: ArrayVec::default(),
+            depth_stencil: <span class="prelude-val">None</span>,
+            sample_count: desc.sample_count,
+            multiview: desc.multiview,
+        };
         <span class="kw">let </span><span class="kw-2">mut </span>fb_key = <span class="kw">super</span>::FramebufferKey {
+            raw_pass: vk::RenderPass::null(),
             attachments: ArrayVec::default(),
             extent: desc.extent,
-            sample_count: desc.sample_count,
         };
-        <span class="kw">let </span>caps = <span class="kw-2">&amp;</span><span class="self">self</span>.device.private_caps;
 
         <span class="kw">for </span>cat <span class="kw">in </span>desc.color_attachments {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(cat) = cat.as_ref() {
+                <span class="kw">let </span>color_view = <span class="kw">if </span>cat.target.view.dimension == wgt::TextureViewDimension::D3 {
+                    <span class="kw">let </span>key = <span class="kw">super</span>::TempTextureViewKey {
+                        texture: cat.target.view.raw_texture,
+                        format: cat.target.view.raw_format,
+                        mip_level: cat.target.view.base_mip_level,
+                        depth_slice: cat.depth_slice.unwrap(),
+                    };
+                    <span class="self">self</span>.make_temp_texture_view(key)<span class="question-mark">?
+                </span>} <span class="kw">else </span>{
+                    cat.target.view.raw
+                };
+
                 vk_clear_values.push(vk::ClearValue {
                     color: <span class="kw">unsafe </span>{ cat.make_vk_clear_color() },
                 });
-                vk_image_views.push(cat.target.view.raw);
                 <span class="kw">let </span>color = <span class="kw">super</span>::ColorAttachmentKey {
-                    base: cat.target.make_attachment_key(cat.ops, caps),
-                    resolve: cat.resolve_target.as_ref().map(|target| {
-                        target.make_attachment_key(<span class="kw">crate</span>::AttachmentOps::STORE, caps)
-                    }),
+                    base: cat.target.make_attachment_key(cat.ops),
+                    resolve: cat
+                        .resolve_target
+                        .as_ref()
+                        .map(|target| target.make_attachment_key(<span class="kw">crate</span>::AttachmentOps::STORE)),
                 };
 
                 rp_key.colors.push(<span class="prelude-val">Some</span>(color));
-                fb_key.attachments.push(cat.target.view.attachment.clone());
+                fb_key.attachments.push(color_view);
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>at) = cat.resolve_target {
                     vk_clear_values.push(<span class="kw">unsafe </span>{ mem::zeroed() });
-                    vk_image_views.push(at.view.raw);
-                    fb_key.attachments.push(at.view.attachment.clone());
+                    fb_key.attachments.push(at.view.raw);
                 }
 
                 <span class="comment">// Assert this attachment is valid for the detected multiview, as a sanity check
@@ -2060,12 +2183,11 @@
                     stencil: ds.clear_value.<span class="number">1</span>,
                 },
             });
-            vk_image_views.push(ds.target.view.raw);
             rp_key.depth_stencil = <span class="prelude-val">Some</span>(<span class="kw">super</span>::DepthStencilAttachmentKey {
-                base: ds.target.make_attachment_key(ds.depth_ops, caps),
+                base: ds.target.make_attachment_key(ds.depth_ops),
                 stencil_ops: ds.stencil_ops,
             });
-            fb_key.attachments.push(ds.target.view.attachment.clone());
+            fb_key.attachments.push(ds.target.view.raw);
 
             <span class="comment">// Assert this attachment is valid for the detected multiview, as a sanity check
             // The driver crash for this is really bad on AMD, so the check is worth it
@@ -2073,8 +2195,6 @@
                 <span class="macro">assert_eq!</span>(ds.target.view.layers, multiview);
             }
         }
-        rp_key.sample_count = fb_key.sample_count;
-        rp_key.multiview = desc.multiview;
 
         <span class="kw">let </span>render_area = vk::Rect2D {
             offset: vk::Offset2D { x: <span class="number">0</span>, y: <span class="number">0 </span>},
@@ -2085,11 +2205,7 @@
         };
         <span class="kw">let </span>vk_viewports = [vk::Viewport {
             x: <span class="number">0.0</span>,
-            y: <span class="kw">if </span><span class="self">self</span>.device.private_caps.flip_y_requires_shift {
-                desc.extent.height <span class="kw">as </span>f32
-            } <span class="kw">else </span>{
-                <span class="number">0.0
-            </span>},
+            y: desc.extent.height <span class="kw">as </span>f32,
             width: desc.extent.width <span class="kw">as </span>f32,
             height: -(desc.extent.height <span class="kw">as </span>f32),
             min_depth: <span class="number">0.0</span>,
@@ -2097,24 +2213,14 @@
         }];
 
         <span class="kw">let </span>raw_pass = <span class="self">self</span>.device.make_render_pass(rp_key).unwrap();
-        <span class="kw">let </span>raw_framebuffer = <span class="self">self
-            </span>.device
-            .make_framebuffer(fb_key, raw_pass, desc.label)
-            .unwrap();
+        fb_key.raw_pass = raw_pass;
+        <span class="kw">let </span>raw_framebuffer = <span class="self">self</span>.make_framebuffer(fb_key).unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::RenderPassBeginInfo::default()
+        <span class="kw">let </span>vk_info = vk::RenderPassBeginInfo::default()
             .render_pass(raw_pass)
             .render_area(render_area)
             .clear_values(<span class="kw-2">&amp;</span>vk_clear_values)
             .framebuffer(raw_framebuffer);
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_attachment_info = <span class="kw">if </span>caps.imageless_framebuffers {
-            <span class="prelude-val">Some</span>(vk::RenderPassAttachmentBeginInfo::default().attachments(<span class="kw-2">&amp;</span>vk_image_views))
-        } <span class="kw">else </span>{
-            <span class="prelude-val">None
-        </span>};
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(attachment_info) = vk_attachment_info.as_mut() {
-            vk_info = vk_info.push_next(attachment_info);
-        }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.begin_debug_marker(label) };
@@ -2148,6 +2254,8 @@
         };
 
         <span class="self">self</span>.bind_point = vk::PipelineBindPoint::GRAPHICS;
+
+        <span class="prelude-val">Ok</span>(())
     }
     <span class="kw">unsafe fn </span>end_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{
@@ -2262,11 +2370,7 @@
     <span class="kw">unsafe fn </span>set_viewport(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rect: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Rect&lt;f32&gt;, depth_range: Range&lt;f32&gt;) {
         <span class="kw">let </span>vk_viewports = [vk::Viewport {
             x: rect.x,
-            y: <span class="kw">if </span><span class="self">self</span>.device.private_caps.flip_y_requires_shift {
-                rect.y + rect.h
-            } <span class="kw">else </span>{
-                rect.y
-            },
+            y: rect.y + rect.h,
             width: rect.w,
             height: -rect.h, <span class="comment">// flip Y
             </span>min_depth: depth_range.start,

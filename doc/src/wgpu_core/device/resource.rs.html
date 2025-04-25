@@ -3937,8 +3937,7 @@
 <a href="#3936" id="3936">3936</a>
 <a href="#3937" id="3937">3937</a>
 <a href="#3938" id="3938">3938</a>
-<a href="#3939" id="3939">3939</a>
-<a href="#3940" id="3940">3940</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3939" id="3939">3939</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
@@ -4869,13 +4868,6 @@
                     desc.format,
                 ));
             }
-            <span class="comment">// Renderable textures can only be 2D
-            </span><span class="kw">if </span>desc.usage.contains(wgt::TextureUsages::RENDER_ATTACHMENT) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTextureError::InvalidDimensionUsages(
-                    wgt::TextureUsages::RENDER_ATTACHMENT,
-                    desc.dimension,
-                ));
-            }
         }
 
         <span class="kw">if </span>desc.dimension != wgt::TextureDimension::D2
@@ -4886,6 +4878,14 @@
                 <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTextureError::InvalidCompressedDimension(
                     desc.dimension,
                     desc.format,
+                ));
+            }
+
+            <span class="comment">// Renderable textures can only be 2D or 3D
+            </span><span class="kw">if </span>desc.usage.contains(wgt::TextureUsages::RENDER_ATTACHMENT) {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTextureError::InvalidDimensionUsages(
+                    wgt::TextureUsages::RENDER_ATTACHMENT,
+                    desc.dimension,
                 ));
             }
         }
@@ -5064,16 +5064,12 @@
 
         <span class="kw">let </span>clear_mode = <span class="kw">if </span>hal_usage
             .intersects(wgt::TextureUses::DEPTH_STENCIL_WRITE | wgt::TextureUses::COLOR_TARGET)
+            &amp;&amp; desc.dimension == wgt::TextureDimension::D2
         {
             <span class="kw">let </span>(is_color, usage) = <span class="kw">if </span>desc.format.is_depth_stencil_format() {
                 (<span class="bool-val">false</span>, wgt::TextureUses::DEPTH_STENCIL_WRITE)
             } <span class="kw">else </span>{
                 (<span class="bool-val">true</span>, wgt::TextureUses::COLOR_TARGET)
-            };
-            <span class="kw">let </span>dimension = <span class="kw">match </span>desc.dimension {
-                wgt::TextureDimension::D1 =&gt; TextureViewDimension::D1,
-                wgt::TextureDimension::D2 =&gt; TextureViewDimension::D2,
-                wgt::TextureDimension::D3 =&gt; <span class="macro">unreachable!</span>(),
             };
 
             <span class="kw">let </span>clear_label = hal_label(
@@ -5089,7 +5085,7 @@
                             <span class="kw">let </span>desc = hal::TextureViewDescriptor {
                                 label: clear_label,
                                 format: <span class="macro-nonterminal">$format</span>,
-                                dimension,
+                                dimension: TextureViewDimension::D2,
                                 usage,
                                 range: wgt::ImageSubresourceRange {
                                     aspect: <span class="macro-nonterminal">$aspect</span>,
@@ -5360,10 +5356,12 @@
                 <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::Usage(resolved_usage));
             }
 
-            <span class="kw">if </span>!(resolved_dimension == TextureViewDimension::D2
-                || (<span class="self">self</span>.features.contains(wgt::Features::MULTIVIEW)
-                    &amp;&amp; resolved_dimension == TextureViewDimension::D2Array))
-            {
+            <span class="kw">let </span>allowed_view_dimensions = [
+                TextureViewDimension::D2,
+                TextureViewDimension::D2Array,
+                TextureViewDimension::D3,
+            ];
+            <span class="kw">if </span>!allowed_view_dimensions.contains(<span class="kw-2">&amp;</span>resolved_dimension) {
                 <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::Dimension(
                     resolved_dimension,
                 ));

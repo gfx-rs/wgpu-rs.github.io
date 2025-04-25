@@ -1252,7 +1252,10 @@
 <a href="#1251" id="1251">1251</a>
 <a href="#1252" id="1252">1252</a>
 <a href="#1253" id="1253">1253</a>
-<a href="#1254" id="1254">1254</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::string::String;
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::string::String;
 <span class="kw">use </span>core::{mem, ops::Range};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -1750,7 +1753,7 @@
     </span><span class="kw">unsafe fn </span>begin_render_pass(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="kw">super</span>::QuerySet, <span class="kw">super</span>::TextureView&gt;,
-    ) {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.state.end_of_pass_timestamp.is_none());
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>t) = desc.timestamp_writes {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = t.beginning_of_pass_write_index {
@@ -1811,6 +1814,7 @@
                         <span class="self">self</span>.cmd_buffer.commands.push(C::BindAttachment {
                             attachment,
                             view: cat.target.view.clone(),
+                            depth_slice: cat.depth_slice,
                         });
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>rat) = cat.resolve_target {
                             <span class="self">self</span>.state
@@ -1832,6 +1836,7 @@
                     <span class="self">self</span>.cmd_buffer.commands.push(C::BindAttachment {
                         attachment,
                         view: dsat.target.view.clone(),
+                        depth_slice: <span class="prelude-val">None</span>,
                     });
                     <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::DEPTH)
                         &amp;&amp; !dsat.depth_ops.contains(<span class="kw">crate</span>::AttachmentOps::STORE)
@@ -1919,6 +1924,7 @@
                     .push(C::ClearStencil(dsat.clear_value.<span class="number">1</span>));
             }
         }
+        <span class="prelude-val">Ok</span>(())
     }
     <span class="kw">unsafe fn </span>end_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>(attachment, dst) <span class="kw">in </span><span class="self">self</span>.state.resolve_attachments.drain(..) {
