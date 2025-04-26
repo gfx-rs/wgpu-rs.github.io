@@ -5235,7 +5235,46 @@
 <a href="#5234" id="5234">5234</a>
 <a href="#5235" id="5235">5235</a>
 <a href="#5236" id="5236">5236</a>
-<a href="#5237" id="5237">5237</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5237" id="5237">5237</a>
+<a href="#5238" id="5238">5238</a>
+<a href="#5239" id="5239">5239</a>
+<a href="#5240" id="5240">5240</a>
+<a href="#5241" id="5241">5241</a>
+<a href="#5242" id="5242">5242</a>
+<a href="#5243" id="5243">5243</a>
+<a href="#5244" id="5244">5244</a>
+<a href="#5245" id="5245">5245</a>
+<a href="#5246" id="5246">5246</a>
+<a href="#5247" id="5247">5247</a>
+<a href="#5248" id="5248">5248</a>
+<a href="#5249" id="5249">5249</a>
+<a href="#5250" id="5250">5250</a>
+<a href="#5251" id="5251">5251</a>
+<a href="#5252" id="5252">5252</a>
+<a href="#5253" id="5253">5253</a>
+<a href="#5254" id="5254">5254</a>
+<a href="#5255" id="5255">5255</a>
+<a href="#5256" id="5256">5256</a>
+<a href="#5257" id="5257">5257</a>
+<a href="#5258" id="5258">5258</a>
+<a href="#5259" id="5259">5259</a>
+<a href="#5260" id="5260">5260</a>
+<a href="#5261" id="5261">5261</a>
+<a href="#5262" id="5262">5262</a>
+<a href="#5263" id="5263">5263</a>
+<a href="#5264" id="5264">5264</a>
+<a href="#5265" id="5265">5265</a>
+<a href="#5266" id="5266">5266</a>
+<a href="#5267" id="5267">5267</a>
+<a href="#5268" id="5268">5268</a>
+<a href="#5269" id="5269">5269</a>
+<a href="#5270" id="5270">5270</a>
+<a href="#5271" id="5271">5271</a>
+<a href="#5272" id="5272">5272</a>
+<a href="#5273" id="5273">5273</a>
+<a href="#5274" id="5274">5274</a>
+<a href="#5275" id="5275">5275</a>
+<a href="#5276" id="5276">5276</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -5446,6 +5485,10 @@ to output a [`Module`](crate::Module) into glsl
 
     <span class="kw">fn </span>supports_early_depth_test(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw-2">*</span><span class="self">self </span>&gt;= Version::Desktop(<span class="number">130</span>) || <span class="kw-2">*</span><span class="self">self </span>&gt;= Version::new_gles(<span class="number">310</span>)
+    }
+
+    <span class="kw">fn </span>supports_std140_layout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw-2">*</span><span class="self">self </span>&gt;= Version::Desktop(<span class="number">140</span>) || <span class="kw-2">*</span><span class="self">self </span>&gt;= Version::new_gles(<span class="number">300</span>)
     }
 
     <span class="kw">fn </span>supports_std430_layout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
@@ -6423,6 +6466,68 @@ to output a [`Module`](crate::Module) into glsl
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Helper method used by [Self::write_global] to write just the layout part of
+    /// a non image/sampler global variable, if applicable.
+    ///
+    /// # Notes
+    ///
+    /// Adds trailing whitespace if any layout qualifier is written
+    </span><span class="kw">fn </span>write_global_layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, global: <span class="kw-2">&amp;</span><span class="kw">crate</span>::GlobalVariable) -&gt; BackendResult {
+        <span class="comment">// Determine which (if any) explicit memory layout to use, and whether we support it
+        </span><span class="kw">let </span>layout = <span class="kw">match </span>global.space {
+            <span class="kw">crate</span>::AddressSpace::Uniform =&gt; {
+                <span class="kw">if </span>!<span class="self">self</span>.options.version.supports_std140_layout() {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(
+                        <span class="string">"Uniform address space requires std140 layout support"</span>.to_string(),
+                    ));
+                }
+
+                <span class="prelude-val">Some</span>(<span class="string">"std140"</span>)
+            }
+            <span class="kw">crate</span>::AddressSpace::Storage { .. } =&gt; {
+                <span class="kw">if </span>!<span class="self">self</span>.options.version.supports_std430_layout() {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(
+                        <span class="string">"Storage address space requires std430 layout support"</span>.to_string(),
+                    ));
+                }
+
+                <span class="prelude-val">Some</span>(<span class="string">"std430"</span>)
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        };
+
+        <span class="comment">// If our version supports explicit layouts, we can also output the explicit binding
+        // if we have it
+        </span><span class="kw">if </span><span class="self">self</span>.options.version.supports_explicit_locations() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>br) = global.binding {
+                <span class="kw">match </span><span class="self">self</span>.options.binding_map.get(br) {
+                    <span class="prelude-val">Some</span>(binding) =&gt; {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"layout("</span>)<span class="question-mark">?</span>;
+
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(layout) = layout {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}, "</span>, layout)<span class="question-mark">?</span>;
+                        }
+
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"binding = {binding}) "</span>)<span class="question-mark">?</span>;
+
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                    }
+                    <span class="prelude-val">None </span>=&gt; {
+                        <span class="macro">log::debug!</span>(<span class="string">"unassigned binding for {:?}"</span>, global.name);
+                    }
+                }
+            }
+        }
+
+        <span class="comment">// Either no explicit bindings are supported or we didn't have any.
+        // Write just the memory layout.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(layout) = layout {
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"layout({}) "</span>, layout)<span class="question-mark">?</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="doccomment">/// Helper method used to write non images/sampler globals
     ///
     /// # Notes
@@ -6435,34 +6540,7 @@ to output a [`Module`](crate::Module) into glsl
         handle: Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;,
         global: <span class="kw-2">&amp;</span><span class="kw">crate</span>::GlobalVariable,
     ) -&gt; BackendResult {
-        <span class="kw">if </span><span class="self">self</span>.options.version.supports_explicit_locations() {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>br) = global.binding {
-                <span class="kw">match </span><span class="self">self</span>.options.binding_map.get(br) {
-                    <span class="prelude-val">Some</span>(binding) =&gt; {
-                        <span class="kw">let </span>layout = <span class="kw">match </span>global.space {
-                            <span class="kw">crate</span>::AddressSpace::Storage { .. } =&gt; {
-                                <span class="kw">if </span><span class="self">self</span>.options.version.supports_std430_layout() {
-                                    <span class="string">"std430, "
-                                </span>} <span class="kw">else </span>{
-                                    <span class="string">"std140, "
-                                </span>}
-                            }
-                            <span class="kw">crate</span>::AddressSpace::Uniform =&gt; <span class="string">"std140, "</span>,
-                            <span class="kw">_ </span>=&gt; <span class="string">""</span>,
-                        };
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"layout({layout}binding = {binding}) "</span>)<span class="question-mark">?
-                    </span>}
-                    <span class="prelude-val">None </span>=&gt; {
-                        <span class="macro">log::debug!</span>(<span class="string">"unassigned binding for {:?}"</span>, global.name);
-                        <span class="kw">if let </span><span class="kw">crate</span>::AddressSpace::Storage { .. } = global.space {
-                            <span class="kw">if </span><span class="self">self</span>.options.version.supports_std430_layout() {
-                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"layout(std430) "</span>)<span class="question-mark">?
-                            </span>}
-                        }
-                    }
-                }
-            }
-        }
+        <span class="self">self</span>.write_global_layout(global)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="kw">crate</span>::AddressSpace::Storage { access } = global.space {
             <span class="self">self</span>.write_storage_access(access)<span class="question-mark">?</span>;
