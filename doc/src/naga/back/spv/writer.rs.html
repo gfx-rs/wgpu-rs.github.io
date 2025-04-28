@@ -2498,7 +2498,48 @@
 <a href="#2497" id="2497">2497</a>
 <a href="#2498" id="2498">2498</a>
 <a href="#2499" id="2499">2499</a>
-<a href="#2500" id="2500">2500</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#2500" id="2500">2500</a>
+<a href="#2501" id="2501">2501</a>
+<a href="#2502" id="2502">2502</a>
+<a href="#2503" id="2503">2503</a>
+<a href="#2504" id="2504">2504</a>
+<a href="#2505" id="2505">2505</a>
+<a href="#2506" id="2506">2506</a>
+<a href="#2507" id="2507">2507</a>
+<a href="#2508" id="2508">2508</a>
+<a href="#2509" id="2509">2509</a>
+<a href="#2510" id="2510">2510</a>
+<a href="#2511" id="2511">2511</a>
+<a href="#2512" id="2512">2512</a>
+<a href="#2513" id="2513">2513</a>
+<a href="#2514" id="2514">2514</a>
+<a href="#2515" id="2515">2515</a>
+<a href="#2516" id="2516">2516</a>
+<a href="#2517" id="2517">2517</a>
+<a href="#2518" id="2518">2518</a>
+<a href="#2519" id="2519">2519</a>
+<a href="#2520" id="2520">2520</a>
+<a href="#2521" id="2521">2521</a>
+<a href="#2522" id="2522">2522</a>
+<a href="#2523" id="2523">2523</a>
+<a href="#2524" id="2524">2524</a>
+<a href="#2525" id="2525">2525</a>
+<a href="#2526" id="2526">2526</a>
+<a href="#2527" id="2527">2527</a>
+<a href="#2528" id="2528">2528</a>
+<a href="#2529" id="2529">2529</a>
+<a href="#2530" id="2530">2530</a>
+<a href="#2531" id="2531">2531</a>
+<a href="#2532" id="2532">2532</a>
+<a href="#2533" id="2533">2533</a>
+<a href="#2534" id="2534">2534</a>
+<a href="#2535" id="2535">2535</a>
+<a href="#2536" id="2536">2536</a>
+<a href="#2537" id="2537">2537</a>
+<a href="#2538" id="2538">2538</a>
+<a href="#2539" id="2539">2539</a>
+<a href="#2540" id="2540">2540</a>
+<a href="#2541" id="2541">2541</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     string::{String, ToString},
     vec,
     vec::Vec,
@@ -2560,7 +2601,6 @@
         <span class="kw">if </span>major != <span class="number">1 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedVersion(major, minor));
         }
-        <span class="kw">let </span>raw_version = ((major <span class="kw">as </span>u32) &lt;&lt; <span class="number">16</span>) | ((minor <span class="kw">as </span>u32) &lt;&lt; <span class="number">8</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>capabilities_used = <span class="kw">crate</span>::FastIndexSet::default();
         capabilities_used.insert(spirv::Capability::Shader);
@@ -2570,7 +2610,7 @@
         <span class="kw">let </span>void_type = id_gen.next();
 
         <span class="prelude-val">Ok</span>(Writer {
-            physical_layout: PhysicalLayout::new(raw_version),
+            physical_layout: PhysicalLayout::new(major, minor),
             logical_layout: LogicalLayout::default(),
             id_gen,
             capabilities_available: options.capabilities.clone(),
@@ -2597,6 +2637,11 @@
             ray_get_committed_intersection_function: <span class="prelude-val">None</span>,
             ray_get_candidate_intersection_function: <span class="prelude-val">None</span>,
         })
+    }
+
+    <span class="doccomment">/// Returns `(major, minor)` of the SPIR-V language version.
+    </span><span class="kw">pub const fn </span>lang_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u8, u8) {
+        <span class="self">self</span>.physical_layout.lang_version()
     }
 
     <span class="doccomment">/// Reset `Writer` to its initial state, retaining any allocations.
@@ -2700,6 +2745,43 @@
                 <span class="prelude-val">Ok</span>(())
             }
         }
+    }
+
+    <span class="doccomment">/// Indicate that the code requires all of the listed capabilities.
+    ///
+    /// If all entries of `capabilities` appear in the available capabilities
+    /// specified in the [`Options`] from which this `Writer` was created
+    /// (including the case where [`Options::capabilities`] is `None`), add
+    /// them all to this `Writer`'s [`capabilities_used`] table, and return
+    /// `Ok(())`. If at least one of the listed capabilities is not available,
+    /// do not add anything to the `capabilities_used` table, and return the
+    /// first unavailable requested capability, wrapped in `Err()`.
+    ///
+    /// This method is does not return an [`enum@Error`] in case of failure
+    /// because it may be used in cases where the caller can recover (e.g.,
+    /// with a polyfill) if the requested capabilities are not available. In
+    /// this case, it would be unnecessary work to find *all* the unavailable
+    /// requested capabilities, and to allocate a `Vec` for them, just so we
+    /// could return an [`Error::MissingCapabilities`]).
+    ///
+    /// [`capabilities_used`]: Writer::capabilities_used
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>require_all(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        capabilities: <span class="kw-2">&amp;</span>[spirv::Capability],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), spirv::Capability&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>available) = <span class="self">self</span>.capabilities_available {
+            <span class="kw">for </span>requested <span class="kw">in </span>capabilities {
+                <span class="kw">if </span>!available.contains(requested) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw-2">*</span>requested);
+                }
+            }
+        }
+
+        <span class="kw">for </span>requested <span class="kw">in </span>capabilities {
+            <span class="self">self</span>.capabilities_used.insert(<span class="kw-2">*</span>requested);
+        }
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Indicate that the code uses the given extension.

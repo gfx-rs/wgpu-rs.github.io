@@ -4383,7 +4383,22 @@
 <a href="#4382" id="4382">4382</a>
 <a href="#4383" id="4383">4383</a>
 <a href="#4384" id="4384">4384</a>
-<a href="#4385" id="4385">4385</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4385" id="4385">4385</a>
+<a href="#4386" id="4386">4386</a>
+<a href="#4387" id="4387">4387</a>
+<a href="#4388" id="4388">4388</a>
+<a href="#4389" id="4389">4389</a>
+<a href="#4390" id="4390">4390</a>
+<a href="#4391" id="4391">4391</a>
+<a href="#4392" id="4392">4392</a>
+<a href="#4393" id="4393">4393</a>
+<a href="#4394" id="4394">4394</a>
+<a href="#4395" id="4395">4395</a>
+<a href="#4396" id="4396">4396</a>
+<a href="#4397" id="4397">4397</a>
+<a href="#4398" id="4398">4398</a>
+<a href="#4399" id="4399">4399</a>
+<a href="#4400" id="4400">4400</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -4397,7 +4412,7 @@
         WrappedZeroValue,
     },
     storage::StoreValue,
-    BackendResult, Error, FragmentEntryPoint, Options,
+    BackendResult, Error, FragmentEntryPoint, Options, ShaderModel,
 };
 <span class="kw">use crate</span>::{
     back::{<span class="self">self</span>, Baked},
@@ -8136,33 +8151,48 @@
                     fun @ (Function::Dot4I8Packed | Function::Dot4U8Packed) =&gt; {
                         <span class="kw">let </span>arg1 = arg1.unwrap();
 
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"dot("</span>)<span class="question-mark">?</span>;
+                        <span class="kw">if </span><span class="self">self</span>.options.shader_model &gt;= ShaderModel::V6_4 {
+                            <span class="comment">// Intrinsics `dot4add_{i, u}8packed` are available in SM 6.4 and later.
+                            </span><span class="kw">let </span>function_name = <span class="kw">match </span>fun {
+                                Function::Dot4I8Packed =&gt; <span class="string">"dot4add_i8packed"</span>,
+                                Function::Dot4U8Packed =&gt; <span class="string">"dot4add_u8packed"</span>,
+                                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                            };
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{function_name}("</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", 0)"</span>)<span class="question-mark">?</span>;
+                        } <span class="kw">else </span>{
+                            <span class="comment">// Fall back to a polyfill as `dot4add_u8packed` is not available.
+                            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"dot("</span>)<span class="question-mark">?</span>;
 
-                        <span class="kw">if </span><span class="macro">matches!</span>(fun, Function::Dot4U8Packed) {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"u"</span>)<span class="question-mark">?</span>;
-                        }
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int4("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 8, "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 16, "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 24) &lt;&lt; 24 &gt;&gt; 24, "</span>)<span class="question-mark">?</span>;
+                            <span class="kw">if </span><span class="macro">matches!</span>(fun, Function::Dot4U8Packed) {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"u"</span>)<span class="question-mark">?</span>;
+                            }
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int4("</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 8, "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 16, "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 24) &lt;&lt; 24 &gt;&gt; 24, "</span>)<span class="question-mark">?</span>;
 
-                        <span class="kw">if </span><span class="macro">matches!</span>(fun, Function::Dot4U8Packed) {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"u"</span>)<span class="question-mark">?</span>;
+                            <span class="kw">if </span><span class="macro">matches!</span>(fun, Function::Dot4U8Packed) {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"u"</span>)<span class="question-mark">?</span>;
+                            }
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int4("</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 8, "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 16, "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 24) &lt;&lt; 24 &gt;&gt; 24)"</span>)<span class="question-mark">?</span>;
                         }
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int4("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 8, "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 16, "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 24) &lt;&lt; 24 &gt;&gt; 24)"</span>)<span class="question-mark">?</span>;
                     }
                     Function::QuantizeToF16 =&gt; {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"f16tof32(f32tof16("</span>)<span class="question-mark">?</span>;

@@ -214,7 +214,18 @@
 <a href="#213" id="213">213</a>
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{vec, vec::Vec};
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{vec, vec::Vec};
 <span class="kw">use </span>core::iter;
 
 <span class="kw">use </span>spirv::{Op, Word, MAGIC_NUMBER};
@@ -228,7 +239,8 @@
 </span><span class="kw">const </span>GENERATOR: Word = <span class="number">28</span>;
 
 <span class="kw">impl </span>PhysicalLayout {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>new(version: Word) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>new(major_version: u8, minor_version: u8) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>version = ((major_version <span class="kw">as </span>u32) &lt;&lt; <span class="number">16</span>) | ((minor_version <span class="kw">as </span>u32) &lt;&lt; <span class="number">8</span>);
         PhysicalLayout {
             magic_number: MAGIC_NUMBER,
             version,
@@ -244,6 +256,13 @@
         sink.extend(iter::once(<span class="self">self</span>.generator));
         sink.extend(iter::once(<span class="self">self</span>.bound));
         sink.extend(iter::once(<span class="self">self</span>.instruction_schema));
+    }
+
+    <span class="doccomment">/// Returns `(major, minor)`.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>lang_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u8, u8) {
+        <span class="kw">let </span>major = (<span class="self">self</span>.version &gt;&gt; <span class="number">16</span>) <span class="kw">as </span>u8;
+        <span class="kw">let </span>minor = (<span class="self">self</span>.version &gt;&gt; <span class="number">8</span>) <span class="kw">as </span>u8;
+        (major, minor)
     }
 }
 
@@ -366,10 +385,13 @@
 <span class="attr">#[test]
 </span><span class="kw">fn </span>test_physical_layout_in_words() {
     <span class="kw">let </span>bound = <span class="number">5</span>;
-    <span class="kw">let </span>version = <span class="number">0x10203</span>;
+
+    <span class="comment">// The least and most significant bytes of `version` must both be zero
+    // according to the SPIR-V spec.
+    </span><span class="kw">let </span>version = <span class="number">0x0001_0200</span>;
 
     <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="macro">vec!</span>[];
-    <span class="kw">let </span><span class="kw-2">mut </span>layout = PhysicalLayout::new(version);
+    <span class="kw">let </span><span class="kw-2">mut </span>layout = PhysicalLayout::new(<span class="number">1</span>, <span class="number">2</span>);
     layout.bound = bound;
 
     layout.in_words(<span class="kw-2">&amp;mut </span>output);

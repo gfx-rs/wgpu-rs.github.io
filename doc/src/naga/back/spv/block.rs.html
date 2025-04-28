@@ -3484,7 +3484,41 @@
 <a href="#3483" id="3483">3483</a>
 <a href="#3484" id="3484">3484</a>
 <a href="#3485" id="3485">3485</a>
-<a href="#3486" id="3486">3486</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#3486" id="3486">3486</a>
+<a href="#3487" id="3487">3487</a>
+<a href="#3488" id="3488">3488</a>
+<a href="#3489" id="3489">3489</a>
+<a href="#3490" id="3490">3490</a>
+<a href="#3491" id="3491">3491</a>
+<a href="#3492" id="3492">3492</a>
+<a href="#3493" id="3493">3493</a>
+<a href="#3494" id="3494">3494</a>
+<a href="#3495" id="3495">3495</a>
+<a href="#3496" id="3496">3496</a>
+<a href="#3497" id="3497">3497</a>
+<a href="#3498" id="3498">3498</a>
+<a href="#3499" id="3499">3499</a>
+<a href="#3500" id="3500">3500</a>
+<a href="#3501" id="3501">3501</a>
+<a href="#3502" id="3502">3502</a>
+<a href="#3503" id="3503">3503</a>
+<a href="#3504" id="3504">3504</a>
+<a href="#3505" id="3505">3505</a>
+<a href="#3506" id="3506">3506</a>
+<a href="#3507" id="3507">3507</a>
+<a href="#3508" id="3508">3508</a>
+<a href="#3509" id="3509">3509</a>
+<a href="#3510" id="3510">3510</a>
+<a href="#3511" id="3511">3511</a>
+<a href="#3512" id="3512">3512</a>
+<a href="#3513" id="3513">3513</a>
+<a href="#3514" id="3514">3514</a>
+<a href="#3515" id="3515">3515</a>
+<a href="#3516" id="3516">3516</a>
+<a href="#3517" id="3517">3517</a>
+<a href="#3518" id="3518">3518</a>
+<a href="#3519" id="3519">3519</a>
+<a href="#3520" id="3520">3520</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
 
@@ -4629,59 +4663,93 @@ Implementations for `BlockContext` methods.
                         </span>),
                     },
                     fun @ (Mf::Dot4I8Packed | Mf::Dot4U8Packed) =&gt; {
-                        <span class="comment">// TODO: consider using packed integer dot product if PackedVectorFormat4x8Bit is available
-                        </span><span class="kw">let </span>(extract_op, arg0_id, arg1_id) = <span class="kw">match </span>fun {
-                            Mf::Dot4U8Packed =&gt; (spirv::Op::BitFieldUExtract, arg0_id, arg1_id),
-                            Mf::Dot4I8Packed =&gt; {
-                                <span class="comment">// Convert both packed arguments to signed integers so that we can apply the
-                                // `BitFieldSExtract` operation on them in `write_dot_product` below.
-                                </span><span class="kw">let </span>new_arg0_id = <span class="self">self</span>.gen_id();
-                                block.body.push(Instruction::unary(
-                                    spirv::Op::Bitcast,
-                                    result_type_id,
-                                    new_arg0_id,
-                                    arg0_id,
-                                ));
-
-                                <span class="kw">let </span>new_arg1_id = <span class="self">self</span>.gen_id();
-                                block.body.push(Instruction::unary(
-                                    spirv::Op::Bitcast,
-                                    result_type_id,
-                                    new_arg1_id,
-                                    arg1_id,
-                                ));
-
-                                (spirv::Op::BitFieldSExtract, new_arg0_id, new_arg1_id)
+                        <span class="kw">if </span><span class="self">self
+                            </span>.writer
+                            .require_all(<span class="kw-2">&amp;</span>[
+                                spirv::Capability::DotProduct,
+                                spirv::Capability::DotProductInput4x8BitPacked,
+                            ])
+                            .is_ok()
+                        {
+                            <span class="comment">// Write optimized code using `PackedVectorFormat4x8Bit`.
+                            </span><span class="kw">if </span><span class="self">self</span>.writer.lang_version() &lt; (<span class="number">1</span>, <span class="number">6</span>) {
+                                <span class="comment">// SPIR-V 1.6 supports the required capabilities natively, so the extension
+                                // is only required for earlier versions. See right column of
+                                // &lt;https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#OpSDot&gt;.
+                                </span><span class="self">self</span>.writer.use_extension(<span class="string">"SPV_KHR_integer_dot_product"</span>);
                             }
-                            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-                        };
 
-                        <span class="kw">let </span>eight = <span class="self">self</span>.writer.get_constant_scalar(<span class="kw">crate</span>::Literal::U32(<span class="number">8</span>));
+                            <span class="kw">let </span>op = <span class="kw">match </span>fun {
+                                Mf::Dot4I8Packed =&gt; spirv::Op::SDot,
+                                Mf::Dot4U8Packed =&gt; spirv::Op::UDot,
+                                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                            };
 
-                        <span class="kw">const </span>VEC_LENGTH: u8 = <span class="number">4</span>;
-                        <span class="kw">let </span>bit_shifts: [<span class="kw">_</span>; VEC_LENGTH <span class="kw">as </span>usize] = core::array::from_fn(|index| {
-                            <span class="self">self</span>.writer
-                                .get_constant_scalar(<span class="kw">crate</span>::Literal::U32(index <span class="kw">as </span>u32 * <span class="number">8</span>))
-                        });
+                            block.body.push(Instruction::ternary(
+                                op,
+                                result_type_id,
+                                id,
+                                arg0_id,
+                                arg1_id,
+                                spirv::PackedVectorFormat::PackedVectorFormat4x8Bit <span class="kw">as </span>Word,
+                            ));
+                        } <span class="kw">else </span>{
+                            <span class="comment">// Fall back to a polyfill since `PackedVectorFormat4x8Bit` is not available.
+                            </span><span class="kw">let </span>(extract_op, arg0_id, arg1_id) = <span class="kw">match </span>fun {
+                                Mf::Dot4U8Packed =&gt; (spirv::Op::BitFieldUExtract, arg0_id, arg1_id),
+                                Mf::Dot4I8Packed =&gt; {
+                                    <span class="comment">// Convert both packed arguments to signed integers so that we can apply the
+                                    // `BitFieldSExtract` operation on them in `write_dot_product` below.
+                                    </span><span class="kw">let </span>new_arg0_id = <span class="self">self</span>.gen_id();
+                                    block.body.push(Instruction::unary(
+                                        spirv::Op::Bitcast,
+                                        result_type_id,
+                                        new_arg0_id,
+                                        arg0_id,
+                                    ));
 
-                        <span class="self">self</span>.write_dot_product(
-                            id,
-                            result_type_id,
-                            arg0_id,
-                            arg1_id,
-                            VEC_LENGTH <span class="kw">as </span>Word,
-                            block,
-                            |result_id, composite_id, index| {
-                                Instruction::ternary(
-                                    extract_op,
-                                    result_type_id,
-                                    result_id,
-                                    composite_id,
-                                    bit_shifts[index <span class="kw">as </span>usize],
-                                    eight,
-                                )
-                            },
-                        );
+                                    <span class="kw">let </span>new_arg1_id = <span class="self">self</span>.gen_id();
+                                    block.body.push(Instruction::unary(
+                                        spirv::Op::Bitcast,
+                                        result_type_id,
+                                        new_arg1_id,
+                                        arg1_id,
+                                    ));
+
+                                    (spirv::Op::BitFieldSExtract, new_arg0_id, new_arg1_id)
+                                }
+                                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                            };
+
+                            <span class="kw">let </span>eight = <span class="self">self</span>.writer.get_constant_scalar(<span class="kw">crate</span>::Literal::U32(<span class="number">8</span>));
+
+                            <span class="kw">const </span>VEC_LENGTH: u8 = <span class="number">4</span>;
+                            <span class="kw">let </span>bit_shifts: [<span class="kw">_</span>; VEC_LENGTH <span class="kw">as </span>usize] =
+                                core::array::from_fn(|index| {
+                                    <span class="self">self</span>.writer
+                                        .get_constant_scalar(<span class="kw">crate</span>::Literal::U32(index <span class="kw">as </span>u32 * <span class="number">8</span>))
+                                });
+
+                            <span class="self">self</span>.write_dot_product(
+                                id,
+                                result_type_id,
+                                arg0_id,
+                                arg1_id,
+                                VEC_LENGTH <span class="kw">as </span>Word,
+                                block,
+                                |result_id, composite_id, index| {
+                                    Instruction::ternary(
+                                        extract_op,
+                                        result_type_id,
+                                        result_id,
+                                        composite_id,
+                                        bit_shifts[index <span class="kw">as </span>usize],
+                                        eight,
+                                    )
+                                },
+                            );
+                        }
+
                         <span class="self">self</span>.cached[expr_handle] = id;
                         <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                     }
