@@ -1189,15 +1189,7 @@
 <a href="#1188" id="1188">1188</a>
 <a href="#1189" id="1189">1189</a>
 <a href="#1190" id="1190">1190</a>
-<a href="#1191" id="1191">1191</a>
-<a href="#1192" id="1192">1192</a>
-<a href="#1193" id="1193">1193</a>
-<a href="#1194" id="1194">1194</a>
-<a href="#1195" id="1195">1195</a>
-<a href="#1196" id="1196">1196</a>
-<a href="#1197" id="1197">1197</a>
-<a href="#1198" id="1198">1198</a>
-<a href="#1199" id="1199">1199</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<a href="#1191" id="1191">1191</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>thiserror::Error;
@@ -1434,62 +1426,64 @@
     copy_size: <span class="kw-2">&amp;</span>Extent3d,
     need_copy_aligned_rows: bool,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(BufferAddress, BufferAddress), TransferError&gt; {
-    <span class="comment">// Convert all inputs to BufferAddress (u64) to avoid some of the overflow issues
-    // Note: u64 is not always enough to prevent overflow, especially when multiplying
-    // something with a potentially large depth value, so it is preferable to validate
-    // the copy size before calling this function (for example via `validate_texture_copy_range`).
-    </span><span class="kw">let </span>copy_width = copy_size.width <span class="kw">as </span>BufferAddress;
-    <span class="kw">let </span>copy_height = copy_size.height <span class="kw">as </span>BufferAddress;
-    <span class="kw">let </span>depth_or_array_layers = copy_size.depth_or_array_layers <span class="kw">as </span>BufferAddress;
+    <span class="kw">let </span>wgt::BufferTextureCopyInfo {
+        copy_width,
+        copy_height,
+        depth_or_array_layers,
 
-    <span class="kw">let </span>offset = layout.offset;
+        offset,
 
-    <span class="kw">let </span>block_size = format.block_copy_size(<span class="prelude-val">Some</span>(aspect)).unwrap() <span class="kw">as </span>BufferAddress;
-    <span class="kw">let </span>(block_width, block_height) = format.block_dimensions();
-    <span class="kw">let </span>block_width = block_width <span class="kw">as </span>BufferAddress;
-    <span class="kw">let </span>block_height = block_height <span class="kw">as </span>BufferAddress;
+        block_size_bytes,
+        block_width_texels,
+        block_height_texels,
 
-    <span class="kw">if </span>copy_width % block_width != <span class="number">0 </span>{
+        width_blocks: <span class="kw">_</span>,
+        height_blocks,
+
+        row_bytes_dense,
+        row_stride_bytes,
+
+        image_stride_rows: <span class="kw">_</span>,
+        image_stride_bytes,
+
+        image_rows_dense: <span class="kw">_</span>,
+        image_bytes_dense: <span class="kw">_</span>,
+
+        bytes_in_copy,
+    } = layout.get_buffer_texture_copy_info(format, aspect, copy_size);
+
+    <span class="kw">if </span>copy_width % block_width_texels != <span class="number">0 </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedCopyWidth);
     }
-    <span class="kw">if </span>copy_height % block_height != <span class="number">0 </span>{
+    <span class="kw">if </span>copy_height % block_height_texels != <span class="number">0 </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedCopyHeight);
     }
 
-    <span class="kw">let </span>width_in_blocks = copy_width / block_width;
-    <span class="kw">let </span>height_in_blocks = copy_height / block_height;
+    <span class="kw">let </span>requires_multiple_rows = depth_or_array_layers &gt; <span class="number">1 </span>|| height_blocks &gt; <span class="number">1</span>;
+    <span class="kw">let </span>requires_multiple_images = depth_or_array_layers &gt; <span class="number">1</span>;
 
-    <span class="kw">let </span>bytes_in_last_row = width_in_blocks * block_size;
-
-    <span class="kw">let </span>bytes_per_row = <span class="kw">if let </span><span class="prelude-val">Some</span>(bytes_per_row) = layout.bytes_per_row {
-        <span class="kw">let </span>bytes_per_row = bytes_per_row <span class="kw">as </span>BufferAddress;
-        <span class="kw">if </span>bytes_per_row &lt; bytes_in_last_row {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(raw_bytes_per_row) = layout.bytes_per_row {
+        <span class="kw">let </span>raw_bytes_per_row = raw_bytes_per_row <span class="kw">as </span>BufferAddress;
+        <span class="kw">if </span>raw_bytes_per_row &lt; row_bytes_dense {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidBytesPerRow);
         }
-        bytes_per_row
-    } <span class="kw">else </span>{
-        <span class="kw">if </span>depth_or_array_layers &gt; <span class="number">1 </span>|| height_in_blocks &gt; <span class="number">1 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnspecifiedBytesPerRow);
-        }
-        <span class="number">0
-    </span>};
-    <span class="kw">let </span>rows_per_image = <span class="kw">if let </span><span class="prelude-val">Some</span>(rows_per_image) = layout.rows_per_image {
-        <span class="kw">let </span>rows_per_image = rows_per_image <span class="kw">as </span>BufferAddress;
-        <span class="kw">if </span>rows_per_image &lt; height_in_blocks {
+    } <span class="kw">else if </span>requires_multiple_rows {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnspecifiedBytesPerRow);
+    }
+
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(raw_rows_per_image) = layout.rows_per_image {
+        <span class="kw">let </span>raw_rows_per_image = raw_rows_per_image <span class="kw">as </span>BufferAddress;
+        <span class="kw">if </span>raw_rows_per_image &lt; height_blocks {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidRowsPerImage);
         }
-        rows_per_image
-    } <span class="kw">else </span>{
-        <span class="kw">if </span>depth_or_array_layers &gt; <span class="number">1 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnspecifiedRowsPerImage);
-        }
-        <span class="number">0
-    </span>};
+    } <span class="kw">else if </span>requires_multiple_images {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnspecifiedRowsPerImage);
+    };
 
     <span class="kw">if </span>need_copy_aligned_rows {
         <span class="kw">let </span>bytes_per_row_alignment = wgt::COPY_BYTES_PER_ROW_ALIGNMENT <span class="kw">as </span>BufferAddress;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>offset_alignment = block_size;
+        <span class="kw">let </span><span class="kw-2">mut </span>offset_alignment = block_size_bytes;
         <span class="kw">if </span>format.is_depth_stencil_format() {
             offset_alignment = <span class="number">4
         </span>}
@@ -1497,33 +1491,23 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedBufferOffset(offset));
         }
 
-        <span class="kw">if </span>bytes_per_row % bytes_per_row_alignment != <span class="number">0 </span>{
+        <span class="comment">// The alignment of row_stride_bytes is only required if there are
+        // multiple rows
+        </span><span class="kw">if </span>requires_multiple_rows &amp;&amp; row_stride_bytes % bytes_per_row_alignment != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedBytesPerRow);
         }
     }
 
-    <span class="kw">let </span>bytes_per_image = bytes_per_row * rows_per_image;
-
-    <span class="kw">let </span>required_bytes_in_copy = <span class="kw">if </span>depth_or_array_layers == <span class="number">0 </span>{
-        <span class="number">0
-    </span>} <span class="kw">else </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>required_bytes_in_copy = bytes_per_image * (depth_or_array_layers - <span class="number">1</span>);
-        <span class="kw">if </span>height_in_blocks &gt; <span class="number">0 </span>{
-            required_bytes_in_copy += bytes_per_row * (height_in_blocks - <span class="number">1</span>) + bytes_in_last_row;
-        }
-        required_bytes_in_copy
-    };
-
-    <span class="kw">if </span>offset + required_bytes_in_copy &gt; buffer_size {
+    <span class="kw">if </span>offset + bytes_in_copy &gt; buffer_size {
         <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::BufferOverrun {
             start_offset: offset,
-            end_offset: offset + required_bytes_in_copy,
+            end_offset: offset + bytes_in_copy,
             buffer_size,
             side: buffer_side,
         });
     }
 
-    <span class="prelude-val">Ok</span>((required_bytes_in_copy, bytes_per_image))
+    <span class="prelude-val">Ok</span>((bytes_in_copy, image_stride_bytes))
 }
 
 <span class="doccomment">/// WebGPU's [validating texture copy range][vtcr] algorithm.
