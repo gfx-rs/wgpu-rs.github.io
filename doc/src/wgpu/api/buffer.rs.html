@@ -943,31 +943,7 @@
 <a href="#942" id="942">942</a>
 <a href="#943" id="943">943</a>
 <a href="#944" id="944">944</a>
-<a href="#945" id="945">945</a>
-<a href="#946" id="946">946</a>
-<a href="#947" id="947">947</a>
-<a href="#948" id="948">948</a>
-<a href="#949" id="949">949</a>
-<a href="#950" id="950">950</a>
-<a href="#951" id="951">951</a>
-<a href="#952" id="952">952</a>
-<a href="#953" id="953">953</a>
-<a href="#954" id="954">954</a>
-<a href="#955" id="955">955</a>
-<a href="#956" id="956">956</a>
-<a href="#957" id="957">957</a>
-<a href="#958" id="958">958</a>
-<a href="#959" id="959">959</a>
-<a href="#960" id="960">960</a>
-<a href="#961" id="961">961</a>
-<a href="#962" id="962">962</a>
-<a href="#963" id="963">963</a>
-<a href="#964" id="964">964</a>
-<a href="#965" id="965">965</a>
-<a href="#966" id="966">966</a>
-<a href="#967" id="967">967</a>
-<a href="#968" id="968">968</a>
-<a href="#969" id="969">969</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec::Vec};
+<a href="#945" id="945">945</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{
     error, fmt,
     ops::{Bound, Deref, DerefMut, Range, RangeBounds},
@@ -1209,8 +1185,9 @@
     ///
     /// - If `bounds` is outside of the bounds of `self`.
     /// - If `bounds` has a length less than 1.
+    </span><span class="attr">#[track_caller]
     </span><span class="kw">pub fn </span>slice&lt;S: RangeBounds&lt;BufferAddress&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bounds: S) -&gt; BufferSlice&lt;<span class="lifetime">'_</span>&gt; {
-        <span class="kw">let </span>(offset, size) = range_to_offset_size(bounds);
+        <span class="kw">let </span>(offset, size) = range_to_offset_size(bounds, <span class="self">self</span>.size);
         check_buffer_bounds(<span class="self">self</span>.size, offset, size);
         BufferSlice {
             buffer: <span class="self">self</span>,
@@ -1407,7 +1384,7 @@
 </span><span class="kw">pub struct </span>BufferSlice&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
     <span class="kw">pub</span>(<span class="kw">crate</span>) offset: BufferAddress,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) size: <span class="prelude-ty">Option</span>&lt;BufferSize&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) size: BufferSize,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(BufferSlice&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
@@ -1425,20 +1402,14 @@
     ///
     /// - If `bounds` is outside of the bounds of `self`.
     /// - If `bounds` has a length less than 1.
+    </span><span class="attr">#[track_caller]
     </span><span class="kw">pub fn </span>slice&lt;S: RangeBounds&lt;BufferAddress&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bounds: S) -&gt; BufferSlice&lt;<span class="lifetime">'a</span>&gt; {
-        <span class="kw">let </span>(offset, size) = range_to_offset_size(bounds);
-        check_buffer_bounds(
-            <span class="kw">match </span><span class="self">self</span>.size {
-                <span class="prelude-val">Some</span>(size) =&gt; size.get(),
-                <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.buffer.size(),
-            },
-            offset,
-            size,
-        );
+        <span class="kw">let </span>(offset, size) = range_to_offset_size(bounds, <span class="self">self</span>.size.get());
+        check_buffer_bounds(<span class="self">self</span>.size.get(), offset, size);
         BufferSlice {
             buffer: <span class="self">self</span>.buffer,
             offset: <span class="self">self</span>.offset + offset, <span class="comment">// check_buffer_bounds ensures this does not overflow
-            </span>size: size.or(<span class="self">self</span>.size),     <span class="comment">// check_buffer_bounds ensures this is essentially min()
+            </span>size,                         <span class="comment">// check_buffer_bounds ensures this is essentially min()
         </span>}
     }
 
@@ -1471,10 +1442,7 @@
     ) {
         <span class="kw">let </span><span class="kw-2">mut </span>mc = <span class="self">self</span>.buffer.map_context.lock();
         <span class="macro">assert_eq!</span>(mc.initial_range, <span class="number">0</span>..<span class="number">0</span>, <span class="string">"Buffer is already mapped"</span>);
-        <span class="kw">let </span>end = <span class="kw">match </span><span class="self">self</span>.size {
-            <span class="prelude-val">Some</span>(s) =&gt; <span class="self">self</span>.offset + s.get(),
-            <span class="prelude-val">None </span>=&gt; mc.total_size,
-        };
+        <span class="kw">let </span>end = <span class="self">self</span>.offset + <span class="self">self</span>.size.get();
         mc.initial_range = <span class="self">self</span>.offset..end;
 
         <span class="self">self</span>.buffer
@@ -1577,10 +1545,7 @@
 
     <span class="doccomment">/// Returns the size of this slice.
     </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BufferSize {
-        <span class="self">self</span>.size.unwrap_or_else(|| {
-            (|| BufferSize::new(<span class="self">self</span>.buffer.size().checked_sub(<span class="self">self</span>.offset)<span class="question-mark">?</span>))()
-                .expect(<span class="string">"can't happen: slice has incorrect size for its buffer"</span>)
-        })
+        <span class="self">self</span>.size
     }
 }
 
@@ -1591,7 +1556,7 @@
         BufferBinding {
             buffer: value.buffer,
             offset: value.offset,
-            size: value.size,
+            size: <span class="prelude-val">Some</span>(value.size),
         }
     }
 }
@@ -1606,16 +1571,9 @@
 
 <span class="doccomment">/// The mapped portion of a buffer, if any, and its outstanding views.
 ///
-/// This ensures that views fall within the mapped range and don't overlap, and
-/// also takes care of turning `Option&lt;BufferSize&gt;` sizes into actual buffer
-/// offsets.
+/// This ensures that views fall within the mapped range and don't overlap.
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>MapContext {
-    <span class="doccomment">/// The overall size of the buffer.
-    ///
-    /// This is just a convenient copy of [`Buffer::size`].
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) total_size: BufferAddress,
-
     <span class="doccomment">/// The range of the buffer that is mapped.
     ///
     /// This is `0..0` if the buffer is not mapped. This becomes non-empty when
@@ -1633,9 +1591,8 @@
 }
 
 <span class="kw">impl </span>MapContext {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(total_size: BufferAddress) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            total_size,
             initial_range: <span class="number">0</span>..<span class="number">0</span>,
             sub_ranges: Vec::new(),
         }
@@ -1658,11 +1615,8 @@
     /// # Panics
     ///
     /// This panics if the given range overlaps with any existing range.
-    </span><span class="kw">fn </span>add(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: BufferAddress, size: <span class="prelude-ty">Option</span>&lt;BufferSize&gt;) -&gt; BufferAddress {
-        <span class="kw">let </span>end = <span class="kw">match </span>size {
-            <span class="prelude-val">Some</span>(s) =&gt; offset + s.get(),
-            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.initial_range.end,
-        };
+    </span><span class="kw">fn </span>add(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: BufferAddress, size: BufferSize) -&gt; BufferAddress {
+        <span class="kw">let </span>end = offset + size.get();
         <span class="macro">assert!</span>(<span class="self">self</span>.initial_range.start &lt;= offset &amp;&amp; end &lt;= <span class="self">self</span>.initial_range.end);
         <span class="comment">// This check is essential for avoiding undefined behavior: it is the
         // only thing that ensures that `&amp;mut` references to the buffer's
@@ -1685,11 +1639,8 @@
     /// passed to [`add`].
     ///
     /// [`add]`: MapContext::add
-    </span><span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: BufferAddress, size: <span class="prelude-ty">Option</span>&lt;BufferSize&gt;) {
-        <span class="kw">let </span>end = <span class="kw">match </span>size {
-            <span class="prelude-val">Some</span>(s) =&gt; offset + s.get(),
-            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.initial_range.end,
-        };
+    </span><span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: BufferAddress, size: BufferSize) {
+        <span class="kw">let </span>end = offset + size.get();
 
         <span class="kw">let </span>index = <span class="self">self
             </span>.sub_ranges
@@ -1840,100 +1791,101 @@
     }
 }
 
-<span class="kw">fn </span>check_buffer_bounds(
+<span class="attr">#[track_caller]
+</span><span class="kw">fn </span>check_buffer_bounds(
     buffer_size: BufferAddress,
-    offset: BufferAddress,
-    size: <span class="prelude-ty">Option</span>&lt;BufferSize&gt;,
+    slice_offset: BufferAddress,
+    slice_size: BufferSize,
 ) {
     <span class="comment">// A slice of length 0 is invalid, so the offset must not be equal to or greater than the buffer size.
-    </span><span class="kw">if </span>offset &gt;= buffer_size {
+    </span><span class="kw">if </span>slice_offset &gt;= buffer_size {
         <span class="macro">panic!</span>(
             <span class="string">"slice offset {} is out of range for buffer of size {}"</span>,
-            offset, buffer_size
+            slice_offset, buffer_size
         );
     }
 
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
-        <span class="comment">// Detect integer overflow.
-        </span><span class="kw">let </span>end = offset.checked_add(size.get());
-        <span class="kw">if </span>end.is_none_or(|end| end &gt; buffer_size) {
-            <span class="macro">panic!</span>(
-                <span class="string">"slice offset {} size {} is out of range for buffer of size {}"</span>,
-                offset, size, buffer_size
-            );
-        }
+    <span class="comment">// Detect integer overflow.
+    </span><span class="kw">let </span>end = slice_offset.checked_add(slice_size.get());
+    <span class="kw">if </span>end.is_none_or(|end| end &gt; buffer_size) {
+        <span class="macro">panic!</span>(
+            <span class="string">"slice offset {} size {} is out of range for buffer of size {}"</span>,
+            slice_offset, slice_size, buffer_size
+        );
     }
 }
 
-<span class="kw">fn </span>range_to_offset_size&lt;S: RangeBounds&lt;BufferAddress&gt;&gt;(
+<span class="attr">#[track_caller]
+</span><span class="kw">fn </span>range_to_offset_size&lt;S: RangeBounds&lt;BufferAddress&gt;&gt;(
     bounds: S,
-) -&gt; (BufferAddress, <span class="prelude-ty">Option</span>&lt;BufferSize&gt;) {
+    whole_size: BufferAddress,
+) -&gt; (BufferAddress, BufferSize) {
     <span class="kw">let </span>offset = <span class="kw">match </span>bounds.start_bound() {
         Bound::Included(<span class="kw-2">&amp;</span>bound) =&gt; bound,
         Bound::Excluded(<span class="kw-2">&amp;</span>bound) =&gt; bound + <span class="number">1</span>,
         Bound::Unbounded =&gt; <span class="number">0</span>,
     };
-    <span class="kw">let </span>size = <span class="kw">match </span>bounds.end_bound() {
-        Bound::Included(<span class="kw-2">&amp;</span>bound) =&gt; <span class="prelude-val">Some</span>(bound + <span class="number">1 </span>- offset),
-        Bound::Excluded(<span class="kw-2">&amp;</span>bound) =&gt; <span class="prelude-val">Some</span>(bound - offset),
-        Bound::Unbounded =&gt; <span class="prelude-val">None</span>,
-    }
-    .map(|size| BufferSize::new(size).expect(<span class="string">"Buffer slices can not be empty"</span>));
+    <span class="kw">let </span>size = BufferSize::new(<span class="kw">match </span>bounds.end_bound() {
+        Bound::Included(<span class="kw-2">&amp;</span>bound) =&gt; bound + <span class="number">1 </span>- offset,
+        Bound::Excluded(<span class="kw-2">&amp;</span>bound) =&gt; bound - offset,
+        Bound::Unbounded =&gt; whole_size - offset,
+    })
+    .expect(<span class="string">"buffer slices can not be empty"</span>);
 
     (offset, size)
 }
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use super</span>::{check_buffer_bounds, range_to_offset_size, BufferSize};
+    <span class="kw">use super</span>::{check_buffer_bounds, range_to_offset_size, BufferAddress, BufferSize};
+
+    <span class="kw">fn </span>bs(value: BufferAddress) -&gt; BufferSize {
+        BufferSize::new(value).unwrap()
+    }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>range_to_offset_size_works() {
-        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">0</span>..<span class="number">2</span>), (<span class="number">0</span>, BufferSize::new(<span class="number">2</span>)));
-        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">2</span>..<span class="number">5</span>), (<span class="number">2</span>, BufferSize::new(<span class="number">3</span>)));
-        <span class="macro">assert_eq!</span>(range_to_offset_size(..), (<span class="number">0</span>, <span class="prelude-val">None</span>));
-        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">21</span>..), (<span class="number">21</span>, <span class="prelude-val">None</span>));
-        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">0</span>..), (<span class="number">0</span>, <span class="prelude-val">None</span>));
-        <span class="macro">assert_eq!</span>(range_to_offset_size(..<span class="number">21</span>), (<span class="number">0</span>, BufferSize::new(<span class="number">21</span>)));
+        <span class="kw">let </span>whole = <span class="number">100</span>;
+
+        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">0</span>..<span class="number">2</span>, whole), (<span class="number">0</span>, bs(<span class="number">2</span>)));
+        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">2</span>..<span class="number">5</span>, whole), (<span class="number">2</span>, bs(<span class="number">3</span>)));
+        <span class="macro">assert_eq!</span>(range_to_offset_size(.., whole), (<span class="number">0</span>, bs(whole)));
+        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">21</span>.., whole), (<span class="number">21</span>, bs(whole - <span class="number">21</span>)));
+        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">0</span>.., whole), (<span class="number">0</span>, bs(whole)));
+        <span class="macro">assert_eq!</span>(range_to_offset_size(..<span class="number">21</span>, whole), (<span class="number">0</span>, bs(<span class="number">21</span>)));
     }
 
     <span class="attr">#[test]
-    #[should_panic]
+    #[should_panic = <span class="string">"buffer slices can not be empty"</span>]
     </span><span class="kw">fn </span>range_to_offset_size_panics_for_empty_range() {
-        range_to_offset_size(<span class="number">123</span>..<span class="number">123</span>);
+        range_to_offset_size(<span class="number">123</span>..<span class="number">123</span>, <span class="number">200</span>);
     }
 
     <span class="attr">#[test]
-    #[should_panic]
+    #[should_panic = <span class="string">"buffer slices can not be empty"</span>]
     </span><span class="kw">fn </span>range_to_offset_size_panics_for_unbounded_empty_range() {
-        range_to_offset_size(..<span class="number">0</span>);
-    }
-
-    <span class="attr">#[test]
-    #[should_panic]
-    </span><span class="kw">fn </span>check_buffer_bounds_panics_for_offset_at_size() {
-        check_buffer_bounds(<span class="number">100</span>, <span class="number">100</span>, <span class="prelude-val">None</span>);
+        range_to_offset_size(..<span class="number">0</span>, <span class="number">100</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>check_buffer_bounds_works_for_end_in_range() {
-        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, BufferSize::new(<span class="number">50</span>));
-        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, BufferSize::new(<span class="number">100</span>));
-        check_buffer_bounds(u64::MAX, u64::MAX - <span class="number">100</span>, BufferSize::new(<span class="number">100</span>));
-        check_buffer_bounds(u64::MAX, <span class="number">0</span>, BufferSize::new(u64::MAX));
-        check_buffer_bounds(u64::MAX, <span class="number">1</span>, BufferSize::new(u64::MAX - <span class="number">1</span>));
+        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, bs(<span class="number">50</span>));
+        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, bs(<span class="number">100</span>));
+        check_buffer_bounds(u64::MAX, u64::MAX - <span class="number">100</span>, bs(<span class="number">100</span>));
+        check_buffer_bounds(u64::MAX, <span class="number">0</span>, bs(u64::MAX));
+        check_buffer_bounds(u64::MAX, <span class="number">1</span>, bs(u64::MAX - <span class="number">1</span>));
     }
 
     <span class="attr">#[test]
     #[should_panic]
     </span><span class="kw">fn </span>check_buffer_bounds_panics_for_end_over_size() {
-        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, BufferSize::new(<span class="number">101</span>));
+        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, bs(<span class="number">101</span>));
     }
 
     <span class="attr">#[test]
     #[should_panic]
     </span><span class="kw">fn </span>check_buffer_bounds_panics_for_end_wraparound() {
-        check_buffer_bounds(u64::MAX, <span class="number">1</span>, BufferSize::new(u64::MAX));
+        check_buffer_bounds(u64::MAX, <span class="number">1</span>, bs(u64::MAX));
     }
 }
 </code></pre></div></section></main></body></html>
