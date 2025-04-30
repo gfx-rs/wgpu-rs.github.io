@@ -7124,7 +7124,12 @@
 <a href="#7123" id="7123">7123</a>
 <a href="#7124" id="7124">7124</a>
 <a href="#7125" id="7125">7125</a>
-<a href="#7126" id="7126">7126</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#7126" id="7126">7126</a>
+<a href="#7127" id="7127">7127</a>
+<a href="#7128" id="7128">7128</a>
+<a href="#7129" id="7129">7129</a>
+<a href="#7130" id="7130">7130</a>
+<a href="#7131" id="7131">7131</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -7142,7 +7147,7 @@
 <span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
-    back::{<span class="self">self</span>, Baked},
+    back::{<span class="self">self</span>, get_entry_points, Baked},
     common,
     proc::{
         <span class="self">self</span>,
@@ -12998,10 +13003,15 @@ template &lt;typename A&gt;
             <span class="self">self</span>.named_expressions.clear();
         }
 
+        <span class="kw">let </span>ep_range = get_entry_points(module, pipeline_options.entry_point.as_ref())
+            .map_err(|(stage, name)| Error::EntryPointNotFound(stage, name))<span class="question-mark">?</span>;
+
         <span class="kw">let </span><span class="kw-2">mut </span>info = TranslationInfo {
-            entry_point_names: Vec::with_capacity(module.entry_points.len()),
+            entry_point_names: Vec::with_capacity(ep_range.len()),
         };
-        <span class="kw">for </span>(ep_index, ep) <span class="kw">in </span>module.entry_points.iter().enumerate() {
+
+        <span class="kw">for </span>ep_index <span class="kw">in </span>ep_range {
+            <span class="kw">let </span>ep = <span class="kw-2">&amp;</span>module.entry_points[ep_index];
             <span class="kw">let </span>fun = <span class="kw-2">&amp;</span>ep.function;
             <span class="kw">let </span>fun_info = mod_info.get_entry_point(ep_index);
             <span class="kw">let </span><span class="kw-2">mut </span>ep_error = <span class="prelude-val">None</span>;
@@ -14202,8 +14212,8 @@ template &lt;typename A&gt;
         }
         <span class="kw">let </span>stack_size = addresses_end - addresses_start;
         <span class="comment">// check the size (in debug only)
-        // last observed macOS value: 20528 (CI)
-        </span><span class="kw">if </span>!(<span class="number">11000</span>..=<span class="number">25000</span>).contains(<span class="kw-2">&amp;</span>stack_size) {
+        // last observed macOS value: 25904 (CI), 2025-04-29
+        </span><span class="kw">if </span>!(<span class="number">11000</span>..=<span class="number">27000</span>).contains(<span class="kw-2">&amp;</span>stack_size) {
             <span class="macro">panic!</span>(<span class="string">"`put_expression` stack size {stack_size} has changed!"</span>);
         }
     }

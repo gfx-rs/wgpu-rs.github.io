@@ -4398,7 +4398,33 @@
 <a href="#4397" id="4397">4397</a>
 <a href="#4398" id="4398">4398</a>
 <a href="#4399" id="4399">4399</a>
-<a href="#4400" id="4400">4400</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4400" id="4400">4400</a>
+<a href="#4401" id="4401">4401</a>
+<a href="#4402" id="4402">4402</a>
+<a href="#4403" id="4403">4403</a>
+<a href="#4404" id="4404">4404</a>
+<a href="#4405" id="4405">4405</a>
+<a href="#4406" id="4406">4406</a>
+<a href="#4407" id="4407">4407</a>
+<a href="#4408" id="4408">4408</a>
+<a href="#4409" id="4409">4409</a>
+<a href="#4410" id="4410">4410</a>
+<a href="#4411" id="4411">4411</a>
+<a href="#4412" id="4412">4412</a>
+<a href="#4413" id="4413">4413</a>
+<a href="#4414" id="4414">4414</a>
+<a href="#4415" id="4415">4415</a>
+<a href="#4416" id="4416">4416</a>
+<a href="#4417" id="4417">4417</a>
+<a href="#4418" id="4418">4418</a>
+<a href="#4419" id="4419">4419</a>
+<a href="#4420" id="4420">4420</a>
+<a href="#4421" id="4421">4421</a>
+<a href="#4422" id="4422">4422</a>
+<a href="#4423" id="4423">4423</a>
+<a href="#4424" id="4424">4424</a>
+<a href="#4425" id="4425">4425</a>
+<a href="#4426" id="4426">4426</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -4412,10 +4438,10 @@
         WrappedZeroValue,
     },
     storage::StoreValue,
-    BackendResult, Error, FragmentEntryPoint, Options, ShaderModel,
+    BackendResult, Error, FragmentEntryPoint, Options, PipelineOptions, ShaderModel,
 };
 <span class="kw">use crate</span>::{
-    back::{<span class="self">self</span>, Baked},
+    back::{<span class="self">self</span>, get_entry_points, Baked},
     common,
     proc::{<span class="self">self</span>, index, NameKey},
     valid, Handle, Module, RayQueryFunction, Scalar, ScalarKind, ShaderStage, TypeInner,
@@ -4523,13 +4549,14 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, W: fmt::Write&gt; <span class="kw">super</span>::Writer&lt;<span class="lifetime">'a</span>, W&gt; {
-    <span class="kw">pub fn </span>new(out: W, options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Options) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(out: W, options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Options, pipeline_options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>PipelineOptions) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             out,
             names: <span class="kw">crate</span>::FastHashMap::default(),
             namer: proc::Namer::default(),
             options,
-            entry_point_io: Vec::new(),
+            pipeline_options,
+            entry_point_io: <span class="kw">crate</span>::FastHashMap::default(),
             named_expressions: <span class="kw">crate</span>::NamedExpressions::default(),
             wrapped: <span class="kw">super</span>::Wrapped::default(),
             written_committed_intersection: <span class="bool-val">false</span>,
@@ -4787,8 +4814,12 @@
             </span><span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
         }
 
+        <span class="kw">let </span>ep_range = get_entry_points(module, <span class="self">self</span>.pipeline_options.entry_point.as_ref())
+            .map_err(|(stage, name)| Error::EntryPointNotFound(stage, name))<span class="question-mark">?</span>;
+
         <span class="comment">// Write all entry points wrapped structs
-        </span><span class="kw">for </span>(index, ep) <span class="kw">in </span>module.entry_points.iter().enumerate() {
+        </span><span class="kw">for </span>index <span class="kw">in </span>ep_range.clone() {
+            <span class="kw">let </span>ep = <span class="kw-2">&amp;</span>module.entry_points[index];
             <span class="kw">let </span>ep_name = <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::EntryPoint(index <span class="kw">as </span>u16)].clone();
             <span class="kw">let </span>ep_io = <span class="self">self</span>.write_ep_interface(
                 module,
@@ -4797,7 +4828,7 @@
                 <span class="kw-2">&amp;</span>ep_name,
                 fragment_entry_point,
             )<span class="question-mark">?</span>;
-            <span class="self">self</span>.entry_point_io.push(ep_io);
+            <span class="self">self</span>.entry_point_io.insert(index, ep_io);
         }
 
         <span class="comment">// Write all regular functions
@@ -4842,10 +4873,11 @@
             <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>entry_point_names = Vec::with_capacity(module.entry_points.len());
+        <span class="kw">let </span><span class="kw-2">mut </span>translated_ep_names = Vec::with_capacity(ep_range.len());
 
         <span class="comment">// Write all entry points
-        </span><span class="kw">for </span>(index, ep) <span class="kw">in </span>module.entry_points.iter().enumerate() {
+        </span><span class="kw">for </span>index <span class="kw">in </span>ep_range {
+            <span class="kw">let </span>ep = <span class="kw-2">&amp;</span>module.entry_points[index];
             <span class="kw">let </span>info = module_info.get_entry_point(index);
 
             <span class="kw">if </span>!<span class="self">self</span>.options.fake_missing_bindings {
@@ -4862,7 +4894,7 @@
                     }
                 }
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = ep_error {
-                    entry_point_names.push(<span class="prelude-val">Err</span>(err));
+                    translated_ep_names.push(<span class="prelude-val">Err</span>(err));
                     <span class="kw">continue</span>;
                 }
             }
@@ -4893,10 +4925,12 @@
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
             }
 
-            entry_point_names.push(<span class="prelude-val">Ok</span>(name));
+            translated_ep_names.push(<span class="prelude-val">Ok</span>(name));
         }
 
-        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ReflectionInfo { entry_point_names })
+        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ReflectionInfo {
+            entry_point_names: translated_ep_names,
+        })
     }
 
     <span class="kw">fn </span>write_modifier(<span class="kw-2">&amp;mut </span><span class="self">self</span>, binding: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Binding) -&gt; BackendResult {
@@ -5216,7 +5250,13 @@
         ep_index: u16,
     ) -&gt; BackendResult {
         <span class="kw">let </span>ep = <span class="kw-2">&amp;</span>module.entry_points[ep_index <span class="kw">as </span>usize];
-        <span class="kw">let </span>ep_input = <span class="kw">match </span><span class="self">self</span>.entry_point_io[ep_index <span class="kw">as </span>usize].input.take() {
+        <span class="kw">let </span>ep_input = <span class="kw">match </span><span class="self">self
+            </span>.entry_point_io
+            .get_mut(<span class="kw-2">&amp;</span>(ep_index <span class="kw">as </span>usize))
+            .unwrap()
+            .input
+            .take()
+        {
             <span class="prelude-val">Some</span>(ep_input) =&gt; ep_input,
             <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
         };
@@ -5832,7 +5872,9 @@
                     }
                 }
                 back::FunctionType::EntryPoint(index) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ep_output) = <span class="self">self</span>.entry_point_io[index <span class="kw">as </span>usize].output {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ep_output) =
+                        <span class="self">self</span>.entry_point_io.get(<span class="kw-2">&amp;</span>(index <span class="kw">as </span>usize)).unwrap().output
+                    {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, ep_output.ty_name)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
                         <span class="self">self</span>.write_type(module, result.ty)<span class="question-mark">?</span>;
@@ -5879,7 +5921,9 @@
                 }
             }
             back::FunctionType::EntryPoint(ep_index) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ep_input) = <span class="self">self</span>.entry_point_io[ep_index <span class="kw">as </span>usize].input {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ep_input) =
+                    <span class="self">self</span>.entry_point_io.get(<span class="kw-2">&amp;</span>(ep_index <span class="kw">as </span>usize)).unwrap().input
+                {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{} {}"</span>, ep_input.ty_name, ep_input.arg_name)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
                     <span class="kw">let </span>stage = module.entry_points[ep_index <span class="kw">as </span>usize].stage;
@@ -5901,7 +5945,12 @@
                     }
                 }
                 <span class="kw">if </span>need_workgroup_variables_initialization {
-                    <span class="kw">if </span><span class="self">self</span>.entry_point_io[ep_index <span class="kw">as </span>usize].input.is_some()
+                    <span class="kw">if </span><span class="self">self
+                        </span>.entry_point_io
+                        .get(<span class="kw-2">&amp;</span>(ep_index <span class="kw">as </span>usize))
+                        .unwrap()
+                        .input
+                        .is_some()
                         || !func.arguments.is_empty()
                     {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
@@ -6270,9 +6319,12 @@
                     <span class="comment">// for entry point returns, we may need to reshuffle the outputs into a different struct
                     </span><span class="kw">let </span>ep_output = <span class="kw">match </span>func_ctx.ty {
                         back::FunctionType::Function(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-                        back::FunctionType::EntryPoint(index) =&gt; {
-                            <span class="self">self</span>.entry_point_io[index <span class="kw">as </span>usize].output.as_ref()
-                        }
+                        back::FunctionType::EntryPoint(index) =&gt; <span class="self">self
+                            </span>.entry_point_io
+                            .get(<span class="kw-2">&amp;</span>(index <span class="kw">as </span>usize))
+                            .unwrap()
+                            .output
+                            .as_ref(),
                     };
                     <span class="kw">let </span>final_name = <span class="kw">match </span>ep_output {
                         <span class="prelude-val">Some</span>(ep_output) =&gt; {

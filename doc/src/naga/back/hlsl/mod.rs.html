@@ -548,7 +548,27 @@
 <a href="#547" id="547">547</a>
 <a href="#548" id="548">548</a>
 <a href="#549" id="549">549</a>
-<a href="#550" id="550">550</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [HLSL][hlsl] (High-Level Shading Language).
 
 # Supported shader model versions:
@@ -669,7 +689,7 @@ information.
 
 <span class="kw">use </span>thiserror::Error;
 
-<span class="kw">use crate</span>::{back, proc};
+<span class="kw">use crate</span>::{back, ir, proc};
 
 <span class="attr">#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
@@ -984,6 +1004,22 @@ information.
     </span><span class="kw">pub </span>entry_point_names: Vec&lt;<span class="prelude-ty">Result</span>&lt;String, EntryPointError&gt;&gt;,
 }
 
+<span class="doccomment">/// A subset of options that are meant to be changed per pipeline.
+</span><span class="attr">#[derive(Debug, Default, Clone)]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, serde(default))]
+</span><span class="kw">pub struct </span>PipelineOptions {
+    <span class="doccomment">/// The entry point to write.
+    ///
+    /// Entry points are identified by a shader stage specification,
+    /// and a name.
+    ///
+    /// If `None`, all entry points will be written. If `Some` and the entry
+    /// point is not found, an error will be thrown while writing.
+    </span><span class="kw">pub </span>entry_point: <span class="prelude-ty">Option</span>&lt;(ir::ShaderStage, String)&gt;,
+}
+
 <span class="attr">#[derive(Error, Debug)]
 </span><span class="kw">pub enum </span>Error {
     <span class="attr">#[error(transparent)]
@@ -998,6 +1034,8 @@ information.
     </span>Override,
     <span class="attr">#[error(transparent)]
     </span>ResolveArraySizeError(<span class="attr">#[from] </span>proc::ResolveArraySizeError),
+    <span class="attr">#[error(<span class="string">"entry point with stage {0:?} and name '{1}' not found"</span>)]
+    </span>EntryPointNotFound(ir::ShaderStage, String),
 }
 
 <span class="attr">#[derive(PartialEq, Eq, Hash)]
@@ -1069,8 +1107,10 @@ information.
     namer: proc::Namer,
     <span class="doccomment">/// HLSL backend options
     </span>options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Options,
+    <span class="doccomment">/// Per-stage backend options
+    </span>pipeline_options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>PipelineOptions,
     <span class="doccomment">/// Information about entry point arguments and result types.
-    </span>entry_point_io: Vec&lt;writer::EntryPointInterface&gt;,
+    </span>entry_point_io: <span class="kw">crate</span>::FastHashMap&lt;usize, writer::EntryPointInterface&gt;,
     <span class="doccomment">/// Set of expressions that have associated temporary variables
     </span>named_expressions: <span class="kw">crate</span>::NamedExpressions,
     wrapped: Wrapped,

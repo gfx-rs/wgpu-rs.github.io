@@ -739,7 +739,18 @@
 <a href="#738" id="738">738</a>
 <a href="#739" id="739">739</a>
 <a href="#740" id="740">740</a>
-<a href="#741" id="741">741</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [MSL][msl] (Metal Shading Language).
 
 This backend does not support the [`SHADER_INT64_ATOMIC_ALL_OPS`][all-atom]
@@ -793,7 +804,7 @@ additional effort and the difference is unlikely to matter.)
 };
 <span class="kw">use </span>core::fmt::{Error <span class="kw">as </span>FmtError, Write};
 
-<span class="kw">use crate</span>::{arena::Handle, proc::index, valid::ModuleInfo};
+<span class="kw">use crate</span>::{arena::Handle, ir, proc::index, valid::ModuleInfo};
 
 <span class="kw">mod </span>keywords;
 <span class="kw">pub mod </span>sampler;
@@ -925,7 +936,7 @@ additional effort and the difference is unlikely to matter.)
     <span class="attr">#[error(<span class="string">"can not use writeable storage buffers in fragment stage prior to MSL 1.2"</span>)]
     </span>UnsupportedWriteableStorageBuffer,
     <span class="attr">#[error(<span class="string">"can not use writeable storage textures in {0:?} stage prior to MSL 1.2"</span>)]
-    </span>UnsupportedWriteableStorageTexture(<span class="kw">crate</span>::ShaderStage),
+    </span>UnsupportedWriteableStorageTexture(ir::ShaderStage),
     <span class="attr">#[error(<span class="string">"can not use read-write storage textures prior to MSL 1.2"</span>)]
     </span>UnsupportedRWStorageTexture,
     <span class="attr">#[error(<span class="string">"array of '{0}' is not supported for target MSL version"</span>)]
@@ -940,6 +951,8 @@ additional effort and the difference is unlikely to matter.)
     </span>UnsupportedBitCast(<span class="kw">crate</span>::TypeInner),
     <span class="attr">#[error(transparent)]
     </span>ResolveArraySizeError(<span class="attr">#[from] </span><span class="kw">crate</span>::proc::ResolveArraySizeError),
+    <span class="attr">#[error(<span class="string">"entry point with stage {0:?} and name '{1}' not found"</span>)]
+    </span>EntryPointNotFound(ir::ShaderStage, String),
 }
 
 <span class="attr">#[derive(Clone, Debug, PartialEq, thiserror::Error)]
@@ -1161,6 +1174,15 @@ additional effort and the difference is unlikely to matter.)
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, serde(default))]
 </span><span class="kw">pub struct </span>PipelineOptions {
+    <span class="doccomment">/// The entry point to write.
+    ///
+    /// Entry points are identified by a shader stage specification,
+    /// and a name.
+    ///
+    /// If `None`, all entry points will be written. If `Some` and the entry
+    /// point is not found, an error will be thrown while writing.
+    </span><span class="kw">pub </span>entry_point: <span class="prelude-ty">Option</span>&lt;(ir::ShaderStage, String)&gt;,
+
     <span class="doccomment">/// Allow `BuiltIn::PointSize` and inject it if doesn't exist.
     ///
     /// Metal doesn't like this for non-point primitive topologies and requires it for
@@ -1478,6 +1500,6 @@ additional effort and the difference is unlikely to matter.)
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>test_error_size() {
-    <span class="macro">assert_eq!</span>(size_of::&lt;Error&gt;(), <span class="number">32</span>);
+    <span class="macro">assert_eq!</span>(size_of::&lt;Error&gt;(), <span class="number">40</span>);
 }
 </code></pre></div></section></main></body></html>
