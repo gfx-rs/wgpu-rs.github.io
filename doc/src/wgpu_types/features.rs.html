@@ -1553,7 +1553,30 @@
 <a href="#1552" id="1552">1552</a>
 <a href="#1553" id="1553">1553</a>
 <a href="#1554" id="1554">1554</a>
-<a href="#1555" id="1555">1555</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::VertexFormat;
+<a href="#1555" id="1555">1555</a>
+<a href="#1556" id="1556">1556</a>
+<a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
+<a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::VertexFormat;
 <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>alloc::fmt;
 <span class="kw">use </span>alloc::vec::Vec;
@@ -1592,25 +1615,28 @@
     </span><span class="kw">pub const </span>WEBGPU_FEATURE_TEXTURE_COMPRESSION_ASTC: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
 
     <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub const </span>WEBGPU_FEATURE_TIMESTAMP_QUERY: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
+    </span><span class="kw">pub const </span>WEBGPU_FEATURE_TEXTURE_COMPRESSION_ASTC_SLICED_3D: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
 
     <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub const </span>WEBGPU_FEATURE_INDIRECT_FIRST_INSTANCE: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+    </span><span class="kw">pub const </span>WEBGPU_FEATURE_TIMESTAMP_QUERY: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
 
     <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub const </span>WEBGPU_FEATURE_SHADER_F16: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+    </span><span class="kw">pub const </span>WEBGPU_FEATURE_INDIRECT_FIRST_INSTANCE: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
 
     <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub const </span>WEBGPU_FEATURE_RG11B10UFLOAT_RENDERABLE: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
+    </span><span class="kw">pub const </span>WEBGPU_FEATURE_SHADER_F16: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
 
     <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub const </span>WEBGPU_FEATURE_BGRA8UNORM_STORAGE: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">10</span>;
+    </span><span class="kw">pub const </span>WEBGPU_FEATURE_RG11B10UFLOAT_RENDERABLE: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">10</span>;
 
     <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub const </span>WEBGPU_FEATURE_FLOAT32_FILTERABLE: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
+    </span><span class="kw">pub const </span>WEBGPU_FEATURE_BGRA8UNORM_STORAGE: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
 
     <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub const </span>WEBGPU_FEATURE_DUAL_SOURCE_BLENDING: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">12</span>;
+    </span><span class="kw">pub const </span>WEBGPU_FEATURE_FLOAT32_FILTERABLE: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">12</span>;
+
+    <span class="attr">#[doc(hidden)]
+    </span><span class="kw">pub const </span>WEBGPU_FEATURE_DUAL_SOURCE_BLENDING: u64 = <span class="number">1 </span>&lt;&lt; <span class="number">13</span>;
 }
 
 <span class="macro">macro_rules!</span> bitflags_array_impl {
@@ -2849,12 +2875,32 @@
         /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ASTC formats with Unorm/UnormSrgb channel type.
         /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
         ///
+        /// This feature does not guarantee availability of sliced 3d textures for ASTC formats.
+        /// If available, 3d support can be enabled by TEXTURE_COMPRESSION_ASTC_SLICED_3D feature.
+        ///
         /// Supported Platforms:
         /// - Vulkan on Intel
         /// - Mobile (some)
         ///
         /// This is a web and native feature.
         </span><span class="kw">const </span>TEXTURE_COMPRESSION_ASTC = WEBGPU_FEATURE_TEXTURE_COMPRESSION_ASTC;
+
+
+        <span class="doccomment">/// Allows the 3d dimension for textures with ASTC compressed formats.
+        ///
+        /// This feature must be used in combination with TEXTURE_COMPRESSION_ASTC to enable 3D textures with ASTC compression.
+        /// It does not enable the ASTC formats by itself.
+        ///
+        /// Supported Platforms:
+        /// - Vulkan (some)
+        /// - Metal on Apple3+
+        /// - OpenGL/WebGL (some)
+        ///
+        /// Not Supported:
+        /// - DX12
+        ///
+        /// This is a web and native feature.
+        </span><span class="kw">const </span>TEXTURE_COMPRESSION_ASTC_SLICED_3D = WEBGPU_FEATURE_TEXTURE_COMPRESSION_ASTC_SLICED_3D;
 
         <span class="doccomment">/// Enables use of Timestamp Queries. These queries tell the current gpu timestamp when
         /// all work before the query is finished.

@@ -1298,7 +1298,14 @@
 <a href="#1297" id="1297">1297</a>
 <a href="#1298" id="1298">1298</a>
 <a href="#1299" id="1299">1299</a>
-<a href="#1300" id="1300">1300</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, format, string::String, sync::Arc, vec, vec::Vec};
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, format, string::String, sync::Arc, vec, vec::Vec};
 <span class="kw">use </span>core::sync::atomic::AtomicU8;
 
 <span class="kw">use </span>glow::HasContext;
@@ -1831,6 +1838,7 @@
                     .compressed_texture_astc_supports_ldr_profile()
                 {
                     features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC);
+                    features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC_SLICED_3D);
                 }
                 <span class="kw">if </span>context
                     .glow_context
@@ -1843,12 +1851,18 @@
             <span class="attr">#[cfg(any(native, Emscripten))]
             </span>{
                 features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC);
+                features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC_SLICED_3D);
                 features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR);
             }
         } <span class="kw">else </span>{
             features.set(
                 wgt::Features::TEXTURE_COMPRESSION_ASTC,
                 extensions.contains(<span class="string">"GL_KHR_texture_compression_astc_ldr"</span>),
+            );
+            features.set(
+                wgt::Features::TEXTURE_COMPRESSION_ASTC_SLICED_3D,
+                extensions.contains(<span class="string">"GL_KHR_texture_compression_astc_ldr"</span>)
+                    &amp;&amp; extensions.contains(<span class="string">"GL_KHR_texture_compression_astc_sliced_3d"</span>),
             );
             features.set(
                 wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR,
