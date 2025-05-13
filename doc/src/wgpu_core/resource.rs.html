@@ -2775,7 +2775,8 @@
             <span class="kw">let </span>raw = <span class="kw">match </span><span class="self">self</span>.raw.snatch(<span class="kw-2">&amp;mut </span>snatch_guard) {
                 <span class="prelude-val">Some</span>(raw) =&gt; raw,
                 <span class="prelude-val">None </span>=&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(DestroyError::AlreadyDestroyed);
+                    <span class="comment">// Per spec, it is valid to call `destroy` multiple times.
+                    </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
             };
 
@@ -3251,7 +3252,8 @@
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
                 <span class="prelude-val">None </span>=&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(DestroyError::AlreadyDestroyed);
+                    <span class="comment">// Per spec, it is valid to call `destroy` multiple times.
+                    </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
             };
 
@@ -4015,8 +4017,6 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>DestroyError {
-    <span class="attr">#[error(<span class="string">"Resource is already destroyed"</span>)]
-    </span>AlreadyDestroyed,
     <span class="attr">#[error(transparent)]
     </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
