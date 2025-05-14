@@ -568,12 +568,12 @@
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
 <a href="#569" id="569">569</a>
-<a href="#570" id="570">570</a>
-<a href="#571" id="571">571</a></pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
+<a href="#570" id="570">570</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils;
+<span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>glam::{Mat4, Quat, Vec3};
 <span class="kw">use </span>std::f32::consts::PI;
 <span class="kw">use </span>std::ops::IndexMut;
-<span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, ops::Range, pin::Pin, task, time::Instant};
+<span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, ops::Range, pin::Pin, task};
 <span class="kw">use </span>wgpu::util::DeviceExt;
 
 <span class="comment">// from cube
@@ -881,8 +881,8 @@
     tlas_package: wgpu::TlasPackage,
     pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
-    start_inst: Instant,
     scene_components: SceneComponents,
+    animation_timer: utils::AnimationTimer,
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::framework::Example <span class="kw">for </span>Example {
@@ -1005,16 +1005,14 @@
             ],
         });
 
-        <span class="kw">let </span>start_inst = Instant::now();
-
         Example {
             uniforms,
             uniform_buf,
             tlas_package,
             pipeline,
             bind_group,
-            start_inst,
             scene_components,
+            animation_timer: utils::AnimationTimer::default(),
         }
     }
 
@@ -1047,7 +1045,7 @@
 
             <span class="kw">let </span>side_count = <span class="number">2</span>;
 
-            <span class="kw">let </span>anim_time = <span class="self">self</span>.start_inst.elapsed().as_secs_f64() <span class="kw">as </span>f32;
+            <span class="kw">let </span>anim_time = <span class="self">self</span>.animation_timer.time();
 
             <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..side_count {
                 <span class="kw">for </span>y <span class="kw">in </span><span class="number">0</span>..side_count {

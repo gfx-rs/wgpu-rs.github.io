@@ -499,13 +499,15 @@
 <a href="#498" id="498">498</a>
 <a href="#499" id="499">499</a>
 <a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, pin::Pin, task, time::Instant};
+<a href="#501" id="501">501</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, pin::Pin, task};
 
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>glam::{Affine3A, Mat4, Quat, Vec3};
 <span class="kw">use </span>wgpu::util::DeviceExt;
 
 <span class="kw">use </span>wgpu::StoreOp;
+
+<span class="kw">use </span><span class="kw">crate</span>::utils;
 
 <span class="comment">// from cube
 </span><span class="attr">#[repr(C)]
@@ -636,7 +638,7 @@
     compute_bind_group: wgpu::BindGroup,
     blit_pipeline: wgpu::RenderPipeline,
     blit_bind_group: wgpu::BindGroup,
-    start_inst: Instant,
+    animation_timer: utils::AnimationTimer,
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::framework::Example <span class="kw">for </span>Example {
@@ -893,8 +895,6 @@
 
         queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
 
-        <span class="kw">let </span>start_inst = Instant::now();
-
         Example {
             rt_target,
             rt_view,
@@ -907,7 +907,7 @@
             compute_bind_group,
             blit_pipeline,
             blit_bind_group,
-            start_inst,
+            animation_timer: utils::AnimationTimer::default(),
         }
     }
 
@@ -926,7 +926,7 @@
     <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, view: <span class="kw-2">&amp;</span>wgpu::TextureView, device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
         device.push_error_scope(wgpu::ErrorFilter::Validation);
 
-        <span class="kw">let </span>anim_time = <span class="self">self</span>.start_inst.elapsed().as_secs_f64() <span class="kw">as </span>f32;
+        <span class="kw">let </span>anim_time = <span class="self">self</span>.animation_timer.time();
 
         <span class="self">self</span>.tlas_package[<span class="number">0</span>].as_mut().unwrap().transform =
             affine_to_rows(<span class="kw-2">&amp;</span>Affine3A::from_rotation_translation(

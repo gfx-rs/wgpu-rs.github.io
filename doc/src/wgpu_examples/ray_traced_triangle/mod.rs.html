@@ -443,9 +443,9 @@
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
 <a href="#444" id="444">444</a>
-<a href="#445" id="445">445</a></pre></div><pre class="rust"><code><span class="kw">use </span>glam::{Mat4, Vec3};
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a></pre></div><pre class="rust"><code><span class="kw">use </span>glam::{Mat4, Vec3};
 <span class="kw">use </span>std::mem;
-<span class="kw">use </span>std::time::Instant;
 <span class="kw">use </span>wgpu::util::{BufferInitDescriptor, DeviceExt};
 <span class="kw">use </span>wgpu::{include_wgsl, BufferUsages, IndexFormat, SamplerDescriptor};
 <span class="kw">use </span>wgpu::{
@@ -454,6 +454,8 @@
     CreateBlasDescriptor, CreateTlasDescriptor, TlasInstance, TlasPackage,
 };
 
+<span class="kw">use </span><span class="kw">crate</span>::utils;
+
 <span class="kw">struct </span>Example {
     tlas_package: TlasPackage,
     compute_pipeline: wgpu::ComputePipeline,
@@ -461,7 +463,7 @@
     bind_group: wgpu::BindGroup,
     blit_bind_group: wgpu::BindGroup,
     storage_texture: wgpu::Texture,
-    start: Instant,
+    animation_timer: utils::AnimationTimer,
 }
 
 <span class="attr">#[repr(C)]
@@ -805,7 +807,7 @@
             bind_group,
             blit_bind_group,
             storage_texture: storage_tex,
-            start: Instant::now(),
+            animation_timer: utils::AnimationTimer::default(),
         }
     }
 
@@ -821,7 +823,7 @@
 
     <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, view: <span class="kw-2">&amp;</span>wgpu::TextureView, device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
         <span class="self">self</span>.tlas_package[<span class="number">0</span>].as_mut().unwrap().transform =
-            Mat4::from_rotation_y(<span class="self">self</span>.start.elapsed().as_secs_f32())
+            Mat4::from_rotation_y(<span class="self">self</span>.animation_timer.time())
                 .transpose()
                 .to_cols_array()[..<span class="number">12</span>]
                 .try_into()

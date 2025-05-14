@@ -385,11 +385,11 @@
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a></pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
+<a href="#387" id="387">387</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils;
+<span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>glam::{Mat4, Quat, Vec3};
 <span class="kw">use </span>std::ops::IndexMut;
-<span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, pin::Pin, task, time::Instant};
+<span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, pin::Pin, task};
 <span class="kw">use </span>wgpu::util::DeviceExt;
 
 <span class="comment">// from cube
@@ -489,7 +489,7 @@
     tlas_package: wgpu::TlasPackage,
     pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
-    start_inst: Instant,
+    animation_timer: utils::AnimationTimer,
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::framework::Example <span class="kw">for </span>Example {
@@ -652,8 +652,6 @@
 
         queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
 
-        <span class="kw">let </span>start_inst = Instant::now();
-
         Example {
             uniforms,
             uniform_buf,
@@ -661,7 +659,7 @@
             tlas_package,
             pipeline,
             bind_group,
-            start_inst,
+            animation_timer: utils::AnimationTimer::default(),
         }
     }
 
@@ -694,7 +692,7 @@
 
             <span class="kw">let </span>side_count = <span class="number">8</span>;
 
-            <span class="kw">let </span>anim_time = <span class="self">self</span>.start_inst.elapsed().as_secs_f64() <span class="kw">as </span>f32;
+            <span class="kw">let </span>anim_time = <span class="self">self</span>.animation_timer.time();
 
             <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..side_count {
                 <span class="kw">for </span>y <span class="kw">in </span><span class="number">0</span>..side_count {

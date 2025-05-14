@@ -382,12 +382,15 @@
 <a href="#381" id="381">381</a>
 <a href="#382" id="382">382</a>
 <a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, pin::Pin, task, time::Instant};
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, pin::Pin, task};
 
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>glam::{Mat4, Vec3};
 <span class="kw">use </span>wgpu::util::DeviceExt;
 <span class="kw">use </span>wgpu::{vertex_attr_array, IndexFormat, VertexBufferLayout};
+
+<span class="kw">use </span><span class="kw">crate</span>::utils;
 
 <span class="comment">// from cube
 </span><span class="attr">#[repr(C)]
@@ -463,7 +466,7 @@
     index_buf: wgpu::Buffer,
     pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
-    start_inst: Instant,
+    animation_timer: utils::AnimationTimer,
 }
 
 <span class="kw">const </span>CAM_LOOK_AT: Vec3 = Vec3::new(<span class="number">0.0</span>, <span class="number">1.0</span>, -<span class="number">1.5</span>);
@@ -674,7 +677,7 @@
             ],
         });
 
-        <span class="kw">let </span>start_inst = Instant::now();
+        <span class="kw">let </span>animation_timer = utils::AnimationTimer::default();
 
         Example {
             uniforms,
@@ -683,7 +686,7 @@
             index_buf,
             pipeline,
             bind_group,
-            start_inst,
+            animation_timer,
         }
     }
 
@@ -706,10 +709,9 @@
         </span><span class="kw">const </span>LIGHT_DISTANCE: f32 = <span class="number">5.0</span>;
         <span class="kw">const </span>TIME_SCALE: f32 = -<span class="number">0.2</span>;
         <span class="kw">const </span>INITIAL_TIME: f32 = <span class="number">1.0</span>;
-        <span class="kw">let </span>cos = (<span class="self">self</span>.start_inst.elapsed().as_secs_f32() * TIME_SCALE + INITIAL_TIME).cos()
-            * LIGHT_DISTANCE;
-        <span class="kw">let </span>sin = (<span class="self">self</span>.start_inst.elapsed().as_secs_f32() * TIME_SCALE + INITIAL_TIME).sin()
-            * LIGHT_DISTANCE;
+        <span class="kw">let </span>time = <span class="self">self</span>.animation_timer.time();
+        <span class="kw">let </span>cos = (time * TIME_SCALE + INITIAL_TIME).cos() * LIGHT_DISTANCE;
+        <span class="kw">let </span>sin = (time * TIME_SCALE + INITIAL_TIME).sin() * LIGHT_DISTANCE;
 
         <span class="kw">let </span><span class="kw-2">mut </span>encoder =
             device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
