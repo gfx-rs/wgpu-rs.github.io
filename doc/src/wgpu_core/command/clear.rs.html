@@ -506,7 +506,12 @@
 <a href="#505" id="505">505</a>
 <a href="#506" id="506">506</a>
 <a href="#507" id="507">507</a>
-<a href="#508" id="508">508</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 <span class="kw">use </span>core::ops::Range;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -780,7 +785,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     <span class="kw">let </span>dst_raw = dst_texture.try_raw(snatch_guard)<span class="question-mark">?</span>;
 
     <span class="comment">// Issue the right barrier.
-    </span><span class="kw">let </span>clear_usage = <span class="kw">match </span>dst_texture.clear_mode {
+    </span><span class="kw">let </span>clear_usage = <span class="kw">match </span><span class="kw-2">*</span>dst_texture.clear_mode.read() {
         TextureClearMode::BufferCopy =&gt; wgt::TextureUses::COPY_DST,
         TextureClearMode::RenderPass {
             is_color: <span class="bool-val">false</span>, ..
@@ -822,7 +827,8 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     }
 
     <span class="comment">// Record actual clearing
-    </span><span class="kw">match </span>dst_texture.clear_mode {
+    </span><span class="kw">let </span>clear_mode = dst_texture.clear_mode.read();
+    <span class="kw">match </span><span class="kw-2">*</span>clear_mode {
         TextureClearMode::BufferCopy =&gt; clear_texture_via_buffer_copies(
             <span class="kw-2">&amp;</span>dst_texture.desc,
             alignments,
@@ -832,9 +838,11 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             dst_raw,
         ),
         TextureClearMode::Surface { .. } =&gt; {
+            drop(clear_mode);
             clear_texture_via_render_passes(dst_texture, range, <span class="bool-val">true</span>, encoder)<span class="question-mark">?
         </span>}
         TextureClearMode::RenderPass { is_color, .. } =&gt; {
+            drop(clear_mode);
             clear_texture_via_render_passes(dst_texture, range, is_color, encoder)<span class="question-mark">?
         </span>}
         TextureClearMode::None =&gt; {
@@ -954,6 +962,8 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         depth_or_array_layers: <span class="number">1</span>, <span class="comment">// Only one layer is cleared at a time.
     </span>};
 
+    <span class="kw">let </span>clear_mode = dst_texture.clear_mode.read();
+
     <span class="kw">for </span>mip_level <span class="kw">in </span>range.mip_range {
         <span class="kw">let </span>extent = extent_base.mip_level_size(mip_level, dst_texture.desc.dimension);
         <span class="kw">for </span>depth_or_layer <span class="kw">in </span>range.layer_range.clone() {
@@ -962,7 +972,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
                 color_attachments_tmp = [<span class="prelude-val">Some</span>(hal::ColorAttachment {
                     target: hal::Attachment {
                         view: Texture::get_clear_view(
-                            <span class="kw-2">&amp;</span>dst_texture.clear_mode,
+                            <span class="kw-2">&amp;</span>clear_mode,
                             <span class="kw-2">&amp;</span>dst_texture.desc,
                             mip_level,
                             depth_or_layer,
@@ -981,7 +991,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
                     <span class="prelude-val">Some</span>(hal::DepthStencilAttachment {
                         target: hal::Attachment {
                             view: Texture::get_clear_view(
-                                <span class="kw-2">&amp;</span>dst_texture.clear_mode,
+                                <span class="kw-2">&amp;</span>clear_mode,
                                 <span class="kw-2">&amp;</span>dst_texture.desc,
                                 mip_level,
                                 depth_or_layer,

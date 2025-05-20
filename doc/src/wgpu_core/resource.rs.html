@@ -2060,7 +2060,23 @@
 <a href="#2059" id="2059">2059</a>
 <a href="#2060" id="2060">2060</a>
 <a href="#2061" id="2061">2061</a>
-<a href="#2062" id="2062">2062</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#2062" id="2062">2062</a>
+<a href="#2063" id="2063">2063</a>
+<a href="#2064" id="2064">2064</a>
+<a href="#2065" id="2065">2065</a>
+<a href="#2066" id="2066">2066</a>
+<a href="#2067" id="2067">2067</a>
+<a href="#2068" id="2068">2068</a>
+<a href="#2069" id="2069">2069</a>
+<a href="#2070" id="2070">2070</a>
+<a href="#2071" id="2071">2071</a>
+<a href="#2072" id="2072">2072</a>
+<a href="#2073" id="2073">2073</a>
+<a href="#2074" id="2074">2074</a>
+<a href="#2075" id="2075">2075</a>
+<a href="#2076" id="2076">2076</a>
+<a href="#2077" id="2077">2077</a>
+<a href="#2078" id="2078">2078</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{
     borrow::Borrow,
     fmt,
@@ -3091,7 +3107,7 @@
     <span class="doccomment">/// The `label` from the descriptor used to create the resource.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
     <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) clear_mode: TextureClearMode,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) clear_mode: RwLock&lt;TextureClearMode&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) views: Mutex&lt;WeakVec&lt;TextureView&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Mutex&lt;WeakVec&lt;BindGroup&gt;&gt;,
 }
@@ -3126,7 +3142,7 @@
             },
             label: desc.label.to_string(),
             tracking_data: TrackingData::new(device.tracker_indices.textures.clone()),
-            clear_mode,
+            clear_mode: RwLock::new(rank::TEXTURE_CLEAR_MODE, clear_mode),
             views: Mutex::new(rank::TEXTURE_VIEWS, WeakVec::new()),
             bind_groups: Mutex::new(rank::TEXTURE_BIND_GROUPS, WeakVec::new()),
         }
@@ -3152,7 +3168,7 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Texture {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">match </span><span class="self">self</span>.clear_mode {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self</span>.clear_mode.write() {
             TextureClearMode::Surface {
                 <span class="kw-2">ref mut </span>clear_view, ..
             } =&gt; {
@@ -3270,6 +3286,7 @@
             queue::TempResource::DestroyedTexture(DestroyedTexture {
                 raw: ManuallyDrop::new(raw),
                 views,
+                clear_mode: mem::replace(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.clear_mode.write(), TextureClearMode::None),
                 bind_groups,
                 device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.device),
                 label: <span class="self">self</span>.label().to_owned(),
@@ -3533,6 +3550,7 @@
 </span><span class="kw">pub struct </span>DestroyedTexture {
     raw: ManuallyDrop&lt;Box&lt;<span class="kw">dyn </span>hal::DynTexture&gt;&gt;,
     views: WeakVec&lt;TextureView&gt;,
+    clear_mode: TextureClearMode,
     bind_groups: WeakVec&lt;BindGroup&gt;,
     device: Arc&lt;Device&gt;,
     label: String,
@@ -3554,6 +3572,20 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.bind_groups,
         )));
         drop(deferred);
+
+        <span class="kw">match </span>mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.clear_mode, TextureClearMode::None) {
+            TextureClearMode::RenderPass { clear_views, .. } =&gt; {
+                <span class="kw">for </span>clear_view <span class="kw">in </span>clear_views {
+                    <span class="kw">let </span>raw = ManuallyDrop::into_inner(clear_view);
+                    <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw().destroy_texture_view(raw) };
+                }
+            }
+            TextureClearMode::Surface { clear_view } =&gt; {
+                <span class="kw">let </span>raw = ManuallyDrop::into_inner(clear_view);
+                <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw().destroy_texture_view(raw) };
+            }
+            <span class="kw">_ </span>=&gt; (),
+        }
 
         <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Texture (destroyed) {:?}"</span>, <span class="self">self</span>.label());
         <span class="comment">// SAFETY: We are in the Drop impl and we don't use self.raw anymore after this point.
