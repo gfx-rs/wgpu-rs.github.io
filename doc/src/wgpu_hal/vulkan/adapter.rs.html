@@ -2722,7 +2722,38 @@
 <a href="#2721" id="2721">2721</a>
 <a href="#2722" id="2722">2722</a>
 <a href="#2723" id="2723">2723</a>
-<a href="#2724" id="2724">2724</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, collections::BTreeMap, sync::Arc, vec::Vec};
+<a href="#2724" id="2724">2724</a>
+<a href="#2725" id="2725">2725</a>
+<a href="#2726" id="2726">2726</a>
+<a href="#2727" id="2727">2727</a>
+<a href="#2728" id="2728">2728</a>
+<a href="#2729" id="2729">2729</a>
+<a href="#2730" id="2730">2730</a>
+<a href="#2731" id="2731">2731</a>
+<a href="#2732" id="2732">2732</a>
+<a href="#2733" id="2733">2733</a>
+<a href="#2734" id="2734">2734</a>
+<a href="#2735" id="2735">2735</a>
+<a href="#2736" id="2736">2736</a>
+<a href="#2737" id="2737">2737</a>
+<a href="#2738" id="2738">2738</a>
+<a href="#2739" id="2739">2739</a>
+<a href="#2740" id="2740">2740</a>
+<a href="#2741" id="2741">2741</a>
+<a href="#2742" id="2742">2742</a>
+<a href="#2743" id="2743">2743</a>
+<a href="#2744" id="2744">2744</a>
+<a href="#2745" id="2745">2745</a>
+<a href="#2746" id="2746">2746</a>
+<a href="#2747" id="2747">2747</a>
+<a href="#2748" id="2748">2748</a>
+<a href="#2749" id="2749">2749</a>
+<a href="#2750" id="2750">2750</a>
+<a href="#2751" id="2751">2751</a>
+<a href="#2752" id="2752">2752</a>
+<a href="#2753" id="2753">2753</a>
+<a href="#2754" id="2754">2754</a>
+<a href="#2755" id="2755">2755</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, collections::BTreeMap, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::ffi::CStr;
 
 <span class="kw">use </span>ash::{ext, google, khr, vk};
@@ -2786,13 +2817,11 @@
     <span class="doccomment">/// Features provided by `VK_EXT_texture_compression_astc_hdr`, promoted to Vulkan 1.3.
     </span>astc_hdr: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT&lt;<span class="lifetime">'static</span>&gt;&gt;,
 
-    <span class="doccomment">/// Features provided by `VK_KHR_shader_float16_int8` (promoted to Vulkan
-    /// 1.2) and `VK_KHR_16bit_storage` (promoted to Vulkan 1.1). We use these
-    /// features together, or not at all.
-    </span>shader_float16: <span class="prelude-ty">Option</span>&lt;(
-        vk::PhysicalDeviceShaderFloat16Int8Features&lt;<span class="lifetime">'static</span>&gt;,
-        vk::PhysicalDevice16BitStorageFeatures&lt;<span class="lifetime">'static</span>&gt;,
-    )&gt;,
+    <span class="doccomment">/// Features provided by `VK_KHR_shader_float16_int8`, promoted to Vulkan 1.2
+    </span>shader_float16_int8: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceShaderFloat16Int8Features&lt;<span class="lifetime">'static</span>&gt;&gt;,
+
+    <span class="doccomment">/// Features provided by `VK_KHR_16bit_storage`, promoted to Vulkan 1.1
+    </span>_16bit_storage: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDevice16BitStorageFeatures&lt;<span class="lifetime">'static</span>&gt;&gt;,
 
     <span class="doccomment">/// Features provided by `VK_KHR_acceleration_structure`.
     </span>acceleration_structure: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceAccelerationStructureFeaturesKHR&lt;<span class="lifetime">'static</span>&gt;&gt;,
@@ -2878,9 +2907,11 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>.astc_hdr {
             info = info.push_next(feature);
         }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw-2">ref mut </span>f16_i8_feature, <span class="kw-2">ref mut </span>_16bit_feature)) = <span class="self">self</span>.shader_float16 {
-            info = info.push_next(f16_i8_feature);
-            info = info.push_next(_16bit_feature);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>.shader_float16_int8 {
+            info = info.push_next(feature);
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>._16bit_storage {
+            info = info.push_next(feature);
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>.zero_initialize_workgroup_memory {
             info = info.push_next(feature);
@@ -3110,14 +3141,21 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
-            shader_float16: <span class="kw">if </span>requested_features.contains(wgt::Features::SHADER_F16) {
-                <span class="prelude-val">Some</span>((
-                    vk::PhysicalDeviceShaderFloat16Int8Features::default().shader_float16(<span class="bool-val">true</span>),
+            shader_float16_int8: <span class="kw">match </span>requested_features.contains(wgt::Features::SHADER_F16) {
+                shader_float16 <span class="kw">if </span>shader_float16 || private_caps.shader_int8 =&gt; <span class="prelude-val">Some</span>(
+                    vk::PhysicalDeviceShaderFloat16Int8Features::default()
+                        .shader_float16(shader_float16)
+                        .shader_int8(private_caps.shader_int8),
+                ),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+            },
+            _16bit_storage: <span class="kw">if </span>requested_features.contains(wgt::Features::SHADER_F16) {
+                <span class="prelude-val">Some</span>(
                     vk::PhysicalDevice16BitStorageFeatures::default()
                         .storage_buffer16_bit_access(<span class="bool-val">true</span>)
                         .storage_input_output16(<span class="bool-val">true</span>)
                         .uniform_and_storage_buffer16_bit_access(<span class="bool-val">true</span>),
-                ))
+                )
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
@@ -3448,7 +3486,8 @@
             );
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw-2">ref </span>f16_i8, <span class="kw-2">ref </span>bit16)) = <span class="self">self</span>.shader_float16 {
+        <span class="kw">if let </span>(<span class="prelude-val">Some</span>(<span class="kw-2">ref </span>f16_i8), <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>bit16)) = (<span class="self">self</span>.shader_float16_int8, <span class="self">self</span>._16bit_storage)
+        {
             features.set(
                 F::SHADER_F16,
                 f16_i8.shader_float16 != <span class="number">0
@@ -3700,6 +3739,15 @@
             </span><span class="kw">if </span>requested_features.contains(wgt::Features::TEXTURE_FORMAT_NV12) {
                 extensions.push(khr::sampler_ycbcr_conversion::NAME);
             }
+
+            <span class="comment">// Require `VK_KHR_16bit_storage` if the feature `SHADER_F16` was requested
+            </span><span class="kw">if </span>requested_features.contains(wgt::Features::SHADER_F16) {
+                <span class="comment">// - Feature `SHADER_F16` also requires `VK_KHR_shader_float16_int8`, but we always
+                //   require that anyway (if it is available) below.
+                // - `VK_KHR_16bit_storage` requires `VK_KHR_storage_buffer_storage_class`, however
+                //   we require that one already.
+                </span>extensions.push(khr::_16bit_storage::NAME);
+            }
         }
 
         <span class="kw">if </span><span class="self">self</span>.device_api_version &lt; vk::API_VERSION_1_2 {
@@ -3723,13 +3771,13 @@
                 extensions.push(ext::descriptor_indexing::NAME);
             }
 
-            <span class="comment">// Require `VK_KHR_shader_float16_int8` and `VK_KHR_16bit_storage` if the associated feature was requested
-            </span><span class="kw">if </span>requested_features.contains(wgt::Features::SHADER_F16) {
+            <span class="comment">// Always require `VK_KHR_shader_float16_int8` if available as it enables
+            // Int8 optimizations. Also require it even if it's not available but
+            // requested so that we get a corresponding error message.
+            </span><span class="kw">if </span>requested_features.contains(wgt::Features::SHADER_F16)
+                || <span class="self">self</span>.supports_extension(khr::shader_float16_int8::NAME)
+            {
                 extensions.push(khr::shader_float16_int8::NAME);
-                <span class="comment">// `VK_KHR_16bit_storage` requires `VK_KHR_storage_buffer_storage_class`, however we require that one already
-                </span><span class="kw">if </span><span class="self">self</span>.device_api_version &lt; vk::API_VERSION_1_1 {
-                    extensions.push(khr::_16bit_storage::NAME);
-                }
             }
 
             <span class="kw">if </span>requested_features.intersects(wgt::Features::EXPERIMENTAL_MESH_SHADER) {
@@ -4198,15 +4246,22 @@
                     .insert(vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT::default());
                 features2 = features2.push_next(next);
             }
-            <span class="kw">if </span>capabilities.supports_extension(khr::shader_float16_int8::NAME)
-                &amp;&amp; capabilities.supports_extension(khr::_16bit_storage::NAME)
+
+            <span class="comment">// `VK_KHR_shader_float16_int8` is promoted to 1.2
+            </span><span class="kw">if </span>capabilities.device_api_version &gt;= vk::API_VERSION_1_2
+                || capabilities.supports_extension(khr::shader_float16_int8::NAME)
             {
-                <span class="kw">let </span>next = features.shader_float16.insert((
-                    vk::PhysicalDeviceShaderFloat16Int8FeaturesKHR::default(),
-                    vk::PhysicalDevice16BitStorageFeaturesKHR::default(),
-                ));
-                features2 = features2.push_next(<span class="kw-2">&amp;mut </span>next.<span class="number">0</span>);
-                features2 = features2.push_next(<span class="kw-2">&amp;mut </span>next.<span class="number">1</span>);
+                <span class="kw">let </span>next = features
+                    .shader_float16_int8
+                    .insert(vk::PhysicalDeviceShaderFloat16Int8FeaturesKHR::default());
+                features2 = features2.push_next(next);
+            }
+
+            <span class="kw">if </span>capabilities.supports_extension(khr::_16bit_storage::NAME) {
+                <span class="kw">let </span>next = features
+                    ._16bit_storage
+                    .insert(vk::PhysicalDevice16BitStorageFeaturesKHR::default());
+                features2 = features2.push_next(next);
             }
             <span class="kw">if </span>capabilities.supports_extension(khr::acceleration_structure::NAME) {
                 <span class="kw">let </span>next = features
@@ -4445,6 +4500,9 @@
             shader_integer_dot_product: phd_features
                 .shader_integer_dot_product
                 .is_some_and(|ext| ext.shader_integer_dot_product != <span class="number">0</span>),
+            shader_int8: phd_features
+                .shader_float16_int8
+                .is_some_and(|features| features.shader_int8 != <span class="number">0</span>),
         };
         <span class="kw">let </span>capabilities = <span class="kw">crate</span>::Capabilities {
             limits: phd_capabilities.to_wgpu_limits(),
@@ -4745,6 +4803,10 @@
                     spv::Capability::DotProductInput4x8BitPackedKHR,
                     spv::Capability::DotProductKHR,
                 ]);
+            }
+            <span class="kw">if </span><span class="self">self</span>.private_caps.shader_int8 {
+                <span class="comment">// See &lt;https://registry.khronos.org/vulkan/specs/latest/man/html/VkPhysicalDeviceShaderFloat16Int8Features.html#extension-features-shaderInt8&gt;.
+                </span>capabilities.extend(<span class="kw-2">&amp;</span>[spv::Capability::Int8]);
             }
             spv::Options {
                 lang_version: <span class="kw">match </span><span class="self">self</span>.phd_capabilities.device_api_version {

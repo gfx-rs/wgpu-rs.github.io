@@ -7242,7 +7242,53 @@
 <a href="#7241" id="7241">7241</a>
 <a href="#7242" id="7242">7242</a>
 <a href="#7243" id="7243">7243</a>
-<a href="#7244" id="7244">7244</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#7244" id="7244">7244</a>
+<a href="#7245" id="7245">7245</a>
+<a href="#7246" id="7246">7246</a>
+<a href="#7247" id="7247">7247</a>
+<a href="#7248" id="7248">7248</a>
+<a href="#7249" id="7249">7249</a>
+<a href="#7250" id="7250">7250</a>
+<a href="#7251" id="7251">7251</a>
+<a href="#7252" id="7252">7252</a>
+<a href="#7253" id="7253">7253</a>
+<a href="#7254" id="7254">7254</a>
+<a href="#7255" id="7255">7255</a>
+<a href="#7256" id="7256">7256</a>
+<a href="#7257" id="7257">7257</a>
+<a href="#7258" id="7258">7258</a>
+<a href="#7259" id="7259">7259</a>
+<a href="#7260" id="7260">7260</a>
+<a href="#7261" id="7261">7261</a>
+<a href="#7262" id="7262">7262</a>
+<a href="#7263" id="7263">7263</a>
+<a href="#7264" id="7264">7264</a>
+<a href="#7265" id="7265">7265</a>
+<a href="#7266" id="7266">7266</a>
+<a href="#7267" id="7267">7267</a>
+<a href="#7268" id="7268">7268</a>
+<a href="#7269" id="7269">7269</a>
+<a href="#7270" id="7270">7270</a>
+<a href="#7271" id="7271">7271</a>
+<a href="#7272" id="7272">7272</a>
+<a href="#7273" id="7273">7273</a>
+<a href="#7274" id="7274">7274</a>
+<a href="#7275" id="7275">7275</a>
+<a href="#7276" id="7276">7276</a>
+<a href="#7277" id="7277">7277</a>
+<a href="#7278" id="7278">7278</a>
+<a href="#7279" id="7279">7279</a>
+<a href="#7280" id="7280">7280</a>
+<a href="#7281" id="7281">7281</a>
+<a href="#7282" id="7282">7282</a>
+<a href="#7283" id="7283">7283</a>
+<a href="#7284" id="7284">7284</a>
+<a href="#7285" id="7285">7285</a>
+<a href="#7286" id="7286">7286</a>
+<a href="#7287" id="7287">7287</a>
+<a href="#7288" id="7288">7288</a>
+<a href="#7289" id="7289">7289</a>
+<a href="#7290" id="7290">7290</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -8768,6 +8814,58 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Emit code for the WGSL functions `pack4x{I, U}8[Clamp]`.
+    </span><span class="kw">fn </span>put_pack4x8(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        arg: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        context: <span class="kw-2">&amp;</span>ExpressionContext&lt;<span class="lifetime">'_</span>&gt;,
+        was_signed: bool,
+        clamp_bounds: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>str, <span class="kw-2">&amp;</span>str)&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">let </span>write_arg = |this: <span class="kw-2">&amp;mut </span><span class="self">Self</span>| -&gt; BackendResult {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>((min, max)) = clamp_bounds {
+                <span class="comment">// Clamping with scalar bounds works (component-wise) even for packed_[u]char4.
+                </span><span class="macro">write!</span>(this.out, <span class="string">"{NAMESPACE}::clamp("</span>)<span class="question-mark">?</span>;
+                this.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(this.out, <span class="string">", {min}, {max})"</span>)<span class="question-mark">?</span>;
+            } <span class="kw">else </span>{
+                this.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+            }
+            <span class="prelude-val">Ok</span>(())
+        };
+
+        <span class="kw">if </span>context.lang_version &gt;= (<span class="number">2</span>, <span class="number">1</span>) {
+            <span class="kw">let </span>packed_type = <span class="kw">if </span>was_signed {
+                <span class="string">"packed_char4"
+            </span>} <span class="kw">else </span>{
+                <span class="string">"packed_uchar4"
+            </span>};
+            <span class="comment">// Metal uses little endian byte order, which matches what WGSL expects here.
+            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"as_type&lt;uint&gt;({packed_type}("</span>)<span class="question-mark">?</span>;
+            write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            <span class="comment">// MSL &lt; 2.1 doesn't support `as_type` casting between packed chars and scalars.
+            </span><span class="kw">if </span>was_signed {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint("</span>)<span class="question-mark">?</span>;
+            }
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
+            write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[0] &amp; 0xFF) | (("</span>)<span class="question-mark">?</span>;
+            write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[1] &amp; 0xFF) &lt;&lt; 8) | (("</span>)<span class="question-mark">?</span>;
+            write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[2] &amp; 0xFF) &lt;&lt; 16) | (("</span>)<span class="question-mark">?</span>;
+            write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[3] &amp; 0xFF) &lt;&lt; 24)"</span>)<span class="question-mark">?</span>;
+            <span class="kw">if </span>was_signed {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+            }
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="doccomment">/// Emit code for the isign expression.
     ///
     </span><span class="kw">fn </span>put_isign(
@@ -9734,53 +9832,41 @@
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{fun_name}"</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.put_call_parameters(iter::once(arg), context)<span class="question-mark">?</span>;
                     }
-                    fun @ (Mf::Pack4xI8 | Mf::Pack4xU8 | Mf::Pack4xI8Clamp | Mf::Pack4xU8Clamp) =&gt; {
-                        <span class="kw">let </span>was_signed = <span class="macro">matches!</span>(fun, Mf::Pack4xI8 | Mf::Pack4xI8Clamp);
-                        <span class="kw">let </span>clamp_bounds = <span class="kw">match </span>fun {
-                            Mf::Pack4xI8Clamp =&gt; <span class="prelude-val">Some</span>((<span class="string">"-128"</span>, <span class="string">"127"</span>)),
-                            Mf::Pack4xU8Clamp =&gt; <span class="prelude-val">Some</span>((<span class="string">"0"</span>, <span class="string">"255"</span>)),
-                            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-                        };
-                        <span class="kw">if </span>was_signed {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint("</span>)<span class="question-mark">?</span>;
-                        }
-                        <span class="kw">let </span>write_arg = |this: <span class="kw-2">&amp;mut </span><span class="self">Self</span>| -&gt; BackendResult {
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>((min, max)) = clamp_bounds {
-                                <span class="macro">write!</span>(this.out, <span class="string">"{NAMESPACE}::clamp("</span>)<span class="question-mark">?</span>;
-                                this.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                                <span class="macro">write!</span>(this.out, <span class="string">", {min}, {max})"</span>)<span class="question-mark">?</span>;
-                            } <span class="kw">else </span>{
-                                this.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                            }
-                            <span class="prelude-val">Ok</span>(())
-                        };
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
-                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[0] &amp; 0xFF) | (("</span>)<span class="question-mark">?</span>;
-                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[1] &amp; 0xFF) &lt;&lt; 8) | (("</span>)<span class="question-mark">?</span>;
-                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[2] &amp; 0xFF) &lt;&lt; 16) | (("</span>)<span class="question-mark">?</span>;
-                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[3] &amp; 0xFF) &lt;&lt; 24)"</span>)<span class="question-mark">?</span>;
-                        <span class="kw">if </span>was_signed {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
-                        }
-                    }
+                    Mf::Pack4xI8 =&gt; <span class="self">self</span>.put_pack4x8(arg, context, <span class="bool-val">true</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
+                    Mf::Pack4xU8 =&gt; <span class="self">self</span>.put_pack4x8(arg, context, <span class="bool-val">false</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
+                    Mf::Pack4xI8Clamp =&gt; {
+                        <span class="self">self</span>.put_pack4x8(arg, context, <span class="bool-val">true</span>, <span class="prelude-val">Some</span>((<span class="string">"-128"</span>, <span class="string">"127"</span>)))<span class="question-mark">?
+                    </span>}
+                    Mf::Pack4xU8Clamp =&gt; {
+                        <span class="self">self</span>.put_pack4x8(arg, context, <span class="bool-val">false</span>, <span class="prelude-val">Some</span>((<span class="string">"0"</span>, <span class="string">"255"</span>)))<span class="question-mark">?
+                    </span>}
                     fun @ (Mf::Unpack4xI8 | Mf::Unpack4xU8) =&gt; {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
-                        <span class="kw">if </span><span class="macro">matches!</span>(fun, Mf::Unpack4xU8) {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"u"</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>sign_prefix = <span class="kw">if </span><span class="macro">matches!</span>(fun, Mf::Unpack4xU8) {
+                            <span class="string">"u"
+                        </span>} <span class="kw">else </span>{
+                            <span class="string">""
+                        </span>};
+
+                        <span class="kw">if </span>context.lang_version &gt;= (<span class="number">2</span>, <span class="number">1</span>) {
+                            <span class="comment">// Metal uses little endian byte order, which matches what WGSL expects here.
+                            </span><span class="macro">write!</span>(
+                                <span class="self">self</span>.out,
+                                <span class="string">"{sign_prefix}int4(as_type&lt;packed_{sign_prefix}char4&gt;("
+                            </span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
+                        } <span class="kw">else </span>{
+                            <span class="comment">// MSL &lt; 2.1 doesn't support `as_type` casting between packed chars and scalars.
+                            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"({sign_prefix}int4("</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 8, "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 16, "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 24) &lt;&lt; 24 &gt;&gt; 24)"</span>)<span class="question-mark">?</span>;
                         }
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int4("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 8, "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 16, "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 24) &lt;&lt; 24 &gt;&gt; 24)"</span>)<span class="question-mark">?</span>;
                     }
                     Mf::QuantizeToF16 =&gt; {
                         <span class="kw">match </span><span class="kw-2">*</span>context.resolve_type(arg) {
@@ -10523,14 +10609,20 @@
                         <span class="self">self</span>.need_bake_expressions.insert(arg);
                         <span class="self">self</span>.need_bake_expressions.insert(arg1.unwrap());
                     }
-                    <span class="kw">crate</span>::MathFunction::FirstLeadingBit
-                    | <span class="kw">crate</span>::MathFunction::Pack4xI8
+                    <span class="kw">crate</span>::MathFunction::FirstLeadingBit =&gt; {
+                        <span class="self">self</span>.need_bake_expressions.insert(arg);
+                    }
+                    <span class="kw">crate</span>::MathFunction::Pack4xI8
                     | <span class="kw">crate</span>::MathFunction::Pack4xU8
                     | <span class="kw">crate</span>::MathFunction::Pack4xI8Clamp
                     | <span class="kw">crate</span>::MathFunction::Pack4xU8Clamp
                     | <span class="kw">crate</span>::MathFunction::Unpack4xI8
                     | <span class="kw">crate</span>::MathFunction::Unpack4xU8 =&gt; {
-                        <span class="self">self</span>.need_bake_expressions.insert(arg);
+                        <span class="comment">// On MSL &lt; 2.1, we emit a polyfill for these functions that uses the
+                        // argument multiple times. This is no longer necessary on MSL &gt;= 2.1.
+                        </span><span class="kw">if </span>context.lang_version &lt; (<span class="number">2</span>, <span class="number">1</span>) {
+                            <span class="self">self</span>.need_bake_expressions.insert(arg);
+                        }
                     }
                     <span class="kw">crate</span>::MathFunction::ExtractBits =&gt; {
                         <span class="comment">// Only argument 1 is re-used.
