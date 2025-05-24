@@ -2065,18 +2065,7 @@
 <a href="#2064" id="2064">2064</a>
 <a href="#2065" id="2065">2065</a>
 <a href="#2066" id="2066">2066</a>
-<a href="#2067" id="2067">2067</a>
-<a href="#2068" id="2068">2068</a>
-<a href="#2069" id="2069">2069</a>
-<a href="#2070" id="2070">2070</a>
-<a href="#2071" id="2071">2071</a>
-<a href="#2072" id="2072">2072</a>
-<a href="#2073" id="2073">2073</a>
-<a href="#2074" id="2074">2074</a>
-<a href="#2075" id="2075">2075</a>
-<a href="#2076" id="2076">2076</a>
-<a href="#2077" id="2077">2077</a>
-<a href="#2078" id="2078">2078</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#2067" id="2067">2067</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{
     borrow::Borrow,
     fmt,
@@ -2782,7 +2771,7 @@
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyError&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) {
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span><span class="self">self</span>.device;
 
         <span class="kw">let </span>temp = {
@@ -2792,7 +2781,7 @@
                 <span class="prelude-val">Some</span>(raw) =&gt; raw,
                 <span class="prelude-val">None </span>=&gt; {
                     <span class="comment">// Per spec, it is valid to call `destroy` multiple times.
-                    </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                    </span><span class="kw">return</span>;
                 }
             };
 
@@ -2833,8 +2822,6 @@
                 }
             }
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -3258,18 +3245,18 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyError&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) {
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span><span class="self">self</span>.device;
 
         <span class="kw">let </span>temp = {
             <span class="kw">let </span>raw = <span class="kw">match </span><span class="self">self</span>.inner.snatch(<span class="kw-2">&amp;mut </span>device.snatchable_lock.write()) {
                 <span class="prelude-val">Some</span>(TextureInner::Native { raw }) =&gt; raw,
                 <span class="prelude-val">Some</span>(TextureInner::Surface { .. }) =&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                    <span class="kw">return</span>;
                 }
                 <span class="prelude-val">None </span>=&gt; {
                     <span class="comment">// Per spec, it is valid to call `destroy` multiple times.
-                    </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                    </span><span class="kw">return</span>;
                 }
             };
 
@@ -3305,8 +3292,6 @@
                 }
             }
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -4044,13 +4029,6 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynQuerySet {
         <span class="self">self</span>.raw.as_ref()
     }
-}
-
-<span class="attr">#[derive(Clone, Debug, Error)]
-#[non_exhaustive]
-</span><span class="kw">pub enum </span>DestroyError {
-    <span class="attr">#[error(transparent)]
-    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="kw">pub type </span>BlasDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::CreateBlasDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;

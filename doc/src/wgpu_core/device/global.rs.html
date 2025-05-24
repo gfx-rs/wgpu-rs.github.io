@@ -2293,7 +2293,13 @@
 <a href="#2292" id="2292">2292</a>
 <a href="#2293" id="2293">2293</a>
 <a href="#2294" id="2294">2294</a>
-<a href="#2295" id="2295">2295</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#2295" id="2295">2295</a>
+<a href="#2296" id="2296">2296</a>
+<a href="#2297" id="2297">2297</a>
+<a href="#2298" id="2298">2298</a>
+<a href="#2299" id="2299">2299</a>
+<a href="#2300" id="2300">2300</a>
+<a href="#2301" id="2301">2301</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{ptr::NonNull, sync::atomic::Ordering};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -2547,13 +2553,16 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>buffer_destroy(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer_id: id::BufferId) -&gt; <span class="prelude-ty">Result</span>&lt;(), resource::DestroyError&gt; {
+    <span class="kw">pub fn </span>buffer_destroy(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer_id: id::BufferId) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Buffer::destroy"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Buffer::destroy {buffer_id:?}"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>buffer = hub.buffers.get(buffer_id).get()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="prelude-val">Ok</span>(buffer) = hub.buffers.get(buffer_id).get() <span class="kw">else </span>{
+            <span class="comment">// If the buffer is already invalid, there's nothing to do.
+            </span><span class="kw">return</span>;
+        };
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(trace) = buffer.device.trace.lock().as_mut() {
@@ -2565,7 +2574,7 @@
             </span>buffer_id,
         );
 
-        buffer.destroy()
+        buffer.destroy();
     }
 
     <span class="kw">pub fn </span>buffer_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer_id: id::BufferId) {
@@ -2704,20 +2713,23 @@
         (id, err)
     }
 
-    <span class="kw">pub fn </span>texture_destroy(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_id: id::TextureId) -&gt; <span class="prelude-ty">Result</span>&lt;(), resource::DestroyError&gt; {
+    <span class="kw">pub fn </span>texture_destroy(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_id: id::TextureId) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Texture::destroy"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Texture::destroy {texture_id:?}"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>texture = hub.textures.get(texture_id).get()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="prelude-val">Ok</span>(texture) = hub.textures.get(texture_id).get() <span class="kw">else </span>{
+            <span class="comment">// If the texture is already invalid, there's nothing to do.
+            </span><span class="kw">return</span>;
+        };
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(trace) = texture.device.trace.lock().as_mut() {
             trace.add(trace::Action::FreeTexture(texture_id));
         }
 
-        texture.destroy()
+        texture.destroy();
     }
 
     <span class="kw">pub fn </span>texture_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_id: id::TextureId) {
