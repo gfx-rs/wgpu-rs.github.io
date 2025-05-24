@@ -2434,7 +2434,31 @@
 <a href="#2433" id="2433">2433</a>
 <a href="#2434" id="2434">2434</a>
 <a href="#2435" id="2435">2435</a>
-<a href="#2436" id="2436">2436</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#2436" id="2436">2436</a>
+<a href="#2437" id="2437">2437</a>
+<a href="#2438" id="2438">2438</a>
+<a href="#2439" id="2439">2439</a>
+<a href="#2440" id="2440">2440</a>
+<a href="#2441" id="2441">2441</a>
+<a href="#2442" id="2442">2442</a>
+<a href="#2443" id="2443">2443</a>
+<a href="#2444" id="2444">2444</a>
+<a href="#2445" id="2445">2445</a>
+<a href="#2446" id="2446">2446</a>
+<a href="#2447" id="2447">2447</a>
+<a href="#2448" id="2448">2448</a>
+<a href="#2449" id="2449">2449</a>
+<a href="#2450" id="2450">2450</a>
+<a href="#2451" id="2451">2451</a>
+<a href="#2452" id="2452">2452</a>
+<a href="#2453" id="2453">2453</a>
+<a href="#2454" id="2454">2454</a>
+<a href="#2455" id="2455">2455</a>
+<a href="#2456" id="2456">2456</a>
+<a href="#2457" id="2457">2457</a>
+<a href="#2458" id="2458">2458</a>
+<a href="#2459" id="2459">2459</a>
+<a href="#2460" id="2460">2460</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 The Intermediate Representation shared by all frontends and backends.
 
 The central structure of the IR, and the crate, is [`Module`]. A `Module` contains:
@@ -2673,19 +2697,27 @@ An override expression can be evaluated at pipeline creation time.
 
 <span class="kw">pub use </span>block::Block;
 
-<span class="doccomment">/// Early fragment tests.
+<span class="doccomment">/// Explicitly allows early depth/stencil tests.
 ///
-/// In a standard situation, if a driver determines that it is possible to switch on early depth test, it will.
+/// Normally, depth/stencil tests are performed after fragment shading. However, as an optimization,
+/// most drivers will move the depth/stencil tests before fragment shading if this does not
+/// have any observable consequences. This optimization is disabled under the following
+/// circumstances:
+///   - `discard` is called in the fragment shader.
+///   - The fragment shader writes to the depth buffer.
+///   - The fragment shader writes to any storage bindings.
 ///
-/// Typical situations when early depth test is switched off:
-///   - Calling `discard` in a shader.
-///   - Writing to the depth buffer, unless ConservativeDepth is enabled.
+/// When `EarlyDepthTest` is set, it is allowed to perform an early depth/stencil test even if the
+/// above conditions are not met. When [`EarlyDepthTest::Force`] is used, depth/stencil tests
+/// **must** be performed before fragment shading.
 ///
-/// To use in a shader:
+/// To force early depth/stencil tests in a shader:
 ///   - GLSL: `layout(early_fragment_tests) in;`
 ///   - HLSL: `Attribute earlydepthstencil`
 ///   - SPIR-V: `ExecutionMode EarlyFragmentTests`
-///   - WGSL: `@early_depth_test`
+///   - WGSL: `@early_depth_test(force)`
+///
+/// This may also be enabled in a shader by specifying a [`ConservativeDepth`].
 ///
 /// For more, see:
 ///   - &lt;https://www.khronos.org/opengl/wiki/Early_Fragment_Test#Explicit_specification&gt;
@@ -2695,8 +2727,24 @@ An override expression can be evaluated at pipeline creation time.
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
-</span><span class="kw">pub struct </span>EarlyDepthTest {
-    <span class="kw">pub </span>conservative: <span class="prelude-ty">Option</span>&lt;ConservativeDepth&gt;,
+</span><span class="kw">pub enum </span>EarlyDepthTest {
+    <span class="doccomment">/// Requires depth/stencil tests to be performed before fragment shading.
+    ///
+    /// This will disable depth/stencil tests after fragment shading, so discarding the fragment
+    /// or overwriting the fragment depth will have no effect.
+    </span>Force,
+
+    <span class="doccomment">/// Allows an additional depth/stencil test to be performed before fragment shading.
+    ///
+    /// It is up to the driver to decide whether early tests are performed. Unlike `Force`, this
+    /// does not disable depth/stencil tests after fragment shading.
+    </span>Allow {
+        <span class="doccomment">/// Specifies restrictions on how the depth value can be modified within the fragment
+        /// shader.
+        ///
+        /// This may be taken into account when deciding whether to perform early tests.
+        </span>conservative: ConservativeDepth,
+    },
 }
 
 <span class="doccomment">/// Enables adjusting depth without disabling early Z.

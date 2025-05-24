@@ -6103,7 +6103,32 @@
 <a href="#6102" id="6102">6102</a>
 <a href="#6103" id="6103">6103</a>
 <a href="#6104" id="6104">6104</a>
-<a href="#6105" id="6105">6105</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#6105" id="6105">6105</a>
+<a href="#6106" id="6106">6106</a>
+<a href="#6107" id="6107">6107</a>
+<a href="#6108" id="6108">6108</a>
+<a href="#6109" id="6109">6109</a>
+<a href="#6110" id="6110">6110</a>
+<a href="#6111" id="6111">6111</a>
+<a href="#6112" id="6112">6112</a>
+<a href="#6113" id="6113">6113</a>
+<a href="#6114" id="6114">6114</a>
+<a href="#6115" id="6115">6115</a>
+<a href="#6116" id="6116">6116</a>
+<a href="#6117" id="6117">6117</a>
+<a href="#6118" id="6118">6118</a>
+<a href="#6119" id="6119">6119</a>
+<a href="#6120" id="6120">6120</a>
+<a href="#6121" id="6121">6121</a>
+<a href="#6122" id="6122">6122</a>
+<a href="#6123" id="6123">6123</a>
+<a href="#6124" id="6124">6124</a>
+<a href="#6125" id="6125">6125</a>
+<a href="#6126" id="6126">6126</a>
+<a href="#6127" id="6127">6127</a>
+<a href="#6128" id="6128">6128</a>
+<a href="#6129" id="6129">6129</a>
+<a href="#6130" id="6130">6130</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
 ## ID lookups
@@ -10930,24 +10955,49 @@ This value then gets used instead of `OpLoad` result later on.
 
         <span class="kw">match </span>mode {
             ExecutionMode::EarlyFragmentTests =&gt; {
-                <span class="kw">if </span>ep.early_depth_test.is_none() {
-                    ep.early_depth_test = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::EarlyDepthTest { conservative: <span class="prelude-val">None </span>});
-                }
+                ep.early_depth_test = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::EarlyDepthTest::Force);
             }
             ExecutionMode::DepthUnchanged =&gt; {
-                ep.early_depth_test = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::EarlyDepthTest {
-                    conservative: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ConservativeDepth::Unchanged),
-                });
+                <span class="kw">if let </span><span class="kw-2">&amp;mut </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>early_depth_test) = <span class="kw-2">&amp;mut </span>ep.early_depth_test {
+                    <span class="kw">if let </span><span class="kw-2">&amp;mut </span><span class="kw">crate</span>::EarlyDepthTest::Allow {
+                        <span class="kw-2">ref mut </span>conservative,
+                    } = early_depth_test
+                    {
+                        <span class="kw-2">*</span>conservative = <span class="kw">crate</span>::ConservativeDepth::Unchanged;
+                    }
+                } <span class="kw">else </span>{
+                    ep.early_depth_test = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::EarlyDepthTest::Allow {
+                        conservative: <span class="kw">crate</span>::ConservativeDepth::Unchanged,
+                    });
+                }
             }
             ExecutionMode::DepthGreater =&gt; {
-                ep.early_depth_test = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::EarlyDepthTest {
-                    conservative: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ConservativeDepth::GreaterEqual),
-                });
+                <span class="kw">if let </span><span class="kw-2">&amp;mut </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>early_depth_test) = <span class="kw-2">&amp;mut </span>ep.early_depth_test {
+                    <span class="kw">if let </span><span class="kw-2">&amp;mut </span><span class="kw">crate</span>::EarlyDepthTest::Allow {
+                        <span class="kw-2">ref mut </span>conservative,
+                    } = early_depth_test
+                    {
+                        <span class="kw-2">*</span>conservative = <span class="kw">crate</span>::ConservativeDepth::GreaterEqual;
+                    }
+                } <span class="kw">else </span>{
+                    ep.early_depth_test = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::EarlyDepthTest::Allow {
+                        conservative: <span class="kw">crate</span>::ConservativeDepth::GreaterEqual,
+                    });
+                }
             }
             ExecutionMode::DepthLess =&gt; {
-                ep.early_depth_test = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::EarlyDepthTest {
-                    conservative: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ConservativeDepth::LessEqual),
-                });
+                <span class="kw">if let </span><span class="kw-2">&amp;mut </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>early_depth_test) = <span class="kw-2">&amp;mut </span>ep.early_depth_test {
+                    <span class="kw">if let </span><span class="kw-2">&amp;mut </span><span class="kw">crate</span>::EarlyDepthTest::Allow {
+                        <span class="kw-2">ref mut </span>conservative,
+                    } = early_depth_test
+                    {
+                        <span class="kw-2">*</span>conservative = <span class="kw">crate</span>::ConservativeDepth::LessEqual;
+                    }
+                } <span class="kw">else </span>{
+                    ep.early_depth_test = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::EarlyDepthTest::Allow {
+                        conservative: <span class="kw">crate</span>::ConservativeDepth::LessEqual,
+                    });
+                }
             }
             ExecutionMode::DepthReplacing =&gt; {
                 <span class="comment">// Ignored because it can be deduced from the IR.

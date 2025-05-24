@@ -3191,7 +3191,9 @@
 <a href="#3190" id="3190">3190</a>
 <a href="#3191" id="3191">3191</a>
 <a href="#3192" id="3192">3192</a>
-<a href="#3193" id="3193">3193</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
+<a href="#3193" id="3193">3193</a>
+<a href="#3194" id="3194">3194</a>
+<a href="#3195" id="3195">3195</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
 <span class="kw">use </span>directive::enable_extension::ImplementedEnableExtension;
 
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
@@ -6031,15 +6033,17 @@
                     workgroup_size.set(new_workgroup_size, name_span)<span class="question-mark">?</span>;
                 }
                 <span class="string">"early_depth_test" </span>=&gt; {
-                    <span class="kw">let </span>conservative = <span class="kw">if </span>lexer.skip(Token::Paren(<span class="string">'('</span>)) {
-                        <span class="kw">let </span>(ident, ident_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
-                        <span class="kw">let </span>value = conv::map_conservative_depth(ident, ident_span)<span class="question-mark">?</span>;
-                        lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
-                        <span class="prelude-val">Some</span>(value)
+                    lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>(ident, ident_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>value = <span class="kw">if </span>ident == <span class="string">"force" </span>{
+                        <span class="kw">crate</span>::EarlyDepthTest::Force
                     } <span class="kw">else </span>{
-                        <span class="prelude-val">None
-                    </span>};
-                    early_depth_test.set(<span class="kw">crate</span>::EarlyDepthTest { conservative }, name_span)<span class="question-mark">?</span>;
+                        <span class="kw">crate</span>::EarlyDepthTest::Allow {
+                            conservative: conv::map_conservative_depth(ident, ident_span)<span class="question-mark">?</span>,
+                        }
+                    };
+                    lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
+                    early_depth_test.set(value, name_span)<span class="question-mark">?</span>;
                 }
                 <span class="string">"must_use" </span>=&gt; {
                     must_use.set(name_span, name_span)<span class="question-mark">?</span>;

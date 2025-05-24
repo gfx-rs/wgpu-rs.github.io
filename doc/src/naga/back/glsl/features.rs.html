@@ -621,7 +621,9 @@
 <a href="#620" id="620">620</a>
 <a href="#621" id="621">621</a>
 <a href="#622" id="622">622</a>
-<a href="#623" id="623">623</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt::Write;
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt::Write;
 
 <span class="kw">use super</span>::{BackendResult, Error, Version, Writer};
 <span class="kw">use crate</span>::{
@@ -923,14 +925,16 @@
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>collect_required_features(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; BackendResult {
         <span class="kw">let </span>ep_info = <span class="self">self</span>.info.get_entry_point(<span class="self">self</span>.entry_point_idx <span class="kw">as </span>usize);
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(depth_test) = <span class="self">self</span>.entry_point.early_depth_test {
-            <span class="comment">// If IMAGE_LOAD_STORE is supported for this version of GLSL
-            </span><span class="kw">if </span><span class="self">self</span>.options.version.supports_early_depth_test() {
-                <span class="self">self</span>.features.request(Features::IMAGE_LOAD_STORE);
-            }
-
-            <span class="kw">if </span>depth_test.conservative.is_some() {
-                <span class="self">self</span>.features.request(Features::CONSERVATIVE_DEPTH);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(early_depth_test) = <span class="self">self</span>.entry_point.early_depth_test {
+            <span class="kw">match </span>early_depth_test {
+                <span class="kw">crate</span>::EarlyDepthTest::Force =&gt; {
+                    <span class="kw">if </span><span class="self">self</span>.options.version.supports_early_depth_test() {
+                        <span class="self">self</span>.features.request(Features::IMAGE_LOAD_STORE);
+                    }
+                }
+                <span class="kw">crate</span>::EarlyDepthTest::Allow { .. } =&gt; {
+                    <span class="self">self</span>.features.request(Features::CONSERVATIVE_DEPTH);
+                }
             }
         }
 

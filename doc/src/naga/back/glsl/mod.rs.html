@@ -5275,7 +5275,8 @@
 <a href="#5274" id="5274">5274</a>
 <a href="#5275" id="5275">5275</a>
 <a href="#5276" id="5276">5276</a>
-<a href="#5277" id="5277">5277</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5277" id="5277">5277</a>
+<a href="#5278" id="5278">5278</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -6027,22 +6028,23 @@ to output a [`Module`](crate::Module) into glsl
         }
 
         <span class="comment">// Enable early depth tests if needed
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(depth_test) = <span class="self">self</span>.entry_point.early_depth_test {
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(early_depth_test) = <span class="self">self</span>.entry_point.early_depth_test {
             <span class="comment">// If early depth test is supported for this version of GLSL
             </span><span class="kw">if </span><span class="self">self</span>.options.version.supports_early_depth_test() {
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"layout(early_fragment_tests) in;"</span>)<span class="question-mark">?</span>;
-
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(conservative) = depth_test.conservative {
-                    <span class="kw">use </span><span class="kw">crate</span>::ConservativeDepth <span class="kw">as </span>Cd;
-
-                    <span class="kw">let </span>depth = <span class="kw">match </span>conservative {
-                        Cd::GreaterEqual =&gt; <span class="string">"greater"</span>,
-                        Cd::LessEqual =&gt; <span class="string">"less"</span>,
-                        Cd::Unchanged =&gt; <span class="string">"unchanged"</span>,
-                    };
-                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"layout (depth_{depth}) out float gl_FragDepth;"</span>)<span class="question-mark">?</span>;
+                <span class="kw">match </span>early_depth_test {
+                    <span class="kw">crate</span>::EarlyDepthTest::Force =&gt; {
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"layout(early_fragment_tests) in;"</span>)<span class="question-mark">?</span>;
+                    }
+                    <span class="kw">crate</span>::EarlyDepthTest::Allow { conservative, .. } =&gt; {
+                        <span class="kw">use </span><span class="kw">crate</span>::ConservativeDepth <span class="kw">as </span>Cd;
+                        <span class="kw">let </span>depth = <span class="kw">match </span>conservative {
+                            Cd::GreaterEqual =&gt; <span class="string">"greater"</span>,
+                            Cd::LessEqual =&gt; <span class="string">"less"</span>,
+                            Cd::Unchanged =&gt; <span class="string">"unchanged"</span>,
+                        };
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"layout (depth_{depth}) out float gl_FragDepth;"</span>)<span class="question-mark">?</span>;
+                    }
                 }
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
             } <span class="kw">else </span>{
                 <span class="macro">log::warn!</span>(
                     <span class="string">"Early depth testing is not supported for this version of GLSL: {}"</span>,
