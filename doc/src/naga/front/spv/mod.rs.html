@@ -6128,7 +6128,65 @@
 <a href="#6127" id="6127">6127</a>
 <a href="#6128" id="6128">6128</a>
 <a href="#6129" id="6129">6129</a>
-<a href="#6130" id="6130">6130</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#6130" id="6130">6130</a>
+<a href="#6131" id="6131">6131</a>
+<a href="#6132" id="6132">6132</a>
+<a href="#6133" id="6133">6133</a>
+<a href="#6134" id="6134">6134</a>
+<a href="#6135" id="6135">6135</a>
+<a href="#6136" id="6136">6136</a>
+<a href="#6137" id="6137">6137</a>
+<a href="#6138" id="6138">6138</a>
+<a href="#6139" id="6139">6139</a>
+<a href="#6140" id="6140">6140</a>
+<a href="#6141" id="6141">6141</a>
+<a href="#6142" id="6142">6142</a>
+<a href="#6143" id="6143">6143</a>
+<a href="#6144" id="6144">6144</a>
+<a href="#6145" id="6145">6145</a>
+<a href="#6146" id="6146">6146</a>
+<a href="#6147" id="6147">6147</a>
+<a href="#6148" id="6148">6148</a>
+<a href="#6149" id="6149">6149</a>
+<a href="#6150" id="6150">6150</a>
+<a href="#6151" id="6151">6151</a>
+<a href="#6152" id="6152">6152</a>
+<a href="#6153" id="6153">6153</a>
+<a href="#6154" id="6154">6154</a>
+<a href="#6155" id="6155">6155</a>
+<a href="#6156" id="6156">6156</a>
+<a href="#6157" id="6157">6157</a>
+<a href="#6158" id="6158">6158</a>
+<a href="#6159" id="6159">6159</a>
+<a href="#6160" id="6160">6160</a>
+<a href="#6161" id="6161">6161</a>
+<a href="#6162" id="6162">6162</a>
+<a href="#6163" id="6163">6163</a>
+<a href="#6164" id="6164">6164</a>
+<a href="#6165" id="6165">6165</a>
+<a href="#6166" id="6166">6166</a>
+<a href="#6167" id="6167">6167</a>
+<a href="#6168" id="6168">6168</a>
+<a href="#6169" id="6169">6169</a>
+<a href="#6170" id="6170">6170</a>
+<a href="#6171" id="6171">6171</a>
+<a href="#6172" id="6172">6172</a>
+<a href="#6173" id="6173">6173</a>
+<a href="#6174" id="6174">6174</a>
+<a href="#6175" id="6175">6175</a>
+<a href="#6176" id="6176">6176</a>
+<a href="#6177" id="6177">6177</a>
+<a href="#6178" id="6178">6178</a>
+<a href="#6179" id="6179">6179</a>
+<a href="#6180" id="6180">6180</a>
+<a href="#6181" id="6181">6181</a>
+<a href="#6182" id="6182">6182</a>
+<a href="#6183" id="6183">6183</a>
+<a href="#6184" id="6184">6184</a>
+<a href="#6185" id="6185">6185</a>
+<a href="#6186" id="6186">6186</a>
+<a href="#6187" id="6187">6187</a>
+<a href="#6188" id="6188">6188</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
 ## ID lookups
@@ -10194,7 +10252,8 @@ This value then gets used instead of `OpLoad` result later on.
                 | Op::GroupNonUniformShuffle
                 | Op::GroupNonUniformShuffleDown
                 | Op::GroupNonUniformShuffleUp
-                | Op::GroupNonUniformShuffleXor =&gt; {
+                | Op::GroupNonUniformShuffleXor
+                | Op::GroupNonUniformQuadBroadcast =&gt; {
                     inst.expect(<span class="kw">if </span><span class="macro">matches!</span>(inst.op, Op::GroupNonUniformBroadcastFirst) {
                         <span class="number">5
                     </span>} <span class="kw">else </span>{
@@ -10234,6 +10293,9 @@ This value then gets used instead of `OpLoad` result later on.
                             Op::GroupNonUniformShuffleXor =&gt; {
                                 <span class="kw">crate</span>::GatherMode::ShuffleXor(index_handle)
                             }
+                            Op::GroupNonUniformQuadBroadcast =&gt; {
+                                <span class="kw">crate</span>::GatherMode::QuadBroadcast(index_handle)
+                            }
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                         }
                     };
@@ -10259,6 +10321,60 @@ This value then gets used instead of `OpLoad` result later on.
                         <span class="kw">crate</span>::Statement::SubgroupGather {
                             result: result_handle,
                             mode,
+                            argument: argument_handle,
+                        },
+                        span,
+                    );
+                    emitter.start(ctx.expressions);
+                }
+                Op::GroupNonUniformQuadSwap =&gt; {
+                    inst.expect(<span class="number">6</span>)<span class="question-mark">?</span>;
+                    block.extend(emitter.finish(ctx.expressions));
+                    <span class="kw">let </span>result_type_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>result_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>exec_scope_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>argument_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>direction_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
+
+                    <span class="kw">let </span>argument_lookup = <span class="self">self</span>.lookup_expression.lookup(argument_id)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>argument_handle = <span class="macro">get_expr_handle!</span>(argument_id, argument_lookup);
+
+                    <span class="kw">let </span>exec_scope_const = <span class="self">self</span>.lookup_constant.lookup(exec_scope_id)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>_exec_scope = resolve_constant(ctx.gctx(), <span class="kw-2">&amp;</span>exec_scope_const.inner)
+                        .filter(|exec_scope| <span class="kw-2">*</span>exec_scope == spirv::Scope::Subgroup <span class="kw">as </span>u32)
+                        .ok_or(Error::InvalidBarrierScope(exec_scope_id))<span class="question-mark">?</span>;
+
+                    <span class="kw">let </span>direction_const = <span class="self">self</span>.lookup_constant.lookup(direction_id)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>direction_const = resolve_constant(ctx.gctx(), <span class="kw-2">&amp;</span>direction_const.inner)
+                        .ok_or(Error::InvalidOperand)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>direction = <span class="kw">match </span>direction_const {
+                        <span class="number">0 </span>=&gt; <span class="kw">crate</span>::Direction::X,
+                        <span class="number">1 </span>=&gt; <span class="kw">crate</span>::Direction::Y,
+                        <span class="number">2 </span>=&gt; <span class="kw">crate</span>::Direction::Diagonal,
+                        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                    };
+
+                    <span class="kw">let </span>result_type = <span class="self">self</span>.lookup_type.lookup(result_type_id)<span class="question-mark">?</span>;
+
+                    <span class="kw">let </span>result_handle = ctx.expressions.append(
+                        <span class="kw">crate</span>::Expression::SubgroupOperationResult {
+                            ty: result_type.handle,
+                        },
+                        span,
+                    );
+                    <span class="self">self</span>.lookup_expression.insert(
+                        result_id,
+                        LookupExpression {
+                            handle: result_handle,
+                            type_id: result_type_id,
+                            block_id,
+                        },
+                    );
+
+                    block.push(
+                        <span class="kw">crate</span>::Statement::SubgroupGather {
+                            mode: <span class="kw">crate</span>::GatherMode::QuadSwap(direction),
+                            result: result_handle,
                             argument: argument_handle,
                         },
                         span,

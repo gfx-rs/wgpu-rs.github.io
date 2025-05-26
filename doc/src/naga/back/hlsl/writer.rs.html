@@ -4424,7 +4424,32 @@
 <a href="#4423" id="4423">4423</a>
 <a href="#4424" id="4424">4424</a>
 <a href="#4425" id="4425">4425</a>
-<a href="#4426" id="4426">4426</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4426" id="4426">4426</a>
+<a href="#4427" id="4427">4427</a>
+<a href="#4428" id="4428">4428</a>
+<a href="#4429" id="4429">4429</a>
+<a href="#4430" id="4430">4430</a>
+<a href="#4431" id="4431">4431</a>
+<a href="#4432" id="4432">4432</a>
+<a href="#4433" id="4433">4433</a>
+<a href="#4434" id="4434">4434</a>
+<a href="#4435" id="4435">4435</a>
+<a href="#4436" id="4436">4436</a>
+<a href="#4437" id="4437">4437</a>
+<a href="#4438" id="4438">4438</a>
+<a href="#4439" id="4439">4439</a>
+<a href="#4440" id="4440">4440</a>
+<a href="#4441" id="4441">4441</a>
+<a href="#4442" id="4442">4442</a>
+<a href="#4443" id="4443">4443</a>
+<a href="#4444" id="4444">4444</a>
+<a href="#4445" id="4445">4445</a>
+<a href="#4446" id="4446">4446</a>
+<a href="#4447" id="4447">4447</a>
+<a href="#4448" id="4448">4448</a>
+<a href="#4449" id="4449">4449</a>
+<a href="#4450" id="4450">4450</a>
+<a href="#4451" id="4451">4451</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -7036,30 +7061,55 @@
                 };
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name} = "</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.named_expressions.insert(result, name);
-
-                <span class="kw">if </span><span class="macro">matches!</span>(mode, <span class="kw">crate</span>::GatherMode::BroadcastFirst) {
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"WaveReadLaneFirst("</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_expr(module, argument, func_ctx)<span class="question-mark">?</span>;
-                } <span class="kw">else </span>{
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"WaveReadLaneAt("</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_expr(module, argument, func_ctx)<span class="question-mark">?</span>;
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                    <span class="kw">match </span>mode {
-                        <span class="kw">crate</span>::GatherMode::BroadcastFirst =&gt; <span class="macro">unreachable!</span>(),
-                        <span class="kw">crate</span>::GatherMode::Broadcast(index) | <span class="kw">crate</span>::GatherMode::Shuffle(index) =&gt; {
-                            <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
+                <span class="kw">match </span>mode {
+                    <span class="kw">crate</span>::GatherMode::BroadcastFirst =&gt; {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"WaveReadLaneFirst("</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, argument, func_ctx)<span class="question-mark">?</span>;
+                    }
+                    <span class="kw">crate</span>::GatherMode::QuadBroadcast(index) =&gt; {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"QuadReadLaneAt("</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, argument, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
+                    }
+                    <span class="kw">crate</span>::GatherMode::QuadSwap(direction) =&gt; {
+                        <span class="kw">match </span>direction {
+                            <span class="kw">crate</span>::Direction::X =&gt; {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"QuadReadAcrossX("</span>)<span class="question-mark">?</span>;
+                            }
+                            <span class="kw">crate</span>::Direction::Y =&gt; {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"QuadReadAcrossY("</span>)<span class="question-mark">?</span>;
+                            }
+                            <span class="kw">crate</span>::Direction::Diagonal =&gt; {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"QuadReadAcrossDiagonal("</span>)<span class="question-mark">?</span>;
+                            }
                         }
-                        <span class="kw">crate</span>::GatherMode::ShuffleDown(index) =&gt; {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"WaveGetLaneIndex() + "</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
-                        }
-                        <span class="kw">crate</span>::GatherMode::ShuffleUp(index) =&gt; {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"WaveGetLaneIndex() - "</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
-                        }
-                        <span class="kw">crate</span>::GatherMode::ShuffleXor(index) =&gt; {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"WaveGetLaneIndex() ^ "</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, argument, func_ctx)<span class="question-mark">?</span>;
+                    }
+                    <span class="kw">_ </span>=&gt; {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"WaveReadLaneAt("</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, argument, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                        <span class="kw">match </span>mode {
+                            <span class="kw">crate</span>::GatherMode::BroadcastFirst =&gt; <span class="macro">unreachable!</span>(),
+                            <span class="kw">crate</span>::GatherMode::Broadcast(index)
+                            | <span class="kw">crate</span>::GatherMode::Shuffle(index) =&gt; {
+                                <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
+                            }
+                            <span class="kw">crate</span>::GatherMode::ShuffleDown(index) =&gt; {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"WaveGetLaneIndex() + "</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
+                            }
+                            <span class="kw">crate</span>::GatherMode::ShuffleUp(index) =&gt; {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"WaveGetLaneIndex() - "</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
+                            }
+                            <span class="kw">crate</span>::GatherMode::ShuffleXor(index) =&gt; {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"WaveGetLaneIndex() ^ "</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
+                            }
+                            <span class="kw">crate</span>::GatherMode::QuadBroadcast(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
+                            <span class="kw">crate</span>::GatherMode::QuadSwap(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
                         }
                     }
                 }

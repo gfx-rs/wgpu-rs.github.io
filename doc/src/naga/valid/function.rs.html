@@ -1787,7 +1787,24 @@
 <a href="#1786" id="1786">1786</a>
 <a href="#1787" id="1787">1787</a>
 <a href="#1788" id="1788">1788</a>
-<a href="#1789" id="1789">1789</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{format, string::String};
+<a href="#1789" id="1789">1789</a>
+<a href="#1790" id="1790">1790</a>
+<a href="#1791" id="1791">1791</a>
+<a href="#1792" id="1792">1792</a>
+<a href="#1793" id="1793">1793</a>
+<a href="#1794" id="1794">1794</a>
+<a href="#1795" id="1795">1795</a>
+<a href="#1796" id="1796">1796</a>
+<a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
+<a href="#1799" id="1799">1799</a>
+<a href="#1800" id="1800">1800</a>
+<a href="#1801" id="1801">1801</a>
+<a href="#1802" id="1802">1802</a>
+<a href="#1803" id="1803">1803</a>
+<a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{format, string::String};
 
 <span class="kw">use </span><span class="kw">super</span>::validate_atomic_compare_exchange_struct;
 <span class="kw">use super</span>::{
@@ -1862,6 +1879,8 @@
     </span>UnsupportedOperation(<span class="kw">super</span>::SubgroupOperationSet),
     <span class="attr">#[error(<span class="string">"Unknown operation"</span>)]
     </span>UnknownOperation,
+    <span class="attr">#[error(<span class="string">"Invocation ID must be a const-expression"</span>)]
+    </span>InvalidInvocationIdExprType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
@@ -2037,6 +2056,7 @@
     special_types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::SpecialTypes,
     prev_infos: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[FunctionInfo],
     return_type: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;&gt;,
+    local_expr_kind: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; BlockContext&lt;<span class="lifetime">'a</span>&gt; {
@@ -2045,6 +2065,7 @@
         module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Module,
         info: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>FunctionInfo,
         prev_infos: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[FunctionInfo],
+        local_expr_kind: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             abilities: ControlFlowAbility::RETURN,
@@ -2057,6 +2078,7 @@
             special_types: <span class="kw-2">&amp;</span>module.special_types,
             prev_infos,
             return_type: fun.result.as_ref().map(|fr| fr.ty),
+            local_expr_kind,
         }
     }
 
@@ -2494,7 +2516,8 @@
             | <span class="kw">crate</span>::GatherMode::Shuffle(index)
             | <span class="kw">crate</span>::GatherMode::ShuffleDown(index)
             | <span class="kw">crate</span>::GatherMode::ShuffleUp(index)
-            | <span class="kw">crate</span>::GatherMode::ShuffleXor(index) =&gt; {
+            | <span class="kw">crate</span>::GatherMode::ShuffleXor(index)
+            | <span class="kw">crate</span>::GatherMode::QuadBroadcast(index) =&gt; {
                 <span class="kw">let </span>index_ty = context.resolve_type_inner(index, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">?</span>;
                 <span class="kw">match </span><span class="kw-2">*</span>index_ty {
                     <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar::U32) =&gt; {}
@@ -2509,6 +2532,17 @@
                     }
                 }
             }
+            <span class="kw">crate</span>::GatherMode::QuadSwap(<span class="kw">_</span>) =&gt; {}
+        }
+        <span class="kw">match </span><span class="kw-2">*</span>mode {
+            <span class="kw">crate</span>::GatherMode::Broadcast(index) | <span class="kw">crate</span>::GatherMode::QuadBroadcast(index) =&gt; {
+                <span class="kw">if </span>!context.local_expr_kind.is_const(index) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(SubgroupError::InvalidInvocationIdExprType(index)
+                        .with_span_handle(index, context.expressions)
+                        .into_other());
+                }
+            }
+            <span class="kw">_ </span>=&gt; {}
         }
         <span class="kw">let </span>argument_inner = context.resolve_type_inner(argument, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">?</span>;
         <span class="kw">if </span>!<span class="macro">matches!</span>(<span class="kw-2">*</span>argument_inner,
@@ -3561,7 +3595,7 @@
             <span class="kw">let </span>stages = <span class="self">self
                 </span>.validate_block(
                     <span class="kw-2">&amp;</span>fun.body,
-                    <span class="kw-2">&amp;</span>BlockContext::new(fun, module, <span class="kw-2">&amp;</span>info, <span class="kw-2">&amp;</span>mod_info.functions),
+                    <span class="kw-2">&amp;</span>BlockContext::new(fun, module, <span class="kw-2">&amp;</span>info, <span class="kw-2">&amp;</span>mod_info.functions, <span class="kw-2">&amp;</span>local_expr_kind),
                 )<span class="question-mark">?
                 </span>.stages;
             info.available_stages &amp;= stages;

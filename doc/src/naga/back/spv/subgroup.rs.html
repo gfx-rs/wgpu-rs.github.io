@@ -202,7 +202,26 @@
 <a href="#201" id="201">201</a>
 <a href="#202" id="202">202</a>
 <a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{Block, BlockContext, Error, Instruction, NumericType};
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{Block, BlockContext, Error, Instruction, NumericType};
 <span class="kw">use crate</span>::{arena::Handle, TypeInner};
 
 <span class="kw">impl </span>BlockContext&lt;<span class="lifetime">'_</span>&gt; {
@@ -329,10 +348,6 @@
         result: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         block: <span class="kw-2">&amp;mut </span>Block,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-        <span class="self">self</span>.writer.require_any(
-            <span class="string">"GroupNonUniformBallot"</span>,
-            <span class="kw-2">&amp;</span>[spirv::Capability::GroupNonUniformBallot],
-        )<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="kw-2">*</span>mode {
             <span class="kw">crate</span>::GatherMode::BroadcastFirst =&gt; {
                 <span class="self">self</span>.writer.require_any(
@@ -352,6 +367,12 @@
                 <span class="self">self</span>.writer.require_any(
                     <span class="string">"GroupNonUniformShuffleRelative"</span>,
                     <span class="kw-2">&amp;</span>[spirv::Capability::GroupNonUniformShuffleRelative],
+                )<span class="question-mark">?</span>;
+            }
+            <span class="kw">crate</span>::GatherMode::QuadBroadcast(<span class="kw">_</span>) | <span class="kw">crate</span>::GatherMode::QuadSwap(<span class="kw">_</span>) =&gt; {
+                <span class="self">self</span>.writer.require_any(
+                    <span class="string">"GroupNonUniformQuad"</span>,
+                    <span class="kw-2">&amp;</span>[spirv::Capability::GroupNonUniformQuad],
                 )<span class="question-mark">?</span>;
             }
         }
@@ -378,7 +399,8 @@
             | <span class="kw">crate</span>::GatherMode::Shuffle(index)
             | <span class="kw">crate</span>::GatherMode::ShuffleDown(index)
             | <span class="kw">crate</span>::GatherMode::ShuffleUp(index)
-            | <span class="kw">crate</span>::GatherMode::ShuffleXor(index) =&gt; {
+            | <span class="kw">crate</span>::GatherMode::ShuffleXor(index)
+            | <span class="kw">crate</span>::GatherMode::QuadBroadcast(index) =&gt; {
                 <span class="kw">let </span>index_id = <span class="self">self</span>.cached[index];
                 <span class="kw">let </span>op = <span class="kw">match </span><span class="kw-2">*</span>mode {
                     <span class="kw">crate</span>::GatherMode::BroadcastFirst =&gt; <span class="macro">unreachable!</span>(),
@@ -391,6 +413,8 @@
                     <span class="kw">crate</span>::GatherMode::ShuffleDown(<span class="kw">_</span>) =&gt; spirv::Op::GroupNonUniformShuffleDown,
                     <span class="kw">crate</span>::GatherMode::ShuffleUp(<span class="kw">_</span>) =&gt; spirv::Op::GroupNonUniformShuffleUp,
                     <span class="kw">crate</span>::GatherMode::ShuffleXor(<span class="kw">_</span>) =&gt; spirv::Op::GroupNonUniformShuffleXor,
+                    <span class="kw">crate</span>::GatherMode::QuadBroadcast(<span class="kw">_</span>) =&gt; spirv::Op::GroupNonUniformQuadBroadcast,
+                    <span class="kw">crate</span>::GatherMode::QuadSwap(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
                 };
                 block.body.push(Instruction::group_non_uniform_gather(
                     op,
@@ -399,6 +423,20 @@
                     exec_scope_id,
                     arg_id,
                     index_id,
+                ));
+            }
+            <span class="kw">crate</span>::GatherMode::QuadSwap(direction) =&gt; {
+                <span class="kw">let </span>direction = <span class="self">self</span>.get_index_constant(<span class="kw">match </span>direction {
+                    <span class="kw">crate</span>::Direction::X =&gt; <span class="number">0</span>,
+                    <span class="kw">crate</span>::Direction::Y =&gt; <span class="number">1</span>,
+                    <span class="kw">crate</span>::Direction::Diagonal =&gt; <span class="number">2</span>,
+                });
+                block.body.push(Instruction::group_non_uniform_quad_swap(
+                    result_type_id,
+                    id,
+                    exec_scope_id,
+                    arg_id,
+                    direction,
                 ));
             }
         }

@@ -771,7 +771,14 @@
 <a href="#770" id="770">770</a>
 <a href="#771" id="771">771</a>
 <a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Shader validator.
 */
 
@@ -802,7 +809,7 @@ Shader validator.
 <span class="kw">pub use </span>compose::ComposeError;
 <span class="kw">pub use </span>expression::{check_literal_value, LiteralError};
 <span class="kw">pub use </span>expression::{ConstExpressionError, ExpressionError};
-<span class="kw">pub use </span>function::{CallError, FunctionError, LocalVariableError};
+<span class="kw">pub use </span>function::{CallError, FunctionError, LocalVariableError, SubgroupError};
 <span class="kw">pub use </span>interface::{EntryPointError, GlobalVariableError, VaryingError};
 <span class="kw">pub use </span>r#type::{Disalignment, PushConstantError, TypeError, TypeFlags, WidthError};
 
@@ -968,9 +975,9 @@ Shader validator.
         <span class="comment">// We don't support these operations yet
         // /// Clustered
         // const CLUSTERED = 1 &lt;&lt; 6;
-        // /// Quad supported
-        // const QUAD_FRAGMENT_COMPUTE = 1 &lt;&lt; 7;
-        // /// Quad supported in all stages
+        </span><span class="doccomment">/// Quad supported
+        </span><span class="kw">const </span>QUAD_FRAGMENT_COMPUTE = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+        <span class="comment">// /// Quad supported in all stages
         // const QUAD_ALL_STAGES = 1 &lt;&lt; 8;
     </span>}
 }
@@ -994,6 +1001,7 @@ Shader validator.
             <span class="self">Self</span>::BroadcastFirst | <span class="self">Self</span>::Broadcast(<span class="kw">_</span>) =&gt; S::BALLOT,
             <span class="self">Self</span>::Shuffle(<span class="kw">_</span>) | <span class="self">Self</span>::ShuffleXor(<span class="kw">_</span>) =&gt; S::SHUFFLE,
             <span class="self">Self</span>::ShuffleUp(<span class="kw">_</span>) | <span class="self">Self</span>::ShuffleDown(<span class="kw">_</span>) =&gt; S::SHUFFLE_RELATIVE,
+            <span class="self">Self</span>::QuadBroadcast(<span class="kw">_</span>) | <span class="self">Self</span>::QuadSwap(<span class="kw">_</span>) =&gt; S::QUAD_FRAGMENT_COMPUTE,
         }
     }
 }
@@ -1230,7 +1238,13 @@ Shader validator.
     </span><span class="kw">pub fn </span>new(flags: ValidationFlags, capabilities: Capabilities) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>subgroup_operations = <span class="kw">if </span>capabilities.contains(Capabilities::SUBGROUP) {
             <span class="kw">use </span>SubgroupOperationSet <span class="kw">as </span>S;
-            S::BASIC | S::VOTE | S::ARITHMETIC | S::BALLOT | S::SHUFFLE | S::SHUFFLE_RELATIVE
+            S::BASIC
+                | S::VOTE
+                | S::ARITHMETIC
+                | S::BALLOT
+                | S::SHUFFLE
+                | S::SHUFFLE_RELATIVE
+                | S::QUAD_FRAGMENT_COMPUTE
         } <span class="kw">else </span>{
             SubgroupOperationSet::empty()
         };

@@ -5276,7 +5276,23 @@
 <a href="#5275" id="5275">5275</a>
 <a href="#5276" id="5276">5276</a>
 <a href="#5277" id="5277">5277</a>
-<a href="#5278" id="5278">5278</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5278" id="5278">5278</a>
+<a href="#5279" id="5279">5279</a>
+<a href="#5280" id="5280">5280</a>
+<a href="#5281" id="5281">5281</a>
+<a href="#5282" id="5282">5282</a>
+<a href="#5283" id="5283">5283</a>
+<a href="#5284" id="5284">5284</a>
+<a href="#5285" id="5285">5285</a>
+<a href="#5286" id="5286">5286</a>
+<a href="#5287" id="5287">5287</a>
+<a href="#5288" id="5288">5288</a>
+<a href="#5289" id="5289">5289</a>
+<a href="#5290" id="5290">5290</a>
+<a href="#5291" id="5291">5291</a>
+<a href="#5292" id="5292">5292</a>
+<a href="#5293" id="5293">5293</a>
+<a href="#5294" id="5294">5294</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -7995,6 +8011,20 @@ to output a [`Module`](crate::Module) into glsl
                     <span class="kw">crate</span>::GatherMode::ShuffleXor(<span class="kw">_</span>) =&gt; {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"subgroupShuffleXor("</span>)<span class="question-mark">?</span>;
                     }
+                    <span class="kw">crate</span>::GatherMode::QuadBroadcast(<span class="kw">_</span>) =&gt; {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"subgroupQuadBroadcast("</span>)<span class="question-mark">?</span>;
+                    }
+                    <span class="kw">crate</span>::GatherMode::QuadSwap(direction) =&gt; <span class="kw">match </span>direction {
+                        <span class="kw">crate</span>::Direction::X =&gt; {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"subgroupQuadSwapHorizontal("</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">crate</span>::Direction::Y =&gt; {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"subgroupQuadSwapVertical("</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">crate</span>::Direction::Diagonal =&gt; {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"subgroupQuadSwapDiagonal("</span>)<span class="question-mark">?</span>;
+                        }
+                    },
                 }
                 <span class="self">self</span>.write_expr(argument, ctx)<span class="question-mark">?</span>;
                 <span class="kw">match </span>mode {
@@ -8003,10 +8033,12 @@ to output a [`Module`](crate::Module) into glsl
                     | <span class="kw">crate</span>::GatherMode::Shuffle(index)
                     | <span class="kw">crate</span>::GatherMode::ShuffleDown(index)
                     | <span class="kw">crate</span>::GatherMode::ShuffleUp(index)
-                    | <span class="kw">crate</span>::GatherMode::ShuffleXor(index) =&gt; {
+                    | <span class="kw">crate</span>::GatherMode::ShuffleXor(index)
+                    | <span class="kw">crate</span>::GatherMode::QuadBroadcast(index) =&gt; {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.write_expr(index, ctx)<span class="question-mark">?</span>;
                     }
+                    <span class="kw">crate</span>::GatherMode::QuadSwap(<span class="kw">_</span>) =&gt; {}
                 }
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
             }

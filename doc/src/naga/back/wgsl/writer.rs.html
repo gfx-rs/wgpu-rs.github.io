@@ -1811,7 +1811,23 @@
 <a href="#1810" id="1810">1810</a>
 <a href="#1811" id="1811">1811</a>
 <a href="#1812" id="1812">1812</a>
-<a href="#1813" id="1813">1813</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
+<a href="#1828" id="1828">1828</a>
+<a href="#1829" id="1829">1829</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -2758,6 +2774,20 @@
                     <span class="kw">crate</span>::GatherMode::ShuffleXor(<span class="kw">_</span>) =&gt; {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"subgroupShuffleXor("</span>)<span class="question-mark">?</span>;
                     }
+                    <span class="kw">crate</span>::GatherMode::QuadBroadcast(<span class="kw">_</span>) =&gt; {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"quadBroadcast("</span>)<span class="question-mark">?</span>;
+                    }
+                    <span class="kw">crate</span>::GatherMode::QuadSwap(direction) =&gt; <span class="kw">match </span>direction {
+                        <span class="kw">crate</span>::Direction::X =&gt; {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"quadSwapX("</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">crate</span>::Direction::Y =&gt; {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"quadSwapY("</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">crate</span>::Direction::Diagonal =&gt; {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"quadSwapDiagonal("</span>)<span class="question-mark">?</span>;
+                        }
+                    },
                 }
                 <span class="self">self</span>.write_expr(module, argument, func_ctx)<span class="question-mark">?</span>;
                 <span class="kw">match </span>mode {
@@ -2766,10 +2796,12 @@
                     | <span class="kw">crate</span>::GatherMode::Shuffle(index)
                     | <span class="kw">crate</span>::GatherMode::ShuffleDown(index)
                     | <span class="kw">crate</span>::GatherMode::ShuffleUp(index)
-                    | <span class="kw">crate</span>::GatherMode::ShuffleXor(index) =&gt; {
+                    | <span class="kw">crate</span>::GatherMode::ShuffleXor(index)
+                    | <span class="kw">crate</span>::GatherMode::QuadBroadcast(index) =&gt; {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
                     }
+                    <span class="kw">crate</span>::GatherMode::QuadSwap(<span class="kw">_</span>) =&gt; {}
                 }
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
             }
