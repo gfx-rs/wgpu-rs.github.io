@@ -1189,7 +1189,11 @@
 <a href="#1188" id="1188">1188</a>
 <a href="#1189" id="1189">1189</a>
 <a href="#1190" id="1190">1190</a>
-<a href="#1191" id="1191">1191</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>thiserror::Error;
@@ -1723,7 +1727,7 @@
         source_offset: BufferAddress,
         destination: BufferId,
         destination_offset: BufferAddress,
-        size: BufferAddress,
+        size: <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CopyError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::copy_buffer_to_buffer"</span>);
         <span class="macro">api_log!</span>(
@@ -1789,6 +1793,11 @@
             .map_err(TransferError::MissingBufferUsage)<span class="question-mark">?</span>;
         <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer, <span class="kw-2">&amp;</span>snatch_guard));
 
+        <span class="kw">let </span>(size, source_end_offset) = <span class="kw">match </span>size {
+            <span class="prelude-val">Some</span>(size) =&gt; (size, source_offset + size),
+            <span class="prelude-val">None </span>=&gt; (src_buffer.size - source_offset, src_buffer.size),
+        };
+
         <span class="kw">if </span>size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedCopySize(size).into());
         }
@@ -1819,7 +1828,6 @@
             }
         }
 
-        <span class="kw">let </span>source_end_offset = source_offset + size;
         <span class="kw">let </span>destination_end_offset = destination_offset + size;
         <span class="kw">if </span>source_end_offset &gt; src_buffer.size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::BufferOverrun {
