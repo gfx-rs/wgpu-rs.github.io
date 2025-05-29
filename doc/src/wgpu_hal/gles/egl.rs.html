@@ -1538,7 +1538,7 @@
 <a href="#1537" id="1537">1537</a>
 <a href="#1538" id="1538">1538</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{rc::Rc, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{ffi, mem::ManuallyDrop, ptr, time::Duration};
-<span class="kw">use </span>std::{os::raw, sync::LazyLock};
+<span class="kw">use </span>std::sync::LazyLock;
 
 <span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>hashbrown::HashMap;
@@ -1560,14 +1560,14 @@
 <span class="kw">const </span>EGL_GL_COLORSPACE_SRGB_KHR: u32 = <span class="number">0x3089</span>;
 
 <span class="kw">type </span>XOpenDisplayFun =
-    <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(display_name: <span class="kw-2">*const </span>raw::c_char) -&gt; <span class="kw-2">*mut </span>raw::c_void;
+    <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(display_name: <span class="kw-2">*const </span>ffi::c_char) -&gt; <span class="kw-2">*mut </span>ffi::c_void;
 
-<span class="kw">type </span>XCloseDisplayFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(display: <span class="kw-2">*mut </span>raw::c_void) -&gt; raw::c_int;
+<span class="kw">type </span>XCloseDisplayFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(display: <span class="kw-2">*mut </span>ffi::c_void) -&gt; ffi::c_int;
 
 <span class="kw">type </span>WlDisplayConnectFun =
-    <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(display_name: <span class="kw-2">*const </span>raw::c_char) -&gt; <span class="kw-2">*mut </span>raw::c_void;
+    <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(display_name: <span class="kw-2">*const </span>ffi::c_char) -&gt; <span class="kw-2">*mut </span>ffi::c_void;
 
-<span class="kw">type </span>WlDisplayDisconnectFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(display: <span class="kw-2">*const </span>raw::c_void);
+<span class="kw">type </span>WlDisplayDisconnectFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(display: <span class="kw-2">*const </span>ffi::c_void);
 
 <span class="attr">#[cfg(not(Emscripten))]
 </span><span class="kw">type </span>EglInstance = khronos_egl::DynamicInstance&lt;khronos_egl::EGL1_4&gt;;
@@ -1576,32 +1576,32 @@
 </span><span class="kw">type </span>EglInstance = khronos_egl::Instance&lt;khronos_egl::Static&gt;;
 
 <span class="kw">type </span>WlEglWindowCreateFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(
-    surface: <span class="kw-2">*const </span>raw::c_void,
-    width: raw::c_int,
-    height: raw::c_int,
-) -&gt; <span class="kw-2">*mut </span>raw::c_void;
+    surface: <span class="kw-2">*const </span>ffi::c_void,
+    width: ffi::c_int,
+    height: ffi::c_int,
+) -&gt; <span class="kw-2">*mut </span>ffi::c_void;
 
 <span class="kw">type </span>WlEglWindowResizeFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(
-    window: <span class="kw-2">*const </span>raw::c_void,
-    width: raw::c_int,
-    height: raw::c_int,
-    dx: raw::c_int,
-    dy: raw::c_int,
+    window: <span class="kw-2">*const </span>ffi::c_void,
+    width: ffi::c_int,
+    height: ffi::c_int,
+    dx: ffi::c_int,
+    dy: ffi::c_int,
 );
 
-<span class="kw">type </span>WlEglWindowDestroyFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(window: <span class="kw-2">*const </span>raw::c_void);
+<span class="kw">type </span>WlEglWindowDestroyFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(window: <span class="kw-2">*const </span>ffi::c_void);
 
-<span class="kw">type </span>EglLabel = <span class="kw-2">*const </span>raw::c_void;
+<span class="kw">type </span>EglLabel = <span class="kw-2">*const </span>ffi::c_void;
 
 <span class="attr">#[allow(clippy::upper_case_acronyms)]
 </span><span class="kw">type </span>EGLDEBUGPROCKHR = <span class="prelude-ty">Option</span>&lt;
     <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(
         error: khronos_egl::Enum,
-        command: <span class="kw-2">*const </span>raw::c_char,
+        command: <span class="kw-2">*const </span>ffi::c_char,
         message_type: u32,
         thread_label: EglLabel,
         object_label: EglLabel,
-        message: <span class="kw-2">*const </span>raw::c_char,
+        message: <span class="kw-2">*const </span>ffi::c_char,
     ),
 &gt;;
 
@@ -1613,15 +1613,15 @@
 <span class="kw">type </span>EglDebugMessageControlFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(
     proc: EGLDEBUGPROCKHR,
     attrib_list: <span class="kw-2">*const </span>khronos_egl::Attrib,
-) -&gt; raw::c_int;
+) -&gt; ffi::c_int;
 
 <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn </span>egl_debug_proc(
     error: khronos_egl::Enum,
-    command_raw: <span class="kw-2">*const </span>raw::c_char,
+    command_raw: <span class="kw-2">*const </span>ffi::c_char,
     message_type: u32,
     _thread_label: EglLabel,
     _object_label: EglLabel,
-    message_raw: <span class="kw-2">*const </span>raw::c_char,
+    message_raw: <span class="kw-2">*const </span>ffi::c_char,
 ) {
     <span class="kw">let </span>log_severity = <span class="kw">match </span>message_type {
         EGL_DEBUG_MSG_CRITICAL_KHR | EGL_DEBUG_MSG_ERROR_KHR =&gt; log::Level::Error,
@@ -1651,13 +1651,13 @@
 /// enum variant is the X11 variant
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">enum </span>DisplayRef {
-    X11(ptr::NonNull&lt;raw::c_void&gt;),
+    X11(ptr::NonNull&lt;ffi::c_void&gt;),
     Wayland,
 }
 
 <span class="kw">impl </span>DisplayRef {
     <span class="doccomment">/// Convenience for getting the underlying pointer
-    </span><span class="kw">fn </span>as_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>raw::c_void {
+    </span><span class="kw">fn </span>as_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>ffi::c_void {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::X11(ptr) =&gt; ptr.as_ptr(),
             <span class="self">Self</span>::Wayland =&gt; <span class="macro">unreachable!</span>(),
@@ -1883,7 +1883,7 @@
         <span class="self">self</span>.egl.as_ref().map(|egl| egl.version)
     }
 
-    <span class="kw">pub fn </span>raw_context(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>raw::c_void {
+    <span class="kw">pub fn </span>raw_context(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>ffi::c_void {
         <span class="kw">match </span><span class="self">self</span>.egl {
             <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>egl) =&gt; egl.raw.as_ptr(),
             <span class="prelude-val">None </span>=&gt; ptr::null_mut(),
@@ -1998,7 +1998,7 @@
     supports_native_window: bool,
     config: khronos_egl::Config,
     <span class="attr">#[cfg_attr(Emscripten, allow(dead_code))]
-    </span>wl_display: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*mut </span>raw::c_void&gt;,
+    </span>wl_display: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*mut </span>ffi::c_void&gt;,
     <span class="attr">#[cfg_attr(Emscripten, allow(dead_code))]
     </span>force_gles_minor_version: wgt::Gles3MinorVersion,
     <span class="doccomment">/// Method by which the framebuffer should support srgb
@@ -2694,7 +2694,7 @@
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Swapchain {
     surface: khronos_egl::Surface,
-    wl_window: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*mut </span>raw::c_void&gt;,
+    wl_window: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*mut </span>ffi::c_void&gt;,
     framebuffer: glow::Framebuffer,
     renderbuffer: glow::Renderbuffer,
     <span class="doccomment">/// Extent because the window lies
@@ -2800,7 +2800,7 @@
     <span class="kw">unsafe fn </span>unconfigure_impl(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span><span class="kw">super</span>::Device,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;(khronos_egl::Surface, <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*mut </span>raw::c_void&gt;)&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(khronos_egl::Surface, <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*mut </span>ffi::c_void&gt;)&gt; {
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span>device.shared.context.lock();
         <span class="kw">match </span><span class="self">self</span>.swapchain.write().take() {
             <span class="prelude-val">Some</span>(sc) =&gt; {
