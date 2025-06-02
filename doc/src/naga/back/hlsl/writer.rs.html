@@ -4449,7 +4449,44 @@
 <a href="#4448" id="4448">4448</a>
 <a href="#4449" id="4449">4449</a>
 <a href="#4450" id="4450">4450</a>
-<a href="#4451" id="4451">4451</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4451" id="4451">4451</a>
+<a href="#4452" id="4452">4452</a>
+<a href="#4453" id="4453">4453</a>
+<a href="#4454" id="4454">4454</a>
+<a href="#4455" id="4455">4455</a>
+<a href="#4456" id="4456">4456</a>
+<a href="#4457" id="4457">4457</a>
+<a href="#4458" id="4458">4458</a>
+<a href="#4459" id="4459">4459</a>
+<a href="#4460" id="4460">4460</a>
+<a href="#4461" id="4461">4461</a>
+<a href="#4462" id="4462">4462</a>
+<a href="#4463" id="4463">4463</a>
+<a href="#4464" id="4464">4464</a>
+<a href="#4465" id="4465">4465</a>
+<a href="#4466" id="4466">4466</a>
+<a href="#4467" id="4467">4467</a>
+<a href="#4468" id="4468">4468</a>
+<a href="#4469" id="4469">4469</a>
+<a href="#4470" id="4470">4470</a>
+<a href="#4471" id="4471">4471</a>
+<a href="#4472" id="4472">4472</a>
+<a href="#4473" id="4473">4473</a>
+<a href="#4474" id="4474">4474</a>
+<a href="#4475" id="4475">4475</a>
+<a href="#4476" id="4476">4476</a>
+<a href="#4477" id="4477">4477</a>
+<a href="#4478" id="4478">4478</a>
+<a href="#4479" id="4479">4479</a>
+<a href="#4480" id="4480">4480</a>
+<a href="#4481" id="4481">4481</a>
+<a href="#4482" id="4482">4482</a>
+<a href="#4483" id="4483">4483</a>
+<a href="#4484" id="4484">4484</a>
+<a href="#4485" id="4485">4485</a>
+<a href="#4486" id="4486">4486</a>
+<a href="#4487" id="4487">4487</a>
+<a href="#4488" id="4488">4488</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -4719,6 +4756,12 @@
                     result: <span class="kw">_</span>,
                 } =&gt; {
                     <span class="self">self</span>.need_bake_expressions.insert(argument);
+                }
+                <span class="kw">crate</span>::Statement::Atomic {
+                    fun: <span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">Some</span>(cmp) },
+                    ..
+                } =&gt; {
+                    <span class="self">self</span>.need_bake_expressions.insert(cmp);
                 }
                 <span class="kw">_ </span>=&gt; {}
             }
@@ -6809,49 +6852,61 @@
                 result,
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>res_name = <span class="kw">match </span>result {
-                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
-                    <span class="prelude-val">Some</span>(result) =&gt; {
-                        <span class="kw">let </span>name = Baked(result).to_string();
-                        <span class="kw">match </span>func_ctx.info[result].ty {
-                            proc::TypeResolution::Handle(handle) =&gt; {
-                                <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?
-                            </span>}
-                            proc::TypeResolution::Value(<span class="kw-2">ref </span>value) =&gt; {
-                                <span class="self">self</span>.write_value_type(module, value)<span class="question-mark">?
-                            </span>}
-                        };
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name}; "</span>)<span class="question-mark">?</span>;
-                        <span class="prelude-val">Some</span>((result, name))
-                    }
-                };
-
-                <span class="comment">// Validation ensures that `pointer` has a `Pointer` type.
-                </span><span class="kw">let </span>pointer_space = func_ctx
+                <span class="kw">let </span>res_var_info = <span class="kw">if let </span><span class="prelude-val">Some</span>(res_handle) = result {
+                    <span class="kw">let </span>name = Baked(res_handle).to_string();
+                    <span class="kw">match </span>func_ctx.info[res_handle].ty {
+                        proc::TypeResolution::Handle(handle) =&gt; <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?</span>,
+                        proc::TypeResolution::Value(<span class="kw-2">ref </span>value) =&gt; {
+                            <span class="self">self</span>.write_value_type(module, value)<span class="question-mark">?
+                        </span>}
+                    };
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name}; "</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.named_expressions.insert(res_handle, name.clone());
+                    <span class="prelude-val">Some</span>((res_handle, name))
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>};
+                <span class="kw">let </span>pointer_space = func_ctx
                     .resolve_type(pointer, <span class="kw-2">&amp;</span>module.types)
                     .pointer_space()
                     .unwrap();
-
                 <span class="kw">let </span>fun_str = fun.to_hlsl_suffix();
+                <span class="kw">let </span>compare_expr = <span class="kw">match </span><span class="kw-2">*</span>fun {
+                    <span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">Some</span>(cmp) } =&gt; <span class="prelude-val">Some</span>(cmp),
+                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                };
                 <span class="kw">match </span>pointer_space {
                     <span class="kw">crate</span>::AddressSpace::WorkGroup =&gt; {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"Interlocked{fun_str}("</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.write_expr(module, pointer, func_ctx)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.emit_hlsl_atomic_tail(
+                            module,
+                            func_ctx,
+                            fun,
+                            compare_expr,
+                            value,
+                            <span class="kw-2">&amp;</span>res_var_info,
+                        )<span class="question-mark">?</span>;
                     }
                     <span class="kw">crate</span>::AddressSpace::Storage { .. } =&gt; {
                         <span class="kw">let </span>var_handle = <span class="self">self</span>.fill_access_chain(module, pointer, func_ctx)<span class="question-mark">?</span>;
-                        <span class="comment">// The call to `self.write_storage_address` wants
-                        // mutable access to all of `self`, so temporarily take
-                        // ownership of our reusable access chain buffer.
-                        </span><span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
                         <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
                         <span class="kw">let </span>width = <span class="kw">match </span>func_ctx.resolve_type(value, <span class="kw-2">&amp;</span>module.types) {
                             <span class="kw-2">&amp;</span>TypeInner::Scalar(Scalar { width: <span class="number">8</span>, .. }) =&gt; <span class="string">"64"</span>,
                             <span class="kw">_ </span>=&gt; <span class="string">""</span>,
                         };
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{var_name}.Interlocked{fun_str}{width}("</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
                         <span class="self">self</span>.write_storage_address(module, <span class="kw-2">&amp;</span>chain, func_ctx)<span class="question-mark">?</span>;
                         <span class="self">self</span>.temp_access_chain = chain;
+                        <span class="self">self</span>.emit_hlsl_atomic_tail(
+                            module,
+                            func_ctx,
+                            fun,
+                            compare_expr,
+                            value,
+                            <span class="kw-2">&amp;</span>res_var_info,
+                        )<span class="question-mark">?</span>;
                     }
                     <span class="kw-2">ref </span>other =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(<span class="macro">format!</span>(
@@ -6859,29 +6914,16 @@
                         </span>)))
                     }
                 }
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                <span class="comment">// handle the special cases
-                </span><span class="kw">match </span><span class="kw-2">*</span>fun {
-                    <span class="kw">crate</span>::AtomicFunction::Subtract =&gt; {
-                        <span class="comment">// we just wrote `InterlockedAdd`, so negate the argument
-                        </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"-"</span>)<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(cmp) = compare_expr {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(_res_handle, <span class="kw-2">ref </span>res_name)) = res_var_info.as_ref() {
+                        <span class="macro">write!</span>(
+                            <span class="self">self</span>.out,
+                            <span class="string">"{level}{res_name}.exchanged = ({res_name}.old_value == "
+                        </span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, cmp, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
                     }
-                    <span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="string">"atomic CompareExchange"</span>.to_string()));
-                    }
-                    <span class="kw">_ </span>=&gt; {}
                 }
-                <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
-
-                <span class="comment">// The `original_value` out parameter is optional for all the
-                // `Interlocked` functions we generate other than
-                // `InterlockedExchange`.
-                </span><span class="kw">if let </span><span class="prelude-val">Some</span>((result, name)) = res_name {
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {name}"</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.named_expressions.insert(result, name);
-                }
-
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
             }
             Statement::ImageAtomic {
                 image,
@@ -8761,6 +8803,38 @@
         <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::TEXTURE) {
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrierWithGroupSync();"</span>)<span class="question-mark">?</span>;
         }
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Helper to emit the shared tail of an HLSL atomic call (arguments, value, result)
+    </span><span class="kw">fn </span>emit_hlsl_atomic_tail(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        module: <span class="kw-2">&amp;</span>Module,
+        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
+        fun: <span class="kw-2">&amp;</span><span class="kw">crate</span>::AtomicFunction,
+        compare_expr: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
+        value: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        res_var_info: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;(Handle&lt;<span class="kw">crate</span>::Expression&gt;, String)&gt;,
+    ) -&gt; BackendResult {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cmp) = compare_expr {
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.write_expr(module, cmp, func_ctx)<span class="question-mark">?</span>;
+        }
+        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="kw">crate</span>::AtomicFunction::Subtract = <span class="kw-2">*</span>fun {
+            <span class="comment">// we just wrote `InterlockedAdd`, so negate the argument
+            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"-"</span>)<span class="question-mark">?</span>;
+        }
+        <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(_res_handle, <span class="kw-2">ref </span>res_name)) = res_var_info.as_ref() {
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+            <span class="kw">if </span>compare_expr.is_some() {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{res_name}.old_value"</span>)<span class="question-mark">?</span>;
+            } <span class="kw">else </span>{
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{res_name}"</span>)<span class="question-mark">?</span>;
+            }
+        }
+        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
