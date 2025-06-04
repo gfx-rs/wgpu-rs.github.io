@@ -1128,7 +1128,16 @@
 <a href="#1127" id="1127">1127</a>
 <a href="#1128" id="1128">1128</a>
 <a href="#1129" id="1129">1129</a>
-<a href="#1130" id="1130">1130</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, boxed::Box, ffi::CString, string::String, sync::Arc, vec::Vec};
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, boxed::Box, ffi::CString, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{
     ffi::{c_void, CStr},
     slice,
@@ -1196,6 +1205,15 @@
     // https://github.com/KhronosGroup/Vulkan-ValidationLayers/issues/9276
     </span><span class="kw">const </span>VUID_VKCMDCOPYIMAGETOBUFFER_PREGIONS_00184: i32 = <span class="number">0x45ef177c</span>;
     <span class="kw">if </span>cd.message_id_number == VUID_VKCMDCOPYIMAGETOBUFFER_PREGIONS_00184 {
+        <span class="kw">return </span>vk::FALSE;
+    }
+
+    <span class="comment">// Silence Vulkan Validation error "VUID-StandaloneSpirv-None-10684".
+    //
+    // This is a bug. To prevent massive noise in the tests, lets suppress it for now.
+    // https://github.com/gfx-rs/wgpu/issues/7696
+    </span><span class="kw">const </span>VUID_STANDALONESPIRV_NONE_10684: i32 = <span class="number">0xb210f7c2_u32 </span><span class="kw">as </span>i32;
+    <span class="kw">if </span>cd.message_id_number == VUID_STANDALONESPIRV_NONE_10684 {
         <span class="kw">return </span>vk::FALSE;
     }
 
