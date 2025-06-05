@@ -1949,7 +1949,15 @@
 <a href="#1948" id="1948">1948</a>
 <a href="#1949" id="1949">1949</a>
 <a href="#1950" id="1950">1950</a>
-<a href="#1951" id="1951">1951</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#1951" id="1951">1951</a>
+<a href="#1952" id="1952">1952</a>
+<a href="#1953" id="1953">1953</a>
+<a href="#1954" id="1954">1954</a>
+<a href="#1955" id="1955">1955</a>
+<a href="#1956" id="1956">1956</a>
+<a href="#1957" id="1957">1957</a>
+<a href="#1958" id="1958">1958</a>
+<a href="#1959" id="1959">1959</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Helpers for the hlsl backend
 
 Important note about `Expression::ImageQuery`/`Expression::ArrayLength` and hlsl backend:
@@ -3269,7 +3277,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                         <span class="kw">crate</span>::BinaryOperator::Modulo,
                         <span class="prelude-val">Some</span>(
                             scalar @ <span class="kw">crate</span>::Scalar {
-                                kind: ScalarKind::Sint | ScalarKind::Uint,
+                                kind: ScalarKind::Sint | ScalarKind::Uint | ScalarKind::Float,
                                 ..
                             },
                         ),
@@ -3317,6 +3325,14 @@ int dim_1d = NagaDimensions1D(image_1d);
                             </span>}
                             ScalarKind::Uint =&gt; {
                                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}return lhs % (rhs == 0u ? 1u : rhs);"</span>)<span class="question-mark">?
+                            </span>}
+                            <span class="comment">// HLSL's fmod has the same definition as WGSL's % operator but due
+                            // to its implementation in DXC it is not as accurate as the WGSL spec
+                            // requires it to be. See:
+                            // - https://shader-playground.timjones.io/0c8572816dbb6fc4435cc5d016a978a7
+                            // - https://github.com/llvm/llvm-project/blob/50f9b8acafdca48e87e6b8e393c1f116a2d193ee/clang/lib/Headers/hlsl/hlsl_intrinsic_helpers.h#L78-L81
+                            </span>ScalarKind::Float =&gt; {
+                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}return lhs - rhs * trunc(lhs / rhs);"</span>)<span class="question-mark">?
                             </span>}
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                         }
