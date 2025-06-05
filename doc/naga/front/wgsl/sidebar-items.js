@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ImplementedLanguageExtension","LanguageExtension","UnimplementedLanguageExtension"],"fn":["parse_str"],"mod":["error","index","lower","parse"],"struct":["Frontend","ParseError"],"type":["Result"]};
+window.SIDEBAR_ITEMS = {"enum":["ImplementedLanguageExtension","LanguageExtension","UnimplementedLanguageExtension"],"fn":["parse_str"],"mod":["error","index","lower","parse"],"struct":["Frontend","Options","ParseError"],"type":["Result"]};

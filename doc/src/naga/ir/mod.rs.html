@@ -2472,7 +2472,31 @@
 <a href="#2471" id="2471">2471</a>
 <a href="#2472" id="2472">2472</a>
 <a href="#2473" id="2473">2473</a>
-<a href="#2474" id="2474">2474</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#2474" id="2474">2474</a>
+<a href="#2475" id="2475">2475</a>
+<a href="#2476" id="2476">2476</a>
+<a href="#2477" id="2477">2477</a>
+<a href="#2478" id="2478">2478</a>
+<a href="#2479" id="2479">2479</a>
+<a href="#2480" id="2480">2480</a>
+<a href="#2481" id="2481">2481</a>
+<a href="#2482" id="2482">2482</a>
+<a href="#2483" id="2483">2483</a>
+<a href="#2484" id="2484">2484</a>
+<a href="#2485" id="2485">2485</a>
+<a href="#2486" id="2486">2486</a>
+<a href="#2487" id="2487">2487</a>
+<a href="#2488" id="2488">2488</a>
+<a href="#2489" id="2489">2489</a>
+<a href="#2490" id="2490">2490</a>
+<a href="#2491" id="2491">2491</a>
+<a href="#2492" id="2492">2492</a>
+<a href="#2493" id="2493">2493</a>
+<a href="#2494" id="2494">2494</a>
+<a href="#2495" id="2495">2495</a>
+<a href="#2496" id="2496">2496</a>
+<a href="#2497" id="2497">2497</a>
+<a href="#2498" id="2498">2498</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 The Intermediate Representation shared by all frontends and backends.
 
 The central structure of the IR, and the crate, is [`Module`]. A `Module` contains:
@@ -2695,7 +2719,7 @@ An override expression can be evaluated at pipeline creation time.
 
 </span><span class="kw">mod </span>block;
 
-<span class="kw">use </span>alloc::{string::String, vec::Vec};
+<span class="kw">use </span>alloc::{boxed::Box, string::String, vec::Vec};
 
 <span class="attr">#[cfg(feature = <span class="string">"arbitrary"</span>)]
 </span><span class="kw">use </span>arbitrary::Arbitrary;
@@ -4860,6 +4884,28 @@ An override expression can be evaluated at pipeline creation time.
     </span>Aabb = <span class="number">3</span>,
 }
 
+<span class="doccomment">/// Doc comments preceding items.
+///
+/// These can be used to generate automated documentation,
+/// IDE hover information or translate shaders with their context comments.
+</span><span class="attr">#[derive(Debug, Default, Clone)]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
+</span><span class="kw">pub struct </span>DocComments {
+    <span class="kw">pub </span>types: FastIndexMap&lt;Handle&lt;Type&gt;, Vec&lt;String&gt;&gt;,
+    <span class="comment">// The key is:
+    // - key.0: the handle to the Struct
+    // - key.1: the index of the `StructMember`.
+    </span><span class="kw">pub </span>struct_members: FastIndexMap&lt;(Handle&lt;Type&gt;, usize), Vec&lt;String&gt;&gt;,
+    <span class="kw">pub </span>entry_points: FastIndexMap&lt;usize, Vec&lt;String&gt;&gt;,
+    <span class="kw">pub </span>functions: FastIndexMap&lt;Handle&lt;Function&gt;, Vec&lt;String&gt;&gt;,
+    <span class="kw">pub </span>constants: FastIndexMap&lt;Handle&lt;Constant&gt;, Vec&lt;String&gt;&gt;,
+    <span class="kw">pub </span>global_variables: FastIndexMap&lt;Handle&lt;GlobalVariable&gt;, Vec&lt;String&gt;&gt;,
+    <span class="comment">// Top level comments, appearing before any space.
+    </span><span class="kw">pub </span>module: Vec&lt;String&gt;,
+}
+
 <span class="doccomment">/// Shader module.
 ///
 /// A module is a set of constants, global variables and functions, as well as
@@ -4945,5 +4991,7 @@ An override expression can be evaluated at pipeline creation time.
     /// See [`DiagnosticFilterNode`] for details on how the tree is represented and used in
     /// validation.
     </span><span class="kw">pub </span>diagnostic_filter_leaf: <span class="prelude-ty">Option</span>&lt;Handle&lt;DiagnosticFilterNode&gt;&gt;,
+    <span class="doccomment">/// Doc comments.
+    </span><span class="kw">pub </span>doc_comments: <span class="prelude-ty">Option</span>&lt;Box&lt;DocComments&gt;&gt;,
 }
 </code></pre></div></section></main></body></html>

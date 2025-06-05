@@ -85,7 +85,16 @@
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
 <a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [WGSL][wgsl] (WebGPU Shading Language).
 
 [wgsl]: https://gpuweb.github.io/gpuweb/wgsl.html
@@ -102,6 +111,7 @@ Frontend for [WGSL][wgsl] (WebGPU Shading Language).
 <span class="kw">pub use </span><span class="kw">crate</span>::front::wgsl::parse::directive::language_extension::{
     ImplementedLanguageExtension, LanguageExtension, UnimplementedLanguageExtension,
 };
+<span class="kw">pub use </span><span class="kw">crate</span>::front::wgsl::parse::Options;
 
 <span class="kw">use </span>alloc::boxed::Box;
 <span class="kw">use </span>thiserror::Error;
@@ -118,12 +128,20 @@ Frontend for [WGSL][wgsl] (WebGPU Shading Language).
 
 <span class="kw">pub struct </span>Frontend {
     parser: Parser,
+    options: Options,
 }
 
 <span class="kw">impl </span>Frontend {
     <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             parser: Parser::new(),
+            options: Options::new(),
+        }
+    }
+    <span class="kw">pub const fn </span>new_with_options(options: Options) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            parser: Parser::new(),
+            options,
         }
     }
 
@@ -132,7 +150,7 @@ Frontend for [WGSL][wgsl] (WebGPU Shading Language).
     }
 
     <span class="kw">fn </span>inner&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, <span class="kw">crate</span>::Module&gt; {
-        <span class="kw">let </span>tu = <span class="self">self</span>.parser.parse(source)<span class="question-mark">?</span>;
+        <span class="kw">let </span>tu = <span class="self">self</span>.parser.parse(source, <span class="kw-2">&amp;</span><span class="self">self</span>.options)<span class="question-mark">?</span>;
         <span class="kw">let </span>index = index::Index::generate(<span class="kw-2">&amp;</span>tu)<span class="question-mark">?</span>;
         <span class="kw">let </span>module = Lowerer::new(<span class="kw-2">&amp;</span>index).lower(tu)<span class="question-mark">?</span>;
 
