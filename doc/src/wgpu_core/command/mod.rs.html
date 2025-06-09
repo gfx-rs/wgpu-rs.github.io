@@ -1079,7 +1079,11 @@
 <a href="#1078" id="1078">1078</a>
 <a href="#1079" id="1079">1079</a>
 <a href="#1080" id="1080">1080</a>
-<a href="#1081" id="1081">1081</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
 <span class="kw">mod </span>clear;
@@ -1189,10 +1193,14 @@
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-    </span><span class="kw">fn </span>get_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>CommandBufferMutable, CommandEncoderError&gt; {
+    </span><span class="kw">fn </span>get_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>CommandBufferMutable {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Locked(inner) | <span class="self">Self</span>::Finished(inner) | <span class="self">Self</span>::Recording(inner) =&gt; <span class="prelude-val">Ok</span>(inner),
-            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+            <span class="self">Self</span>::Locked(inner) | <span class="self">Self</span>::Finished(inner) | <span class="self">Self</span>::Recording(inner) =&gt; inner,
+            <span class="comment">// This is unreachable because this function is only used when
+            // playing back a recorded trace. If only to avoid having to
+            // implement serialization for all the error types, we don't support
+            // storing the errors in a trace.
+            </span><span class="self">Self</span>::Error =&gt; <span class="macro">unreachable!</span>(<span class="string">"passes in a trace do not store errors"</span>),
         }
     }
 

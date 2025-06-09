@@ -3653,11 +3653,7 @@
 <a href="#3652" id="3652">3652</a>
 <a href="#3653" id="3653">3653</a>
 <a href="#3654" id="3654">3654</a>
-<a href="#3655" id="3655">3655</a>
-<a href="#3656" id="3656">3656</a>
-<a href="#3657" id="3657">3657</a>
-<a href="#3658" id="3658">3658</a>
-<a href="#3659" id="3659">3659</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
+<a href="#3655" id="3655">3655</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{fmt, num::NonZeroU32, ops::Range, str};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -5289,9 +5285,7 @@
         depth_stencil_attachment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>RenderPassDepthStencilAttachment&gt;,
         timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>PassTimestampWrites&gt;,
         occlusion_query_set: <span class="prelude-ty">Option</span>&lt;id::QuerySetId&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassError&gt; {
-        <span class="kw">let </span>pass_scope = PassErrorScope::Pass;
-
+    ) {
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span>{
             <span class="kw">let </span>cmd_buf = <span class="self">self
@@ -5299,7 +5293,7 @@
                 .command_buffers
                 .get(encoder_id.into_command_buffer_id());
             <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-            <span class="kw">let </span>cmd_buf_data = cmd_buf_data.get_inner().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            <span class="kw">let </span>cmd_buf_data = cmd_buf_data.get_inner();
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
                 list.push(<span class="kw">crate</span>::device::trace::Command::RunRenderPass {
@@ -5337,21 +5331,19 @@
             },
         );
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = encoder_error {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassError {
-                scope: pass_scope,
-                inner: err.into(),
-            });
+            <span class="macro">panic!</span>(<span class="string">"{:?}"</span>, err);
         };
 
         render_pass.base = <span class="prelude-val">Some</span>(BasePass {
             label,
-            commands: <span class="kw">super</span>::RenderCommand::resolve_render_command_ids(<span class="kw-2">&amp;</span><span class="self">self</span>.hub, <span class="kw-2">&amp;</span>commands)<span class="question-mark">?</span>,
+            commands: <span class="kw">super</span>::RenderCommand::resolve_render_command_ids(<span class="kw-2">&amp;</span><span class="self">self</span>.hub, <span class="kw-2">&amp;</span>commands)
+                .unwrap(),
             dynamic_offsets,
             string_data,
             push_constant_data,
         });
 
-        <span class="self">self</span>.render_pass_end(<span class="kw-2">&amp;mut </span>render_pass)
+        <span class="self">self</span>.render_pass_end(<span class="kw-2">&amp;mut </span>render_pass).unwrap();
     }
 
     <span class="kw">pub fn </span>render_pass_end(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>RenderPass) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassError&gt; {

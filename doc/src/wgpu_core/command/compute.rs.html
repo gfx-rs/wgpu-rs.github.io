@@ -1332,8 +1332,7 @@
 <a href="#1331" id="1331">1331</a>
 <a href="#1332" id="1332">1332</a>
 <a href="#1333" id="1333">1333</a>
-<a href="#1334" id="1334">1334</a>
-<a href="#1335" id="1335">1335</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
+<a href="#1334" id="1334">1334</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{BufferAddress, DynamicOffset};
 
 <span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, sync::Arc, vec::Vec};
@@ -1656,6 +1655,9 @@
 
     <span class="doccomment">/// Note that this differs from [`Self::compute_pass_end`], it will
     /// create a new pass, replay the commands and end the pass.
+    ///
+    /// # Panics
+    /// On any error.
     </span><span class="attr">#[doc(hidden)]
     #[cfg(any(feature = <span class="string">"serde"</span>, feature = <span class="string">"replay"</span>))]
     </span><span class="kw">pub fn </span>compute_pass_end_with_unresolved_commands(
@@ -1663,9 +1665,7 @@
         encoder_id: id::CommandEncoderId,
         base: BasePass&lt;<span class="kw">super</span>::ComputeCommand&gt;,
         timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>PassTimestampWrites&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
-        <span class="kw">let </span>pass_scope = PassErrorScope::Pass;
-
+    ) {
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span>{
             <span class="kw">let </span>cmd_buf = <span class="self">self
@@ -1673,7 +1673,7 @@
                 .command_buffers
                 .get(encoder_id.into_command_buffer_id());
             <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-            <span class="kw">let </span>cmd_buf_data = cmd_buf_data.get_inner().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            <span class="kw">let </span>cmd_buf_data = cmd_buf_data.get_inner();
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
                 list.push(<span class="kw">crate</span>::device::trace::Command::RunComputePass {
@@ -1705,21 +1705,19 @@
             },
         );
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = encoder_error {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassError {
-                scope: pass_scope,
-                inner: err.into(),
-            });
+            <span class="macro">panic!</span>(<span class="string">"{:?}"</span>, err);
         };
 
         compute_pass.base = <span class="prelude-val">Some</span>(BasePass {
             label,
-            commands: <span class="kw">super</span>::ComputeCommand::resolve_compute_command_ids(<span class="kw-2">&amp;</span><span class="self">self</span>.hub, <span class="kw-2">&amp;</span>commands)<span class="question-mark">?</span>,
+            commands: <span class="kw">super</span>::ComputeCommand::resolve_compute_command_ids(<span class="kw-2">&amp;</span><span class="self">self</span>.hub, <span class="kw-2">&amp;</span>commands)
+                .unwrap(),
             dynamic_offsets,
             string_data,
             push_constant_data,
         });
 
-        <span class="self">self</span>.compute_pass_end(<span class="kw-2">&amp;mut </span>compute_pass)
+        <span class="self">self</span>.compute_pass_end(<span class="kw-2">&amp;mut </span>compute_pass).unwrap();
     }
 
     <span class="kw">pub fn </span>compute_pass_end(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>ComputePass) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
