@@ -83,8 +83,25 @@
 <a href="#82" id="82">82</a>
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::{error, fmt};
-<span class="kw">use </span>std::thread;
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::{error, fmt};
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -133,7 +150,7 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>SurfaceTexture {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!<span class="self">self</span>.presented &amp;&amp; !thread::panicking() {
+        <span class="kw">if </span>!<span class="self">self</span>.presented &amp;&amp; !thread_panicking() {
             <span class="self">self</span>.detail.texture_discard();
         }
     }
@@ -168,4 +185,23 @@
 }
 
 <span class="kw">impl </span>error::Error <span class="kw">for </span>SurfaceError {}
+
+<span class="kw">fn </span>thread_panicking() -&gt; bool {
+    <span class="macro">cfg_if::cfg_if!</span> {
+        <span class="kw">if </span><span class="attr">#[cfg(std)] </span>{
+            std::thread::panicking()
+        } <span class="kw">else if </span><span class="attr">#[cfg(panic = <span class="string">"abort"</span>)] </span>{
+            <span class="comment">// If `panic = "abort"` then a thread _cannot_ be observably panicking by definition.
+            </span><span class="bool-val">false
+        </span>} <span class="kw">else </span>{
+            <span class="comment">// TODO: This is potentially overly pessimistic; it may be appropriate to instead allow a
+            // texture to not be discarded.
+            // Alternatively, this could _also_ be a `panic!`, since we only care if the thread is panicking
+            // when the surface has not been presented.
+            </span><span class="macro">compile_error!</span>(
+                <span class="string">"cannot determine if a thread is panicking without either `panic = \"abort\"` or `std`"
+            </span>);
+        }
+    }
+}
 </code></pre></div></section></main></body></html>

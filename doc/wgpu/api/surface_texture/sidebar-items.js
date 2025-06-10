@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["SurfaceError"],"struct":["SurfaceTexture"]};
+window.SIDEBAR_ITEMS = {"enum":["SurfaceError"],"fn":["thread_panicking"],"struct":["SurfaceTexture"]};
