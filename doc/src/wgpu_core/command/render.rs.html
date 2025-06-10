@@ -3651,10 +3651,7 @@
 <a href="#3650" id="3650">3650</a>
 <a href="#3651" id="3651">3651</a>
 <a href="#3652" id="3652">3652</a>
-<a href="#3653" id="3653">3653</a>
-<a href="#3654" id="3654">3654</a>
-<a href="#3655" id="3655">3655</a>
-<a href="#3656" id="3656">3656</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
+<a href="#3653" id="3653">3653</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{fmt, num::NonZeroU32, ops::Range, str};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -4463,15 +4460,12 @@
     </span><span class="kw">pub</span>(<span class="kw">super</span>) inner: RenderPassErrorInner,
 }
 
-<span class="kw">impl</span>&lt;T, E&gt; MapPassErr&lt;T, RenderPassError&gt; <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;T, E&gt;
-<span class="kw">where
-    </span>E: Into&lt;RenderPassErrorInner&gt;,
-{
-    <span class="kw">fn </span>map_pass_err(<span class="self">self</span>, scope: PassErrorScope) -&gt; <span class="prelude-ty">Result</span>&lt;T, RenderPassError&gt; {
-        <span class="self">self</span>.map_err(|inner| RenderPassError {
+<span class="kw">impl</span>&lt;E: Into&lt;RenderPassErrorInner&gt;&gt; MapPassErr&lt;RenderPassError&gt; <span class="kw">for </span>E {
+    <span class="kw">fn </span>map_pass_err(<span class="self">self</span>, scope: PassErrorScope) -&gt; RenderPassError {
+        RenderPassError {
             scope,
-            inner: inner.into(),
-        })
+            inner: <span class="self">self</span>.into(),
+        }
     }
 }
 
