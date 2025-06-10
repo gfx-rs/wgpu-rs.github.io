@@ -1083,7 +1083,16 @@
 <a href="#1082" id="1082">1082</a>
 <a href="#1083" id="1083">1083</a>
 <a href="#1084" id="1084">1084</a>
-<a href="#1085" id="1085">1085</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
 <span class="kw">mod </span>clear;
@@ -1180,15 +1189,15 @@
 
 <span class="kw">impl </span>CommandEncoderStatus {
     <span class="doccomment">/// Checks that the encoder is in the [`Self::Recording`] state.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>record(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RecordingGuard&lt;<span class="lifetime">'_</span>&gt;, CommandEncoderError&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>record(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RecordingGuard&lt;<span class="lifetime">'_</span>&gt;, EncoderStateError&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Recording(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(RecordingGuard { inner: <span class="self">self </span>}),
             <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; {
                 <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Error;
-                <span class="prelude-val">Err</span>(CommandEncoderError::Locked)
+                <span class="prelude-val">Err</span>(EncoderStateError::Locked)
             }
-            <span class="self">Self</span>::Finished(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording),
-            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+            <span class="self">Self</span>::Finished(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Ended),
+            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid),
         }
     }
 
@@ -1207,7 +1216,7 @@
     <span class="doccomment">/// Locks the encoder by putting it in the [`Self::Locked`] state.
     ///
     /// Call [`Self::unlock_encoder`] to put the [`CommandBuffer`] back into the [`Self::Recording`] state.
-    </span><span class="kw">fn </span>lock_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+    </span><span class="kw">fn </span>lock_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
         <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Error) {
             <span class="self">Self</span>::Recording(inner) =&gt; {
                 <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Locked(inner);
@@ -1215,10 +1224,10 @@
             }
             <span class="self">Self</span>::Finished(inner) =&gt; {
                 <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
-                <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording)
+                <span class="prelude-val">Err</span>(EncoderStateError::Ended)
             }
-            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Locked),
-            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Locked),
+            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid),
         }
     }
 
@@ -1227,7 +1236,7 @@
     /// This function is the unlocking counterpart to [`Self::lock_encoder`].
     ///
     /// It is only valid to call this function if the encoder is in the [`Self::Locked`] state.
-    </span><span class="kw">fn </span>unlock_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RecordingGuard&lt;<span class="lifetime">'_</span>&gt;, CommandEncoderError&gt; {
+    </span><span class="kw">fn </span>unlock_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RecordingGuard&lt;<span class="lifetime">'_</span>&gt;, EncoderStateError&gt; {
         <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Error) {
             <span class="self">Self</span>::Locked(inner) =&gt; {
                 <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Recording(inner);
@@ -1235,10 +1244,10 @@
             }
             <span class="self">Self</span>::Finished(inner) =&gt; {
                 <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
-                <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording)
+                <span class="prelude-val">Err</span>(EncoderStateError::Ended)
             }
-            <span class="self">Self</span>::Recording(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
-            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+            <span class="self">Self</span>::Recording(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid),
+            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid),
         }
     }
 
@@ -1256,10 +1265,10 @@
             }
             <span class="self">Self</span>::Finished(inner) =&gt; {
                 <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
-                <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording)
+                <span class="prelude-val">Err</span>(EncoderStateError::Ended.into())
             }
-            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Locked),
-            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Locked.into()),
+            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid.into()),
         }
     }
 }
@@ -1810,18 +1819,27 @@
     }
 }
 
+<span class="doccomment">/// Errors related to the state of a command or pass encoder.
+</span><span class="attr">#[derive(Clone, Debug, Error)]
+#[non_exhaustive]
+</span><span class="kw">pub enum </span>EncoderStateError {
+    <span class="attr">#[error(<span class="string">"Encoder is invalid"</span>)]
+    </span>Invalid,
+    <span class="attr">#[error(<span class="string">"Encoding must not have ended"</span>)]
+    </span>Ended,
+
+    <span class="doccomment">/// Note: only command encoders can be locked (not pass encoders).
+    </span><span class="attr">#[error(<span class="string">"Encoder is locked by a previously created render/compute pass. Before recording any new commands, the pass must be ended."</span>)]
+    </span>Locked,
+}
+
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>CommandEncoderError {
-    <span class="attr">#[error(<span class="string">"Command encoder is invalid"</span>)]
-    </span>Invalid,
-    <span class="attr">#[error(<span class="string">"Command encoder must be active"</span>)]
-    </span>NotRecording,
+    <span class="attr">#[error(transparent)]
+    </span>State(<span class="attr">#[from] </span>EncoderStateError),
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">"Command encoder is locked by a previously created render/compute pass. Before recording any new commands, the pass must be ended."</span>)]
-    </span>Locked,
-
     <span class="attr">#[error(transparent)]
     </span>InvalidColorAttachment(<span class="attr">#[from] </span>ColorAttachmentError),
     <span class="attr">#[error(transparent)]

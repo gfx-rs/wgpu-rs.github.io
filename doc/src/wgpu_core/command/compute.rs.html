@@ -1332,12 +1332,14 @@
 <a href="#1331" id="1331">1331</a>
 <a href="#1332" id="1332">1332</a>
 <a href="#1333" id="1333">1333</a>
-<a href="#1334" id="1334">1334</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{BufferAddress, DynamicOffset};
 
 <span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{fmt, str};
 
+<span class="kw">use </span><span class="kw">crate</span>::command::EncoderStateError;
 <span class="kw">use </span><span class="kw">crate</span>::ray_tracing::AsAction;
 <span class="kw">use crate</span>::{
     binding_model::{
@@ -1461,7 +1463,7 @@
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
-    </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
+    </span>EncoderState(<span class="attr">#[from] </span>EncoderStateError),
     <span class="attr">#[error(<span class="string">"Parent encoder is invalid"</span>)]
     </span>InvalidParentEncoder,
     <span class="attr">#[error(<span class="string">"Bind group index {index} is greater than the device's requested `max_bind_group` limit {max}"</span>)]
@@ -1635,7 +1637,7 @@
 
         <span class="kw">match </span>cmd_buf.data.lock().lock_encoder() {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {}
-            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>make_err(e, arc_desc),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>make_err(e.into(), arc_desc),
         };
 
         arc_desc.timestamp_writes = <span class="kw">match </span>desc

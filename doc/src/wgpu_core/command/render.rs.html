@@ -3653,7 +3653,8 @@
 <a href="#3652" id="3652">3652</a>
 <a href="#3653" id="3653">3653</a>
 <a href="#3654" id="3654">3654</a>
-<a href="#3655" id="3655">3655</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
+<a href="#3655" id="3655">3655</a>
+<a href="#3656" id="3656">3656</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{fmt, num::NonZeroU32, ops::Range, str};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3666,6 +3667,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
+    EncoderStateError,
 };
 <span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{RenderPipeline, VertexStep};
@@ -4317,7 +4319,7 @@
     <span class="attr">#[error(transparent)]
     </span>ColorAttachment(<span class="attr">#[from] </span>ColorAttachmentError),
     <span class="attr">#[error(transparent)]
-    </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
+    </span>EncoderState(<span class="attr">#[from] </span>EncoderStateError),
     <span class="attr">#[error(<span class="string">"Parent encoder is invalid"</span>)]
     </span>InvalidParentEncoder,
     <span class="attr">#[error(<span class="string">"The format of the {location} ({format:?}) is not resolvable"</span>)]
@@ -5265,7 +5267,7 @@
 
         <span class="kw">match </span>cmd_buf.data.lock().lock_encoder() {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {}
-            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>make_err(e, arc_desc),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>make_err(e.into(), arc_desc),
         };
 
         <span class="kw">let </span>err = fill_arc_desc(hub, desc, <span class="kw-2">&amp;mut </span>arc_desc, <span class="kw-2">&amp;</span>cmd_buf.device).err();

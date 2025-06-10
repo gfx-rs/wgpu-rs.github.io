@@ -1189,11 +1189,7 @@
 <a href="#1188" id="1188">1188</a>
 <a href="#1189" id="1189">1189</a>
 <a href="#1190" id="1190">1190</a>
-<a href="#1191" id="1191">1191</a>
-<a href="#1192" id="1192">1192</a>
-<a href="#1193" id="1193">1193</a>
-<a href="#1194" id="1194">1194</a>
-<a href="#1195" id="1195">1195</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<a href="#1191" id="1191">1191</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>thiserror::Error;
@@ -1203,7 +1199,7 @@
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
     api_log,
-    command::{clear_texture, CommandEncoderError},
+    command::{clear_texture, EncoderStateError},
     conv,
     device::{Device, DeviceError, MissingDownlevelFlags},
     global::Global,
@@ -1356,19 +1352,15 @@
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>CopyError {
     <span class="attr">#[error(transparent)]
-    </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
+    </span>EncoderState(<span class="attr">#[from] </span>EncoderStateError),
+    <span class="attr">#[error(transparent)]
+    </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(<span class="string">"Copy error"</span>)]
     </span>Transfer(<span class="attr">#[from] </span>TransferError),
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(transparent)]
     </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
-}
-
-<span class="kw">impl </span>From&lt;DeviceError&gt; <span class="kw">for </span>CopyError {
-    <span class="kw">fn </span>from(err: DeviceError) -&gt; <span class="self">Self </span>{
-        CopyError::Encoder(CommandEncoderError::Device(err))
-    }
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extract_texture_selector&lt;T&gt;(
