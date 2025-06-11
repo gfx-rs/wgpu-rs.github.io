@@ -1143,7 +1143,16 @@
 <a href="#1142" id="1142">1142</a>
 <a href="#1143" id="1143">1143</a>
 <a href="#1144" id="1144">1144</a>
-<a href="#1145" id="1145">1145</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
+<a href="#1153" id="1153">1153</a>
+<a href="#1154" id="1154">1154</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::{Cow, ToOwned <span class="kw">as _</span>},
     boxed::Box,
     string::String,
@@ -1591,14 +1600,23 @@
             <span class="kw">let </span><span class="kw-2">mut </span>backend_adapters =
                 <span class="kw">unsafe </span>{ instance.enumerate_adapters(compatible_hal_surface) };
             <span class="kw">if </span>backend_adapters.is_empty() {
+                <span class="macro">log::debug!</span>(<span class="string">"enabled backend `{:?}` has no adapters"</span>, backend);
                 no_adapter_backends |= Backends::from(backend);
                 <span class="comment">// by continuing, we avoid setting the further error bits below
                 </span><span class="kw">continue</span>;
             }
 
             <span class="kw">if </span>desc.force_fallback_adapter {
-                backend_adapters.retain(|exposed| exposed.info.device_type == wgt::DeviceType::Cpu);
+                <span class="macro">log::debug!</span>(<span class="string">"Filtering `{backend:?}` for `force_fallback_adapter`"</span>);
+                backend_adapters.retain(|exposed| {
+                    <span class="kw">let </span>keep = exposed.info.device_type == wgt::DeviceType::Cpu;
+                    <span class="kw">if </span>!keep {
+                        <span class="macro">log::debug!</span>(<span class="string">"* Eliminating adapter `{}`"</span>, exposed.info.name);
+                    }
+                    keep
+                });
                 <span class="kw">if </span>backend_adapters.is_empty() {
+                    <span class="macro">log::debug!</span>(<span class="string">"* Backend `{:?}` has no fallback adapters"</span>, backend);
                     no_fallback_backends |= Backends::from(backend);
                     <span class="kw">continue</span>;
                 }
