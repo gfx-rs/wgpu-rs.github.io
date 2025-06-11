@@ -1500,16 +1500,7 @@
 <a href="#1499" id="1499">1499</a>
 <a href="#1500" id="1500">1500</a>
 <a href="#1501" id="1501">1501</a>
-<a href="#1502" id="1502">1502</a>
-<a href="#1503" id="1503">1503</a>
-<a href="#1504" id="1504">1504</a>
-<a href="#1505" id="1505">1505</a>
-<a href="#1506" id="1506">1506</a>
-<a href="#1507" id="1507">1507</a>
-<a href="#1508" id="1508">1508</a>
-<a href="#1509" id="1509">1509</a>
-<a href="#1510" id="1510">1510</a>
-<a href="#1511" id="1511">1511</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#1502" id="1502">1502</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
 ## Stack memory
@@ -1542,11 +1533,12 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="kw">mod </span>drm;
 <span class="kw">mod </span>instance;
 <span class="kw">mod </span>sampler;
+<span class="kw">mod </span>semaphore_list;
 
 <span class="kw">pub use </span>adapter::PhysicalDeviceFeatures;
 
 <span class="kw">use </span>alloc::{boxed::Box, ffi::CString, sync::Arc, vec::Vec};
-<span class="kw">use </span>core::{borrow::Borrow, ffi::CStr, fmt, mem, num::NonZeroU32, ops::DerefMut};
+<span class="kw">use </span>core::{borrow::Borrow, ffi::CStr, fmt, mem, num::NonZeroU32};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{ext, khr, vk};
@@ -1556,6 +1548,8 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
 <span class="kw">use </span>naga::FastHashMap;
 <span class="kw">use </span>wgt::InternalCounter;
+
+<span class="kw">use </span>semaphore_list::SemaphoreList;
 
 <span class="kw">const </span>MILLIS_TO_NANOS: u64 = <span class="number">1_000_000</span>;
 <span class="kw">const </span>MAX_TOTAL_ATTACHMENTS: usize = <span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS * <span class="number">2 </span>+ <span class="number">1</span>;
@@ -2270,7 +2264,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     device: Arc&lt;DeviceShared&gt;,
     family_index: u32,
     relay_semaphores: Mutex&lt;RelaySemaphores&gt;,
-    signal_semaphores: Mutex&lt;(Vec&lt;vk::Semaphore&gt;, Vec&lt;u64&gt;)&gt;,
+    signal_semaphores: Mutex&lt;SemaphoreList&gt;,
 }
 
 <span class="kw">impl </span>Queue {
@@ -2713,8 +2707,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
         <span class="kw">let </span><span class="kw-2">mut </span>wait_stage_masks = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>wait_semaphores = Vec::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>signal_semaphores = Vec::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>signal_values = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>signal_semaphores = SemaphoreList::default();
 
         <span class="comment">// Double check that the same swapchain image isn't being given to us multiple times,
         // as that will deadlock when we try to lock them all.
@@ -2753,17 +2746,12 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
             <span class="comment">// Get a semaphore to signal when we're done writing to this surface
             // image. Presentation of this image will wait for this.
             </span><span class="kw">let </span>signal_semaphore = swapchain_semaphore.get_submit_signal_semaphore(<span class="kw-2">&amp;</span><span class="self">self</span>.device)<span class="question-mark">?</span>;
-            signal_semaphores.push(signal_semaphore);
-            signal_values.push(!<span class="number">0</span>);
+            signal_semaphores.push_binary(signal_semaphore);
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>guards = <span class="self">self</span>.signal_semaphores.lock();
-        <span class="kw">let </span>(<span class="kw-2">ref mut </span>pending_signal_semaphores, <span class="kw-2">ref mut </span>pending_signal_semaphore_values) =
-            guards.deref_mut();
-        <span class="macro">assert!</span>(pending_signal_semaphores.len() == pending_signal_semaphore_values.len());
-        <span class="kw">if </span>!pending_signal_semaphores.is_empty() {
-            signal_semaphores.append(pending_signal_semaphores);
-            signal_values.append(pending_signal_semaphore_values);
+        <span class="kw">let </span><span class="kw-2">mut </span>guard = <span class="self">self</span>.signal_semaphores.lock();
+        <span class="kw">if </span>!guard.is_empty() {
+            signal_semaphores.append(<span class="kw-2">&amp;mut </span>guard);
         }
 
         <span class="comment">// In order for submissions to be strictly ordered, we encode a dependency between each submission
@@ -2775,15 +2763,13 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
             wait_semaphores.push(sem);
         }
 
-        signal_semaphores.push(semaphore_state.signal);
-        signal_values.push(!<span class="number">0</span>);
+        signal_semaphores.push_binary(semaphore_state.signal);
 
         <span class="comment">// We need to signal our wgpu::Fence if we have one, this adds it to the signal list.
         </span>signal_fence.maintain(<span class="kw-2">&amp;</span><span class="self">self</span>.device.raw)<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="kw-2">*</span>signal_fence {
             Fence::TimelineSemaphore(raw) =&gt; {
-                signal_semaphores.push(raw);
-                signal_values.push(signal_value);
+                signal_semaphores.push_timeline(raw, signal_value);
             }
             Fence::FencePool {
                 <span class="kw-2">ref mut </span>active,
@@ -2812,16 +2798,10 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
         vk_info = vk_info
             .wait_semaphores(<span class="kw-2">&amp;</span>wait_semaphores)
-            .wait_dst_stage_mask(<span class="kw-2">&amp;</span>wait_stage_masks)
-            .signal_semaphores(<span class="kw-2">&amp;</span>signal_semaphores);
+            .wait_dst_stage_mask(<span class="kw-2">&amp;</span>wait_stage_masks);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_timeline_info;
-
-        <span class="kw">if </span><span class="self">self</span>.device.private_caps.timeline_semaphores {
-            vk_timeline_info =
-                vk::TimelineSemaphoreSubmitInfo::default().signal_semaphore_values(<span class="kw-2">&amp;</span>signal_values);
-            vk_info = vk_info.push_next(<span class="kw-2">&amp;mut </span>vk_timeline_info);
-        }
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_timeline_info = mem::MaybeUninit::uninit();
+        vk_info = signal_semaphores.add_to_submit(vk_info, <span class="kw-2">&amp;mut </span>vk_timeline_info);
 
         <span class="macro">profiling::scope!</span>(<span class="string">"vkQueueSubmit"</span>);
         <span class="kw">unsafe </span>{
@@ -2900,10 +2880,12 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     }
 
     <span class="kw">pub fn </span>add_signal_semaphore(<span class="kw-2">&amp;</span><span class="self">self</span>, semaphore: vk::Semaphore, semaphore_value: <span class="prelude-ty">Option</span>&lt;u64&gt;) {
-        <span class="kw">let </span><span class="kw-2">mut </span>guards = <span class="self">self</span>.signal_semaphores.lock();
-        <span class="kw">let </span>(<span class="kw-2">ref mut </span>semaphores, <span class="kw-2">ref mut </span>semaphore_values) = guards.deref_mut();
-        semaphores.push(semaphore);
-        semaphore_values.push(semaphore_value.unwrap_or(!<span class="number">0</span>));
+        <span class="kw">let </span><span class="kw-2">mut </span>guard = <span class="self">self</span>.signal_semaphores.lock();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = semaphore_value {
+            guard.push_timeline(semaphore, value);
+        } <span class="kw">else </span>{
+            guard.push_binary(semaphore);
+        }
     }
 }
 
