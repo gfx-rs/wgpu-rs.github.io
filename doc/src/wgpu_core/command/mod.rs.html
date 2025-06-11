@@ -1101,7 +1101,78 @@
 <a href="#1100" id="1100">1100</a>
 <a href="#1101" id="1101">1101</a>
 <a href="#1102" id="1102">1102</a>
-<a href="#1103" id="1103">1103</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
+<a href="#1153" id="1153">1153</a>
+<a href="#1154" id="1154">1154</a>
+<a href="#1155" id="1155">1155</a>
+<a href="#1156" id="1156">1156</a>
+<a href="#1157" id="1157">1157</a>
+<a href="#1158" id="1158">1158</a>
+<a href="#1159" id="1159">1159</a>
+<a href="#1160" id="1160">1160</a>
+<a href="#1161" id="1161">1161</a>
+<a href="#1162" id="1162">1162</a>
+<a href="#1163" id="1163">1163</a>
+<a href="#1164" id="1164">1164</a>
+<a href="#1165" id="1165">1165</a>
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
+<a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
 <span class="kw">mod </span>clear;
@@ -1153,7 +1224,11 @@
 
 <span class="kw">const </span>PUSH_CONSTANT_CLEAR_ARRAY: <span class="kw-2">&amp;</span>[u32] = <span class="kw-2">&amp;</span>[<span class="number">0_u32</span>; <span class="number">64</span>];
 
-<span class="doccomment">/// The current state of a [`CommandBuffer`].
+<span class="doccomment">/// The current state of a command or pass encoder.
+///
+/// In the WebGPU spec, the state of an encoder (open, locked, or ended) is
+/// orthogonal to the validity of the encoder. However, this enum does not
+/// represent the state of an invalid encoder.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>CommandEncoderStatus {
     <span class="doccomment">/// Ready to record commands. An encoder's initial state.
     ///
@@ -1173,9 +1248,9 @@
     /// This state is entered when a render/compute pass is created,
     /// and exited when the pass is ended.
     ///
-    /// As long as the command encoder is locked, any command building operation on it will fail
-    /// and put the encoder into the [`Self::Error`] state.
-    /// See &lt;https://www.w3.org/TR/webgpu/#encoder-state-locked&gt;
+    /// As long as the command encoder is locked, any command building operation
+    /// on it will fail and put the encoder into the [`Self::Error`] state. See
+    /// &lt;https://www.w3.org/TR/webgpu/#encoder-state-locked&gt;
     </span>Locked(CommandBufferMutable),
 
     <span class="doccomment">/// Command recording is complete, and the buffer is ready for submission.
@@ -1183,17 +1258,22 @@
     /// [`Global::command_encoder_finish`] transitions a
     /// `CommandBuffer` from the `Recording` state into this state.
     ///
-    /// [`Global::queue_submit`] drops command buffers unless they are
+    /// [`Global::queue_submit`] requires that command buffers are
     /// in this state.
+    ///
+    /// This corresponds to WebGPU's "ended" state.
+    /// See &lt;https://www.w3.org/TR/webgpu/#encoder-state-ended&gt;
     </span>Finished(CommandBufferMutable),
 
-    <span class="doccomment">/// An error occurred while recording a compute or render pass.
+    <span class="doccomment">/// The command encoder is invalid.
     ///
-    /// When a `CommandEncoder` is left in this state, we have also
-    /// returned an error result from the function that encountered
-    /// the problem. Future attempts to use the encoder (for example,
-    /// calls to [`Self::record`]) will also return errors.
-    </span>Error,
+    /// The error that caused the invalidation is stored here, and will
+    /// be raised by `CommandEncoder.finish()`.
+    </span>Error(CommandEncoderError),
+
+    <span class="doccomment">/// Temporary state used internally by methods on `CommandEncoderStatus`.
+    /// Encoder should never be left in this state.
+    </span>Transitioning,
 }
 
 <span class="kw">impl </span>CommandEncoderStatus {
@@ -1201,12 +1281,10 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>record(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RecordingGuard&lt;<span class="lifetime">'_</span>&gt;, EncoderStateError&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Recording(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(RecordingGuard { inner: <span class="self">self </span>}),
-            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; {
-                <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Error;
-                <span class="prelude-val">Err</span>(EncoderStateError::Locked)
-            }
+            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="self">self</span>.invalidate(EncoderStateError::Locked)),
             <span class="self">Self</span>::Finished(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Ended),
-            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid),
+            <span class="self">Self</span>::Error(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid),
+            <span class="self">Self</span>::Transitioning =&gt; <span class="macro">unreachable!</span>(),
         }
     }
 
@@ -1218,25 +1296,34 @@
             // playing back a recorded trace. If only to avoid having to
             // implement serialization for all the error types, we don't support
             // storing the errors in a trace.
-            </span><span class="self">Self</span>::Error =&gt; <span class="macro">unreachable!</span>(<span class="string">"passes in a trace do not store errors"</span>),
+            </span><span class="self">Self</span>::Error(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(<span class="string">"passes in a trace do not store errors"</span>),
+            <span class="self">Self</span>::Transitioning =&gt; <span class="macro">unreachable!</span>(),
         }
     }
 
     <span class="doccomment">/// Locks the encoder by putting it in the [`Self::Locked`] state.
     ///
-    /// Call [`Self::unlock_encoder`] to put the [`CommandBuffer`] back into the [`Self::Recording`] state.
+    /// Call [`Self::unlock_encoder`] to put the [`CommandBuffer`] back into the
+    /// [`Self::Recording`] state.
     </span><span class="kw">fn </span>lock_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
-        <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Error) {
+        <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Transitioning) {
             <span class="self">Self</span>::Recording(inner) =&gt; {
                 <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Locked(inner);
                 <span class="prelude-val">Ok</span>(())
             }
-            <span class="self">Self</span>::Finished(inner) =&gt; {
-                <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
+            st @ <span class="self">Self</span>::Finished(<span class="kw">_</span>) =&gt; {
+                <span class="comment">// Attempting to open a pass on a finished encoder raises a
+                // validation error but does not invalidate the encoder. This is
+                // related to https://github.com/gpuweb/gpuweb/issues/5207.
+                </span><span class="kw-2">*</span><span class="self">self </span>= st;
                 <span class="prelude-val">Err</span>(EncoderStateError::Ended)
             }
-            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Locked),
-            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid),
+            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="self">self</span>.invalidate(EncoderStateError::Locked)),
+            st @ <span class="self">Self</span>::Error(<span class="kw">_</span>) =&gt; {
+                <span class="kw-2">*</span><span class="self">self </span>= st;
+                <span class="prelude-val">Err</span>(EncoderStateError::Invalid)
+            }
+            <span class="self">Self</span>::Transitioning =&gt; <span class="macro">unreachable!</span>(),
         }
     }
 
@@ -1246,25 +1333,32 @@
     ///
     /// It is only valid to call this function if the encoder is in the [`Self::Locked`] state.
     </span><span class="kw">fn </span>unlock_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RecordingGuard&lt;<span class="lifetime">'_</span>&gt;, EncoderStateError&gt; {
-        <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Error) {
+        <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Transitioning) {
             <span class="self">Self</span>::Locked(inner) =&gt; {
                 <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Recording(inner);
                 <span class="prelude-val">Ok</span>(RecordingGuard { inner: <span class="self">self </span>})
             }
-            <span class="self">Self</span>::Finished(inner) =&gt; {
-                <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
+            st @ <span class="self">Self</span>::Finished(<span class="kw">_</span>) =&gt; {
+                <span class="comment">// Attempting to end a pass on a finished encoder raises a
+                // validation error but does not invalidate the encoder. This is
+                // related to https://github.com/gpuweb/gpuweb/issues/5207.
+                </span><span class="kw-2">*</span><span class="self">self </span>= st;
                 <span class="prelude-val">Err</span>(EncoderStateError::Ended)
             }
-            <span class="self">Self</span>::Recording(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid),
-            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid),
+            <span class="self">Self</span>::Recording(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="self">self</span>.invalidate(EncoderStateError::Unlocked)),
+            st @ <span class="self">Self</span>::Error(<span class="kw">_</span>) =&gt; {
+                <span class="kw-2">*</span><span class="self">self </span>= st;
+                <span class="prelude-val">Err</span>(EncoderStateError::Invalid)
+            }
+            <span class="self">Self</span>::Transitioning =&gt; <span class="macro">unreachable!</span>(),
         }
     }
 
     <span class="kw">fn </span>finish(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
-        <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Error) {
+        <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Transitioning) {
             <span class="self">Self</span>::Recording(<span class="kw-2">mut </span>inner) =&gt; {
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = inner.encoder.close_if_open() {
-                    <span class="prelude-val">Err</span>(e.into())
+                    <span class="prelude-val">Err</span>(<span class="self">self</span>.invalidate(e.into()))
                 } <span class="kw">else </span>{
                     <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
                     <span class="comment">// Note: if we want to stop tracking the swapchain texture view,
@@ -1272,13 +1366,21 @@
                     </span><span class="prelude-val">Ok</span>(())
                 }
             }
-            <span class="self">Self</span>::Finished(inner) =&gt; {
-                <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
-                <span class="prelude-val">Err</span>(EncoderStateError::Ended.into())
-            }
-            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Locked.into()),
-            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(EncoderStateError::Invalid.into()),
+            <span class="self">Self</span>::Finished(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="self">self</span>.invalidate(EncoderStateError::Ended.into())),
+            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="self">self</span>.invalidate(EncoderStateError::Locked.into())),
+            <span class="self">Self</span>::Error(err) =&gt; <span class="prelude-val">Err</span>(<span class="self">self</span>.invalidate(err)),
+            <span class="self">Self</span>::Transitioning =&gt; <span class="macro">unreachable!</span>(),
         }
+    }
+
+    <span class="comment">// Invalidate the command encoder and store the error `err` causing the
+    // invalidation for diagnostic purposes.
+    //
+    // Since we do not track the state of an invalid encoder, it is not
+    // necessary to unlock an encoder that has been invalidated.
+    </span><span class="kw">fn </span>invalidate&lt;E: Clone + Into&lt;CommandEncoderError&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, err: E) -&gt; E {
+        <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Error(err.clone().into());
+        err
     }
 }
 
@@ -1306,7 +1408,11 @@
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Drop <span class="kw">for </span>RecordingGuard&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw-2">*</span><span class="self">self</span>.inner = CommandEncoderStatus::Error;
+        <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">*</span><span class="self">self</span>.inner, CommandEncoderStatus::Error(<span class="kw">_</span>)) {
+            <span class="comment">// Don't overwrite an error that is already present.
+            </span><span class="kw">return</span>;
+        }
+        <span class="self">self</span>.inner.invalidate(EncoderStateError::Invalid);
     }
 }
 
@@ -1674,12 +1780,16 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_invalid(device: <span class="kw-2">&amp;</span>Arc&lt;Device&gt;, label: <span class="kw-2">&amp;</span>Label) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_invalid(
+        device: <span class="kw-2">&amp;</span>Arc&lt;Device&gt;,
+        label: <span class="kw-2">&amp;</span>Label,
+        err: CommandEncoderError,
+    ) -&gt; <span class="self">Self </span>{
         CommandBuffer {
             device: device.clone(),
             support_clear_texture: device.features.contains(wgt::Features::CLEAR_TEXTURE),
             label: label.to_string(),
-            data: Mutex::new(rank::COMMAND_BUFFER_DATA, CommandEncoderStatus::Error),
+            data: Mutex::new(rank::COMMAND_BUFFER_DATA, CommandEncoderStatus::Error(err)),
         }
     }
 
@@ -1762,12 +1872,16 @@
 
 <span class="kw">impl </span>CommandBuffer {
     <span class="kw">pub fn </span>take_finished&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;CommandBufferMutable, InvalidResourceError&gt; {
-        <span class="kw">let </span>status = mem::replace(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.data.lock(), CommandEncoderStatus::Error);
-        <span class="kw">match </span>status {
-            CommandEncoderStatus::Finished(command_buffer_mutable) =&gt; <span class="prelude-val">Ok</span>(command_buffer_mutable),
-            CommandEncoderStatus::Recording(<span class="kw">_</span>)
-            | CommandEncoderStatus::Locked(<span class="kw">_</span>)
-            | CommandEncoderStatus::Error =&gt; <span class="prelude-val">Err</span>(InvalidResourceError(<span class="self">self</span>.error_ident())),
+        <span class="kw">use </span>CommandEncoderStatus <span class="kw">as </span>St;
+        <span class="kw">match </span>mem::replace(
+            <span class="kw-2">&amp;mut *</span><span class="self">self</span>.data.lock(),
+            CommandEncoderStatus::Error(EncoderStateError::Submitted.into()),
+        ) {
+            St::Finished(command_buffer_mutable) =&gt; <span class="prelude-val">Ok</span>(command_buffer_mutable),
+            St::Recording(<span class="kw">_</span>) | St::Locked(<span class="kw">_</span>) | St::Error(<span class="kw">_</span>) =&gt; {
+                <span class="prelude-val">Err</span>(InvalidResourceError(<span class="self">self</span>.error_ident()))
+            }
+            St::Transitioning =&gt; <span class="macro">unreachable!</span>(),
         }
     }
 }
@@ -1829,17 +1943,45 @@
 }
 
 <span class="doccomment">/// Errors related to the state of a command or pass encoder.
+///
+/// The exact behavior of these errors may change based on the resolution of
+/// &lt;https://github.com/gpuweb/gpuweb/issues/5207&gt;.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>EncoderStateError {
-    <span class="attr">#[error(<span class="string">"Encoder is invalid"</span>)]
+    <span class="doccomment">/// Used internally by wgpu functions to indicate the encoder already
+    /// contained an error. This variant should usually not be seen by users of
+    /// the API, since an effort should be made to provide the caller with a
+    /// more specific reason for the encoder being invalid.
+    </span><span class="attr">#[error(<span class="string">"Encoder is invalid"</span>)]
     </span>Invalid,
-    <span class="attr">#[error(<span class="string">"Encoding must not have ended"</span>)]
+
+    <span class="doccomment">/// Returned immediately when an attempt is made to encode a command using
+    /// an encoder that has already finished.
+    </span><span class="attr">#[error(<span class="string">"Encoding must not have ended"</span>)]
     </span>Ended,
 
-    <span class="doccomment">/// Note: only command encoders can be locked (not pass encoders).
+    <span class="doccomment">/// Returned by a subsequent call to `encoder.finish()`, if there was an
+    /// attempt to open a second pass on the encoder while it was locked for
+    /// a first pass (i.e. the first pass was still open).
+    ///
+    /// Note: only command encoders can be locked (not pass encoders).
     </span><span class="attr">#[error(<span class="string">"Encoder is locked by a previously created render/compute pass. Before recording any new commands, the pass must be ended."</span>)]
     </span>Locked,
+
+    <span class="doccomment">/// Returned when attempting to end a pass if the parent encoder is not
+    /// locked. This can only happen if pass begin/end calls are mismatched.
+    </span><span class="attr">#[error(
+        <span class="string">"Encoder is not currently locked. A pass can only be ended while the encoder is locked."
+    </span>)]
+    </span>Unlocked,
+
+    <span class="doccomment">/// The command buffer has already been submitted.
+    ///
+    /// Although command encoders and command buffers are distinct WebGPU
+    /// objects, we use `CommandEncoderStatus` for both.
+    </span><span class="attr">#[error(<span class="string">"This command buffer has already been submitted."</span>)]
+    </span>Submitted,
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
