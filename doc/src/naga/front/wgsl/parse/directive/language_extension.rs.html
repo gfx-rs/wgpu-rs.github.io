@@ -96,13 +96,27 @@
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a></pre></div><pre class="rust"><code><span class="doccomment">//! `requires …;` extensions in WGSL.
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a></pre></div><pre class="rust"><code><span class="doccomment">//! `requires …;` extensions in WGSL.
 //!
 //! The focal point of this module is the [`LanguageExtension`] API.
 
-</span><span class="kw">use </span>strum::VariantArray;
-
-<span class="doccomment">/// A language extension recognized by Naga, but not guaranteed to be present in all environments.
+/// A language extension recognized by Naga, but not guaranteed to be present in all environments.
 ///
 /// WGSL spec.: &lt;https://www.w3.org/TR/WGSL/#language-extensions-sec&gt;
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -152,7 +166,8 @@
 }
 
 <span class="doccomment">/// A variant of [`LanguageExtension::Implemented`].
-</span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, VariantArray)]
+</span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[cfg_attr(test, derive(strum::VariantArray))]
 </span><span class="kw">pub enum </span>ImplementedLanguageExtension {
     ReadOnlyAndReadWriteStorageTextures,
     Packed4x8IntegerDotProduct,
@@ -160,6 +175,13 @@
 }
 
 <span class="kw">impl </span>ImplementedLanguageExtension {
+    <span class="doccomment">/// A slice of all variants of [`ImplementedLanguageExtension`].
+    </span><span class="kw">pub const </span>VARIANTS: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[<span class="self">Self</span>] = <span class="kw-2">&amp;</span>[
+        <span class="self">Self</span>::ReadOnlyAndReadWriteStorageTextures,
+        <span class="self">Self</span>::Packed4x8IntegerDotProduct,
+        <span class="self">Self</span>::PointerCompositeAccess,
+    ];
+
     <span class="doccomment">/// Returns slice of all variants of [`ImplementedLanguageExtension`].
     </span><span class="kw">pub const fn </span>all() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[<span class="self">Self</span>] {
         <span class="self">Self</span>::VARIANTS
@@ -179,6 +201,16 @@
             }
         }
     }
+}
+
+<span class="attr">#[test]
+</span><span class="doccomment">/// Asserts that the manual implementation of VARIANTS is the same as the derived strum version would be
+/// while still allowing strum to be a dev-only dependency
+</span><span class="kw">fn </span>test_manual_variants_array_is_correct() {
+    <span class="macro">assert_eq!</span>(
+        &lt;ImplementedLanguageExtension <span class="kw">as </span>strum::VariantArray&gt;::VARIANTS,
+        ImplementedLanguageExtension::VARIANTS
+    );
 }
 
 <span class="doccomment">/// A variant of [`LanguageExtension::Unimplemented`].
