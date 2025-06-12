@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["compact"],"mod":["expressions","functions","handle_set_map","statements","types"],"struct":["FunctionMap","ModuleMap","ModuleTracer"]};
+window.SIDEBAR_ITEMS = {"enum":["KeepUnused"],"fn":["compact"],"mod":["expressions","functions","handle_set_map","statements","types"],"struct":["FunctionMap","ModuleMap","ModuleTracer"]};

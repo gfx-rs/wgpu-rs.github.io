@@ -108,7 +108,29 @@
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a></pre></div><pre class="rust"><code><span class="doccomment">//! The [`HandleSet`] type and associated definitions.
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a></pre></div><pre class="rust"><code><span class="doccomment">//! The [`HandleSet`] type and associated definitions.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle, UniqueArena};
 
@@ -187,6 +209,11 @@
         }
     }
 
+    <span class="doccomment">/// Add all of the handles that can be included in this set.
+    </span><span class="kw">pub fn </span>add_all(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.members.get_mut().set_all();
+    }
+
     <span class="kw">pub fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;T&gt;) -&gt; bool {
         <span class="self">self</span>.members.contains(handle.index())
     }
@@ -194,6 +221,23 @@
     <span class="doccomment">/// Return an iterator over all handles in `self`.
     </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span><span class="lifetime">'_ </span>+ Iterator&lt;Item = Handle&lt;T&gt;&gt; {
         <span class="self">self</span>.members.iter().map(Handle::from_usize)
+    }
+
+    <span class="doccomment">/// Removes and returns the numerically largest handle in the set, or `None`
+    /// if the set is empty.
+    </span><span class="kw">pub fn </span>pop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Handle&lt;T&gt;&gt; {
+        <span class="kw">let </span>members = core::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.members);
+        <span class="kw">let </span><span class="kw-2">mut </span>vec = members.into_bit_vec();
+        <span class="kw">let </span>result = vec.iter_mut().enumerate().rev().find_map(|(i, <span class="kw-2">mut </span>bit)| {
+            <span class="kw">if </span><span class="kw-2">*</span>bit {
+                <span class="kw-2">*</span>bit = <span class="bool-val">false</span>;
+                <span class="prelude-val">Some</span>(i)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>}
+        });
+        <span class="self">self</span>.members = bit_set::BitSet::from_bit_vec(vec);
+        result.map(Handle::from_usize)
     }
 }
 

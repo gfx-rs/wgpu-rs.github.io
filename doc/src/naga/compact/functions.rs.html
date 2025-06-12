@@ -108,7 +108,18 @@
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::arena::HandleSet;
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::arena::HandleSet;
 <span class="kw">use super</span>::{FunctionMap, ModuleMap};
 
 <span class="kw">pub struct </span>FunctionTracer&lt;<span class="lifetime">'a</span>&gt; {
@@ -116,7 +127,10 @@
     <span class="kw">pub </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Constant&gt;,
     <span class="kw">pub </span>overrides: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Override&gt;,
 
+    <span class="kw">pub </span>functions_pending: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Function&gt;,
+    <span class="kw">pub </span>functions_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Function&gt;,
     <span class="kw">pub </span>types_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Type&gt;,
+    <span class="kw">pub </span>global_variables_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::GlobalVariable&gt;,
     <span class="kw">pub </span>constants_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Constant&gt;,
     <span class="kw">pub </span>overrides_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Override&gt;,
     <span class="kw">pub </span>global_expressions_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
@@ -126,6 +140,13 @@
 }
 
 <span class="kw">impl </span>FunctionTracer&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="kw">pub fn </span>trace_call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, function: <span class="kw">crate</span>::Handle&lt;<span class="kw">crate</span>::Function&gt;) {
+        <span class="kw">if </span>!<span class="self">self</span>.functions_used.contains(function) {
+            <span class="self">self</span>.functions_used.insert(function);
+            <span class="self">self</span>.functions_pending.insert(function);
+        }
+    }
+
     <span class="kw">pub fn </span>trace(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>argument <span class="kw">in </span><span class="self">self</span>.function.arguments.iter() {
             <span class="self">self</span>.types_used.insert(argument.ty);
@@ -163,6 +184,7 @@
             expressions: <span class="kw-2">&amp;</span><span class="self">self</span>.function.expressions,
 
             types_used: <span class="self">self</span>.types_used,
+            global_variables_used: <span class="self">self</span>.global_variables_used,
             constants_used: <span class="self">self</span>.constants_used,
             overrides_used: <span class="self">self</span>.overrides_used,
             expressions_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.expressions_used,
@@ -215,7 +237,7 @@
         <span class="macro">assert!</span>(reuse.is_empty());
 
         <span class="comment">// Adjust statements.
-        </span><span class="self">self</span>.adjust_body(function);
+        </span><span class="self">self</span>.adjust_body(function, <span class="kw-2">&amp;</span>module_map.functions);
     }
 }
 </code></pre></div></section></main></body></html>

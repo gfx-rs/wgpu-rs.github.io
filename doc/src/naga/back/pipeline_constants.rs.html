@@ -1051,7 +1051,20 @@
 <a href="#1050" id="1050">1050</a>
 <a href="#1051" id="1051">1051</a>
 <a href="#1052" id="1052">1052</a>
-<a href="#1053" id="1053">1053</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     string::{String, ToString},
 };
@@ -1063,6 +1076,8 @@
 <span class="kw">use </span><span class="kw">super</span>::PipelineConstants;
 <span class="kw">use crate</span>::{
     arena::HandleVec,
+    compact::{compact, KeepUnused},
+    ir,
     proc::{ConstantEvaluator, ConstantEvaluatorError, Emitter},
     valid::{Capabilities, ModuleInfo, ValidationError, ValidationFlags, Validator},
     Arena, Block, Constant, Expression, Function, Handle, Literal, Module, Override, Range, Scalar,
@@ -1108,6 +1123,7 @@
 </span><span class="kw">pub fn </span>process_overrides&lt;<span class="lifetime">'a</span>&gt;(
     module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Module,
     module_info: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ModuleInfo,
+    entry_point: <span class="prelude-ty">Option</span>&lt;(ir::ShaderStage, <span class="kw-2">&amp;</span>str)&gt;,
     pipeline_constants: <span class="kw-2">&amp;</span>PipelineConstants,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(Cow&lt;<span class="lifetime">'a</span>, Module&gt;, Cow&lt;<span class="lifetime">'a</span>, ModuleInfo&gt;), PipelineConstantError&gt; {
     <span class="kw">if </span>module.overrides.is_empty() {
@@ -1115,6 +1131,16 @@
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>module = module.clone();
+
+    <span class="comment">// If an entry point was specified, compact the module to remove anything
+    // not reachable from that entry point. This is necessary because we may not
+    // have values for overrides that are not reachable from the entry point.
+    </span><span class="kw">if let </span><span class="prelude-val">Some</span>((ep_stage, ep_name)) = entry_point {
+        module
+            .entry_points
+            .retain(|ep| ep.stage == ep_stage &amp;&amp; ep.name == ep_name);
+    }
+    compact(<span class="kw-2">&amp;mut </span>module, KeepUnused::No);
 
     <span class="comment">// A map from override handles to the handles of the constants
     // we've replaced them with.
