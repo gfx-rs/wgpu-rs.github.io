@@ -381,9 +381,7 @@
 <a href="#380" id="380">380</a>
 <a href="#381" id="381">381</a>
 <a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, pin::Pin, task};
+<a href="#383" id="383">383</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, pin::Pin, task};
 
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>glam::{Mat4, Vec3};
@@ -555,7 +553,7 @@
             },
         );
 
-        <span class="kw">let </span>tlas = device.create_tlas(<span class="kw-2">&amp;</span>wgpu::CreateTlasDescriptor {
+        <span class="kw">let </span><span class="kw-2">mut </span>tlas = device.create_tlas(<span class="kw-2">&amp;</span>wgpu::CreateTlasDescriptor {
             label: <span class="prelude-val">None</span>,
             flags: wgpu::AccelerationStructureFlags::PREFER_FAST_TRACE,
             update_mode: wgpu::AccelerationStructureUpdateMode::Build,
@@ -629,9 +627,7 @@
             cache: <span class="prelude-val">None</span>,
         });
 
-        <span class="kw">let </span><span class="kw-2">mut </span>tlas_package = wgpu::TlasPackage::new(tlas);
-
-        tlas_package[<span class="number">0</span>] = <span class="prelude-val">Some</span>(wgpu::TlasInstance::new(
+        tlas[<span class="number">0</span>] = <span class="prelude-val">Some</span>(wgpu::TlasInstance::new(
             <span class="kw-2">&amp;</span>blas,
             [<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>],
             <span class="number">0</span>,
@@ -657,7 +653,7 @@
                     },
                 ]),
             }),
-            iter::once(<span class="kw-2">&amp;</span>tlas_package),
+            iter::once(<span class="kw-2">&amp;</span>tlas),
         );
 
         queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
@@ -672,7 +668,7 @@
                 },
                 wgpu::BindGroupEntry {
                     binding: <span class="number">1</span>,
-                    resource: tlas_package.as_binding(),
+                    resource: tlas.as_binding(),
                 },
             ],
         });

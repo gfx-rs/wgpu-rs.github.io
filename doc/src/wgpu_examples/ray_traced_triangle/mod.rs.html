@@ -442,22 +442,20 @@
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
-<a href="#444" id="444">444</a>
-<a href="#445" id="445">445</a>
-<a href="#446" id="446">446</a></pre></div><pre class="rust"><code><span class="kw">use </span>glam::{Mat4, Vec3};
+<a href="#444" id="444">444</a></pre></div><pre class="rust"><code><span class="kw">use </span>glam::{Mat4, Vec3};
 <span class="kw">use </span>std::mem;
 <span class="kw">use </span>wgpu::util::{BufferInitDescriptor, DeviceExt};
 <span class="kw">use </span>wgpu::{include_wgsl, BufferUsages, IndexFormat, SamplerDescriptor};
 <span class="kw">use </span>wgpu::{
     AccelerationStructureFlags, AccelerationStructureUpdateMode, BlasBuildEntry, BlasGeometries,
     BlasGeometrySizeDescriptors, BlasTriangleGeometry, BlasTriangleGeometrySizeDescriptor,
-    CreateBlasDescriptor, CreateTlasDescriptor, TlasInstance, TlasPackage,
+    CreateBlasDescriptor, CreateTlasDescriptor, Tlas, TlasInstance,
 };
 
 <span class="kw">use </span><span class="kw">crate</span>::utils;
 
 <span class="kw">struct </span>Example {
-    tlas_package: TlasPackage,
+    tlas: Tlas,
     compute_pipeline: wgpu::ComputePipeline,
     blit_pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
@@ -592,16 +590,14 @@
             },
         );
 
-        <span class="kw">let </span>tlas = device.create_tlas(<span class="kw-2">&amp;</span>CreateTlasDescriptor {
+        <span class="kw">let </span><span class="kw-2">mut </span>tlas = device.create_tlas(<span class="kw-2">&amp;</span>CreateTlasDescriptor {
             label: <span class="prelude-val">None</span>,
             max_instances: <span class="number">3</span>,
             flags: AccelerationStructureFlags::PREFER_FAST_TRACE,
             update_mode: AccelerationStructureUpdateMode::Build,
         });
 
-        <span class="kw">let </span><span class="kw-2">mut </span>tlas_package = TlasPackage::new(tlas);
-
-        tlas_package[<span class="number">0</span>] = <span class="prelude-val">Some</span>(TlasInstance::new(
+        tlas[<span class="number">0</span>] = <span class="prelude-val">Some</span>(TlasInstance::new(
             <span class="kw-2">&amp;</span>blas,
             Mat4::from_translation(Vec3 {
                 x: <span class="number">0.0</span>,
@@ -616,7 +612,7 @@
             <span class="number">0xff</span>,
         ));
 
-        tlas_package[<span class="number">1</span>] = <span class="prelude-val">Some</span>(TlasInstance::new(
+        tlas[<span class="number">1</span>] = <span class="prelude-val">Some</span>(TlasInstance::new(
             <span class="kw-2">&amp;</span>blas,
             Mat4::from_translation(Vec3 {
                 x: -<span class="number">1.0</span>,
@@ -631,7 +627,7 @@
             <span class="number">0xff</span>,
         ));
 
-        tlas_package[<span class="number">2</span>] = <span class="prelude-val">Some</span>(TlasInstance::new(
+        tlas[<span class="number">2</span>] = <span class="prelude-val">Some</span>(TlasInstance::new(
             <span class="kw-2">&amp;</span>blas,
             Mat4::from_translation(Vec3 {
                 x: <span class="number">1.0</span>,
@@ -679,7 +675,7 @@
                     transform_buffer_offset: <span class="prelude-val">None</span>,
                 }]),
             }),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>tlas_package),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>tlas),
         );
 
         queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
@@ -778,7 +774,7 @@
                 },
                 wgpu::BindGroupEntry {
                     binding: <span class="number">2</span>,
-                    resource: wgpu::BindingResource::AccelerationStructure(tlas_package.tlas()),
+                    resource: wgpu::BindingResource::AccelerationStructure(<span class="kw-2">&amp;</span>tlas),
                 },
             ],
         });
@@ -801,7 +797,7 @@
         });
 
         <span class="self">Self </span>{
-            tlas_package,
+            tlas,
             compute_pipeline,
             blit_pipeline,
             bind_group,
@@ -822,7 +818,7 @@
     <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _event: winit::event::WindowEvent) {}
 
     <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, view: <span class="kw-2">&amp;</span>wgpu::TextureView, device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
-        <span class="self">self</span>.tlas_package[<span class="number">0</span>].as_mut().unwrap().transform =
+        <span class="self">self</span>.tlas[<span class="number">0</span>].as_mut().unwrap().transform =
             Mat4::from_rotation_y(<span class="self">self</span>.animation_timer.time())
                 .transpose()
                 .to_cols_array()[..<span class="number">12</span>]
@@ -832,7 +828,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>encoder =
             device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
 
-        encoder.build_acceleration_structures(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.tlas_package));
+        encoder.build_acceleration_structures(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.tlas));
 
         {
             <span class="kw">let </span><span class="kw-2">mut </span>cpass = encoder.begin_compute_pass(<span class="kw-2">&amp;</span>wgpu::ComputePassDescriptor {

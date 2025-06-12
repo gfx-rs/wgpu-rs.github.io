@@ -497,9 +497,7 @@
 <a href="#496" id="496">496</a>
 <a href="#497" id="497">497</a>
 <a href="#498" id="498">498</a>
-<a href="#499" id="499">499</a>
-<a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, pin::Pin, task};
+<a href="#499" id="499">499</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, future::Future, iter, mem, pin::Pin, task};
 
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>glam::{Affine3A, Mat4, Quat, Vec3};
@@ -633,7 +631,7 @@
     </span>vertex_buf: wgpu::Buffer,
     <span class="attr">#[expect(dead_code)]
     </span>index_buf: wgpu::Buffer,
-    tlas_package: wgpu::TlasPackage,
+    tlas: wgpu::Tlas,
     compute_pipeline: wgpu::ComputePipeline,
     compute_bind_group: wgpu::BindGroup,
     blit_pipeline: wgpu::RenderPipeline,
@@ -760,7 +758,7 @@
             },
         );
 
-        <span class="kw">let </span>tlas = device.create_tlas(<span class="kw-2">&amp;</span>wgpu::CreateTlasDescriptor {
+        <span class="kw">let </span><span class="kw-2">mut </span>tlas = device.create_tlas(<span class="kw-2">&amp;</span>wgpu::CreateTlasDescriptor {
             label: <span class="prelude-val">None</span>,
             flags: wgpu::AccelerationStructureFlags::PREFER_FAST_TRACE,
             update_mode: wgpu::AccelerationStructureUpdateMode::Build,
@@ -849,13 +847,11 @@
             ],
         });
 
-        <span class="kw">let </span><span class="kw-2">mut </span>tlas_package = wgpu::TlasPackage::new(tlas);
-
         <span class="kw">let </span>dist = <span class="number">3.0</span>;
 
         <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..side_count {
             <span class="kw">for </span>y <span class="kw">in </span><span class="number">0</span>..side_count {
-                tlas_package[(x + y * side_count) <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(wgpu::TlasInstance::new(
+                tlas[(x + y * side_count) <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(wgpu::TlasInstance::new(
                     <span class="kw-2">&amp;</span>blas,
                     affine_to_rows(<span class="kw-2">&amp;</span>Affine3A::from_rotation_translation(
                         Quat::from_rotation_y(<span class="number">45.9_f32</span>.to_radians()),
@@ -890,7 +886,7 @@
                     },
                 ]),
             }),
-            iter::once(<span class="kw-2">&amp;</span>tlas_package),
+            iter::once(<span class="kw-2">&amp;</span>tlas),
         );
 
         queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
@@ -902,7 +898,7 @@
             uniform_buf,
             vertex_buf,
             index_buf,
-            tlas_package,
+            tlas,
             compute_pipeline,
             compute_bind_group,
             blit_pipeline,
@@ -928,7 +924,7 @@
 
         <span class="kw">let </span>anim_time = <span class="self">self</span>.animation_timer.time();
 
-        <span class="self">self</span>.tlas_package[<span class="number">0</span>].as_mut().unwrap().transform =
+        <span class="self">self</span>.tlas[<span class="number">0</span>].as_mut().unwrap().transform =
             affine_to_rows(<span class="kw-2">&amp;</span>Affine3A::from_rotation_translation(
                 Quat::from_euler(
                     glam::EulerRot::XYZ,
@@ -946,7 +942,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>encoder =
             device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
 
-        encoder.build_acceleration_structures(iter::empty(), iter::once(<span class="kw-2">&amp;</span><span class="self">self</span>.tlas_package));
+        encoder.build_acceleration_structures(iter::empty(), iter::once(<span class="kw-2">&amp;</span><span class="self">self</span>.tlas));
 
         {
             <span class="kw">let </span><span class="kw-2">mut </span>cpass = encoder.begin_compute_pass(<span class="kw-2">&amp;</span>wgpu::ComputePassDescriptor {

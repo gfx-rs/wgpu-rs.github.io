@@ -383,9 +383,7 @@
 <a href="#382" id="382">382</a>
 <a href="#383" id="383">383</a>
 <a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils;
+<a href="#385" id="385">385</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils;
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>glam::{Mat4, Quat, Vec3};
 <span class="kw">use </span>std::ops::IndexMut;
@@ -486,7 +484,7 @@
     uniforms: Uniforms,
     uniform_buf: wgpu::Buffer,
     blas: wgpu::Blas,
-    tlas_package: wgpu::TlasPackage,
+    tlas: wgpu::Tlas,
     pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
     animation_timer: utils::AnimationTimer,
@@ -625,8 +623,6 @@
             ],
         });
 
-        <span class="kw">let </span>tlas_package = wgpu::TlasPackage::new(tlas);
-
         <span class="kw">let </span><span class="kw-2">mut </span>encoder =
             device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
 
@@ -647,7 +643,7 @@
                 ]),
             }),
             <span class="comment">// iter::empty(),
-            </span>iter::once(<span class="kw-2">&amp;</span>tlas_package),
+            </span>iter::once(<span class="kw-2">&amp;</span>tlas),
         );
 
         queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
@@ -656,7 +652,7 @@
             uniforms,
             uniform_buf,
             blas,
-            tlas_package,
+            tlas,
             pipeline,
             bind_group,
             animation_timer: utils::AnimationTimer::default(),
@@ -696,7 +692,7 @@
 
             <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..side_count {
                 <span class="kw">for </span>y <span class="kw">in </span><span class="number">0</span>..side_count {
-                    <span class="kw">let </span>instance = <span class="self">self</span>.tlas_package.index_mut((x + y * side_count) <span class="kw">as </span>usize);
+                    <span class="kw">let </span>instance = <span class="self">self</span>.tlas.index_mut((x + y * side_count) <span class="kw">as </span>usize);
 
                     <span class="kw">let </span>x = x <span class="kw">as </span>f32 / (side_count - <span class="number">1</span>) <span class="kw">as </span>f32;
                     <span class="kw">let </span>y = y <span class="kw">as </span>f32 / (side_count - <span class="number">1</span>) <span class="kw">as </span>f32;
@@ -728,7 +724,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>encoder =
             device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
 
-        encoder.build_acceleration_structures(iter::empty(), iter::once(<span class="kw-2">&amp;</span><span class="self">self</span>.tlas_package));
+        encoder.build_acceleration_structures(iter::empty(), iter::once(<span class="kw-2">&amp;</span><span class="self">self</span>.tlas));
 
         {
             <span class="kw">let </span><span class="kw-2">mut </span>rpass = encoder.begin_render_pass(<span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {

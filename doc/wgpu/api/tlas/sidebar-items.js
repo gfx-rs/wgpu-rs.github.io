@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Tlas","TlasBuildEntry","TlasPackage","TlasShared"],"type":["CreateTlasDescriptor"]};
+window.SIDEBAR_ITEMS = {"struct":["Tlas"],"type":["CreateTlasDescriptor"]};
