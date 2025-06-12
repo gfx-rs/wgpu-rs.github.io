@@ -852,7 +852,17 @@
 <a href="#851" id="851">851</a>
 <a href="#852" id="852">852</a>
 <a href="#853" id="853">853</a>
-<a href="#854" id="854">854</a></pre></div><pre class="rust"><code><span class="doccomment">//! Infrastructure for dispatching calls to the appropriate "backend". The "backends" are:
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a></pre></div><pre class="rust"><code><span class="doccomment">//! Infrastructure for dispatching calls to the appropriate "backend". The "backends" are:
 //!
 //! - `wgpu_core`: An implementation of the the wgpu api on top of various native graphics APIs.
 //! - `webgpu`: An implementation of the wgpu api which calls WebGPU directly.
@@ -907,6 +917,11 @@
 </span><span class="kw">pub type </span>BufferMapCallback = Box&lt;<span class="kw">dyn </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::BufferAsyncError&gt;) + Send + <span class="lifetime">'static</span>&gt;;
 <span class="attr">#[cfg(not(send_sync))]
 </span><span class="kw">pub type </span>BufferMapCallback = Box&lt;<span class="kw">dyn </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::BufferAsyncError&gt;) + <span class="lifetime">'static</span>&gt;;
+
+<span class="attr">#[cfg(send_sync)]
+</span><span class="kw">pub type </span>BlasCompactCallback = Box&lt;<span class="kw">dyn </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::BlasAsyncError&gt;) + Send + <span class="lifetime">'static</span>&gt;;
+<span class="attr">#[cfg(not(send_sync))]
+</span><span class="kw">pub type </span>BlasCompactCallback = Box&lt;<span class="kw">dyn </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::BlasAsyncError&gt;) + <span class="lifetime">'static</span>&gt;;
 
 <span class="comment">// remove when rust 1.86
 </span><span class="attr">#[cfg_attr(not(custom), expect(dead_code))]
@@ -1076,6 +1091,8 @@
 
     <span class="kw">fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32;
     <span class="kw">fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: BoxSubmittedWorkDoneCallback);
+
+    <span class="kw">fn </span>compact_blas(<span class="kw-2">&amp;</span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>DispatchBlas) -&gt; (<span class="prelude-ty">Option</span>&lt;u64&gt;, DispatchBlas);
 }
 
 <span class="kw">pub trait </span>ShaderModuleInterface: CommonTraits {
@@ -1104,7 +1121,10 @@
 
     <span class="kw">fn </span>destroy(<span class="kw-2">&amp;</span><span class="self">self</span>);
 }
-<span class="kw">pub trait </span>BlasInterface: CommonTraits {}
+<span class="kw">pub trait </span>BlasInterface: CommonTraits {
+    <span class="kw">fn </span>prepare_compact_async(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: BlasCompactCallback);
+    <span class="kw">fn </span>ready_for_compaction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+}
 <span class="kw">pub trait </span>TlasInterface: CommonTraits {}
 <span class="kw">pub trait </span>QuerySetInterface: CommonTraits {}
 <span class="kw">pub trait </span>PipelineLayoutInterface: CommonTraits {}

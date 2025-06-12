@@ -666,7 +666,9 @@
 <a href="#665" id="665">665</a>
 <a href="#666" id="666">666</a>
 <a href="#667" id="667">667</a>
-<a href="#668" id="668">668</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
 generating barriers where needednd making sure resources are kept
@@ -763,7 +765,8 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 [`UsageScope`]: https://gpuweb.github.io/gpuweb/#programming-model-synchronization
 */
 
-</span><span class="kw">mod </span>buffer;
+</span><span class="kw">mod </span>blas;
+<span class="kw">mod </span>buffer;
 <span class="kw">mod </span>metadata;
 <span class="kw">mod </span>range;
 <span class="kw">mod </span>stateless;
@@ -775,6 +778,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     pipeline,
     resource::{<span class="self">self</span>, Labeled, ResourceErrorIdent},
     snatch::SnatchGuard,
+    track::blas::BlasTracker,
 };
 
 <span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
@@ -1269,7 +1273,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Tracker {
     <span class="kw">pub </span>buffers: BufferTracker,
     <span class="kw">pub </span>textures: TextureTracker,
-    <span class="kw">pub </span>blas_s: StatelessTracker&lt;resource::Blas&gt;,
+    <span class="kw">pub </span>blas_s: BlasTracker,
     <span class="kw">pub </span>tlas_s: StatelessTracker&lt;resource::Tlas&gt;,
     <span class="kw">pub </span>views: StatelessTracker&lt;resource::TextureView&gt;,
     <span class="kw">pub </span>bind_groups: StatelessTracker&lt;binding_model::BindGroup&gt;,
@@ -1284,7 +1288,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
         <span class="self">Self </span>{
             buffers: BufferTracker::new(),
             textures: TextureTracker::new(),
-            blas_s: StatelessTracker::new(),
+            blas_s: BlasTracker::new(),
             tlas_s: StatelessTracker::new(),
             views: StatelessTracker::new(),
             bind_groups: StatelessTracker::new(),

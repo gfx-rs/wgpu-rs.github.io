@@ -3703,7 +3703,63 @@
 <a href="#3702" id="3702">3702</a>
 <a href="#3703" id="3703">3703</a>
 <a href="#3704" id="3704">3704</a>
-<a href="#3705" id="3705">3705</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3705" id="3705">3705</a>
+<a href="#3706" id="3706">3706</a>
+<a href="#3707" id="3707">3707</a>
+<a href="#3708" id="3708">3708</a>
+<a href="#3709" id="3709">3709</a>
+<a href="#3710" id="3710">3710</a>
+<a href="#3711" id="3711">3711</a>
+<a href="#3712" id="3712">3712</a>
+<a href="#3713" id="3713">3713</a>
+<a href="#3714" id="3714">3714</a>
+<a href="#3715" id="3715">3715</a>
+<a href="#3716" id="3716">3716</a>
+<a href="#3717" id="3717">3717</a>
+<a href="#3718" id="3718">3718</a>
+<a href="#3719" id="3719">3719</a>
+<a href="#3720" id="3720">3720</a>
+<a href="#3721" id="3721">3721</a>
+<a href="#3722" id="3722">3722</a>
+<a href="#3723" id="3723">3723</a>
+<a href="#3724" id="3724">3724</a>
+<a href="#3725" id="3725">3725</a>
+<a href="#3726" id="3726">3726</a>
+<a href="#3727" id="3727">3727</a>
+<a href="#3728" id="3728">3728</a>
+<a href="#3729" id="3729">3729</a>
+<a href="#3730" id="3730">3730</a>
+<a href="#3731" id="3731">3731</a>
+<a href="#3732" id="3732">3732</a>
+<a href="#3733" id="3733">3733</a>
+<a href="#3734" id="3734">3734</a>
+<a href="#3735" id="3735">3735</a>
+<a href="#3736" id="3736">3736</a>
+<a href="#3737" id="3737">3737</a>
+<a href="#3738" id="3738">3738</a>
+<a href="#3739" id="3739">3739</a>
+<a href="#3740" id="3740">3740</a>
+<a href="#3741" id="3741">3741</a>
+<a href="#3742" id="3742">3742</a>
+<a href="#3743" id="3743">3743</a>
+<a href="#3744" id="3744">3744</a>
+<a href="#3745" id="3745">3745</a>
+<a href="#3746" id="3746">3746</a>
+<a href="#3747" id="3747">3747</a>
+<a href="#3748" id="3748">3748</a>
+<a href="#3749" id="3749">3749</a>
+<a href="#3750" id="3750">3750</a>
+<a href="#3751" id="3751">3751</a>
+<a href="#3752" id="3752">3752</a>
+<a href="#3753" id="3753">3753</a>
+<a href="#3754" id="3754">3754</a>
+<a href="#3755" id="3755">3755</a>
+<a href="#3756" id="3756">3756</a>
+<a href="#3757" id="3757">3757</a>
+<a href="#3758" id="3758">3758</a>
+<a href="#3759" id="3759">3759</a>
+<a href="#3760" id="3760">3760</a>
+<a href="#3761" id="3761">3761</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow::{<span class="self">self</span>, Borrowed},
     boxed::Box,
     format,
@@ -3716,13 +3772,16 @@
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>smallvec::SmallVec;
-<span class="kw">use </span>wgc::{command::bundle_ffi::<span class="kw-2">*</span>, error::ContextErrorSource, pipeline::CreateShaderModuleError};
+<span class="kw">use </span>wgc::{
+    command::bundle_ffi::<span class="kw-2">*</span>, error::ContextErrorSource, pipeline::CreateShaderModuleError,
+    resource::BlasPrepareCompactResult,
+};
 <span class="kw">use </span>wgt::WasmNotSendSync;
 
 <span class="kw">use </span><span class="kw">crate</span>::util::Mutex;
 <span class="kw">use crate</span>::{
     api,
-    dispatch::{<span class="self">self</span>, BufferMappedRangeInterface},
+    dispatch::{<span class="self">self</span>, BlasCompactCallback, BufferMappedRangeInterface},
     BindingResource, Blas, BufferBinding, BufferDescriptor, CompilationInfo, CompilationMessage,
     CompilationMessageType, ErrorSource, Features, Label, LoadOp, MapMode, Operations,
     ShaderSource, SurfaceTargetUnsafe, TextureDescriptor, Tlas,
@@ -4349,8 +4408,8 @@
 </span><span class="kw">pub struct </span>CoreBlas {
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: ContextWgpuCore,
     id: wgc::id::BlasId,
-    <span class="comment">// error_sink: ErrorSink,
-</span>}
+    error_sink: ErrorSink,
+}
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>CoreTlas {
@@ -5252,8 +5311,8 @@
             CoreBlas {
                 context: <span class="self">self</span>.context.clone(),
                 id,
-                <span class="comment">// error_sink: Arc::clone(&amp;self.error_sink),
-            </span>}
+                error_sink: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.error_sink),
+            }
             .into(),
         )
     }
@@ -5636,6 +5695,27 @@
             .<span class="number">0
             </span>.queue_on_submitted_work_done(<span class="self">self</span>.id, callback);
     }
+
+    <span class="kw">fn </span>compact_blas(<span class="kw-2">&amp;</span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>dispatch::DispatchBlas) -&gt; (<span class="prelude-ty">Option</span>&lt;u64&gt;, dispatch::DispatchBlas) {
+        <span class="kw">let </span>(id, handle, error) =
+            <span class="self">self</span>.context
+                .<span class="number">0
+                </span>.queue_compact_blas(<span class="self">self</span>.id, blas.as_core().id, <span class="prelude-val">None</span>);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
+            <span class="self">self</span>.context
+                .handle_error_nolabel(<span class="kw-2">&amp;</span><span class="self">self</span>.error_sink, cause, <span class="string">"Queue::compact_blas"</span>);
+        }
+        (
+            handle,
+            CoreBlas {
+                context: <span class="self">self</span>.context.clone(),
+                id,
+                error_sink: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.error_sink),
+            }
+            .into(),
+        )
+    }
 }
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>CoreQueue {
@@ -5807,7 +5887,39 @@
     }
 }
 
-<span class="kw">impl </span>dispatch::BlasInterface <span class="kw">for </span>CoreBlas {}
+<span class="kw">impl </span>dispatch::BlasInterface <span class="kw">for </span>CoreBlas {
+    <span class="kw">fn </span>prepare_compact_async(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: BlasCompactCallback) {
+        <span class="kw">let </span>callback: <span class="prelude-ty">Option</span>&lt;wgc::resource::BlasCompactCallback&gt; =
+            <span class="prelude-val">Some</span>(Box::new(|status: BlasPrepareCompactResult| {
+                <span class="kw">let </span>res = status.map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::BlasAsyncError);
+                callback(res);
+            }));
+
+        <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.blas_prepare_compact_async(<span class="self">self</span>.id, callback) {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; (),
+            <span class="prelude-val">Err</span>(cause) =&gt; <span class="self">self</span>.context.handle_error_nolabel(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.error_sink,
+                cause,
+                <span class="string">"Blas::prepare_compact_async"</span>,
+            ),
+        }
+    }
+
+    <span class="kw">fn </span>ready_for_compaction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.ready_for_compaction(<span class="self">self</span>.id) {
+            <span class="prelude-val">Ok</span>(ready) =&gt; ready,
+            <span class="prelude-val">Err</span>(cause) =&gt; {
+                <span class="self">self</span>.context.handle_error_nolabel(
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.error_sink,
+                    cause,
+                    <span class="string">"Blas::ready_for_compaction"</span>,
+                );
+                <span class="comment">// A BLAS is definitely not ready for compaction if it's not valid
+                </span><span class="bool-val">false
+            </span>}
+        }
+    }
+}
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>CoreBlas {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {

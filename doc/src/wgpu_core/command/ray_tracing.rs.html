@@ -1296,7 +1296,69 @@
 <a href="#1295" id="1295">1295</a>
 <a href="#1296" id="1296">1296</a>
 <a href="#1297" id="1297">1297</a>
-<a href="#1298" id="1298">1298</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec::Vec};
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{
     cmp::max,
     num::NonZeroU64,
@@ -1320,7 +1382,9 @@
         TlasBuildEntry, TlasInstance, TlasPackage, TraceBlasBuildEntry, TraceBlasGeometries,
         TraceBlasTriangleGeometry, TraceTlasInstance, TraceTlasPackage,
     },
-    resource::{AccelerationStructure, Blas, Buffer, Labeled, StagingBuffer, Tlas},
+    resource::{
+        AccelerationStructure, Blas, BlasCompactState, Buffer, Labeled, StagingBuffer, Tlas,
+    },
     scratch::ScratchBuffer,
     snatch::SnatchGuard,
     track::PendingTransition,
@@ -1633,10 +1697,16 @@
 
         <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
 
+        <span class="kw">let </span><span class="kw-2">mut </span>blas_s_compactable = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>descriptors = Vec::new();
 
         <span class="kw">for </span>storage <span class="kw">in </span><span class="kw-2">&amp;</span>blas_storage {
-            descriptors.push(map_blas(storage, scratch_buffer.raw(), <span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>);
+            descriptors.push(map_blas(
+                storage,
+                scratch_buffer.raw(),
+                <span class="kw-2">&amp;</span>snatch_guard,
+                <span class="kw-2">&amp;mut </span>blas_s_compactable,
+            )<span class="question-mark">?</span>);
         }
 
         build_blas(
@@ -1646,6 +1716,7 @@
             input_barriers,
             <span class="kw-2">&amp;</span>descriptors,
             scratch_buffer_barrier,
+            blas_s_compactable,
         );
 
         <span class="kw">if </span>tlas_present {
@@ -1962,10 +2033,16 @@
 
         <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
 
+        <span class="kw">let </span><span class="kw-2">mut </span>blas_s_compactable = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>descriptors = Vec::new();
 
         <span class="kw">for </span>storage <span class="kw">in </span><span class="kw-2">&amp;</span>blas_storage {
-            descriptors.push(map_blas(storage, scratch_buffer.raw(), <span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>);
+            descriptors.push(map_blas(
+                storage,
+                scratch_buffer.raw(),
+                <span class="kw-2">&amp;</span>snatch_guard,
+                <span class="kw-2">&amp;mut </span>blas_s_compactable,
+            )<span class="question-mark">?</span>);
         }
 
         build_blas(
@@ -1975,6 +2052,7 @@
             input_barriers,
             <span class="kw-2">&amp;</span>descriptors,
             scratch_buffer_barrier,
+            blas_s_compactable,
         );
 
         <span class="kw">if </span>tlas_present {
@@ -2092,6 +2170,15 @@
 
                     command_index_guard.next_acceleration_structure_build_command_index += <span class="number">1</span>;
                     <span class="kw">for </span>blas <span class="kw">in </span>build.blas_s_built.iter() {
+                        <span class="kw">let </span><span class="kw-2">mut </span>state_lock = blas.compacted_state.lock();
+                        <span class="kw-2">*</span>state_lock = <span class="kw">match </span><span class="kw-2">*</span>state_lock {
+                            BlasCompactState::Compacted =&gt; {
+                                <span class="macro">unreachable!</span>(<span class="string">"Should be validated out in build."</span>)
+                            }
+                            <span class="comment">// Reset the compacted state to idle. This means any prepares, before mapping their
+                            // internal buffer, will terminate.
+                            </span><span class="kw">_ </span>=&gt; BlasCompactState::Idle,
+                        };
                         <span class="kw-2">*</span>blas.built_index.write() = <span class="prelude-val">Some</span>(build_command_index);
                     }
 
@@ -2513,6 +2600,10 @@
     storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BlasStore&lt;<span class="lifetime">'_</span>&gt;,
     scratch_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>hal::DynBuffer,
     snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard,
+    blases_compactable: <span class="kw-2">&amp;mut </span>Vec&lt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>hal::DynBuffer,
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>hal::DynAccelerationStructure,
+    )&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;
     hal::BuildAccelerationStructureDescriptor&lt;
         <span class="lifetime">'a</span>,
@@ -2529,12 +2620,27 @@
     <span class="kw">if </span>blas.update_mode == wgt::AccelerationStructureUpdateMode::PreferUpdate {
         <span class="macro">log::info!</span>(<span class="string">"only rebuild implemented"</span>)
     }
+    <span class="kw">let </span>raw = blas.try_raw(snatch_guard)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>state_lock = blas.compacted_state.lock();
+    <span class="kw">if let </span>BlasCompactState::Compacted = <span class="kw-2">*</span>state_lock {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(BuildAccelerationStructureError::CompactedBlas(
+            blas.error_ident(),
+        ));
+    }
+
+    <span class="kw">if </span>blas
+        .flags
+        .contains(wgpu_types::AccelerationStructureFlags::ALLOW_COMPACTION)
+    {
+        blases_compactable.push((blas.compaction_buffer.as_ref().unwrap().as_ref(), raw));
+    }
     <span class="prelude-val">Ok</span>(hal::BuildAccelerationStructureDescriptor {
         entries,
         mode: hal::AccelerationStructureBuildMode::Build,
         flags: blas.flags,
         source_acceleration_structure: <span class="prelude-val">None</span>,
-        destination_acceleration_structure: blas.try_raw(snatch_guard)<span class="question-mark">?</span>,
+        destination_acceleration_structure: raw,
         scratch_buffer,
         scratch_buffer_offset: <span class="kw-2">*</span>scratch_buffer_offset,
     })
@@ -2551,6 +2657,10 @@
         <span class="kw">dyn </span>hal::DynAccelerationStructure,
     &gt;],
     scratch_buffer_barrier: hal::BufferBarrier&lt;<span class="kw">dyn </span>hal::DynBuffer&gt;,
+    blas_s_for_compaction: Vec&lt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>hal::DynBuffer,
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>hal::DynAccelerationStructure,
+    )&gt;,
 ) {
     <span class="kw">unsafe </span>{
         cmd_buf_raw.transition_buffers(<span class="kw-2">&amp;</span>input_barriers);
@@ -2577,6 +2687,20 @@
 
     <span class="kw">let </span><span class="kw-2">mut </span>source_usage = hal::AccelerationStructureUses::empty();
     <span class="kw">let </span><span class="kw-2">mut </span>destination_usage = hal::AccelerationStructureUses::empty();
+    <span class="kw">for </span><span class="kw-2">&amp;</span>(buf, blas) <span class="kw">in </span>blas_s_for_compaction.iter() {
+        <span class="kw">unsafe </span>{
+            cmd_buf_raw.transition_buffers(<span class="kw-2">&amp;</span>[hal::BufferBarrier {
+                buffer: buf,
+                usage: hal::StateTransition {
+                    from: BufferUses::ACCELERATION_STRUCTURE_QUERY,
+                    to: BufferUses::ACCELERATION_STRUCTURE_QUERY,
+                },
+            }])
+        }
+        <span class="kw">unsafe </span>{ cmd_buf_raw.read_acceleration_structure_compact_size(blas, buf) }
+        destination_usage |= hal::AccelerationStructureUses::COPY_SRC;
+    }
+
     <span class="kw">if </span>blas_present {
         source_usage |= hal::AccelerationStructureUses::BUILD_OUTPUT;
         destination_usage |= hal::AccelerationStructureUses::BUILD_INPUT

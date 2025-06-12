@@ -480,13 +480,22 @@
 <a href="#479" id="479">479</a>
 <a href="#480" id="480">480</a>
 <a href="#481" id="481">481</a>
-<a href="#482" id="482">482</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, vec::Vec};
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, vec::Vec};
 <span class="kw">use </span>core::{fmt, num::NonZeroU32};
 
 <span class="kw">use crate</span>::{
     binding_model,
     hub::Hub,
     id::{BindGroupLayoutId, PipelineLayoutId},
+    ray_tracing::BlasCompactReadyPendingClosure,
     resource::{
         Buffer, BufferAccessError, BufferAccessResult, BufferMapOperation, Labeled,
         ResourceErrorIdent,
@@ -638,6 +647,7 @@
 <span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>UserClosures {
     <span class="kw">pub </span>mappings: Vec&lt;BufferMapPendingClosure&gt;,
+    <span class="kw">pub </span>blas_compact_ready: Vec&lt;BlasCompactReadyPendingClosure&gt;,
     <span class="kw">pub </span>submissions: SmallVec&lt;[queue::SubmittedWorkDoneClosure; <span class="number">1</span>]&gt;,
     <span class="kw">pub </span>device_lost_invocations: SmallVec&lt;[DeviceLostInvocation; <span class="number">1</span>]&gt;,
 }
@@ -645,6 +655,7 @@
 <span class="kw">impl </span>UserClosures {
     <span class="kw">fn </span>extend(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="self">Self</span>) {
         <span class="self">self</span>.mappings.extend(other.mappings);
+        <span class="self">self</span>.blas_compact_ready.extend(other.blas_compact_ready);
         <span class="self">self</span>.submissions.extend(other.submissions);
         <span class="self">self</span>.device_lost_invocations
             .extend(other.device_lost_invocations);
@@ -658,6 +669,11 @@
         // a on_submitted_work_done callback to be fired before the on_submitted_work_done callback.
         </span><span class="kw">for </span>(<span class="kw-2">mut </span>operation, status) <span class="kw">in </span><span class="self">self</span>.mappings {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = operation.callback.take() {
+                callback(status);
+            }
+        }
+        <span class="kw">for </span>(<span class="kw-2">mut </span>operation, status) <span class="kw">in </span><span class="self">self</span>.blas_compact_ready {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = operation.take() {
                 callback(status);
             }
         }

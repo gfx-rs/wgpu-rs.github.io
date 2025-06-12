@@ -216,9 +216,55 @@
 <a href="#215" id="215">215</a>
 <a href="#216" id="216">216</a>
 <a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
 
-<span class="kw">use </span>wgt::WasmNotSendSync;
+<span class="kw">use </span>wgt::{WasmNotSend, WasmNotSendSync};
 
 <span class="kw">use </span><span class="kw">crate</span>::dispatch;
 <span class="kw">use crate</span>::{Buffer, Label};
@@ -433,5 +479,51 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) blas: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>dispatch::DispatchBlas,
     <span class="attr">#[expect(dead_code)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) geometries: ContextBlasGeometries&lt;<span class="lifetime">'a</span>&gt;,
+}
+
+<span class="doccomment">/// Error occurred when trying to asynchronously prepare a blas for compaction.
+</span><span class="attr">#[derive(Clone, PartialEq, Eq, Debug)]
+</span><span class="kw">pub struct </span>BlasAsyncError;
+<span class="macro">static_assertions::assert_impl_all!</span>(BlasAsyncError: Send, Sync);
+
+<span class="kw">impl </span>core::fmt::Display <span class="kw">for </span>BlasAsyncError {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
+        <span class="macro">write!</span>(
+            f,
+            <span class="string">"Error occurred when trying to asynchronously prepare a blas for compaction"
+        </span>)
+    }
+}
+
+<span class="kw">impl </span>core::error::Error <span class="kw">for </span>BlasAsyncError {}
+
+<span class="kw">impl </span>Blas {
+    <span class="doccomment">/// Asynchronously prepares this BLAS for compaction. The callback is called once all builds
+    /// using this BLAS are finished and the BLAS is compactable. This can be checked using
+    /// [`Blas::ready_for_compaction`]. Rebuilding this BLAS will reset its compacted state, and it
+    /// will need to be prepared again.
+    ///
+    /// ### Interaction with other functions
+    /// On native, `queue.submit(..)` and polling devices (that is calling `instance.poll_all` or
+    /// `device.poll`) with [`PollType::Poll`] may call the callback. On native, polling devices with
+    /// [`PollType::Wait`] (or [`PollType::WaitForSubmissionIndex`] with a submission index greater
+    /// than the last submit the BLAS was used in) will guarantee callback is called.
+    ///
+    /// [`PollType::Poll`]: wgpu_types::PollType::Poll
+    /// [`PollType::Wait`]: wgpu_types::PollType::Wait
+    /// [`PollType::WaitForSubmissionIndex`]: wgpu_types::PollType::WaitForSubmissionIndex
+    </span><span class="kw">pub fn </span>prepare_compaction_async(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        callback: <span class="kw">impl </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), BlasAsyncError&gt;) + WasmNotSend + <span class="lifetime">'static</span>,
+    ) {
+        <span class="self">self</span>.inner.prepare_compact_async(Box::new(callback));
+    }
+
+    <span class="doccomment">/// Checks whether this BLAS is ready for compaction. The returned value is `true` if
+    /// [`Blas::prepare_compaction_async`]'s callback was called with a non-error value, otherwise
+    /// this is `false`.
+    </span><span class="kw">pub fn </span>ready_for_compaction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.inner.ready_for_compaction()
+    }
 }
 </code></pre></div></section></main></body></html>
