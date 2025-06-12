@@ -521,7 +521,11 @@
 <a href="#520" id="520">520</a>
 <a href="#521" id="521">521</a>
 <a href="#522" id="522">522</a>
-<a href="#523" id="523">523</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     format,
     string::{String, ToString},
@@ -529,7 +533,7 @@
 };
 <span class="kw">use </span>core::{error::Error, fmt, ops::Range};
 
-<span class="kw">use crate</span>::{Arena, Handle, UniqueArena};
+<span class="kw">use crate</span>::{as_diagnostic_file_path::AsDiagnosticFilePath, Arena, Handle, UniqueArena};
 
 <span class="doccomment">/// A source code span, used for error reporting.
 </span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Default)]
@@ -806,12 +810,14 @@
 
     <span class="doccomment">/// Emits a summary of the error to standard error stream.
     </span><span class="attr">#[cfg(feature = <span class="string">"stderr"</span>)]
-    </span><span class="kw">pub fn </span>emit_to_stderr_with_path(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str)
+    </span><span class="kw">pub fn </span>emit_to_stderr_with_path&lt;P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str, path: P)
     <span class="kw">where
         </span>E: Error,
+        P: AsDiagnosticFilePath,
     {
         <span class="kw">use </span>codespan_reporting::{files, term};
 
+        <span class="kw">let </span>path = path.to_string_lossy();
         <span class="kw">let </span>files = files::SimpleFile::new(path, source);
         <span class="kw">let </span>config = term::Config::default();
 
@@ -836,12 +842,14 @@
     }
 
     <span class="doccomment">/// Emits a summary of the error to a string.
-    </span><span class="kw">pub fn </span>emit_to_string_with_path(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str) -&gt; String
+    </span><span class="kw">pub fn </span>emit_to_string_with_path&lt;P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str, path: P) -&gt; String
     <span class="kw">where
         </span>E: Error,
+        P: AsDiagnosticFilePath,
     {
         <span class="kw">use </span>codespan_reporting::{files, term};
 
+        <span class="kw">let </span>path = path.to_string_lossy();
         <span class="kw">let </span>files = files::SimpleFile::new(path, source);
         <span class="kw">let </span>config = term::Config::default();
 
