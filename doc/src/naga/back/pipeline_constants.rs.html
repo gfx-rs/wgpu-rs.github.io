@@ -1064,7 +1064,23 @@
 <a href="#1063" id="1063">1063</a>
 <a href="#1064" id="1064">1064</a>
 <a href="#1065" id="1065">1065</a>
-<a href="#1066" id="1066">1066</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     string::{String, ToString},
 };
@@ -2011,6 +2027,19 @@
             <span class="kw">let </span>value = value <span class="kw">as </span>u32;
             <span class="prelude-val">Ok</span>(Literal::U32(value))
         }
+        Scalar::F16 =&gt; {
+            <span class="comment">// https://webidl.spec.whatwg.org/#js-float
+            </span><span class="kw">if </span>!value.is_finite() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(PipelineConstantError::SrcNeedsToBeFinite);
+            }
+
+            <span class="kw">let </span>value = half::f16::from_f64(value);
+            <span class="kw">if </span>!value.is_finite() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(PipelineConstantError::DstRangeTooSmall);
+            }
+
+            <span class="prelude-val">Ok</span>(Literal::F16(value))
+        }
         Scalar::F32 =&gt; {
             <span class="comment">// https://webidl.spec.whatwg.org/#js-float
             </span><span class="kw">if </span>!value.is_finite() {
@@ -2032,7 +2061,10 @@
 
             <span class="prelude-val">Ok</span>(Literal::F64(value))
         }
-        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+        Scalar::ABSTRACT_FLOAT | Scalar::ABSTRACT_INT =&gt; {
+            <span class="macro">unreachable!</span>(<span class="string">"abstract values should not be validated out of override processing"</span>)
+        }
+        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">"unrecognized scalar type for override"</span>),
     }
 }
 
