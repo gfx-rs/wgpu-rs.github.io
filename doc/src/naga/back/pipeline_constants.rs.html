@@ -1084,7 +1084,16 @@
 <a href="#1083" id="1083">1083</a>
 <a href="#1084" id="1084">1084</a>
 <a href="#1085" id="1085">1085</a>
-<a href="#1086" id="1086">1086</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     string::{String, ToString},
 };
@@ -1127,17 +1136,16 @@
     </span>NegativeWorkgroupSize,
 }
 
-<span class="doccomment">/// Replace all overrides in `module` with constants.
+<span class="doccomment">/// Compact `module` and replace all overrides with constants.
 ///
-/// If no changes are needed, this just returns `Cow::Borrowed`
-/// references to `module` and `module_info`. Otherwise, it clones
-/// `module`, edits its [`global_expressions`] arena to contain only
-/// fully-evaluated expressions, and returns `Cow::Owned` values
-/// holding the simplified module and its validation results.
+/// If no changes are needed, this just returns `Cow::Borrowed` references to
+/// `module` and `module_info`. Otherwise, it clones `module`, retains only the
+/// selected entry point, compacts the module, edits its [`global_expressions`]
+/// arena to contain only fully-evaluated expressions, and returns the
+/// simplified module and its validation results.
 ///
-/// In either case, the module returned has an empty `overrides`
-/// arena, and the `global_expressions` arena contains only
-/// fully-evaluated expressions.
+/// The module returned has an empty `overrides` arena, and the
+/// `global_expressions` arena contains only fully-evaluated expressions.
 ///
 /// [`global_expressions`]: Module::global_expressions
 </span><span class="kw">pub fn </span>process_overrides&lt;<span class="lifetime">'a</span>&gt;(
@@ -1146,21 +1154,26 @@
     entry_point: <span class="prelude-ty">Option</span>&lt;(ir::ShaderStage, <span class="kw-2">&amp;</span>str)&gt;,
     pipeline_constants: <span class="kw-2">&amp;</span>PipelineConstants,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(Cow&lt;<span class="lifetime">'a</span>, Module&gt;, Cow&lt;<span class="lifetime">'a</span>, ModuleInfo&gt;), PipelineConstantError&gt; {
-    <span class="kw">if </span>module.overrides.is_empty() {
+    <span class="kw">if </span>(entry_point.is_none() || module.entry_points.len() &lt;= <span class="number">1</span>) &amp;&amp; module.overrides.is_empty() {
         <span class="kw">return </span><span class="prelude-val">Ok</span>((Cow::Borrowed(module), Cow::Borrowed(module_info)));
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>module = module.clone();
-
-    <span class="comment">// If an entry point was specified, compact the module to remove anything
-    // not reachable from that entry point. This is necessary because we may not
-    // have values for overrides that are not reachable from the entry point.
-    </span><span class="kw">if let </span><span class="prelude-val">Some</span>((ep_stage, ep_name)) = entry_point {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>((ep_stage, ep_name)) = entry_point {
         module
             .entry_points
             .retain(|ep| ep.stage == ep_stage &amp;&amp; ep.name == ep_name);
     }
-    compact(<span class="kw-2">&amp;mut </span>module, KeepUnused::No);
+
+    <span class="comment">// Compact the module to remove anything not reachable from an entry point.
+    // This is necessary because we may not have values for overrides that are
+    // not reachable from the/an entry point.
+    </span>compact(<span class="kw-2">&amp;mut </span>module, KeepUnused::No);
+
+    <span class="comment">// If there are no overrides in the module, then we can skip the rest.
+    </span><span class="kw">if </span>module.overrides.is_empty() {
+        <span class="kw">return </span>revalidate(module);
+    }
 
     <span class="comment">// A map from override handles to the handles of the constants
     // we've replaced them with.
@@ -1323,9 +1336,14 @@
     <span class="comment">// Now that we've rewritten all the expressions, we need to
     // recompute their types and other metadata. For the time being,
     // do a full re-validation.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>validator = Validator::new(ValidationFlags::all(), Capabilities::all());
-    <span class="kw">let </span>module_info = validator.validate_resolved_overrides(<span class="kw-2">&amp;</span>module)<span class="question-mark">?</span>;
+    </span>revalidate(module)
+}
 
+<span class="kw">fn </span>revalidate(
+    module: Module,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(Cow&lt;<span class="lifetime">'static</span>, Module&gt;, Cow&lt;<span class="lifetime">'static</span>, ModuleInfo&gt;), PipelineConstantError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>validator = Validator::new(ValidationFlags::all(), Capabilities::all());
+    <span class="kw">let </span>module_info = validator.validate_resolved_overrides(<span class="kw-2">&amp;</span>module)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>((Cow::Owned(module), Cow::Owned(module_info)))
 }
 
