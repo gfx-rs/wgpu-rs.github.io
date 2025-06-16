@@ -5323,7 +5323,19 @@
 <a href="#5322" id="5322">5322</a>
 <a href="#5323" id="5323">5323</a>
 <a href="#5324" id="5324">5324</a>
-<a href="#5325" id="5325">5325</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5325" id="5325">5325</a>
+<a href="#5326" id="5326">5326</a>
+<a href="#5327" id="5327">5327</a>
+<a href="#5328" id="5328">5328</a>
+<a href="#5329" id="5329">5329</a>
+<a href="#5330" id="5330">5330</a>
+<a href="#5331" id="5331">5331</a>
+<a href="#5332" id="5332">5332</a>
+<a href="#5333" id="5333">5333</a>
+<a href="#5334" id="5334">5334</a>
+<a href="#5335" id="5335">5335</a>
+<a href="#5336" id="5336">5336</a>
+<a href="#5337" id="5337">5337</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -7293,7 +7305,7 @@ to output a [`Module`](crate::Module) into glsl
             }
 
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
+            <span class="self">self</span>.write_control_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -7837,8 +7849,11 @@ to output a [`Module`](crate::Module) into glsl
             // keyword which ceases all further processing in a fragment shader, it's called OpKill
             // in spir-v that's why it's called `Statement::Kill`
             </span>Statement::Kill =&gt; <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}discard;"</span>)<span class="question-mark">?</span>,
-            Statement::Barrier(flags) =&gt; {
-                <span class="self">self</span>.write_barrier(flags, level)<span class="question-mark">?</span>;
+            Statement::ControlBarrier(flags) =&gt; {
+                <span class="self">self</span>.write_control_barrier(flags, level)<span class="question-mark">?</span>;
+            }
+            Statement::MemoryBarrier(flags) =&gt; {
+                <span class="self">self</span>.write_memory_barrier(flags, level)<span class="question-mark">?</span>;
             }
             <span class="comment">// Stores in glsl are just variable assignments written as `pointer = value;`
             </span>Statement::Store { pointer, value } =&gt; {
@@ -7852,14 +7867,14 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="comment">// GLSL doesn't have pointers, which means that this backend needs to ensure that
                 // the actual "loading" is happening between the two barriers.
                 // This is done in `Emit` by never emitting a variable name for pointer variables
-                </span><span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
+                </span><span class="self">self</span>.write_control_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>result_name = Baked(result).to_string();
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="comment">// Expressions cannot have side effects, so just writing the expression here is fine.
                 </span><span class="self">self</span>.write_named_expr(pointer, result_name, result, ctx)<span class="question-mark">?</span>;
 
-                <span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
+                <span class="self">self</span>.write_control_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
             }
             <span class="comment">// Stores a value into an image.
             </span>Statement::ImageStore {
@@ -10237,9 +10252,19 @@ to output a [`Module`](crate::Module) into glsl
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Issue a memory barrier. Please note that to ensure visibility,
-    /// OpenGL always requires a call to the `barrier()` function after a `memoryBarrier*()`
-    </span><span class="kw">fn </span>write_barrier(<span class="kw-2">&amp;mut </span><span class="self">self</span>, flags: <span class="kw">crate</span>::Barrier, level: back::Level) -&gt; BackendResult {
+    <span class="doccomment">/// Issue a control barrier.
+    </span><span class="kw">fn </span>write_control_barrier(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        flags: <span class="kw">crate</span>::Barrier,
+        level: back::Level,
+    ) -&gt; BackendResult {
+        <span class="self">self</span>.write_memory_barrier(flags, level)<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}barrier();"</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Issue a memory barrier.
+    </span><span class="kw">fn </span>write_memory_barrier(<span class="kw-2">&amp;mut </span><span class="self">self</span>, flags: <span class="kw">crate</span>::Barrier, level: back::Level) -&gt; BackendResult {
         <span class="kw">if </span>flags.contains(<span class="kw">crate</span>::Barrier::STORAGE) {
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}memoryBarrierBuffer();"</span>)<span class="question-mark">?</span>;
         }
@@ -10252,7 +10277,6 @@ to output a [`Module`](crate::Module) into glsl
         <span class="kw">if </span>flags.contains(<span class="kw">crate</span>::Barrier::TEXTURE) {
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}memoryBarrierImage();"</span>)<span class="question-mark">?</span>;
         }
-        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}barrier();"</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 

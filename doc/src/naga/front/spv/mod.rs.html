@@ -6186,7 +6186,49 @@
 <a href="#6185" id="6185">6185</a>
 <a href="#6186" id="6186">6186</a>
 <a href="#6187" id="6187">6187</a>
-<a href="#6188" id="6188">6188</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#6188" id="6188">6188</a>
+<a href="#6189" id="6189">6189</a>
+<a href="#6190" id="6190">6190</a>
+<a href="#6191" id="6191">6191</a>
+<a href="#6192" id="6192">6192</a>
+<a href="#6193" id="6193">6193</a>
+<a href="#6194" id="6194">6194</a>
+<a href="#6195" id="6195">6195</a>
+<a href="#6196" id="6196">6196</a>
+<a href="#6197" id="6197">6197</a>
+<a href="#6198" id="6198">6198</a>
+<a href="#6199" id="6199">6199</a>
+<a href="#6200" id="6200">6200</a>
+<a href="#6201" id="6201">6201</a>
+<a href="#6202" id="6202">6202</a>
+<a href="#6203" id="6203">6203</a>
+<a href="#6204" id="6204">6204</a>
+<a href="#6205" id="6205">6205</a>
+<a href="#6206" id="6206">6206</a>
+<a href="#6207" id="6207">6207</a>
+<a href="#6208" id="6208">6208</a>
+<a href="#6209" id="6209">6209</a>
+<a href="#6210" id="6210">6210</a>
+<a href="#6211" id="6211">6211</a>
+<a href="#6212" id="6212">6212</a>
+<a href="#6213" id="6213">6213</a>
+<a href="#6214" id="6214">6214</a>
+<a href="#6215" id="6215">6215</a>
+<a href="#6216" id="6216">6216</a>
+<a href="#6217" id="6217">6217</a>
+<a href="#6218" id="6218">6218</a>
+<a href="#6219" id="6219">6219</a>
+<a href="#6220" id="6220">6220</a>
+<a href="#6221" id="6221">6221</a>
+<a href="#6222" id="6222">6222</a>
+<a href="#6223" id="6223">6223</a>
+<a href="#6224" id="6224">6224</a>
+<a href="#6225" id="6225">6225</a>
+<a href="#6226" id="6226">6226</a>
+<a href="#6227" id="6227">6227</a>
+<a href="#6228" id="6228">6228</a>
+<a href="#6229" id="6229">6229</a>
+<a href="#6230" id="6230">6230</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
 ## ID lookups
@@ -10038,7 +10080,9 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>semantics = resolve_constant(ctx.gctx(), <span class="kw-2">&amp;</span>semantics_const.inner)
                         .ok_or(Error::InvalidBarrierMemorySemantics(semantics_id))<span class="question-mark">?</span>;
 
-                    <span class="kw">if </span>exec_scope == spirv::Scope::Workgroup <span class="kw">as </span>u32 {
+                    <span class="kw">if </span>exec_scope == spirv::Scope::Workgroup <span class="kw">as </span>u32
+                        || exec_scope == spirv::Scope::Subgroup <span class="kw">as </span>u32
+                    {
                         <span class="kw">let </span><span class="kw-2">mut </span>flags = <span class="kw">crate</span>::Barrier::empty();
                         flags.set(
                             <span class="kw">crate</span>::Barrier::STORAGE,
@@ -10046,20 +10090,59 @@ This value then gets used instead of `OpLoad` result later on.
                         );
                         flags.set(
                             <span class="kw">crate</span>::Barrier::WORK_GROUP,
-                            semantics
-                                &amp; (spirv::MemorySemantics::SUBGROUP_MEMORY
-                                    | spirv::MemorySemantics::WORKGROUP_MEMORY)
-                                    .bits()
-                                != <span class="number">0</span>,
+                            semantics &amp; (spirv::MemorySemantics::WORKGROUP_MEMORY).bits() != <span class="number">0</span>,
+                        );
+                        flags.set(
+                            <span class="kw">crate</span>::Barrier::SUB_GROUP,
+                            semantics &amp; spirv::MemorySemantics::SUBGROUP_MEMORY.bits() != <span class="number">0</span>,
                         );
                         flags.set(
                             <span class="kw">crate</span>::Barrier::TEXTURE,
                             semantics &amp; spirv::MemorySemantics::IMAGE_MEMORY.bits() != <span class="number">0</span>,
                         );
-                        block.push(<span class="kw">crate</span>::Statement::Barrier(flags), span);
+                        block.push(<span class="kw">crate</span>::Statement::ControlBarrier(flags), span);
                     } <span class="kw">else </span>{
                         <span class="macro">log::warn!</span>(<span class="string">"Unsupported barrier execution scope: {}"</span>, exec_scope);
                     }
+                }
+                Op::MemoryBarrier =&gt; {
+                    inst.expect(<span class="number">3</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>mem_scope_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>semantics_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>mem_scope_const = <span class="self">self</span>.lookup_constant.lookup(mem_scope_id)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>semantics_const = <span class="self">self</span>.lookup_constant.lookup(semantics_id)<span class="question-mark">?</span>;
+
+                    <span class="kw">let </span>mem_scope = resolve_constant(ctx.gctx(), <span class="kw-2">&amp;</span>mem_scope_const.inner)
+                        .ok_or(Error::InvalidBarrierScope(mem_scope_id))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>semantics = resolve_constant(ctx.gctx(), <span class="kw-2">&amp;</span>semantics_const.inner)
+                        .ok_or(Error::InvalidBarrierMemorySemantics(semantics_id))<span class="question-mark">?</span>;
+
+                    <span class="kw">let </span><span class="kw-2">mut </span>flags = <span class="kw">if </span>mem_scope == spirv::Scope::Device <span class="kw">as </span>u32 {
+                        <span class="kw">crate</span>::Barrier::STORAGE
+                    } <span class="kw">else if </span>mem_scope == spirv::Scope::Workgroup <span class="kw">as </span>u32 {
+                        <span class="kw">crate</span>::Barrier::WORK_GROUP
+                    } <span class="kw">else if </span>mem_scope == spirv::Scope::Subgroup <span class="kw">as </span>u32 {
+                        <span class="kw">crate</span>::Barrier::SUB_GROUP
+                    } <span class="kw">else </span>{
+                        <span class="kw">crate</span>::Barrier::empty()
+                    };
+                    flags.set(
+                        <span class="kw">crate</span>::Barrier::STORAGE,
+                        semantics &amp; spirv::MemorySemantics::UNIFORM_MEMORY.bits() != <span class="number">0</span>,
+                    );
+                    flags.set(
+                        <span class="kw">crate</span>::Barrier::WORK_GROUP,
+                        semantics &amp; (spirv::MemorySemantics::WORKGROUP_MEMORY).bits() != <span class="number">0</span>,
+                    );
+                    flags.set(
+                        <span class="kw">crate</span>::Barrier::SUB_GROUP,
+                        semantics &amp; spirv::MemorySemantics::SUBGROUP_MEMORY.bits() != <span class="number">0</span>,
+                    );
+                    flags.set(
+                        <span class="kw">crate</span>::Barrier::TEXTURE,
+                        semantics &amp; spirv::MemorySemantics::IMAGE_MEMORY.bits() != <span class="number">0</span>,
+                    );
+                    block.push(<span class="kw">crate</span>::Statement::MemoryBarrier(flags), span);
                 }
                 Op::CopyObject =&gt; {
                     inst.expect(<span class="number">4</span>)<span class="question-mark">?</span>;
@@ -10754,7 +10837,8 @@ This value then gets used instead of `OpLoad` result later on.
                 | S::Continue
                 | S::Return { .. }
                 | S::Kill
-                | S::Barrier(<span class="kw">_</span>)
+                | S::ControlBarrier(<span class="kw">_</span>)
+                | S::MemoryBarrier(<span class="kw">_</span>)
                 | S::Store { .. }
                 | S::ImageStore { .. }
                 | S::Atomic { .. }

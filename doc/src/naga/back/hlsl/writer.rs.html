@@ -4471,7 +4471,34 @@
 <a href="#4470" id="4470">4470</a>
 <a href="#4471" id="4471">4471</a>
 <a href="#4472" id="4472">4472</a>
-<a href="#4473" id="4473">4473</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4473" id="4473">4473</a>
+<a href="#4474" id="4474">4474</a>
+<a href="#4475" id="4475">4475</a>
+<a href="#4476" id="4476">4476</a>
+<a href="#4477" id="4477">4477</a>
+<a href="#4478" id="4478">4478</a>
+<a href="#4479" id="4479">4479</a>
+<a href="#4480" id="4480">4480</a>
+<a href="#4481" id="4481">4481</a>
+<a href="#4482" id="4482">4482</a>
+<a href="#4483" id="4483">4483</a>
+<a href="#4484" id="4484">4484</a>
+<a href="#4485" id="4485">4485</a>
+<a href="#4486" id="4486">4486</a>
+<a href="#4487" id="4487">4487</a>
+<a href="#4488" id="4488">4488</a>
+<a href="#4489" id="4489">4489</a>
+<a href="#4490" id="4490">4490</a>
+<a href="#4491" id="4491">4491</a>
+<a href="#4492" id="4492">4492</a>
+<a href="#4493" id="4493">4493</a>
+<a href="#4494" id="4494">4494</a>
+<a href="#4495" id="4495">4495</a>
+<a href="#4496" id="4496">4496</a>
+<a href="#4497" id="4497">4497</a>
+<a href="#4498" id="4498">4498</a>
+<a href="#4499" id="4499">4499</a>
+<a href="#4500" id="4500">4500</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -6120,7 +6147,7 @@
         }
 
         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)
+        <span class="self">self</span>.write_control_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)
     }
 
     <span class="doccomment">/// Helper method used to write switches
@@ -6764,8 +6791,11 @@
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}continue;"</span>)<span class="question-mark">?
                 </span>}
             }
-            Statement::Barrier(barrier) =&gt; {
-                <span class="self">self</span>.write_barrier(barrier, level)<span class="question-mark">?</span>;
+            Statement::ControlBarrier(barrier) =&gt; {
+                <span class="self">self</span>.write_control_barrier(barrier, level)<span class="question-mark">?</span>;
+            }
+            Statement::MemoryBarrier(barrier) =&gt; {
+                <span class="self">self</span>.write_memory_barrier(barrier, level)<span class="question-mark">?</span>;
             }
             Statement::ImageStore {
                 image,
@@ -6937,12 +6967,12 @@
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
             }
             Statement::WorkGroupUniformLoad { pointer, result } =&gt; {
-                <span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
+                <span class="self">self</span>.write_control_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>name = Baked(result).to_string();
                 <span class="self">self</span>.write_named_expr(module, pointer, name, result, func_ctx)<span class="question-mark">?</span>;
 
-                <span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
+                <span class="self">self</span>.write_control_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
             }
             Statement::Switch {
                 selector,
@@ -8760,7 +8790,11 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>write_barrier(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barrier: <span class="kw">crate</span>::Barrier, level: back::Level) -&gt; BackendResult {
+    <span class="kw">fn </span>write_control_barrier(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        barrier: <span class="kw">crate</span>::Barrier,
+        level: back::Level,
+    ) -&gt; BackendResult {
         <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::STORAGE) {
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrierWithGroupSync();"</span>)<span class="question-mark">?</span>;
         }
@@ -8772,6 +8806,26 @@
         </span>}
         <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::TEXTURE) {
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrierWithGroupSync();"</span>)<span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>write_memory_barrier(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        barrier: <span class="kw">crate</span>::Barrier,
+        level: back::Level,
+    ) -&gt; BackendResult {
+        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::STORAGE) {
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrier();"</span>)<span class="question-mark">?</span>;
+        }
+        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::WORK_GROUP) {
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}GroupMemoryBarrier();"</span>)<span class="question-mark">?</span>;
+        }
+        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::SUB_GROUP) {
+            <span class="comment">// Does not exist in DirectX
+        </span>}
+        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::TEXTURE) {
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrier();"</span>)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
