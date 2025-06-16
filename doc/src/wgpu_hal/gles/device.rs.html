@@ -1635,7 +1635,15 @@
 <a href="#1634" id="1634">1634</a>
 <a href="#1635" id="1635">1635</a>
 <a href="#1636" id="1636">1636</a>
-<a href="#1637" id="1637">1637</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1637" id="1637">1637</a>
+<a href="#1638" id="1638">1638</a>
+<a href="#1639" id="1639">1639</a>
+<a href="#1640" id="1640">1640</a>
+<a href="#1641" id="1641">1641</a>
+<a href="#1642" id="1642">1642</a>
+<a href="#1643" id="1643">1643</a>
+<a href="#1644" id="1644">1644</a>
+<a href="#1645" id="1645">1645</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned, format, string::String, string::ToString <span class="kw">as _</span>, sync::Arc, vec, vec::Vec,
 };
 <span class="kw">use </span>core::{cmp::max, convert::TryInto, num::NonZeroU32, ptr, sync::atomic::Ordering};
@@ -1660,6 +1668,7 @@
     name_binding_map: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>NameBindingMap,
     push_constant_items: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;naga::back::glsl::PushConstantItem&gt;,
     multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+    clip_distance_count: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>u32,
 }
 
 <span class="kw">impl </span>CompilationContext&lt;<span class="lifetime">'_</span>&gt; {
@@ -1740,6 +1749,10 @@
         }
 
         <span class="kw-2">*</span><span class="self">self</span>.push_constant_items = reflection_info.push_constant_items;
+
+        <span class="kw">if </span>naga_stage == naga::ShaderStage::Vertex {
+            <span class="kw-2">*</span><span class="self">self</span>.clip_distance_count = reflection_info.clip_distance_count;
+        }
     }
 }
 
@@ -2009,6 +2022,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>sampler_map = [<span class="prelude-val">None</span>; <span class="kw">super</span>::MAX_TEXTURE_SLOTS];
         <span class="kw">let </span><span class="kw-2">mut </span>has_stages = wgt::ShaderStages::empty();
         <span class="kw">let </span><span class="kw-2">mut </span>shaders_to_delete = ArrayVec::&lt;<span class="kw">_</span>, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>clip_distance_count = <span class="number">0</span>;
 
         <span class="kw">for </span><span class="kw-2">&amp;</span>(naga_stage, stage) <span class="kw">in </span><span class="kw-2">&amp;</span>shaders {
             has_stages |= map_naga_stage(naga_stage);
@@ -2022,6 +2036,7 @@
                 name_binding_map: <span class="kw-2">&amp;mut </span>name_binding_map,
                 push_constant_items: pc_item,
                 multiview,
+                clip_distance_count: <span class="kw-2">&amp;mut </span>clip_distance_count,
             };
 
             <span class="kw">let </span>shader = <span class="self">Self</span>::create_shader(gl, naga_stage, stage, context, program)<span class="question-mark">?</span>;
@@ -2133,6 +2148,7 @@
             sampler_map,
             first_instance_location,
             push_constant_descs: uniforms,
+            clip_distance_count,
         }))
     }
 }

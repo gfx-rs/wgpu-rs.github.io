@@ -2758,7 +2758,12 @@
 <a href="#2757" id="2757">2757</a>
 <a href="#2758" id="2758">2758</a>
 <a href="#2759" id="2759">2759</a>
-<a href="#2760" id="2760">2760</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, collections::BTreeMap, sync::Arc, vec::Vec};
+<a href="#2760" id="2760">2760</a>
+<a href="#2761" id="2761">2761</a>
+<a href="#2762" id="2762">2762</a>
+<a href="#2763" id="2763">2763</a>
+<a href="#2764" id="2764">2764</a>
+<a href="#2765" id="2765">2765</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, collections::BTreeMap, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::ffi::CStr;
 
 <span class="kw">use </span>ash::{ext, google, khr, vk};
@@ -3068,8 +3073,8 @@
                         | wgt::Features::STORAGE_RESOURCE_BINDING_ARRAY,
                 ))
                 <span class="comment">//.shader_storage_image_array_dynamic_indexing(
-                //.shader_clip_distance(requested_features.contains(wgt::Features::SHADER_CLIP_DISTANCE))
-                //.shader_cull_distance(requested_features.contains(wgt::Features::SHADER_CULL_DISTANCE))
+                </span>.shader_clip_distance(requested_features.contains(wgt::Features::CLIP_DISTANCES))
+                <span class="comment">//.shader_cull_distance(requested_features.contains(wgt::Features::SHADER_CULL_DISTANCE))
                 </span>.shader_float64(requested_features.contains(wgt::Features::SHADER_F64))
                 .shader_int64(requested_features.contains(wgt::Features::SHADER_INT64))
                 .shader_int16(requested_features.contains(wgt::Features::SHADER_I16))
@@ -3469,6 +3474,7 @@
 
         features.set(F::DEPTH_CLIP_CONTROL, <span class="self">self</span>.core.depth_clamp != <span class="number">0</span>);
         features.set(F::DUAL_SOURCE_BLENDING, <span class="self">self</span>.core.dual_src_blend != <span class="number">0</span>);
+        features.set(F::CLIP_DISTANCES, <span class="self">self</span>.core.shader_clip_distance != <span class="number">0</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>multiview) = <span class="self">self</span>.multiview {
             features.set(F::MULTIVIEW, multiview.multiview != <span class="number">0</span>);
@@ -4781,6 +4787,10 @@
 
             <span class="kw">if </span>features.contains(wgt::Features::SHADER_FLOAT32_ATOMIC) {
                 capabilities.push(spv::Capability::AtomicFloat32AddEXT);
+            }
+
+            <span class="kw">if </span>features.contains(wgt::Features::CLIP_DISTANCES) {
+                capabilities.push(spv::Capability::ClipDistance);
             }
 
             <span class="kw">let </span><span class="kw-2">mut </span>flags = spv::WriterFlags::empty();

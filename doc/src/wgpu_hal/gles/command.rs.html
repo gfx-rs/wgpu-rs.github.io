@@ -1257,7 +1257,18 @@
 <a href="#1256" id="1256">1256</a>
 <a href="#1257" id="1257">1257</a>
 <a href="#1258" id="1258">1258</a>
-<a href="#1259" id="1259">1259</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::string::String;
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::string::String;
 <span class="kw">use </span>core::{mem, ops::Range};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -1296,6 +1307,7 @@
     <span class="comment">// The current state of the push constant data block.
     </span>current_push_constant_data: [u32; <span class="kw">super</span>::MAX_PUSH_CONSTANTS],
     end_of_pass_timestamp: <span class="prelude-ty">Option</span>&lt;glow::Query&gt;,
+    clip_distance_count: u32,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>State {
@@ -1324,6 +1336,7 @@
             push_constant_descs: Default::default(),
             current_push_constant_data: [<span class="number">0</span>; <span class="kw">super</span>::MAX_PUSH_CONSTANTS],
             end_of_pass_timestamp: Default::default(),
+            clip_distance_count: Default::default(),
         }
     }
 }
@@ -2239,6 +2252,15 @@
         <span class="self">self</span>.state.color_targets.clear();
         <span class="kw">for </span>ct <span class="kw">in </span>pipeline.color_targets.iter() {
             <span class="self">self</span>.state.color_targets.push(ct.clone());
+        }
+
+        <span class="comment">// set clip plane count
+        </span><span class="kw">if </span>pipeline.inner.clip_distance_count != <span class="self">self</span>.state.clip_distance_count {
+            <span class="self">self</span>.cmd_buffer.commands.push(C::SetClipDistances {
+                old_count: <span class="self">self</span>.state.clip_distance_count,
+                new_count: pipeline.inner.clip_distance_count,
+            });
+            <span class="self">self</span>.state.clip_distance_count = pipeline.inner.clip_distance_count;
         }
     }
 

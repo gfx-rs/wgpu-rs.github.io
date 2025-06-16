@@ -5335,7 +5335,29 @@
 <a href="#5334" id="5334">5334</a>
 <a href="#5335" id="5335">5335</a>
 <a href="#5336" id="5336">5336</a>
-<a href="#5337" id="5337">5337</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5337" id="5337">5337</a>
+<a href="#5338" id="5338">5338</a>
+<a href="#5339" id="5339">5339</a>
+<a href="#5340" id="5340">5340</a>
+<a href="#5341" id="5341">5341</a>
+<a href="#5342" id="5342">5342</a>
+<a href="#5343" id="5343">5343</a>
+<a href="#5344" id="5344">5344</a>
+<a href="#5345" id="5345">5345</a>
+<a href="#5346" id="5346">5346</a>
+<a href="#5347" id="5347">5347</a>
+<a href="#5348" id="5348">5348</a>
+<a href="#5349" id="5349">5349</a>
+<a href="#5350" id="5350">5350</a>
+<a href="#5351" id="5351">5351</a>
+<a href="#5352" id="5352">5352</a>
+<a href="#5353" id="5353">5353</a>
+<a href="#5354" id="5354">5354</a>
+<a href="#5355" id="5355">5355</a>
+<a href="#5356" id="5356">5356</a>
+<a href="#5357" id="5357">5357</a>
+<a href="#5358" id="5358">5358</a>
+<a href="#5359" id="5359">5359</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -5714,6 +5736,8 @@ to output a [`Module`](crate::Module) into glsl
     </span><span class="kw">pub </span>varying: <span class="kw">crate</span>::FastHashMap&lt;String, VaryingLocation&gt;,
     <span class="doccomment">/// List of push constant items in the shader.
     </span><span class="kw">pub </span>push_constant_items: Vec&lt;PushConstantItem&gt;,
+    <span class="doccomment">/// Number of user-defined clip planes. Only applicable to vertex shaders.
+    </span><span class="kw">pub </span>clip_distance_count: u32,
 }
 
 <span class="doccomment">/// Mapping between a texture and its sampler, if it exists.
@@ -5812,7 +5836,7 @@ to output a [`Module`](crate::Module) into glsl
 <span class="doccomment">/// Helper wrapper used to get a name for a varying
 ///
 /// Varying have different naming schemes depending on their binding:
-/// - Varyings with builtin bindings get the from [`glsl_built_in`].
+/// - Varyings with builtin bindings get their name from [`glsl_built_in`].
 /// - Varyings with location bindings are named `_S_location_X` where `S` is a
 ///   prefix identifying which pipeline stage the varying connects, and `X` is
 ///   the location.
@@ -5958,6 +5982,8 @@ to output a [`Module`](crate::Module) into glsl
     </span>multiview: <span class="prelude-ty">Option</span>&lt;core::num::NonZeroU32&gt;,
     <span class="doccomment">/// Mapping of varying variables to their location. Needed for reflections.
     </span>varying: <span class="kw">crate</span>::FastHashMap&lt;String, VaryingLocation&gt;,
+    <span class="doccomment">/// Number of user-defined clip planes. Only non-zero for vertex shaders.
+    </span>clip_distance_count: u32,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, W: Write&gt; Writer&lt;<span class="lifetime">'a</span>, W&gt; {
@@ -6025,6 +6051,7 @@ to output a [`Module`](crate::Module) into glsl
             need_bake_expressions: Default::default(),
             continue_ctx: back::continue_forward::ContinueCtx::default(),
             varying: Default::default(),
+            clip_distance_count: <span class="number">0</span>,
         };
 
         <span class="comment">// Find all features required to print this module
@@ -6947,31 +6974,47 @@ to output a [`Module`](crate::Module) into glsl
                 blend_src,
             } =&gt; (location, interpolation, sampling, blend_src),
             <span class="kw">crate</span>::Binding::BuiltIn(built_in) =&gt; {
-                <span class="kw">if let </span><span class="kw">crate</span>::BuiltIn::Position { invariant: <span class="bool-val">true </span>} = built_in {
-                    <span class="kw">match </span>(<span class="self">self</span>.options.version, <span class="self">self</span>.entry_point.stage) {
-                        (
-                            Version::Embedded {
-                                version: <span class="number">300</span>,
-                                is_webgl: <span class="bool-val">true</span>,
-                            },
-                            ShaderStage::Fragment,
-                        ) =&gt; {
-                            <span class="comment">// `invariant gl_FragCoord` is not allowed in WebGL2 and possibly
-                            // OpenGL ES in general (waiting on confirmation).
-                            //
-                            // See https://github.com/KhronosGroup/WebGL/issues/3518
-                        </span>}
-                        <span class="kw">_ </span>=&gt; {
-                            <span class="macro">writeln!</span>(
-                                <span class="self">self</span>.out,
-                                <span class="string">"invariant {};"</span>,
-                                glsl_built_in(
-                                    built_in,
-                                    VaryingOptions::from_writer_options(<span class="self">self</span>.options, output)
-                                )
-                            )<span class="question-mark">?</span>;
+                <span class="kw">match </span>built_in {
+                    <span class="kw">crate</span>::BuiltIn::Position { invariant: <span class="bool-val">true </span>} =&gt; {
+                        <span class="kw">match </span>(<span class="self">self</span>.options.version, <span class="self">self</span>.entry_point.stage) {
+                            (
+                                Version::Embedded {
+                                    version: <span class="number">300</span>,
+                                    is_webgl: <span class="bool-val">true</span>,
+                                },
+                                ShaderStage::Fragment,
+                            ) =&gt; {
+                                <span class="comment">// `invariant gl_FragCoord` is not allowed in WebGL2 and possibly
+                                // OpenGL ES in general (waiting on confirmation).
+                                //
+                                // See https://github.com/KhronosGroup/WebGL/issues/3518
+                            </span>}
+                            <span class="kw">_ </span>=&gt; {
+                                <span class="macro">writeln!</span>(
+                                    <span class="self">self</span>.out,
+                                    <span class="string">"invariant {};"</span>,
+                                    glsl_built_in(
+                                        built_in,
+                                        VaryingOptions::from_writer_options(<span class="self">self</span>.options, output)
+                                    )
+                                )<span class="question-mark">?</span>;
+                            }
                         }
                     }
+                    <span class="kw">crate</span>::BuiltIn::ClipDistance =&gt; {
+                        <span class="comment">// Re-declare `gl_ClipDistance` with number of clip planes.
+                        </span><span class="kw">let </span>TypeInner::Array { size, .. } = <span class="self">self</span>.module.types[ty].inner <span class="kw">else </span>{
+                            <span class="macro">unreachable!</span>();
+                        };
+                        <span class="kw">let </span>proc::IndexableLength::Known(size) =
+                            size.resolve(<span class="self">self</span>.module.to_ctx())<span class="question-mark">?
+                        </span><span class="kw">else </span>{
+                            <span class="macro">unreachable!</span>();
+                        };
+                        <span class="self">self</span>.clip_distance_count = size;
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"out float gl_ClipDistance[{size}];"</span>)<span class="question-mark">?</span>;
+                    }
+                    <span class="kw">_ </span>=&gt; {}
                 }
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
@@ -10386,6 +10429,7 @@ to output a [`Module`](crate::Module) into glsl
             uniforms,
             varying: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.varying),
             push_constant_items,
+            clip_distance_count: <span class="self">self</span>.clip_distance_count,
         })
     }
 

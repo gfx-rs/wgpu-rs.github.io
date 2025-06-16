@@ -140,7 +140,8 @@
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a></pre></div><pre class="rust"><code><span class="doccomment">//! `enable …;` extensions in WGSL.
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a></pre></div><pre class="rust"><code><span class="doccomment">//! `enable …;` extensions in WGSL.
 //!
 //! The focal point of this module is the [`EnableExtension`] API.
 
@@ -155,6 +156,7 @@
     dual_source_blending: bool,
     <span class="doccomment">/// Whether `enable f16;` was written earlier in the shader module.
     </span>f16: bool,
+    clip_distances: bool,
 }
 
 <span class="kw">impl </span>EnableExtensions {
@@ -162,6 +164,7 @@
         <span class="self">Self </span>{
             f16: <span class="bool-val">false</span>,
             dual_source_blending: <span class="bool-val">false</span>,
+            clip_distances: <span class="bool-val">false</span>,
         }
     }
 
@@ -170,6 +173,7 @@
         <span class="kw">let </span>field = <span class="kw">match </span>ext {
             ImplementedEnableExtension::DualSourceBlending =&gt; <span class="kw-2">&amp;mut </span><span class="self">self</span>.dual_source_blending,
             ImplementedEnableExtension::F16 =&gt; <span class="kw-2">&amp;mut </span><span class="self">self</span>.f16,
+            ImplementedEnableExtension::ClipDistances =&gt; <span class="kw-2">&amp;mut </span><span class="self">self</span>.clip_distances,
         };
         <span class="kw-2">*</span>field = <span class="bool-val">true</span>;
     }
@@ -179,6 +183,7 @@
         <span class="kw">match </span>ext {
             ImplementedEnableExtension::DualSourceBlending =&gt; <span class="self">self</span>.dual_source_blending,
             ImplementedEnableExtension::F16 =&gt; <span class="self">self</span>.f16,
+            ImplementedEnableExtension::ClipDistances =&gt; <span class="self">self</span>.clip_distances,
         }
     }
 }
@@ -214,9 +219,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_ident(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>word {
             <span class="self">Self</span>::F16 =&gt; <span class="self">Self</span>::Implemented(ImplementedEnableExtension::F16),
-            <span class="self">Self</span>::CLIP_DISTANCES =&gt; {
-                <span class="self">Self</span>::Unimplemented(UnimplementedEnableExtension::ClipDistances)
-            }
+            <span class="self">Self</span>::CLIP_DISTANCES =&gt; <span class="self">Self</span>::Implemented(ImplementedEnableExtension::ClipDistances),
             <span class="self">Self</span>::DUAL_SOURCE_BLENDING =&gt; {
                 <span class="self">Self</span>::Implemented(ImplementedEnableExtension::DualSourceBlending)
             }
@@ -231,9 +234,9 @@
             <span class="self">Self</span>::Implemented(kind) =&gt; <span class="kw">match </span>kind {
                 ImplementedEnableExtension::DualSourceBlending =&gt; <span class="self">Self</span>::DUAL_SOURCE_BLENDING,
                 ImplementedEnableExtension::F16 =&gt; <span class="self">Self</span>::F16,
+                ImplementedEnableExtension::ClipDistances =&gt; <span class="self">Self</span>::CLIP_DISTANCES,
             },
             <span class="self">Self</span>::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {
-                UnimplementedEnableExtension::ClipDistances =&gt; <span class="self">Self</span>::CLIP_DISTANCES,
                 UnimplementedEnableExtension::Subgroups =&gt; <span class="self">Self</span>::SUBGROUPS,
             },
         }
@@ -255,17 +258,17 @@
     ///
     /// [`enable dual_source_blending;`]: https://www.w3.org/TR/WGSL/#extension-dual_source_blending
     </span>DualSourceBlending,
-}
-
-<span class="doccomment">/// A variant of [`EnableExtension::Unimplemented`].
-</span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
-</span><span class="kw">pub enum </span>UnimplementedEnableExtension {
     <span class="doccomment">/// Enables the `clip_distances` variable in WGSL.
     ///
     /// In the WGSL standard, this corresponds to [`enable clip_distances;`].
     ///
     /// [`enable clip_distances;`]: https://www.w3.org/TR/WGSL/#extension-clip_distances
     </span>ClipDistances,
+}
+
+<span class="doccomment">/// A variant of [`EnableExtension::Unimplemented`].
+</span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+</span><span class="kw">pub enum </span>UnimplementedEnableExtension {
     <span class="doccomment">/// Enables subgroup built-ins in all languages.
     ///
     /// In the WGSL standard, this corresponds to [`enable subgroups;`].
@@ -277,7 +280,6 @@
 <span class="kw">impl </span>UnimplementedEnableExtension {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>tracking_issue_num(<span class="self">self</span>) -&gt; u16 {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::ClipDistances =&gt; <span class="number">6236</span>,
             <span class="self">Self</span>::Subgroups =&gt; <span class="number">5555</span>,
         }
     }
