@@ -1319,7 +1319,56 @@
 <a href="#1318" id="1318">1318</a>
 <a href="#1319" id="1319">1319</a>
 <a href="#1320" id="1320">1320</a>
-<a href="#1321" id="1321">1321</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
+<a href="#1366" id="1366">1366</a>
+<a href="#1367" id="1367">1367</a>
+<a href="#1368" id="1368">1368</a>
+<a href="#1369" id="1369">1369</a>
+<a href="#1370" id="1370">1370</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -1444,6 +1493,8 @@
     </span>InvalidSampleLevelBiasDimension(<span class="kw">crate</span>::ImageDimension),
     <span class="attr">#[error(<span class="string">"Sample level (gradient) of {1:?} doesn't match the image dimension {0:?}"</span>)]
     </span>InvalidSampleLevelGradientType(<span class="kw">crate</span>::ImageDimension, Handle&lt;<span class="kw">crate</span>::Expression&gt;),
+    <span class="attr">#[error(<span class="string">"Clamping sample coordinate to edge is not supported with {0}"</span>)]
+    </span>InvalidSampleClampCoordinateToEdge(alloc::string::String),
     <span class="attr">#[error(<span class="string">"Unable to cast"</span>)]
     </span>InvalidCastArgument,
     <span class="attr">#[error(<span class="string">"Invalid argument count for {0:?}"</span>)]
@@ -1734,6 +1785,7 @@
                 offset,
                 level,
                 depth_ref,
+                clamp_to_edge,
             } =&gt; {
                 <span class="comment">// check the validity of expressions
                 </span><span class="kw">let </span>image_ty = <span class="self">Self</span>::global_var_ty(module, function, image)<span class="question-mark">?</span>;
@@ -1858,6 +1910,52 @@
                     <span class="kw">match </span>level {
                         <span class="kw">crate</span>::SampleLevel::Zero =&gt; {}
                         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidGatherLevel),
+                    }
+                }
+
+                <span class="comment">// Clamping coordinate to edge is only supported with 2d non-arrayed, sampled images
+                // when sampling from level Zero without any offset, gather, or depth comparison.
+                </span><span class="kw">if </span>clamp_to_edge {
+                    <span class="kw">if </span>!<span class="macro">matches!</span>(
+                        class,
+                        <span class="kw">crate</span>::ImageClass::Sampled {
+                            kind: <span class="kw">crate</span>::ScalarKind::Float,
+                            multi: <span class="bool-val">false
+                        </span>}
+                    ) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleClampCoordinateToEdge(
+                            <span class="macro">alloc::format!</span>(<span class="string">"image class `{class:?}`"</span>),
+                        ));
+                    }
+                    <span class="kw">if </span>dim != <span class="kw">crate</span>::ImageDimension::D2 {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleClampCoordinateToEdge(
+                            <span class="macro">alloc::format!</span>(<span class="string">"image dimension `{dim:?}`"</span>),
+                        ));
+                    }
+                    <span class="kw">if </span>gather.is_some() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleClampCoordinateToEdge(
+                            <span class="string">"gather"</span>.into(),
+                        ));
+                    }
+                    <span class="kw">if </span>array_index.is_some() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleClampCoordinateToEdge(
+                            <span class="string">"array index"</span>.into(),
+                        ));
+                    }
+                    <span class="kw">if </span>offset.is_some() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleClampCoordinateToEdge(
+                            <span class="string">"offset"</span>.into(),
+                        ));
+                    }
+                    <span class="kw">if </span>level != <span class="kw">crate</span>::SampleLevel::Zero {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleClampCoordinateToEdge(
+                            <span class="string">"non-zero level"</span>.into(),
+                        ));
+                    }
+                    <span class="kw">if </span>depth_ref.is_some() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleClampCoordinateToEdge(
+                            <span class="string">"depth comparison"</span>.into(),
+                        ));
                     }
                 }
 

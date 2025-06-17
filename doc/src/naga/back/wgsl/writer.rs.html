@@ -1818,7 +1818,10 @@
 <a href="#1817" id="1817">1817</a>
 <a href="#1818" id="1818">1818</a>
 <a href="#1819" id="1819">1819</a>
-<a href="#1820" id="1820">1820</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -3123,6 +3126,7 @@
                 offset,
                 level,
                 depth_ref,
+                clamp_to_edge,
             } =&gt; {
                 <span class="kw">use </span><span class="kw">crate</span>::SampleLevel <span class="kw">as </span>Sl;
 
@@ -3132,6 +3136,7 @@
                 };
                 <span class="kw">let </span>suffix_level = <span class="kw">match </span>level {
                     Sl::Auto =&gt; <span class="string">""</span>,
+                    Sl::Zero <span class="kw">if </span>clamp_to_edge =&gt; <span class="string">"BaseClampToEdge"</span>,
                     Sl::Zero | Sl::Exact(<span class="kw">_</span>) =&gt; <span class="string">"Level"</span>,
                     Sl::Bias(<span class="kw">_</span>) =&gt; <span class="string">"Bias"</span>,
                     Sl::Gradient { .. } =&gt; <span class="string">"Grad"</span>,
@@ -3157,8 +3162,8 @@
                 <span class="kw">match </span>level {
                     Sl::Auto =&gt; {}
                     Sl::Zero =&gt; {
-                        <span class="comment">// Level 0 is implied for depth comparison
-                        </span><span class="kw">if </span>depth_ref.is_none() {
+                        <span class="comment">// Level 0 is implied for depth comparison and BaseClampToEdge
+                        </span><span class="kw">if </span>depth_ref.is_none() &amp;&amp; !clamp_to_edge {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", 0.0"</span>)<span class="question-mark">?</span>;
                         }
                     }
@@ -3195,6 +3200,7 @@
                 offset,
                 level: <span class="kw">_</span>,
                 depth_ref,
+                clamp_to_edge: <span class="kw">_</span>,
             } =&gt; {
                 <span class="kw">let </span>suffix_cmp = <span class="kw">match </span>depth_ref {
                     <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="string">"Compare"</span>,

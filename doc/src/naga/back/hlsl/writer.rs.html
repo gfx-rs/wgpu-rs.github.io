@@ -4498,7 +4498,35 @@
 <a href="#4497" id="4497">4497</a>
 <a href="#4498" id="4498">4498</a>
 <a href="#4499" id="4499">4499</a>
-<a href="#4500" id="4500">4500</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4500" id="4500">4500</a>
+<a href="#4501" id="4501">4501</a>
+<a href="#4502" id="4502">4502</a>
+<a href="#4503" id="4503">4503</a>
+<a href="#4504" id="4504">4504</a>
+<a href="#4505" id="4505">4505</a>
+<a href="#4506" id="4506">4506</a>
+<a href="#4507" id="4507">4507</a>
+<a href="#4508" id="4508">4508</a>
+<a href="#4509" id="4509">4509</a>
+<a href="#4510" id="4510">4510</a>
+<a href="#4511" id="4511">4511</a>
+<a href="#4512" id="4512">4512</a>
+<a href="#4513" id="4513">4513</a>
+<a href="#4514" id="4514">4514</a>
+<a href="#4515" id="4515">4515</a>
+<a href="#4516" id="4516">4516</a>
+<a href="#4517" id="4517">4517</a>
+<a href="#4518" id="4518">4518</a>
+<a href="#4519" id="4519">4519</a>
+<a href="#4520" id="4520">4520</a>
+<a href="#4521" id="4521">4521</a>
+<a href="#4522" id="4522">4522</a>
+<a href="#4523" id="4523">4523</a>
+<a href="#4524" id="4524">4524</a>
+<a href="#4525" id="4525">4525</a>
+<a href="#4526" id="4526">4526</a>
+<a href="#4527" id="4527">4527</a>
+<a href="#4528" id="4528">4528</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -4542,6 +4570,8 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2U32_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2u32"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2I64_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2i64"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2U64_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2u64"</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>IMAGE_SAMPLE_BASE_CLAMP_TO_EDGE_FUNCTION: <span class="kw-2">&amp;</span>str =
+    <span class="string">"nagaTextureSampleBaseClampToEdge"</span>;
 
 <span class="kw">struct </span>EpStructMember {
     name: String,
@@ -7684,6 +7714,25 @@
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{name}"</span>)<span class="question-mark">?</span>;
             }
             Expression::ImageSample {
+                coordinate,
+                image,
+                sampler,
+                clamp_to_edge: <span class="bool-val">true</span>,
+                gather: <span class="prelude-val">None</span>,
+                array_index: <span class="prelude-val">None</span>,
+                offset: <span class="prelude-val">None</span>,
+                level: <span class="kw">crate</span>::SampleLevel::Zero,
+                depth_ref: <span class="prelude-val">None</span>,
+            } =&gt; {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{IMAGE_SAMPLE_BASE_CLAMP_TO_EDGE_FUNCTION}("</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.write_expr(module, image, func_ctx)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.write_expr(module, sampler, func_ctx)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.write_expr(module, coordinate, func_ctx)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+            }
+            Expression::ImageSample {
                 image,
                 sampler,
                 gather,
@@ -7692,7 +7741,14 @@
                 offset,
                 level,
                 depth_ref,
+                clamp_to_edge,
             } =&gt; {
+                <span class="kw">if </span>clamp_to_edge {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(
+                        <span class="string">"ImageSample::clamp_to_edge should have been validated out"</span>.to_string(),
+                    ));
+                }
+
                 <span class="kw">use </span><span class="kw">crate</span>::SampleLevel <span class="kw">as </span>Sl;
                 <span class="kw">const </span>COMPONENTS: [<span class="kw-2">&amp;</span>str; <span class="number">4</span>] = [<span class="string">""</span>, <span class="string">"Green"</span>, <span class="string">"Blue"</span>, <span class="string">"Alpha"</span>];
 

@@ -7247,7 +7247,59 @@
 <a href="#7246" id="7246">7246</a>
 <a href="#7247" id="7247">7247</a>
 <a href="#7248" id="7248">7248</a>
-<a href="#7249" id="7249">7249</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#7249" id="7249">7249</a>
+<a href="#7250" id="7250">7250</a>
+<a href="#7251" id="7251">7251</a>
+<a href="#7252" id="7252">7252</a>
+<a href="#7253" id="7253">7253</a>
+<a href="#7254" id="7254">7254</a>
+<a href="#7255" id="7255">7255</a>
+<a href="#7256" id="7256">7256</a>
+<a href="#7257" id="7257">7257</a>
+<a href="#7258" id="7258">7258</a>
+<a href="#7259" id="7259">7259</a>
+<a href="#7260" id="7260">7260</a>
+<a href="#7261" id="7261">7261</a>
+<a href="#7262" id="7262">7262</a>
+<a href="#7263" id="7263">7263</a>
+<a href="#7264" id="7264">7264</a>
+<a href="#7265" id="7265">7265</a>
+<a href="#7266" id="7266">7266</a>
+<a href="#7267" id="7267">7267</a>
+<a href="#7268" id="7268">7268</a>
+<a href="#7269" id="7269">7269</a>
+<a href="#7270" id="7270">7270</a>
+<a href="#7271" id="7271">7271</a>
+<a href="#7272" id="7272">7272</a>
+<a href="#7273" id="7273">7273</a>
+<a href="#7274" id="7274">7274</a>
+<a href="#7275" id="7275">7275</a>
+<a href="#7276" id="7276">7276</a>
+<a href="#7277" id="7277">7277</a>
+<a href="#7278" id="7278">7278</a>
+<a href="#7279" id="7279">7279</a>
+<a href="#7280" id="7280">7280</a>
+<a href="#7281" id="7281">7281</a>
+<a href="#7282" id="7282">7282</a>
+<a href="#7283" id="7283">7283</a>
+<a href="#7284" id="7284">7284</a>
+<a href="#7285" id="7285">7285</a>
+<a href="#7286" id="7286">7286</a>
+<a href="#7287" id="7287">7287</a>
+<a href="#7288" id="7288">7288</a>
+<a href="#7289" id="7289">7289</a>
+<a href="#7290" id="7290">7290</a>
+<a href="#7291" id="7291">7291</a>
+<a href="#7292" id="7292">7292</a>
+<a href="#7293" id="7293">7293</a>
+<a href="#7294" id="7294">7294</a>
+<a href="#7295" id="7295">7295</a>
+<a href="#7296" id="7296">7296</a>
+<a href="#7297" id="7297">7297</a>
+<a href="#7298" id="7298">7298</a>
+<a href="#7299" id="7299">7299</a>
+<a href="#7300" id="7300">7300</a>
+<a href="#7301" id="7301">7301</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -7310,6 +7362,8 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2U32_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2u32"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2I64_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2i64"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2U64_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2u64"</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>IMAGE_SAMPLE_BASE_CLAMP_TO_EDGE_FUNCTION: <span class="kw-2">&amp;</span>str =
+    <span class="string">"nagaTextureSampleBaseClampToEdge"</span>;
 <span class="doccomment">/// For some reason, Metal does not let you have `metal::texture&lt;..&gt;*` as a buffer argument.
 /// However, if you put that texture inside a struct, everything is totally fine. This
 /// baffles me to no end.
@@ -7694,6 +7748,9 @@
         src_scalar: <span class="kw">crate</span>::Scalar,
         vector_size: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::VectorSize&gt;,
         dst_scalar: <span class="kw">crate</span>::Scalar,
+    },
+    ImageSample {
+        clamp_to_edge: bool,
     },
 }
 
@@ -9190,6 +9247,25 @@
             }
             <span class="kw">crate</span>::Expression::Load { pointer } =&gt; <span class="self">self</span>.put_load(pointer, context, is_scoped)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::Expression::ImageSample {
+                coordinate,
+                image,
+                sampler,
+                clamp_to_edge: <span class="bool-val">true</span>,
+                gather: <span class="prelude-val">None</span>,
+                array_index: <span class="prelude-val">None</span>,
+                offset: <span class="prelude-val">None</span>,
+                level: <span class="kw">crate</span>::SampleLevel::Zero,
+                depth_ref: <span class="prelude-val">None</span>,
+            } =&gt; {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{IMAGE_SAMPLE_BASE_CLAMP_TO_EDGE_FUNCTION}("</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.put_expression(image, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.put_expression(sampler, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.put_expression(coordinate, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+            }
+            <span class="kw">crate</span>::Expression::ImageSample {
                 image,
                 sampler,
                 gather,
@@ -9198,7 +9274,14 @@
                 offset,
                 level,
                 depth_ref,
+                clamp_to_edge,
             } =&gt; {
+                <span class="kw">if </span>clamp_to_edge {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(
+                        <span class="string">"ImageSample::clamp_to_edge should have been validated out"</span>.to_string(),
+                    ));
+                }
+
                 <span class="kw">let </span>main_op = <span class="kw">match </span>gather {
                     <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="string">"gather"</span>,
                     <span class="prelude-val">None </span>=&gt; <span class="string">"sample"</span>,
@@ -13076,6 +13159,27 @@ template &lt;typename A&gt;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.put_literal(max)<span class="question-mark">?</span>;
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"));"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::Expression::ImageSample {
+                    clamp_to_edge: <span class="bool-val">true</span>,
+                    ..
+                } =&gt; {
+                    <span class="kw">let </span>wrapped = WrappedFunction::ImageSample {
+                        clamp_to_edge: <span class="bool-val">true</span>,
+                    };
+                    <span class="kw">if </span>!<span class="self">self</span>.wrapped_functions.insert(wrapped) {
+                        <span class="kw">continue</span>;
+                    }
+
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{NAMESPACE}::float4 {IMAGE_SAMPLE_BASE_CLAMP_TO_EDGE_FUNCTION}({NAMESPACE}::texture2d&lt;float, {NAMESPACE}::access::sample&gt; tex, {NAMESPACE}::sampler samp, {NAMESPACE}::float2 coords) {{"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>l1 = back::Level(<span class="number">1</span>);
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{l1}{NAMESPACE}::float2 half_texel = 0.5 / {NAMESPACE}::float2(tex.get_width(0u), tex.get_height(0u));"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(
+                        <span class="self">self</span>.out,
+                        <span class="string">"{l1}return tex.sample(samp, {NAMESPACE}::clamp(coords, half_texel, 1.0 - half_texel), {NAMESPACE}::level(0.0));"
+                    </span>)<span class="question-mark">?</span>;
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
                 }

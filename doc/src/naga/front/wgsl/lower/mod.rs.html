@@ -4055,7 +4055,13 @@
 <a href="#4054" id="4054">4054</a>
 <a href="#4055" id="4055">4055</a>
 <a href="#4056" id="4056">4056</a>
-<a href="#4057" id="4057">4057</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4057" id="4057">4057</a>
+<a href="#4058" id="4058">4058</a>
+<a href="#4059" id="4059">4059</a>
+<a href="#4060" id="4060">4060</a>
+<a href="#4061" id="4061">4061</a>
+<a href="#4062" id="4062">4062</a>
+<a href="#4063" id="4063">4063</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     boxed::Box,
     format,
@@ -5097,8 +5103,8 @@
     SampleCompareLevel,
     SampleGrad,
     SampleLevel,
-    <span class="comment">// SampleBaseClampToEdge,
-</span>}
+    SampleBaseClampToEdge,
+}
 
 <span class="kw">impl </span>Texture {
     <span class="kw">pub fn </span>map(word: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
@@ -5112,8 +5118,8 @@
             <span class="string">"textureSampleCompareLevel" </span>=&gt; <span class="self">Self</span>::SampleCompareLevel,
             <span class="string">"textureSampleGrad" </span>=&gt; <span class="self">Self</span>::SampleGrad,
             <span class="string">"textureSampleLevel" </span>=&gt; <span class="self">Self</span>::SampleLevel,
-            <span class="comment">// "textureSampleBaseClampToEdge" =&gt; Some(Self::SampleBaseClampToEdge),
-            </span><span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+            <span class="string">"textureSampleBaseClampToEdge" </span>=&gt; <span class="self">Self</span>::SampleBaseClampToEdge,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         })
     }
 
@@ -5128,8 +5134,8 @@
             <span class="self">Self</span>::SampleCompareLevel =&gt; <span class="number">5</span>,
             <span class="self">Self</span>::SampleGrad =&gt; <span class="number">6</span>,
             <span class="self">Self</span>::SampleLevel =&gt; <span class="number">5</span>,
-            <span class="comment">// Self::SampleBaseClampToEdge =&gt; 3,
-        </span>}
+            <span class="self">Self</span>::SampleBaseClampToEdge =&gt; <span class="number">3</span>,
+        }
     }
 }
 
@@ -7584,6 +7590,7 @@
         <span class="kw">let </span>sampler = <span class="self">self</span>.expression_for_abstract(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>coordinate = <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, ir::Scalar::F32, ctx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>clamp_to_edge = <span class="macro">matches!</span>(fun, Texture::SampleBaseClampToEdge);
 
         <span class="kw">let </span>(class, arrayed) = ctx.image_data(image, image_span)<span class="question-mark">?</span>;
         <span class="kw">let </span>array_index = arrayed
@@ -7650,6 +7657,10 @@
                 level = ir::SampleLevel::Exact(exact);
                 depth_ref = <span class="prelude-val">None</span>;
             }
+            Texture::SampleBaseClampToEdge =&gt; {
+                level = <span class="kw">crate</span>::SampleLevel::Zero;
+                depth_ref = <span class="prelude-val">None</span>;
+            }
         };
 
         <span class="kw">let </span>offset = args
@@ -7669,6 +7680,7 @@
             offset,
             level,
             depth_ref,
+            clamp_to_edge,
         })
     }
 

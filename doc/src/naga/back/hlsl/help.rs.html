@@ -1957,7 +1957,45 @@
 <a href="#1956" id="1956">1956</a>
 <a href="#1957" id="1957">1957</a>
 <a href="#1958" id="1958">1958</a>
-<a href="#1959" id="1959">1959</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#1959" id="1959">1959</a>
+<a href="#1960" id="1960">1960</a>
+<a href="#1961" id="1961">1961</a>
+<a href="#1962" id="1962">1962</a>
+<a href="#1963" id="1963">1963</a>
+<a href="#1964" id="1964">1964</a>
+<a href="#1965" id="1965">1965</a>
+<a href="#1966" id="1966">1966</a>
+<a href="#1967" id="1967">1967</a>
+<a href="#1968" id="1968">1968</a>
+<a href="#1969" id="1969">1969</a>
+<a href="#1970" id="1970">1970</a>
+<a href="#1971" id="1971">1971</a>
+<a href="#1972" id="1972">1972</a>
+<a href="#1973" id="1973">1973</a>
+<a href="#1974" id="1974">1974</a>
+<a href="#1975" id="1975">1975</a>
+<a href="#1976" id="1976">1976</a>
+<a href="#1977" id="1977">1977</a>
+<a href="#1978" id="1978">1978</a>
+<a href="#1979" id="1979">1979</a>
+<a href="#1980" id="1980">1980</a>
+<a href="#1981" id="1981">1981</a>
+<a href="#1982" id="1982">1982</a>
+<a href="#1983" id="1983">1983</a>
+<a href="#1984" id="1984">1984</a>
+<a href="#1985" id="1985">1985</a>
+<a href="#1986" id="1986">1986</a>
+<a href="#1987" id="1987">1987</a>
+<a href="#1988" id="1988">1988</a>
+<a href="#1989" id="1989">1989</a>
+<a href="#1990" id="1990">1990</a>
+<a href="#1991" id="1991">1991</a>
+<a href="#1992" id="1992">1992</a>
+<a href="#1993" id="1993">1993</a>
+<a href="#1994" id="1994">1994</a>
+<a href="#1995" id="1995">1995</a>
+<a href="#1996" id="1996">1996</a>
+<a href="#1997" id="1997">1997</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Helpers for the hlsl backend
 
 Important note about `Expression::ImageQuery`/`Expression::ArrayLength` and hlsl backend:
@@ -1992,7 +2030,8 @@ int dim_1d = NagaDimensions1D(image_1d);
     <span class="kw">super</span>::FunctionCtx,
     writer::{
         ABS_FUNCTION, DIV_FUNCTION, EXTRACT_BITS_FUNCTION, F2I32_FUNCTION, F2I64_FUNCTION,
-        F2U32_FUNCTION, F2U64_FUNCTION, INSERT_BITS_FUNCTION, MOD_FUNCTION, NEG_FUNCTION,
+        F2U32_FUNCTION, F2U64_FUNCTION, IMAGE_SAMPLE_BASE_CLAMP_TO_EDGE_FUNCTION,
+        INSERT_BITS_FUNCTION, MOD_FUNCTION, NEG_FUNCTION,
     },
     BackendResult, WrappedType,
 };
@@ -2001,6 +2040,11 @@ int dim_1d = NagaDimensions1D(image_1d);
 <span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>WrappedArrayLength {
     <span class="kw">pub</span>(<span class="kw">super</span>) writable: bool,
+}
+
+<span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>WrappedImageSample {
+    <span class="kw">pub</span>(<span class="kw">super</span>) clamp_to_edge: bool,
 }
 
 <span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
@@ -2202,6 +2246,32 @@ int dim_1d = NagaDimensions1D(image_1d);
         </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
         <span class="comment">// Write extra new line
         </span><span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_wrapped_image_sample_function(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        sample: WrappedImageSample,
+    ) -&gt; BackendResult {
+        <span class="kw">match </span>sample {
+            WrappedImageSample {
+                clamp_to_edge: <span class="bool-val">true</span>,
+            } =&gt; {
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"float4 {IMAGE_SAMPLE_BASE_CLAMP_TO_EDGE_FUNCTION}(Texture2D&lt;float4&gt; tex, SamplerState samp, float2 coords) {{"</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>l1 = <span class="kw">crate</span>::back::Level(<span class="number">1</span>);
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{l1}float2 size;"</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{l1}tex.GetDimensions(size.x, size.y);"</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{l1}float2 half_texel = float2(0.5, 0.5) / size;"</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(
+                    <span class="self">self</span>.out,
+                    <span class="string">"{l1}return tex.SampleLevel(samp, clamp(coords, half_texel, 1.0 - half_texel), 0.0);"
+                </span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
+            }
+            <span class="kw">_ </span>=&gt; {}
+        }
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -3479,6 +3549,12 @@ int dim_1d = NagaDimensions1D(image_1d);
 
                     <span class="kw">if </span><span class="self">self</span>.wrapped.insert(WrappedType::ArrayLength(wal)) {
                         <span class="self">self</span>.write_wrapped_array_length_function(wal)<span class="question-mark">?</span>;
+                    }
+                }
+                <span class="kw">crate</span>::Expression::ImageSample { clamp_to_edge, .. } =&gt; {
+                    <span class="kw">let </span>wrapped = WrappedImageSample { clamp_to_edge };
+                    <span class="kw">if </span><span class="self">self</span>.wrapped.insert(WrappedType::ImageSample(wrapped)) {
+                        <span class="self">self</span>.write_wrapped_image_sample_function(wrapped)<span class="question-mark">?</span>;
                     }
                 }
                 <span class="kw">crate</span>::Expression::ImageQuery { image, query } =&gt; {
