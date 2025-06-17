@@ -1228,7 +1228,20 @@
 <a href="#1227" id="1227">1227</a>
 <a href="#1228" id="1228">1228</a>
 <a href="#1229" id="1229">1229</a>
-<a href="#1230" id="1230">1230</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
 <span class="kw">mod </span>clear;
@@ -1260,6 +1273,7 @@
 
 <span class="kw">use </span><span class="self">self</span>::memory_init::CommandBufferTextureMemoryActions;
 
+<span class="kw">use </span><span class="kw">crate</span>::command::transition_resources::TransitionResourcesError;
 <span class="kw">use </span><span class="kw">crate</span>::device::queue::TempResource;
 <span class="kw">use </span><span class="kw">crate</span>::device::{Device, DeviceError, MissingFeatures};
 <span class="kw">use </span><span class="kw">crate</span>::lock::{rank, Mutex};
@@ -1267,9 +1281,11 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
 <span class="kw">use </span><span class="kw">crate</span>::ray_tracing::AsAction;
-<span class="kw">use </span><span class="kw">crate</span>::resource::{Fallible, InvalidResourceError, Labeled, ParentDevice <span class="kw">as _</span>, QuerySet};
+<span class="kw">use </span><span class="kw">crate</span>::resource::{
+    DestroyedResourceError, Fallible, InvalidResourceError, Labeled, ParentDevice <span class="kw">as _</span>, QuerySet,
+};
 <span class="kw">use </span><span class="kw">crate</span>::storage::Storage;
-<span class="kw">use </span><span class="kw">crate</span>::track::{DeviceTracker, Tracker, UsageScope};
+<span class="kw">use </span><span class="kw">crate</span>::track::{DeviceTracker, ResourceUsageCompatibilityError, Tracker, UsageScope};
 <span class="kw">use crate</span>::{api_log, global::Global, id, resource_log, Label};
 <span class="kw">use crate</span>::{hal_label, LabelHelpers};
 
@@ -2116,7 +2132,17 @@
     <span class="attr">#[error(transparent)]
     </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
     <span class="attr">#[error(transparent)]
+    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
+    <span class="attr">#[error(transparent)]
+    </span>ResourceUsage(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
+    <span class="attr">#[error(transparent)]
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
+    <span class="attr">#[error(transparent)]
+    </span>Transfer(<span class="attr">#[from] </span>TransferError),
+    <span class="attr">#[error(transparent)]
+    </span>Clear(<span class="attr">#[from] </span>ClearError),
+    <span class="attr">#[error(transparent)]
+    </span>TransitionResources(<span class="attr">#[from] </span>TransitionResourcesError),
     <span class="attr">#[error(
         <span class="string">"begin and end indices of pass timestamp writes are both set to {idx}, which is not allowed"
     </span>)]
