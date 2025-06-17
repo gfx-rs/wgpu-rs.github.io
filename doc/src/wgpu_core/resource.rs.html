@@ -2209,12 +2209,7 @@
 <a href="#2208" id="2208">2208</a>
 <a href="#2209" id="2209">2209</a>
 <a href="#2210" id="2210">2210</a>
-<a href="#2211" id="2211">2211</a>
-<a href="#2212" id="2212">2212</a>
-<a href="#2213" id="2213">2213</a>
-<a href="#2214" id="2214">2214</a>
-<a href="#2215" id="2215">2215</a>
-<a href="#2216" id="2216">2216</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#2211" id="2211">2211</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{
     borrow::Borrow,
     fmt,
@@ -3599,20 +3594,15 @@
 
         <span class="kw">let </span>cmd_buf = hub.command_buffers.get(id.into_command_buffer_id());
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-        <span class="kw">let </span>cmd_buf_data_guard = cmd_buf_data.record();
-
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>cmd_buf_data_guard) = cmd_buf_data_guard {
-            <span class="kw">let </span>cmd_buf_raw = cmd_buf_data_guard
-                .encoder
-                .open()
-                .ok()
-                .and_then(|encoder| encoder.as_any_mut().downcast_mut());
-            <span class="kw">let </span>ret = hal_command_encoder_callback(cmd_buf_raw);
-            cmd_buf_data_guard.mark_successful();
-            ret
-        } <span class="kw">else </span>{
-            hal_command_encoder_callback(<span class="prelude-val">None</span>)
-        }
+        cmd_buf_data.record_as_hal_mut(|opt_cmd_buf| -&gt; R {
+            hal_command_encoder_callback(opt_cmd_buf.and_then(|cmd_buf| {
+                cmd_buf
+                    .encoder
+                    .open()
+                    .ok()
+                    .and_then(|encoder| encoder.as_any_mut().downcast_mut())
+            }))
+        })
     }
 
     <span class="doccomment">/// # Safety

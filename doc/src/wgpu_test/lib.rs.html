@@ -108,7 +108,14 @@
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a></pre></div><pre class="rust"><code><span class="doccomment">//! Test utilities for the wgpu repository.
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a></pre></div><pre class="rust"><code><span class="doccomment">//! Test utilities for the wgpu repository.
 
 </span><span class="attr">#![allow(clippy::arc_with_non_send_sync)] </span><span class="comment">// False positive on wasm
 
@@ -137,6 +144,13 @@
 <span class="kw">pub use </span>wgpu_macros::gpu_test;
 
 <span class="doccomment">/// Run some code in an error scope and assert that validation fails.
+///
+/// Note that errors related to commands for the GPU (i.e. raised by methods on
+/// GPUCommandEncoder, GPURenderPassEncoder, GPUComputePassEncoder,
+/// GPURenderBundleEncoder) are usually not raised immediately. They are raised
+/// only when `finish()` is called on the command encoder. Tests of such error
+/// cases should call `fail` with a closure that calls `finish()`, not with a
+/// closure that encodes the actual command.
 </span><span class="kw">pub fn </span>fail&lt;T&gt;(
     device: <span class="kw-2">&amp;</span>wgpu::Device,
     callback: <span class="kw">impl </span>FnOnce() -&gt; T,

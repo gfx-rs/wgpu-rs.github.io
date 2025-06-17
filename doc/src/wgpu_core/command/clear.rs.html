@@ -507,11 +507,7 @@
 <a href="#506" id="506">506</a>
 <a href="#507" id="507">507</a>
 <a href="#508" id="508">508</a>
-<a href="#509" id="509">509</a>
-<a href="#510" id="510">510</a>
-<a href="#511" id="511">511</a>
-<a href="#512" id="512">512</a>
-<a href="#513" id="513">513</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<a href="#509" id="509">509</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 <span class="kw">use </span>core::ops::Range;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -599,7 +595,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         dst: BufferId,
         offset: BufferAddress,
         size: <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::clear_buffer"</span>);
         <span class="macro">api_log!</span>(<span class="string">"CommandEncoder::clear_buffer {dst:?}"</span>);
 
@@ -609,77 +605,74 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
-        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
+        cmd_buf_data.record_with(|cmd_buf_data| -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
+                list.push(TraceCommand::ClearBuffer { dst, offset, size });
+            }
 
-        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
-            list.push(TraceCommand::ClearBuffer { dst, offset, size });
-        }
+            <span class="kw">let </span>dst_buffer = hub.buffers.get(dst).get()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>dst_buffer = hub.buffers.get(dst).get()<span class="question-mark">?</span>;
+            dst_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
-        dst_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
+            <span class="kw">let </span>dst_pending = cmd_buf_data
+                .trackers
+                .buffers
+                .set_single(<span class="kw-2">&amp;</span>dst_buffer, wgt::BufferUses::COPY_DST);
 
-        <span class="kw">let </span>dst_pending = cmd_buf_data
-            .trackers
-            .buffers
-            .set_single(<span class="kw-2">&amp;</span>dst_buffer, wgt::BufferUses::COPY_DST);
+            <span class="kw">let </span>snatch_guard = dst_buffer.device.snatchable_lock.read();
+            <span class="kw">let </span>dst_raw = dst_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
+            dst_buffer.check_usage(BufferUsages::COPY_DST)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>snatch_guard = dst_buffer.device.snatchable_lock.read();
-        <span class="kw">let </span>dst_raw = dst_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        dst_buffer.check_usage(BufferUsages::COPY_DST)<span class="question-mark">?</span>;
+            <span class="comment">// Check if offset &amp; size are valid.
+            </span><span class="kw">if </span>offset % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::UnalignedBufferOffset(offset));
+            }
 
-        <span class="comment">// Check if offset &amp; size are valid.
-        </span><span class="kw">if </span>offset % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::UnalignedBufferOffset(offset));
-        }
-
-        <span class="kw">let </span>size = size.unwrap_or(dst_buffer.size.saturating_sub(offset));
-        <span class="kw">if </span>size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::UnalignedFillSize(size));
-        }
-        <span class="kw">let </span>end_offset =
-            offset
-                .checked_add(size)
-                .ok_or(ClearError::OffsetPlusSizeExceeds64BitBounds {
+            <span class="kw">let </span>size = size.unwrap_or(dst_buffer.size.saturating_sub(offset));
+            <span class="kw">if </span>size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::UnalignedFillSize(size));
+            }
+            <span class="kw">let </span>end_offset =
+                offset
+                    .checked_add(size)
+                    .ok_or(ClearError::OffsetPlusSizeExceeds64BitBounds {
+                        start_offset: offset,
+                        requested_size: size,
+                    })<span class="question-mark">?</span>;
+            <span class="kw">if </span>end_offset &gt; dst_buffer.size {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::BufferOverrun {
                     start_offset: offset,
-                    requested_size: size,
-                })<span class="question-mark">?</span>;
-        <span class="kw">if </span>end_offset &gt; dst_buffer.size {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::BufferOverrun {
-                start_offset: offset,
-                end_offset,
-                buffer_size: dst_buffer.size,
-            });
-        }
+                    end_offset,
+                    buffer_size: dst_buffer.size,
+                });
+            }
 
-        <span class="kw">if </span>offset == end_offset {
-            <span class="macro">log::trace!</span>(<span class="string">"Ignoring fill_buffer of size 0"</span>);
+            <span class="kw">if </span>offset == end_offset {
+                <span class="macro">log::trace!</span>(<span class="string">"Ignoring fill_buffer of size 0"</span>);
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+            }
 
-            cmd_buf_data_guard.mark_successful();
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-        }
+            <span class="comment">// Mark dest as initialized.
+            </span>cmd_buf_data.buffer_memory_init_actions.extend(
+                dst_buffer.initialization_status.read().create_action(
+                    <span class="kw-2">&amp;</span>dst_buffer,
+                    offset..end_offset,
+                    MemoryInitKind::ImplicitlyInitialized,
+                ),
+            );
 
-        <span class="comment">// Mark dest as initialized.
-        </span>cmd_buf_data.buffer_memory_init_actions.extend(
-            dst_buffer.initialization_status.read().create_action(
-                <span class="kw-2">&amp;</span>dst_buffer,
-                offset..end_offset,
-                MemoryInitKind::ImplicitlyInitialized,
-            ),
-        );
+            <span class="comment">// actual hal barrier &amp; operation
+            </span><span class="kw">let </span>dst_barrier =
+                dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer, <span class="kw-2">&amp;</span>snatch_guard));
+            <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
+            <span class="kw">unsafe </span>{
+                cmd_buf_raw.transition_buffers(dst_barrier.as_slice());
+                cmd_buf_raw.clear_buffer(dst_raw, offset..end_offset);
+            }
 
-        <span class="comment">// actual hal barrier &amp; operation
-        </span><span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer, <span class="kw-2">&amp;</span>snatch_guard));
-        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
-        <span class="kw">unsafe </span>{
-            cmd_buf_raw.transition_buffers(dst_barrier.as_slice());
-            cmd_buf_raw.clear_buffer(dst_raw, offset..end_offset);
-        }
-
-        cmd_buf_data_guard.mark_successful();
-        <span class="prelude-val">Ok</span>(())
+            <span class="prelude-val">Ok</span>(())
+        })
     }
 
     <span class="kw">pub fn </span>command_encoder_clear_texture(
@@ -687,7 +680,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         command_encoder_id: CommandEncoderId,
         dst: TextureId,
         subresource_range: <span class="kw-2">&amp;</span>ImageSubresourceRange,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::clear_texture"</span>);
         <span class="macro">api_log!</span>(<span class="string">"CommandEncoder::clear_texture {dst:?}"</span>);
 
@@ -697,79 +690,78 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
-        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
+        cmd_buf_data.record_with(|cmd_buf_data| -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
+                list.push(TraceCommand::ClearTexture {
+                    dst,
+                    subresource_range: <span class="kw-2">*</span>subresource_range,
+                });
+            }
 
-        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
-            list.push(TraceCommand::ClearTexture {
-                dst,
-                subresource_range: <span class="kw-2">*</span>subresource_range,
-            });
-        }
+            <span class="kw">if </span>!cmd_buf.support_clear_texture {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::MissingClearTextureFeature);
+            }
 
-        <span class="kw">if </span>!cmd_buf.support_clear_texture {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::MissingClearTextureFeature);
-        }
+            <span class="kw">let </span>dst_texture = hub.textures.get(dst).get()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>dst_texture = hub.textures.get(dst).get()<span class="question-mark">?</span>;
+            dst_texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
-        dst_texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
+            <span class="comment">// Check if subresource aspects are valid.
+            </span><span class="kw">let </span>clear_aspects =
+                hal::FormatAspects::new(dst_texture.desc.format, subresource_range.aspect);
+            <span class="kw">if </span>clear_aspects.is_empty() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::MissingTextureAspect {
+                    texture_format: dst_texture.desc.format,
+                    subresource_range_aspects: subresource_range.aspect,
+                });
+            };
 
-        <span class="comment">// Check if subresource aspects are valid.
-        </span><span class="kw">let </span>clear_aspects =
-            hal::FormatAspects::new(dst_texture.desc.format, subresource_range.aspect);
-        <span class="kw">if </span>clear_aspects.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::MissingTextureAspect {
-                texture_format: dst_texture.desc.format,
-                subresource_range_aspects: subresource_range.aspect,
-            });
-        };
+            <span class="comment">// Check if subresource level range is valid
+            </span><span class="kw">let </span>subresource_mip_range =
+                subresource_range.mip_range(dst_texture.full_range.mips.end);
+            <span class="kw">if </span>dst_texture.full_range.mips.start &gt; subresource_mip_range.start
+                || dst_texture.full_range.mips.end &lt; subresource_mip_range.end
+            {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::InvalidTextureLevelRange {
+                    texture_level_range: dst_texture.full_range.mips.clone(),
+                    subresource_base_mip_level: subresource_range.base_mip_level,
+                    subresource_mip_level_count: subresource_range.mip_level_count,
+                });
+            }
+            <span class="comment">// Check if subresource layer range is valid
+            </span><span class="kw">let </span>subresource_layer_range =
+                subresource_range.layer_range(dst_texture.full_range.layers.end);
+            <span class="kw">if </span>dst_texture.full_range.layers.start &gt; subresource_layer_range.start
+                || dst_texture.full_range.layers.end &lt; subresource_layer_range.end
+            {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::InvalidTextureLayerRange {
+                    texture_layer_range: dst_texture.full_range.layers.clone(),
+                    subresource_base_array_layer: subresource_range.base_array_layer,
+                    subresource_array_layer_count: subresource_range.array_layer_count,
+                });
+            }
 
-        <span class="comment">// Check if subresource level range is valid
-        </span><span class="kw">let </span>subresource_mip_range = subresource_range.mip_range(dst_texture.full_range.mips.end);
-        <span class="kw">if </span>dst_texture.full_range.mips.start &gt; subresource_mip_range.start
-            || dst_texture.full_range.mips.end &lt; subresource_mip_range.end
-        {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::InvalidTextureLevelRange {
-                texture_level_range: dst_texture.full_range.mips.clone(),
-                subresource_base_mip_level: subresource_range.base_mip_level,
-                subresource_mip_level_count: subresource_range.mip_level_count,
-            });
-        }
-        <span class="comment">// Check if subresource layer range is valid
-        </span><span class="kw">let </span>subresource_layer_range =
-            subresource_range.layer_range(dst_texture.full_range.layers.end);
-        <span class="kw">if </span>dst_texture.full_range.layers.start &gt; subresource_layer_range.start
-            || dst_texture.full_range.layers.end &lt; subresource_layer_range.end
-        {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::InvalidTextureLayerRange {
-                texture_layer_range: dst_texture.full_range.layers.clone(),
-                subresource_base_array_layer: subresource_range.base_array_layer,
-                subresource_array_layer_count: subresource_range.array_layer_count,
-            });
-        }
+            <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
+            device.check_is_valid()<span class="question-mark">?</span>;
+            <span class="kw">let </span>(encoder, tracker) = cmd_buf_data.open_encoder_and_tracker()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
-        device.check_is_valid()<span class="question-mark">?</span>;
-        <span class="kw">let </span>(encoder, tracker) = cmd_buf_data.open_encoder_and_tracker()<span class="question-mark">?</span>;
+            <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+            clear_texture(
+                <span class="kw-2">&amp;</span>dst_texture,
+                TextureInitRange {
+                    mip_range: subresource_mip_range,
+                    layer_range: subresource_layer_range,
+                },
+                encoder,
+                <span class="kw-2">&amp;mut </span>tracker.textures,
+                <span class="kw-2">&amp;</span>device.alignments,
+                device.zero_buffer.as_ref(),
+                <span class="kw-2">&amp;</span>snatch_guard,
+            )<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
-        clear_texture(
-            <span class="kw-2">&amp;</span>dst_texture,
-            TextureInitRange {
-                mip_range: subresource_mip_range,
-                layer_range: subresource_layer_range,
-            },
-            encoder,
-            <span class="kw-2">&amp;mut </span>tracker.textures,
-            <span class="kw-2">&amp;</span>device.alignments,
-            device.zero_buffer.as_ref(),
-            <span class="kw-2">&amp;</span>snatch_guard,
-        )<span class="question-mark">?</span>;
-
-        cmd_buf_data_guard.mark_successful();
-        <span class="prelude-val">Ok</span>(())
+            <span class="prelude-val">Ok</span>(())
+        })
     }
 }
 

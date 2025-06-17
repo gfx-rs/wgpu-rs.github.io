@@ -86,13 +86,10 @@
 <a href="#85" id="85">85</a>
 <a href="#86" id="86">86</a>
 <a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
+<a href="#88" id="88">88</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use crate</span>::{
-    command::{CommandBuffer, EncoderStateError},
+    command::{CommandBuffer, CommandEncoderError, EncoderStateError},
     device::DeviceError,
     global::Global,
     id::{BufferId, CommandEncoderId, TextureId},
@@ -106,7 +103,7 @@
         command_encoder_id: CommandEncoderId,
         buffer_transitions: <span class="kw">impl </span>Iterator&lt;Item = wgt::BufferTransition&lt;BufferId&gt;&gt;,
         texture_transitions: <span class="kw">impl </span>Iterator&lt;Item = wgt::TextureTransition&lt;TextureId&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), TransitionResourcesError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::transition_resources"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
@@ -116,54 +113,51 @@
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
-        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
+        cmd_buf_data.record_with(|cmd_buf_data| -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+            <span class="comment">// Get and lock device
+            </span><span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
+            device.check_is_valid()<span class="question-mark">?</span>;
+            <span class="kw">let </span>snatch_guard = <span class="kw-2">&amp;</span>device.snatchable_lock.read();
 
-        <span class="comment">// Get and lock device
-        </span><span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
-        device.check_is_valid()<span class="question-mark">?</span>;
-        <span class="kw">let </span>snatch_guard = <span class="kw-2">&amp;</span>device.snatchable_lock.read();
+            <span class="kw">let </span><span class="kw-2">mut </span>usage_scope = device.new_usage_scope();
+            <span class="kw">let </span>indices = <span class="kw-2">&amp;</span>device.tracker_indices;
+            usage_scope.buffers.set_size(indices.buffers.size());
+            usage_scope.textures.set_size(indices.textures.size());
 
-        <span class="kw">let </span><span class="kw-2">mut </span>usage_scope = device.new_usage_scope();
-        <span class="kw">let </span>indices = <span class="kw-2">&amp;</span>device.tracker_indices;
-        usage_scope.buffers.set_size(indices.buffers.size());
-        usage_scope.textures.set_size(indices.textures.size());
+            <span class="comment">// Process buffer transitions
+            </span><span class="kw">for </span>buffer_transition <span class="kw">in </span>buffer_transitions {
+                <span class="kw">let </span>buffer = hub.buffers.get(buffer_transition.buffer).get()<span class="question-mark">?</span>;
+                buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
-        <span class="comment">// Process buffer transitions
-        </span><span class="kw">for </span>buffer_transition <span class="kw">in </span>buffer_transitions {
-            <span class="kw">let </span>buffer = hub.buffers.get(buffer_transition.buffer).get()<span class="question-mark">?</span>;
-            buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
+                usage_scope
+                    .buffers
+                    .merge_single(<span class="kw-2">&amp;</span>buffer, buffer_transition.state)<span class="question-mark">?</span>;
+            }
 
-            usage_scope
-                .buffers
-                .merge_single(<span class="kw-2">&amp;</span>buffer, buffer_transition.state)<span class="question-mark">?</span>;
-        }
+            <span class="comment">// Process texture transitions
+            </span><span class="kw">for </span>texture_transition <span class="kw">in </span>texture_transitions {
+                <span class="kw">let </span>texture = hub.textures.get(texture_transition.texture).get()<span class="question-mark">?</span>;
+                texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
-        <span class="comment">// Process texture transitions
-        </span><span class="kw">for </span>texture_transition <span class="kw">in </span>texture_transitions {
-            <span class="kw">let </span>texture = hub.textures.get(texture_transition.texture).get()<span class="question-mark">?</span>;
-            texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
+                <span class="kw">unsafe </span>{
+                    usage_scope.textures.merge_single(
+                        <span class="kw-2">&amp;</span>texture,
+                        texture_transition.selector,
+                        texture_transition.state,
+                    )
+                }<span class="question-mark">?</span>;
+            }
 
-            <span class="kw">unsafe </span>{
-                usage_scope.textures.merge_single(
-                    <span class="kw-2">&amp;</span>texture,
-                    texture_transition.selector,
-                    texture_transition.state,
-                )
-            }<span class="question-mark">?</span>;
-        }
-
-        <span class="comment">// Record any needed barriers based on tracker data
-        </span><span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
-        CommandBuffer::insert_barriers_from_scope(
-            cmd_buf_raw,
-            <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers,
-            <span class="kw-2">&amp;</span>usage_scope,
-            snatch_guard,
-        );
-        cmd_buf_data_guard.mark_successful();
-
-        <span class="prelude-val">Ok</span>(())
+            <span class="comment">// Record any needed barriers based on tracker data
+            </span><span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
+            CommandBuffer::insert_barriers_from_scope(
+                cmd_buf_raw,
+                <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers,
+                <span class="kw-2">&amp;</span>usage_scope,
+                snatch_guard,
+            );
+            <span class="prelude-val">Ok</span>(())
+        })
     }
 }
 
