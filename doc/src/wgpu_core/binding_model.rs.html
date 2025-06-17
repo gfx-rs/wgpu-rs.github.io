@@ -1105,7 +1105,27 @@
 <a href="#1104" id="1104">1104</a>
 <a href="#1105" id="1105">1105</a>
 <a href="#1106" id="1106">1106</a>
-<a href="#1107" id="1107">1107</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::{Cow, ToOwned},
     boxed::Box,
     string::String,
@@ -1280,6 +1300,13 @@
     },
     <span class="attr">#[error(<span class="string">"Storage texture bindings must have a single mip level, but given a view with mip_level_count = {mip_level_count:?} at binding {binding}"</span>)]
     </span>InvalidStorageTextureMipLevelCount { binding: u32, mip_level_count: u32 },
+    <span class="attr">#[error(<span class="string">"External texture bindings must have a single mip level, but given a view with mip_level_count = {mip_level_count:?} at binding {binding}"</span>)]
+    </span>InvalidExternalTextureMipLevelCount { binding: u32, mip_level_count: u32 },
+    <span class="attr">#[error(<span class="string">"External texture bindings must have a format of `rgba8unorm`, `bgra8unorm`, or `rgba16float, but given a view with format = {format:?} at binding {binding}"</span>)]
+    </span>InvalidExternalTextureFormat {
+        binding: u32,
+        format: wgt::TextureFormat,
+    },
     <span class="attr">#[error(<span class="string">"Sampler binding {binding} expects comparison = {layout_cmp}, but given a sampler with comparison = {sampler_cmp}"</span>)]
     </span>WrongSamplerComparison {
         binding: u32,
@@ -1488,6 +1515,19 @@
                 }
                 wgt::BindingType::AccelerationStructure { .. } =&gt; {
                     <span class="self">self</span>.acceleration_structures.add(binding.visibility, count);
+                }
+                wgt::BindingType::ExternalTexture =&gt; {
+                    <span class="comment">// https://www.w3.org/TR/webgpu/#gpuexternaltexture
+                    // In order to account for many possible representations,
+                    // the binding conservatively uses the following, for each
+                    // external texture:
+                    // * Three sampled textures for up to 3 planes
+                    // * One additional sampled texture for a 3D LUT
+                    // * One sampler to sample the LUT
+                    // * One uniform buffer for metadata
+                    </span><span class="self">self</span>.sampled_textures.add(binding.visibility, count * <span class="number">4</span>);
+                    <span class="self">self</span>.samplers.add(binding.visibility, count);
+                    <span class="self">self</span>.uniform_buffers.add(binding.visibility, count);
                 }
             }
         }
