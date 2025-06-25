@@ -7849,7 +7849,65 @@
 <a href="#7848" id="7848">7848</a>
 <a href="#7849" id="7849">7849</a>
 <a href="#7850" id="7850">7850</a>
-<a href="#7851" id="7851">7851</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7851" id="7851">7851</a>
+<a href="#7852" id="7852">7852</a>
+<a href="#7853" id="7853">7853</a>
+<a href="#7854" id="7854">7854</a>
+<a href="#7855" id="7855">7855</a>
+<a href="#7856" id="7856">7856</a>
+<a href="#7857" id="7857">7857</a>
+<a href="#7858" id="7858">7858</a>
+<a href="#7859" id="7859">7859</a>
+<a href="#7860" id="7860">7860</a>
+<a href="#7861" id="7861">7861</a>
+<a href="#7862" id="7862">7862</a>
+<a href="#7863" id="7863">7863</a>
+<a href="#7864" id="7864">7864</a>
+<a href="#7865" id="7865">7865</a>
+<a href="#7866" id="7866">7866</a>
+<a href="#7867" id="7867">7867</a>
+<a href="#7868" id="7868">7868</a>
+<a href="#7869" id="7869">7869</a>
+<a href="#7870" id="7870">7870</a>
+<a href="#7871" id="7871">7871</a>
+<a href="#7872" id="7872">7872</a>
+<a href="#7873" id="7873">7873</a>
+<a href="#7874" id="7874">7874</a>
+<a href="#7875" id="7875">7875</a>
+<a href="#7876" id="7876">7876</a>
+<a href="#7877" id="7877">7877</a>
+<a href="#7878" id="7878">7878</a>
+<a href="#7879" id="7879">7879</a>
+<a href="#7880" id="7880">7880</a>
+<a href="#7881" id="7881">7881</a>
+<a href="#7882" id="7882">7882</a>
+<a href="#7883" id="7883">7883</a>
+<a href="#7884" id="7884">7884</a>
+<a href="#7885" id="7885">7885</a>
+<a href="#7886" id="7886">7886</a>
+<a href="#7887" id="7887">7887</a>
+<a href="#7888" id="7888">7888</a>
+<a href="#7889" id="7889">7889</a>
+<a href="#7890" id="7890">7890</a>
+<a href="#7891" id="7891">7891</a>
+<a href="#7892" id="7892">7892</a>
+<a href="#7893" id="7893">7893</a>
+<a href="#7894" id="7894">7894</a>
+<a href="#7895" id="7895">7895</a>
+<a href="#7896" id="7896">7896</a>
+<a href="#7897" id="7897">7897</a>
+<a href="#7898" id="7898">7898</a>
+<a href="#7899" id="7899">7899</a>
+<a href="#7900" id="7900">7900</a>
+<a href="#7901" id="7901">7901</a>
+<a href="#7902" id="7902">7902</a>
+<a href="#7903" id="7903">7903</a>
+<a href="#7904" id="7904">7904</a>
+<a href="#7905" id="7905">7905</a>
+<a href="#7906" id="7906">7906</a>
+<a href="#7907" id="7907">7907</a>
+<a href="#7908" id="7908">7908</a>
+<a href="#7909" id="7909">7909</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -15616,6 +15674,10 @@
     </span>SpirV(ShaderModuleDescriptorSpirV&lt;<span class="lifetime">'a</span>, L&gt;),
     <span class="doccomment">/// Passthrough for MSL source code.
     </span>Msl(ShaderModuleDescriptorMsl&lt;<span class="lifetime">'a</span>, L&gt;),
+    <span class="doccomment">/// Passthrough for DXIL compiled with DXC
+    </span>Dxil(ShaderModuleDescriptorDxil&lt;<span class="lifetime">'a</span>, L&gt;),
+    <span class="doccomment">/// Passthrough for HLSL
+    </span>Hlsl(ShaderModuleDescriptorHlsl&lt;<span class="lifetime">'a</span>, L&gt;),
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, L&gt; CreateShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>, L&gt; {
@@ -15641,6 +15703,22 @@
                     source: inner.source.clone(),
                 })
             }
+            CreateShaderModuleDescriptorPassthrough::Dxil(inner) =&gt; {
+                CreateShaderModuleDescriptorPassthrough::&lt;<span class="lifetime">'_</span>, K&gt;::Dxil(ShaderModuleDescriptorDxil {
+                    entry_point: inner.entry_point.clone(),
+                    label: fun(<span class="kw-2">&amp;</span>inner.label),
+                    num_workgroups: inner.num_workgroups,
+                    source: inner.source,
+                })
+            }
+            CreateShaderModuleDescriptorPassthrough::Hlsl(inner) =&gt; {
+                CreateShaderModuleDescriptorPassthrough::&lt;<span class="lifetime">'_</span>, K&gt;::Hlsl(ShaderModuleDescriptorHlsl {
+                    entry_point: inner.entry_point.clone(),
+                    label: fun(<span class="kw-2">&amp;</span>inner.label),
+                    num_workgroups: inner.num_workgroups,
+                    source: inner.source,
+                })
+            }
         }
     }
 
@@ -15649,6 +15727,8 @@
         <span class="kw">match </span><span class="self">self </span>{
             CreateShaderModuleDescriptorPassthrough::SpirV(inner) =&gt; <span class="kw-2">&amp;</span>inner.label,
             CreateShaderModuleDescriptorPassthrough::Msl(inner) =&gt; <span class="kw-2">&amp;</span>inner.label,
+            CreateShaderModuleDescriptorPassthrough::Dxil(inner) =&gt; <span class="kw-2">&amp;</span>inner.label,
+            CreateShaderModuleDescriptorPassthrough::Hlsl(inner) =&gt; <span class="kw-2">&amp;</span>inner.label,
         }
     }
 
@@ -15660,6 +15740,8 @@
                 bytemuck::cast_slice(<span class="kw-2">&amp;</span>inner.source)
             }
             CreateShaderModuleDescriptorPassthrough::Msl(inner) =&gt; inner.source.as_bytes(),
+            CreateShaderModuleDescriptorPassthrough::Dxil(inner) =&gt; inner.source,
+            CreateShaderModuleDescriptorPassthrough::Hlsl(inner) =&gt; inner.source.as_bytes(),
         }
     }
 
@@ -15669,6 +15751,8 @@
         <span class="kw">match </span><span class="self">self </span>{
             CreateShaderModuleDescriptorPassthrough::SpirV(..) =&gt; <span class="string">"spv"</span>,
             CreateShaderModuleDescriptorPassthrough::Msl(..) =&gt; <span class="string">"msl"</span>,
+            CreateShaderModuleDescriptorPassthrough::Dxil(..) =&gt; <span class="string">"dxil"</span>,
+            CreateShaderModuleDescriptorPassthrough::Hlsl(..) =&gt; <span class="string">"hlsl"</span>,
         }
     }
 }
@@ -15687,6 +15771,38 @@
     </span><span class="kw">pub </span>num_workgroups: (u32, u32, u32),
     <span class="doccomment">/// Shader MSL source.
     </span><span class="kw">pub </span>source: Cow&lt;<span class="lifetime">'a</span>, str&gt;,
+}
+
+<span class="doccomment">/// Descriptor for a shader module given by DirectX DXIL source.
+///
+/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
+/// only WGSL source code strings are accepted.
+</span><span class="attr">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>ShaderModuleDescriptorDxil&lt;<span class="lifetime">'a</span>, L&gt; {
+    <span class="doccomment">/// Entrypoint.
+    </span><span class="kw">pub </span>entry_point: String,
+    <span class="doccomment">/// Debug label of the shader module. This will show up in graphics debuggers for easy identification.
+    </span><span class="kw">pub </span>label: L,
+    <span class="doccomment">/// Number of workgroups in each dimension x, y and z.
+    </span><span class="kw">pub </span>num_workgroups: (u32, u32, u32),
+    <span class="doccomment">/// Shader DXIL source.
+    </span><span class="kw">pub </span>source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8],
+}
+
+<span class="doccomment">/// Descriptor for a shader module given by DirectX HLSL source.
+///
+/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
+/// only WGSL source code strings are accepted.
+</span><span class="attr">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>ShaderModuleDescriptorHlsl&lt;<span class="lifetime">'a</span>, L&gt; {
+    <span class="doccomment">/// Entrypoint.
+    </span><span class="kw">pub </span>entry_point: String,
+    <span class="doccomment">/// Debug label of the shader module. This will show up in graphics debuggers for easy identification.
+    </span><span class="kw">pub </span>label: L,
+    <span class="doccomment">/// Number of workgroups in each dimension x, y and z.
+    </span><span class="kw">pub </span>num_workgroups: (u32, u32, u32),
+    <span class="doccomment">/// Shader HLSL source.
+    </span><span class="kw">pub </span>source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
 }
 
 <span class="doccomment">/// Descriptor for a shader module given by SPIR-V binary.
