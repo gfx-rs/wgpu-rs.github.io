@@ -149,12 +149,36 @@
 <a href="#148" id="148">148</a>
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a></pre></div><pre class="rust"><code><span class="attr">#![cfg(all(unix, not(target_vendor = <span class="string">"apple"</span>), not(target_family = <span class="string">"wasm"</span>)))]
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a></pre></div><pre class="rust"><code><span class="attr">#![cfg(all(unix, not(target_vendor = <span class="string">"apple"</span>), not(target_family = <span class="string">"wasm"</span>)))]
 
 </span><span class="kw">use </span>alloc::{string::ToString, vec::Vec};
 <span class="kw">use </span>core::mem::MaybeUninit;
 
 <span class="kw">use </span>ash::{ext, khr, vk};
+
+<span class="macro">macro_rules!</span> to_u64 {
+    (<span class="macro-nonterminal">$expr</span>:expr) =&gt; {{
+        <span class="attr">#[allow(trivial_numeric_casts)]
+        </span><span class="kw">let </span>expr = <span class="macro-nonterminal">$expr </span><span class="kw">as </span>u64;
+        <span class="macro">assert!</span>(size_of_val(<span class="kw-2">&amp;</span>expr) &lt;= size_of::&lt;u64&gt;());
+        expr
+    }};
+}
 
 <span class="kw">impl </span><span class="kw">super</span>::Instance {
     <span class="doccomment">/// Creates a new surface from the given drm configuration.
@@ -228,12 +252,18 @@
             <span class="kw">let </span>render_devid =
                 libc::makedev(drm_props.render_major <span class="kw">as _</span>, drm_props.render_minor <span class="kw">as _</span>);
 
-            <span class="comment">// Various platforms use different widths between `dev_t` and `c_int`, so just
-            // force-convert to `u64` to keep things portable.
+            <span class="comment">// On most platforms, both `*_devid`s and `st_rdev` are `dev_t`s (which is generally
+            // observed to be an unsigned integral type no greater than 64 bits). However, on some
+            // platforms, there divergences from this pattern:
+            //
+            // - `armv7-linux-androideabi`: `dev_t` is `c_ulong`, and `*_devid`s are `dev_t`, but
+            //   `st_rdev` is `c_ulonglong`. So, we can't just do a `==` comparison.
+            // - OpenBSD has `dev_t` on both sides, but is `i32` (N.B., unsigned). Therefore, we
+            //   can't just use `u64::from`.
             </span><span class="attr">#[allow(clippy::useless_conversion)]
             </span><span class="kw">if </span>[primary_devid, render_devid]
-                .map(u64::from)
-                .contains(<span class="kw-2">&amp;</span>drm_stat.st_rdev)
+                .map(|devid| <span class="macro">to_u64!</span>(devid))
+                .contains(<span class="kw-2">&amp;</span><span class="macro">to_u64!</span>(drm_stat.st_rdev))
             {
                 physical_device = <span class="prelude-val">Some</span>(device)
             }
