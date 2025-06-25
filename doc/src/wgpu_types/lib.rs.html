@@ -7788,7 +7788,68 @@
 <a href="#7787" id="7787">7787</a>
 <a href="#7788" id="7788">7788</a>
 <a href="#7789" id="7789">7789</a>
-<a href="#7790" id="7790">7790</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7790" id="7790">7790</a>
+<a href="#7791" id="7791">7791</a>
+<a href="#7792" id="7792">7792</a>
+<a href="#7793" id="7793">7793</a>
+<a href="#7794" id="7794">7794</a>
+<a href="#7795" id="7795">7795</a>
+<a href="#7796" id="7796">7796</a>
+<a href="#7797" id="7797">7797</a>
+<a href="#7798" id="7798">7798</a>
+<a href="#7799" id="7799">7799</a>
+<a href="#7800" id="7800">7800</a>
+<a href="#7801" id="7801">7801</a>
+<a href="#7802" id="7802">7802</a>
+<a href="#7803" id="7803">7803</a>
+<a href="#7804" id="7804">7804</a>
+<a href="#7805" id="7805">7805</a>
+<a href="#7806" id="7806">7806</a>
+<a href="#7807" id="7807">7807</a>
+<a href="#7808" id="7808">7808</a>
+<a href="#7809" id="7809">7809</a>
+<a href="#7810" id="7810">7810</a>
+<a href="#7811" id="7811">7811</a>
+<a href="#7812" id="7812">7812</a>
+<a href="#7813" id="7813">7813</a>
+<a href="#7814" id="7814">7814</a>
+<a href="#7815" id="7815">7815</a>
+<a href="#7816" id="7816">7816</a>
+<a href="#7817" id="7817">7817</a>
+<a href="#7818" id="7818">7818</a>
+<a href="#7819" id="7819">7819</a>
+<a href="#7820" id="7820">7820</a>
+<a href="#7821" id="7821">7821</a>
+<a href="#7822" id="7822">7822</a>
+<a href="#7823" id="7823">7823</a>
+<a href="#7824" id="7824">7824</a>
+<a href="#7825" id="7825">7825</a>
+<a href="#7826" id="7826">7826</a>
+<a href="#7827" id="7827">7827</a>
+<a href="#7828" id="7828">7828</a>
+<a href="#7829" id="7829">7829</a>
+<a href="#7830" id="7830">7830</a>
+<a href="#7831" id="7831">7831</a>
+<a href="#7832" id="7832">7832</a>
+<a href="#7833" id="7833">7833</a>
+<a href="#7834" id="7834">7834</a>
+<a href="#7835" id="7835">7835</a>
+<a href="#7836" id="7836">7836</a>
+<a href="#7837" id="7837">7837</a>
+<a href="#7838" id="7838">7838</a>
+<a href="#7839" id="7839">7839</a>
+<a href="#7840" id="7840">7840</a>
+<a href="#7841" id="7841">7841</a>
+<a href="#7842" id="7842">7842</a>
+<a href="#7843" id="7843">7843</a>
+<a href="#7844" id="7844">7844</a>
+<a href="#7845" id="7845">7845</a>
+<a href="#7846" id="7846">7846</a>
+<a href="#7847" id="7847">7847</a>
+<a href="#7848" id="7848">7848</a>
+<a href="#7849" id="7849">7849</a>
+<a href="#7850" id="7850">7850</a>
+<a href="#7851" id="7851">7851</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -8396,6 +8457,22 @@
     /// This limit only affects the d3d12 backend. Using a large number will allow the device
     /// to create many bind groups at the cost of a large up-front allocation at device creation.
     </span><span class="kw">pub </span>max_non_sampler_bindings: u32,
+    <span class="doccomment">/// The maximum number of primitive (ex: triangles, aabbs) a BLAS is allowed to have. Requesting
+    /// more than 0 during device creation only makes sense if [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`]
+    /// is enabled.
+    </span><span class="kw">pub </span>max_blas_primitive_count: u32,
+    <span class="doccomment">/// The maximum number of geometry descriptors a BLAS is allowed to have. Requesting
+    /// more than 0 during device creation only makes sense if [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`]
+    /// is enabled.
+    </span><span class="kw">pub </span>max_blas_geometry_count: u32,
+    <span class="doccomment">/// The maximum number of instances a TLAS is allowed to have. Requesting more than 0 during
+    /// device creation only makes sense if [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`]
+    /// is enabled.
+    </span><span class="kw">pub </span>max_tlas_instance_count: u32,
+    <span class="doccomment">/// The maximum number of acceleration structures allowed to be used in a shader stage.
+    /// Requesting more than 0 during device creation only makes sense if [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`]
+    /// is enabled.
+    </span><span class="kw">pub </span>max_acceleration_structures_per_shader_stage: u32,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Limits {
@@ -8448,6 +8525,10 @@
     ///     max_subgroup_size: 0,
     ///     max_push_constant_size: 0,
     ///     max_non_sampler_bindings: 1_000_000,
+    ///     max_blas_primitive_count: 0,
+    ///     max_blas_geometry_count: 0,
+    ///     max_tlas_instance_count: 0,
+    ///     max_acceleration_structures_per_shader_stage: 0,
     /// });
     /// ```
     ///
@@ -8492,6 +8573,10 @@
             max_subgroup_size: <span class="number">0</span>,
             max_push_constant_size: <span class="number">0</span>,
             max_non_sampler_bindings: <span class="number">1_000_000</span>,
+            max_blas_primitive_count: <span class="number">0</span>,
+            max_blas_geometry_count: <span class="number">0</span>,
+            max_tlas_instance_count: <span class="number">0</span>,
+            max_acceleration_structures_per_shader_stage: <span class="number">0</span>,
         }
     }
 
@@ -8537,6 +8622,10 @@
     ///     max_compute_workgroups_per_dimension: 65535,
     ///     max_buffer_size: 256 &lt;&lt; 20, // (256 MiB)
     ///     max_non_sampler_bindings: 1_000_000,
+    ///     max_blas_primitive_count: 0,
+    ///     max_blas_geometry_count: 0,
+    ///     max_tlas_instance_count: 0,
+    ///     max_acceleration_structures_per_shader_stage: 0,
     /// });
     /// ```
     </span><span class="attr">#[must_use]
@@ -8597,6 +8686,10 @@
     ///     max_compute_workgroups_per_dimension: 0, // +
     ///     max_buffer_size: 256 &lt;&lt; 20, // (256 MiB),
     ///     max_non_sampler_bindings: 1_000_000,
+    ///     max_blas_primitive_count: 0,
+    ///     max_blas_geometry_count: 0,
+    ///     max_tlas_instance_count: 0,
+    ///     max_acceleration_structures_per_shader_stage: 0,
     /// });
     /// ```
     </span><span class="attr">#[must_use]
@@ -8648,6 +8741,32 @@
         <span class="self">Self </span>{
             min_uniform_buffer_offset_alignment: other.min_uniform_buffer_offset_alignment,
             min_storage_buffer_offset_alignment: other.min_storage_buffer_offset_alignment,
+            ..<span class="self">self
+        </span>}
+    }
+
+    <span class="doccomment">/// The minimum guaranteed limits for acceleration structures if you enable [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`]
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>using_minimum_supported_acceleration_structure_values(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            max_blas_geometry_count: (<span class="number">1 </span>&lt;&lt; <span class="number">24</span>) - <span class="number">1</span>, <span class="comment">// 2^24 - 1: Vulkan's minimum
+            </span>max_tlas_instance_count: (<span class="number">1 </span>&lt;&lt; <span class="number">24</span>) - <span class="number">1</span>, <span class="comment">// 2^24 - 1: Vulkan's minimum
+            </span>max_blas_primitive_count: <span class="number">1 </span>&lt;&lt; <span class="number">28</span>,      <span class="comment">// 2^28: Metal's minimum
+            </span>max_acceleration_structures_per_shader_stage: <span class="number">16</span>, <span class="comment">// Vulkan's minimum
+            </span>..<span class="self">self
+        </span>}
+    }
+
+    <span class="doccomment">/// Modify the current limits to use the acceleration structure limits of `other` (`other` could
+    /// be the limits of the adapter).
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>using_acceleration_structure_values(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            max_blas_geometry_count: other.max_blas_geometry_count,
+            max_tlas_instance_count: other.max_tlas_instance_count,
+            max_blas_primitive_count: other.max_blas_primitive_count,
+            max_acceleration_structures_per_shader_stage: other
+                .max_acceleration_structures_per_shader_stage,
             ..<span class="self">self
         </span>}
     }
@@ -8731,6 +8850,9 @@
         }
         <span class="macro">compare!</span>(max_push_constant_size, Less);
         <span class="macro">compare!</span>(max_non_sampler_bindings, Less);
+        <span class="macro">compare!</span>(max_blas_primitive_count, Less);
+        <span class="macro">compare!</span>(max_blas_geometry_count, Less);
+        <span class="macro">compare!</span>(max_tlas_instance_count, Less);
     }
 }
 

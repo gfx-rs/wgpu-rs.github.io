@@ -378,7 +378,28 @@
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
 <a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{string::ToString <span class="kw">as _</span>, sync::Arc, vec::Vec};
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{string::ToString <span class="kw">as _</span>, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::mem::{size_of, ManuallyDrop};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -421,6 +442,13 @@
 
         <span class="kw">let </span>size_info = <span class="kw">match </span><span class="kw-2">&amp;</span>sizes {
             wgt::BlasGeometrySizeDescriptors::Triangles { descriptors } =&gt; {
+                <span class="kw">if </span>descriptors.len() <span class="kw">as </span>u32 &gt; <span class="self">self</span>.limits.max_blas_geometry_count {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(CreateBlasError::TooManyGeometries(
+                        <span class="self">self</span>.limits.max_blas_geometry_count,
+                        descriptors.len() <span class="kw">as </span>u32,
+                    ));
+                }
+
                 <span class="kw">let </span><span class="kw-2">mut </span>entries =
                     Vec::&lt;hal::AccelerationStructureTriangles&lt;<span class="kw">dyn </span>hal::DynBuffer&gt;&gt;::with_capacity(
                         descriptors.len(),
@@ -460,6 +488,13 @@
                             buffer: <span class="self">self</span>.zero_buffer.as_ref(),
                             offset: <span class="number">0</span>,
                         })
+                    }
+
+                    <span class="kw">if </span>desc.vertex_count &gt; <span class="self">self</span>.limits.max_blas_primitive_count {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(CreateBlasError::TooManyPrimitives(
+                            <span class="self">self</span>.limits.max_blas_primitive_count,
+                            desc.vertex_count,
+                        ));
                     }
 
                     entries.push(hal::AccelerationStructureTriangles::&lt;<span class="kw">dyn </span>hal::DynBuffer&gt; {
@@ -543,6 +578,13 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;resource::Tlas&gt;, CreateTlasError&gt; {
         <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
         <span class="self">self</span>.require_features(Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>desc.max_instances &gt; <span class="self">self</span>.limits.max_tlas_instance_count {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTlasError::TooManyInstances(
+                <span class="self">self</span>.limits.max_tlas_instance_count,
+                desc.max_instances,
+            ));
+        }
 
         <span class="kw">if </span>desc
             .flags
