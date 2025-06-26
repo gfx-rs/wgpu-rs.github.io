@@ -1007,7 +1007,15 @@
 <a href="#1006" id="1006">1006</a>
 <a href="#1007" id="1007">1007</a>
 <a href="#1008" id="1008">1008</a>
-<a href="#1009" id="1009">1009</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::vec::Vec;
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::vec::Vec;
 
 <span class="kw">use </span>ash::vk;
 
@@ -1477,18 +1485,26 @@
 }
 
 <span class="kw">pub fn </span>map_vk_present_mode(mode: vk::PresentModeKHR) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::PresentMode&gt; {
-    <span class="kw">if </span>mode == vk::PresentModeKHR::IMMEDIATE {
-        <span class="prelude-val">Some</span>(wgt::PresentMode::Immediate)
-    } <span class="kw">else if </span>mode == vk::PresentModeKHR::MAILBOX {
-        <span class="prelude-val">Some</span>(wgt::PresentMode::Mailbox)
-    } <span class="kw">else if </span>mode == vk::PresentModeKHR::FIFO {
-        <span class="prelude-val">Some</span>(wgt::PresentMode::Fifo)
-    } <span class="kw">else if </span>mode == vk::PresentModeKHR::FIFO_RELAXED {
-        <span class="prelude-val">Some</span>(wgt::PresentMode::FifoRelaxed)
-    } <span class="kw">else </span>{
-        <span class="macro">log::warn!</span>(<span class="string">"Unrecognized present mode {:?}"</span>, mode);
-        <span class="prelude-val">None
-    </span>}
+    <span class="comment">// Not exposed in Ash yet.
+    </span><span class="kw">const </span>FIFO_LATEST_READY: vk::PresentModeKHR = vk::PresentModeKHR::from_raw(<span class="number">1_000_361_000</span>);
+
+    <span class="comment">// See https://registry.khronos.org/vulkan/specs/latest/man/html/VkPresentModeKHR.html
+    </span><span class="kw">match </span>mode {
+        vk::PresentModeKHR::IMMEDIATE =&gt; <span class="prelude-val">Some</span>(wgt::PresentMode::Immediate),
+        vk::PresentModeKHR::MAILBOX =&gt; <span class="prelude-val">Some</span>(wgt::PresentMode::Mailbox),
+        vk::PresentModeKHR::FIFO =&gt; <span class="prelude-val">Some</span>(wgt::PresentMode::Fifo),
+        vk::PresentModeKHR::FIFO_RELAXED =&gt; <span class="prelude-val">Some</span>(wgt::PresentMode::FifoRelaxed),
+
+        <span class="comment">// Modes that aren't exposed yet.
+        </span>vk::PresentModeKHR::SHARED_DEMAND_REFRESH =&gt; <span class="prelude-val">None</span>,
+        vk::PresentModeKHR::SHARED_CONTINUOUS_REFRESH =&gt; <span class="prelude-val">None</span>,
+        FIFO_LATEST_READY =&gt; <span class="prelude-val">None</span>,
+
+        <span class="kw">_ </span>=&gt; {
+            <span class="macro">log::debug!</span>(<span class="string">"Unrecognized present mode {:?}"</span>, mode);
+            <span class="prelude-val">None
+        </span>}
+    }
 }
 
 <span class="kw">pub fn </span>map_composite_alpha_mode(mode: wgt::CompositeAlphaMode) -&gt; vk::CompositeAlphaFlagsKHR {
