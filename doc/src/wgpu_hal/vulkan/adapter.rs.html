@@ -2779,8 +2779,33 @@
 <a href="#2778" id="2778">2778</a>
 <a href="#2779" id="2779">2779</a>
 <a href="#2780" id="2780">2780</a>
-<a href="#2781" id="2781">2781</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, collections::BTreeMap, sync::Arc, vec::Vec};
-<span class="kw">use </span>core::ffi::CStr;
+<a href="#2781" id="2781">2781</a>
+<a href="#2782" id="2782">2782</a>
+<a href="#2783" id="2783">2783</a>
+<a href="#2784" id="2784">2784</a>
+<a href="#2785" id="2785">2785</a>
+<a href="#2786" id="2786">2786</a>
+<a href="#2787" id="2787">2787</a>
+<a href="#2788" id="2788">2788</a>
+<a href="#2789" id="2789">2789</a>
+<a href="#2790" id="2790">2790</a>
+<a href="#2791" id="2791">2791</a>
+<a href="#2792" id="2792">2792</a>
+<a href="#2793" id="2793">2793</a>
+<a href="#2794" id="2794">2794</a>
+<a href="#2795" id="2795">2795</a>
+<a href="#2796" id="2796">2796</a>
+<a href="#2797" id="2797">2797</a>
+<a href="#2798" id="2798">2798</a>
+<a href="#2799" id="2799">2799</a>
+<a href="#2800" id="2800">2800</a>
+<a href="#2801" id="2801">2801</a>
+<a href="#2802" id="2802">2802</a>
+<a href="#2803" id="2803">2803</a>
+<a href="#2804" id="2804">2804</a>
+<a href="#2805" id="2805">2805</a>
+<a href="#2806" id="2806">2806</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, boxed::Box, collections::BTreeMap, sync::Arc, vec::Vec};
+<span class="kw">use </span>core::{ffi::CStr, marker::PhantomData};
 
 <span class="kw">use </span>ash::{ext, google, khr, vk};
 <span class="kw">use </span>parking_lot::Mutex;
@@ -5068,25 +5093,37 @@
     <span class="kw">pub fn </span>texture_format_as_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_format: wgt::TextureFormat) -&gt; vk::Format {
         <span class="self">self</span>.private_caps.map_texture_format(texture_format)
     }
-}
 
-<span class="kw">impl </span><span class="kw">crate</span>::Adapter <span class="kw">for </span><span class="kw">super</span>::Adapter {
-    <span class="kw">type </span>A = <span class="kw">super</span>::Api;
-
-    <span class="kw">unsafe fn </span>open(
+    <span class="doccomment">/// # Safety:
+    /// - Same as `open` plus
+    /// - The callback may not change anything that the device does not support.
+    /// - The callback may not remove features.
+    </span><span class="kw">pub unsafe fn </span>open_with_callback&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         features: wgt::Features,
-        _limits: <span class="kw-2">&amp;</span>wgt::Limits,
         memory_hints: <span class="kw-2">&amp;</span>wgt::MemoryHints,
+        callback: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">super</span>::CreateDeviceCallback&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::OpenDevice&lt;<span class="kw">super</span>::Api&gt;, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">let </span>enabled_extensions = <span class="self">self</span>.required_device_extensions(features);
+        <span class="kw">let </span><span class="kw-2">mut </span>enabled_extensions = <span class="self">self</span>.required_device_extensions(features);
         <span class="kw">let </span><span class="kw-2">mut </span>enabled_phd_features = <span class="self">self</span>.physical_device_features(<span class="kw-2">&amp;</span>enabled_extensions, features);
 
         <span class="kw">let </span>family_index = <span class="number">0</span>; <span class="comment">//TODO
         </span><span class="kw">let </span>family_info = vk::DeviceQueueCreateInfo::default()
             .queue_family_index(family_index)
             .queue_priorities(<span class="kw-2">&amp;</span>[<span class="number">1.0</span>]);
-        <span class="kw">let </span>family_infos = [family_info];
+        <span class="kw">let </span><span class="kw-2">mut </span>family_infos = Vec::from([family_info]);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>pre_info = vk::DeviceCreateInfo::default();
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = callback {
+            callback(<span class="kw">super</span>::CreateDeviceCallbackArgs {
+                extensions: <span class="kw-2">&amp;mut </span>enabled_extensions,
+                device_features: <span class="kw-2">&amp;mut </span>enabled_phd_features,
+                queue_create_infos: <span class="kw-2">&amp;mut </span>family_infos,
+                create_info: <span class="kw-2">&amp;mut </span>pre_info,
+                _phantom: PhantomData,
+            })
+        }
 
         <span class="kw">let </span>str_pointers = enabled_extensions
             .iter()
@@ -5096,7 +5133,7 @@
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let </span>pre_info = vk::DeviceCreateInfo::default()
+        <span class="kw">let </span>pre_info = pre_info
             .queue_create_infos(<span class="kw-2">&amp;</span>family_infos)
             .enabled_extension_names(<span class="kw-2">&amp;</span>str_pointers);
         <span class="kw">let </span>info = enabled_phd_features.add_to_device_create(pre_info);
@@ -5131,6 +5168,19 @@
                 <span class="number">0</span>,
             )
         }
+    }
+}
+
+<span class="kw">impl </span><span class="kw">crate</span>::Adapter <span class="kw">for </span><span class="kw">super</span>::Adapter {
+    <span class="kw">type </span>A = <span class="kw">super</span>::Api;
+
+    <span class="kw">unsafe fn </span>open(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        features: wgt::Features,
+        _limits: <span class="kw-2">&amp;</span>wgt::Limits,
+        memory_hints: <span class="kw-2">&amp;</span>wgt::MemoryHints,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::OpenDevice&lt;<span class="kw">super</span>::Api&gt;, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.open_with_callback(features, memory_hints, <span class="prelude-val">None</span>) }
     }
 
     <span class="kw">unsafe fn </span>texture_format_capabilities(

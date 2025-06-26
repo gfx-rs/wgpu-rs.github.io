@@ -1500,7 +1500,69 @@
 <a href="#1499" id="1499">1499</a>
 <a href="#1500" id="1500">1500</a>
 <a href="#1501" id="1501">1501</a>
-<a href="#1502" id="1502">1502</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#1502" id="1502">1502</a>
+<a href="#1503" id="1503">1503</a>
+<a href="#1504" id="1504">1504</a>
+<a href="#1505" id="1505">1505</a>
+<a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
+<a href="#1552" id="1552">1552</a>
+<a href="#1553" id="1553">1553</a>
+<a href="#1554" id="1554">1554</a>
+<a href="#1555" id="1555">1555</a>
+<a href="#1556" id="1556">1556</a>
+<a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
 ## Stack memory
@@ -1538,7 +1600,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="kw">pub use </span>adapter::PhysicalDeviceFeatures;
 
 <span class="kw">use </span>alloc::{boxed::Box, ffi::CString, sync::Arc, vec::Vec};
-<span class="kw">use </span>core::{borrow::Borrow, ffi::CStr, fmt, mem, num::NonZeroU32};
+<span class="kw">use </span>core::{borrow::Borrow, ffi::CStr, fmt, marker::PhantomData, mem, num::NonZeroU32};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{ext, khr, vk};
@@ -3002,4 +3064,66 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     shader_binding_table_record_offset_and_flags: u32,
     acceleration_structure_reference: u64,
 }
+
+<span class="doccomment">/// Arguments to the [`CreateDeviceCallback`].
+</span><span class="kw">pub struct </span>CreateDeviceCallbackArgs&lt;<span class="lifetime">'arg</span>, <span class="lifetime">'pnext</span>, <span class="lifetime">'this</span>&gt;
+<span class="kw">where
+    </span><span class="lifetime">'this</span>: <span class="lifetime">'pnext</span>,
+{
+    <span class="doccomment">/// The extensions to enable for the device. You must not remove anything from this list,
+    /// but you may add to it.
+    </span><span class="kw">pub </span>extensions: <span class="kw-2">&amp;</span><span class="lifetime">'arg </span><span class="kw-2">mut </span>Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt;,
+    <span class="doccomment">/// The physical device features to enable. You may enable features, but must not disable any.
+    </span><span class="kw">pub </span>device_features: <span class="kw-2">&amp;</span><span class="lifetime">'arg </span><span class="kw-2">mut </span>PhysicalDeviceFeatures,
+    <span class="doccomment">/// The queue create infos for the device. You may add or modify queue create infos as needed.
+    </span><span class="kw">pub </span>queue_create_infos: <span class="kw-2">&amp;</span><span class="lifetime">'arg </span><span class="kw-2">mut </span>Vec&lt;vk::DeviceQueueCreateInfo&lt;<span class="lifetime">'pnext</span>&gt;&gt;,
+    <span class="doccomment">/// The create info for the device. You may add or modify things in the pnext chain, but
+    /// do not turn features off. Additionally, do not add things to the list of extensions,
+    /// or to the feature set, as all changes to that member will be overwritten.
+    </span><span class="kw">pub </span>create_info: <span class="kw-2">&amp;</span><span class="lifetime">'arg </span><span class="kw-2">mut </span>vk::DeviceCreateInfo&lt;<span class="lifetime">'pnext</span>&gt;,
+    <span class="doccomment">/// We need to have `'this` in the struct, so we can declare that all lifetimes coming from
+    /// captures in the closure will live longer (and hence satisfy) `'pnext`. However, we
+    /// don't actually directly use `'this`
+    </span>_phantom: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'this </span>()&gt;,
+}
+
+<span class="doccomment">/// Callback to allow changing the vulkan device creation parameters.
+///
+/// # Safety:
+/// - If you want to add extensions, add the to the `Vec&lt;'static CStr&gt;` not the create info,
+///   as the create info value will be overwritten.
+/// - Callback must not remove features.
+/// - Callback must not change anything to what the instance does not support.
+</span><span class="kw">pub type </span>CreateDeviceCallback&lt;<span class="lifetime">'this</span>&gt; =
+    <span class="kw">dyn for</span>&lt;<span class="lifetime">'arg</span>, <span class="lifetime">'pnext</span>&gt; FnOnce(CreateDeviceCallbackArgs&lt;<span class="lifetime">'arg</span>, <span class="lifetime">'pnext</span>, <span class="lifetime">'this</span>&gt;) + <span class="lifetime">'this</span>;
+
+<span class="doccomment">/// Arguments to the [`CreateInstanceCallback`].
+</span><span class="kw">pub struct </span>CreateInstanceCallbackArgs&lt;<span class="lifetime">'arg</span>, <span class="lifetime">'pnext</span>, <span class="lifetime">'this</span>&gt;
+<span class="kw">where
+    </span><span class="lifetime">'this</span>: <span class="lifetime">'pnext</span>,
+{
+    <span class="doccomment">/// The extensions to enable for the instance. You must not remove anything from this list,
+    /// but you may add to it.
+    </span><span class="kw">pub </span>extensions: <span class="kw-2">&amp;</span><span class="lifetime">'arg </span><span class="kw-2">mut </span>Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt;,
+    <span class="doccomment">/// The create info for the instance. You may add or modify things in the pnext chain, but
+    /// do not turn features off. Additionally, do not add things to the list of extensions,
+    /// all changes to that member will be overwritten.
+    </span><span class="kw">pub </span>create_info: <span class="kw-2">&amp;</span><span class="lifetime">'arg </span><span class="kw-2">mut </span>vk::InstanceCreateInfo&lt;<span class="lifetime">'pnext</span>&gt;,
+    <span class="doccomment">/// Vulkan entry point.
+    </span><span class="kw">pub </span>entry: <span class="kw-2">&amp;</span><span class="lifetime">'arg </span>ash::Entry,
+    <span class="doccomment">/// We need to have `'this` in the struct, so we can declare that all lifetimes coming from
+    /// captures in the closure will live longer (and hence satisfy) `'pnext`. However, we
+    /// don't actually directly use `'this`
+    </span>_phantom: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'this </span>()&gt;,
+}
+
+<span class="doccomment">/// Callback to allow changing the vulkan instance creation parameters.
+///
+/// # Safety:
+/// - If you want to add extensions, add the to the `Vec&lt;'static CStr&gt;` not the create info,
+///   as the create info value will be overwritten.
+/// - Callback must not remove features.
+/// - Callback must not change anything to what the instance does not support.
+</span><span class="kw">pub type </span>CreateInstanceCallback&lt;<span class="lifetime">'this</span>&gt; =
+    <span class="kw">dyn for</span>&lt;<span class="lifetime">'arg</span>, <span class="lifetime">'pnext</span>&gt; FnOnce(CreateInstanceCallbackArgs&lt;<span class="lifetime">'arg</span>, <span class="lifetime">'pnext</span>, <span class="lifetime">'this</span>&gt;) + <span class="lifetime">'this</span>;
 </code></pre></div></section></main></body></html>
