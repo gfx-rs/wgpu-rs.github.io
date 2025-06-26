@@ -1731,7 +1731,9 @@
 <a href="#1730" id="1730">1730</a>
 <a href="#1731" id="1731">1731</a>
 <a href="#1732" id="1732">1732</a>
-<a href="#1733" id="1733">1733</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
+<a href="#1733" id="1733">1733</a>
+<a href="#1734" id="1734">1734</a>
+<a href="#1735" id="1735">1735</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
 command encoder with a single call. A single bundle can replayed any number of
@@ -1818,6 +1820,7 @@ index format changes.
     vec::Vec,
 };
 <span class="kw">use </span>core::{
+    convert::Infallible,
     num::{NonZeroU32, NonZeroU64},
     ops::Range,
 };
@@ -1886,7 +1889,7 @@ index format changes.
 <span class="attr">#[derive(Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Deserialize, serde::Serialize))]
 </span><span class="kw">pub struct </span>RenderBundleEncoder {
-    base: BasePass&lt;RenderCommand&gt;,
+    base: BasePass&lt;RenderCommand, Infallible&gt;,
     parent_id: id::DeviceId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: RenderPassContext,
     <span class="kw">pub</span>(<span class="kw">crate</span>) is_depth_read_only: bool,
@@ -1903,7 +1906,7 @@ index format changes.
     <span class="kw">pub fn </span>new(
         desc: <span class="kw-2">&amp;</span>RenderBundleEncoderDescriptor,
         parent_id: id::DeviceId,
-        base: <span class="prelude-ty">Option</span>&lt;BasePass&lt;RenderCommand&gt;&gt;,
+        base: <span class="prelude-ty">Option</span>&lt;BasePass&lt;RenderCommand, Infallible&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, CreateRenderBundleError&gt; {
         <span class="kw">let </span>(is_depth_read_only, is_stencil_read_only) = <span class="kw">match </span>desc.depth_stencil {
             <span class="prelude-val">Some</span>(ds) =&gt; {
@@ -1981,7 +1984,7 @@ index format changes.
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>to_base_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BasePass&lt;RenderCommand&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>to_base_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BasePass&lt;RenderCommand, Infallible&gt; {
         <span class="self">self</span>.base.clone()
     }
 
@@ -2199,6 +2202,7 @@ index format changes.
         <span class="kw">let </span>render_bundle = RenderBundle {
             base: BasePass {
                 label: desc.label.as_deref().map(str::to_owned),
+                error: <span class="prelude-val">None</span>,
                 commands,
                 dynamic_offsets: flat_dynamic_offsets,
                 string_data: <span class="self">self</span>.base.string_data,
@@ -2596,7 +2600,7 @@ index format changes.
 </span><span class="kw">pub struct </span>RenderBundle {
     <span class="comment">// Normalized command stream. It can be executed verbatim,
     // without re-binding anything on the pipeline change.
-    </span>base: BasePass&lt;ArcRenderCommand&gt;,
+    </span>base: BasePass&lt;ArcRenderCommand, Infallible&gt;,
     <span class="kw">pub</span>(<span class="kw">super</span>) is_depth_read_only: bool,
     <span class="kw">pub</span>(<span class="kw">super</span>) is_stencil_read_only: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&gt;,
