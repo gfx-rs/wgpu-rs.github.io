@@ -699,7 +699,15 @@
 <a href="#698" id="698">698</a>
 <a href="#699" id="699">699</a>
 <a href="#700" id="700">700</a>
-<a href="#701" id="701">701</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{format, vec, vec::Vec};
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{format, vec, vec::Vec};
 
 <span class="kw">use super</span>::{Error, Instruction, LookupExpression, LookupHelper <span class="kw">as _</span>};
 <span class="kw">use </span><span class="kw">crate</span>::proc::Emitter;
@@ -870,10 +878,18 @@
                 <span class="prelude-val">Some</span>(ep) =&gt; <span class="macro">format!</span>(<span class="string">"block_ctx.{:?}-{}.txt"</span>, ep.stage, ep.name),
                 <span class="prelude-val">None </span>=&gt; <span class="macro">format!</span>(<span class="string">"block_ctx.Fun-{}.txt"</span>, function_index),
             };
-            <span class="kw">let </span>dest = prefix.join(dump_suffix);
-            <span class="kw">let </span>dump = <span class="macro">format!</span>(<span class="string">"{block_ctx:#?}"</span>);
-            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = std::fs::write(<span class="kw-2">&amp;</span>dest, dump) {
-                <span class="macro">log::error!</span>(<span class="string">"Unable to dump the block context into {:?}: {}"</span>, dest, e);
+
+            <span class="macro">cfg_if::cfg_if!</span> {
+                <span class="kw">if </span><span class="attr">#[cfg(feature = <span class="string">"fs"</span>)] </span>{
+                    <span class="kw">let </span>prefix: <span class="kw-2">&amp;</span>std::path::Path = prefix.as_ref();
+                    <span class="kw">let </span>dest = prefix.join(dump_suffix);
+                    <span class="kw">let </span>dump = <span class="macro">format!</span>(<span class="string">"{block_ctx:#?}"</span>);
+                    <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = std::fs::write(<span class="kw-2">&amp;</span>dest, dump) {
+                        <span class="macro">log::error!</span>(<span class="string">"Unable to dump the block context into {:?}: {}"</span>, dest, e);
+                    }
+                } <span class="kw">else </span>{
+                    <span class="macro">log::error!</span>(<span class="string">"Unable to dump the block context into {:?}/{}: file system integration was not enabled with the `fs` feature"</span>, prefix, dump_suffix);
+                }
             }
         }
 
