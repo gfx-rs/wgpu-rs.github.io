@@ -1094,7 +1094,16 @@
 <a href="#1093" id="1093">1093</a>
 <a href="#1094" id="1094">1094</a>
 <a href="#1095" id="1095">1095</a>
-<a href="#1096" id="1096">1096</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     string::{String, ToString},
 };
@@ -1156,7 +1165,16 @@
     pipeline_constants: <span class="kw-2">&amp;</span>PipelineConstants,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(Cow&lt;<span class="lifetime">'a</span>, Module&gt;, Cow&lt;<span class="lifetime">'a</span>, ModuleInfo&gt;), PipelineConstantError&gt; {
     <span class="kw">if </span>(entry_point.is_none() || module.entry_points.len() &lt;= <span class="number">1</span>) &amp;&amp; module.overrides.is_empty() {
-        <span class="kw">return </span><span class="prelude-val">Ok</span>((Cow::Borrowed(module), Cow::Borrowed(module_info)));
+        <span class="comment">// We skip compacting the module here mostly to reduce the risk of
+        // hitting corner cases like https://github.com/gfx-rs/wgpu/issues/7793.
+        // Compaction doesn't cost very much [1], so it would also be reasonable
+        // to do it unconditionally. Even when there is a single entry point or
+        // when no entry point is specified, it is still possible that there
+        // are unreferenced items in the module that would be removed by this
+        // compaction.
+        //
+        // [1]: https://github.com/gfx-rs/wgpu/pull/7703#issuecomment-2902153760
+        </span><span class="kw">return </span><span class="prelude-val">Ok</span>((Cow::Borrowed(module), Cow::Borrowed(module_info)));
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>module = module.clone();
