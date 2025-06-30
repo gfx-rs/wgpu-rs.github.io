@@ -1777,7 +1777,11 @@
 <a href="#1776" id="1776">1776</a>
 <a href="#1777" id="1777">1777</a>
 <a href="#1778" id="1778">1778</a>
-<a href="#1779" id="1779">1779</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::ToString, sync::Arc, vec, vec::Vec};
+<a href="#1779" id="1779">1779</a>
+<a href="#1780" id="1780">1780</a>
+<a href="#1781" id="1781">1781</a>
+<a href="#1782" id="1782">1782</a>
+<a href="#1783" id="1783">1783</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::ToString, sync::Arc, vec, vec::Vec};
 <span class="kw">use </span>core::{
     iter,
     mem::{<span class="self">self</span>, ManuallyDrop},
@@ -3090,7 +3094,11 @@
                                     .unwrap()
                             };
                         }
-                        <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(e.into()),
+                        <span class="comment">// The texture must not have been destroyed when its usage here was
+                        // encoded. If it was destroyed after that, then it was transferred
+                        // to `pending_writes.temp_resources` at the time of destruction, so
+                        // we are still okay to use it.
+                        </span><span class="prelude-val">Err</span>(DestroyedResourceError(<span class="kw">_</span>)) =&gt; {}
                     }
                 }
 
