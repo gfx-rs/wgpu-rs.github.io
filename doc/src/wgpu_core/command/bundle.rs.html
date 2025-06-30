@@ -1733,7 +1733,10 @@
 <a href="#1732" id="1732">1732</a>
 <a href="#1733" id="1733">1733</a>
 <a href="#1734" id="1734">1734</a>
-<a href="#1735" id="1735">1735</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
+<a href="#1735" id="1735">1735</a>
+<a href="#1736" id="1736">1736</a>
+<a href="#1737" id="1737">1737</a>
+<a href="#1738" id="1738">1738</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
 command encoder with a single call. A single bundle can replayed any number of
@@ -1853,6 +1856,7 @@ index format changes.
 };
 
 <span class="kw">use super</span>::{
+    pass,
     render_command::{ArcRenderCommand, RenderCommand},
     DrawKind,
 };
@@ -2262,11 +2266,13 @@ index format changes.
 
     <span class="kw">let </span>max_bind_groups = state.device.limits.max_bind_groups;
     <span class="kw">if </span>index &gt;= max_bind_groups {
-        <span class="kw">return </span><span class="prelude-val">Err</span>(RenderCommandError::BindGroupIndexOutOfRange {
-            index,
-            max: max_bind_groups,
-        }
-        .into());
+        <span class="kw">return </span><span class="prelude-val">Err</span>(
+            RenderCommandError::BindGroupIndexOutOfRange(pass::BindGroupIndexOutOfRange {
+                index,
+                max: max_bind_groups,
+            })
+            .into(),
+        );
     }
 
     <span class="comment">// Identify the next `num_dynamic_offsets` entries from `dynamic_offsets`.
@@ -3047,7 +3053,7 @@ index format changes.
     </span><span class="kw">fn </span>pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>PipelineState, RenderBundleErrorInner&gt; {
         <span class="self">self</span>.pipeline
             .as_ref()
-            .ok_or(DrawError::MissingPipeline.into())
+            .ok_or(DrawError::MissingPipeline(pass::MissingPipeline).into())
     }
 
     <span class="doccomment">/// Mark all non-empty bind group table entries from `index` onwards as dirty.

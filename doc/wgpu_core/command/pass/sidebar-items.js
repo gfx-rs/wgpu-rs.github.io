@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["insert_debug_marker","pop_debug_group","push_debug_group","rebind_resources","set_bind_group","set_push_constant","write_timestamp"],"struct":["BaseState","BindGroupIndexOutOfRange","InvalidPopDebugGroup","InvalidValuesOffset","MissingPipeline"]};
