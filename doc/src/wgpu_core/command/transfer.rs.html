@@ -1164,11 +1164,57 @@
 <a href="#1163" id="1163">1163</a>
 <a href="#1164" id="1164">1164</a>
 <a href="#1165" id="1165">1165</a>
-<a href="#1166" id="1166">1166</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
+<a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::{BufferAddress, BufferUsages, Extent3d, TextureSelector, TextureUsages};
+<span class="kw">use </span>wgt::{
+    error::{ErrorType, WebGpuError},
+    BufferAddress, BufferUsages, Extent3d, TextureSelector, TextureUsages,
+};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
@@ -1302,6 +1348,46 @@
     },
     <span class="attr">#[error(<span class="string">"Requested mip level {requested} does no exist (count: {count})"</span>)]
     </span>InvalidMipLevel { requested: u32, count: u32 },
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>TransferError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::MissingBufferUsage(e) =&gt; e,
+            <span class="self">Self</span>::MissingTextureUsage(e) =&gt; e,
+            <span class="self">Self</span>::MemoryInitFailure(e) =&gt; e,
+
+            <span class="self">Self</span>::BufferOverrun { .. }
+            | <span class="self">Self</span>::TextureOverrun { .. }
+            | <span class="self">Self</span>::InvalidTextureAspect { .. }
+            | <span class="self">Self</span>::InvalidTextureMipLevel { .. }
+            | <span class="self">Self</span>::InvalidDimensionExternal
+            | <span class="self">Self</span>::UnalignedBufferOffset(..)
+            | <span class="self">Self</span>::UnalignedCopySize(..)
+            | <span class="self">Self</span>::UnalignedCopyWidth
+            | <span class="self">Self</span>::UnalignedCopyHeight
+            | <span class="self">Self</span>::UnalignedCopyOriginX
+            | <span class="self">Self</span>::UnalignedCopyOriginY
+            | <span class="self">Self</span>::UnalignedBytesPerRow
+            | <span class="self">Self</span>::UnspecifiedBytesPerRow
+            | <span class="self">Self</span>::UnspecifiedRowsPerImage
+            | <span class="self">Self</span>::InvalidBytesPerRow
+            | <span class="self">Self</span>::InvalidRowsPerImage
+            | <span class="self">Self</span>::CopySrcMissingAspects
+            | <span class="self">Self</span>::CopyDstMissingAspects
+            | <span class="self">Self</span>::CopyAspectNotOne
+            | <span class="self">Self</span>::CopyFromForbiddenTextureFormat { .. }
+            | <span class="self">Self</span>::CopyToForbiddenTextureFormat { .. }
+            | <span class="self">Self</span>::ExternalCopyToForbiddenTextureFormat(..)
+            | <span class="self">Self</span>::TextureFormatsNotCopyCompatible { .. }
+            | <span class="self">Self</span>::MissingDownlevelFlags(..)
+            | <span class="self">Self</span>::InvalidSampleCount { .. }
+            | <span class="self">Self</span>::SampleCountNotEqual { .. }
+            | <span class="self">Self</span>::InvalidMipLevel { .. }
+            | <span class="self">Self</span>::SameSourceDestinationBuffer =&gt; <span class="kw">return </span>ErrorType::Validation,
+        };
+        e.webgpu_error_type()
+    }
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extract_texture_selector&lt;T&gt;(

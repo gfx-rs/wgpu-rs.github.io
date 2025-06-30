@@ -101,9 +101,43 @@
 <a href="#100" id="100">100</a>
 <a href="#101" id="101">101</a>
 <a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
 
 <span class="kw">use </span>thiserror::Error;
+
+<span class="kw">use </span>wgt::error::{ErrorType, WebGpuError};
 
 <span class="kw">use </span><span class="kw">super</span>::bind::BinderError;
 <span class="kw">use </span><span class="kw">crate</span>::command::pass;
@@ -159,6 +193,12 @@
     </span>BindingSizeTooSmall(<span class="attr">#[from] </span>LateMinBufferBindingSizeMismatch),
 }
 
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>DrawError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        ErrorType::Validation
+    }
+}
+
 <span class="doccomment">/// Error encountered when encoding a render command.
 /// This is the shared error set between render bundles and passes.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
@@ -194,6 +234,30 @@
     </span>InvalidScissorRect(Rect&lt;u32&gt;, wgt::Extent3d),
     <span class="attr">#[error(<span class="string">"Support for {0} is not implemented yet"</span>)]
     </span>Unimplemented(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>RenderCommandError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::IncompatiblePipelineTargets(e) =&gt; e,
+            <span class="self">Self</span>::ResourceUsageCompatibility(e) =&gt; e,
+            <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
+            <span class="self">Self</span>::MissingBufferUsage(e) =&gt; e,
+            <span class="self">Self</span>::MissingTextureUsage(e) =&gt; e,
+            <span class="self">Self</span>::PushConstants(e) =&gt; e,
+
+            <span class="self">Self</span>::BindGroupIndexOutOfRange { .. }
+            | <span class="self">Self</span>::VertexBufferIndexOutOfRange { .. }
+            | <span class="self">Self</span>::IncompatibleDepthAccess(..)
+            | <span class="self">Self</span>::IncompatibleStencilAccess(..)
+            | <span class="self">Self</span>::InvalidViewportRectSize { .. }
+            | <span class="self">Self</span>::InvalidViewportRectPosition { .. }
+            | <span class="self">Self</span>::InvalidViewportDepth(..)
+            | <span class="self">Self</span>::InvalidScissorRect(..)
+            | <span class="self">Self</span>::Unimplemented(..) =&gt; <span class="kw">return </span>ErrorType::Validation,
+        };
+        e.webgpu_error_type()
+    }
 }
 
 <span class="attr">#[derive(Clone, Copy, Debug, Default)]

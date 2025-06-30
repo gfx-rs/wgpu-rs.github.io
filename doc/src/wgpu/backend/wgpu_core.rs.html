@@ -3686,30 +3686,7 @@
 <a href="#3685" id="3685">3685</a>
 <a href="#3686" id="3686">3686</a>
 <a href="#3687" id="3687">3687</a>
-<a href="#3688" id="3688">3688</a>
-<a href="#3689" id="3689">3689</a>
-<a href="#3690" id="3690">3690</a>
-<a href="#3691" id="3691">3691</a>
-<a href="#3692" id="3692">3692</a>
-<a href="#3693" id="3693">3693</a>
-<a href="#3694" id="3694">3694</a>
-<a href="#3695" id="3695">3695</a>
-<a href="#3696" id="3696">3696</a>
-<a href="#3697" id="3697">3697</a>
-<a href="#3698" id="3698">3698</a>
-<a href="#3699" id="3699">3699</a>
-<a href="#3700" id="3700">3700</a>
-<a href="#3701" id="3701">3701</a>
-<a href="#3702" id="3702">3702</a>
-<a href="#3703" id="3703">3703</a>
-<a href="#3704" id="3704">3704</a>
-<a href="#3705" id="3705">3705</a>
-<a href="#3706" id="3706">3706</a>
-<a href="#3707" id="3707">3707</a>
-<a href="#3708" id="3708">3708</a>
-<a href="#3709" id="3709">3709</a>
-<a href="#3710" id="3710">3710</a>
-<a href="#3711" id="3711">3711</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3688" id="3688">3688</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow::{<span class="self">self</span>, Borrowed},
     boxed::Box,
     format,
@@ -3726,7 +3703,10 @@
     command::bundle_ffi::<span class="kw-2">*</span>, error::ContextErrorSource, pipeline::CreateShaderModuleError,
     resource::BlasPrepareCompactResult,
 };
-<span class="kw">use </span>wgt::WasmNotSendSync;
+<span class="kw">use </span>wgt::{
+    error::{ErrorType, WebGpuError},
+    WasmNotSendSync,
+};
 
 <span class="kw">use </span><span class="kw">crate</span>::util::Mutex;
 <span class="kw">use crate</span>::{
@@ -4015,63 +3995,35 @@
     </span><span class="kw">fn </span>handle_error_inner(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
+        error_type: ErrorType,
         source: ContextErrorSource,
         label: Label&lt;<span class="lifetime">'_</span>&gt;,
         fn_ident: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     ) {
-        <span class="kw">let </span>source_error: ErrorSource = Box::new(wgc::error::ContextError {
+        <span class="kw">let </span>source: ErrorSource = Box::new(wgc::error::ContextError {
             fn_ident,
             source,
             label: label.unwrap_or_default().to_string(),
         });
         <span class="kw">let </span><span class="kw-2">mut </span>sink = sink_mutex.lock();
-        <span class="kw">let </span><span class="kw-2">mut </span>source_opt: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)&gt; = <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>source_error);
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(source) = source_opt {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(wgc::device::DeviceError::OutOfMemory) =
-                    source.downcast_ref::&lt;wgc::device::DeviceError&gt;()
-                {
-                    <span class="kw">break </span><span class="kw">crate</span>::Error::OutOfMemory {
-                        source: source_error,
-                    };
+        <span class="kw">let </span>description = || <span class="self">self</span>.format_error(<span class="kw-2">&amp;*</span>source);
+        <span class="kw">let </span>error = <span class="kw">match </span>error_type {
+            ErrorType::Internal =&gt; {
+                <span class="kw">let </span>description = description();
+                <span class="kw">crate</span>::Error::Internal {
+                    source,
+                    description,
                 }
-                <span class="kw">let </span>device_error =
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(wgc::resource::CreateTextureError::Device(device_error)) =
-                        source.downcast_ref::&lt;wgc::resource::CreateTextureError&gt;()
-                    {
-                        <span class="prelude-val">Some</span>(device_error)
-                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(wgc::resource::CreateBufferError::Device(device_error)) =
-                        source.downcast_ref::&lt;wgc::resource::CreateBufferError&gt;()
-                    {
-                        <span class="prelude-val">Some</span>(device_error)
-                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(wgc::resource::CreateQuerySetError::Device(device_error)) =
-                        source.downcast_ref::&lt;wgc::resource::CreateQuerySetError&gt;()
-                    {
-                        <span class="prelude-val">Some</span>(device_error)
-                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(wgc::ray_tracing::CreateBlasError::Device(device_error)) =
-                        source.downcast_ref::&lt;wgc::ray_tracing::CreateBlasError&gt;()
-                    {
-                        <span class="prelude-val">Some</span>(device_error)
-                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(wgc::ray_tracing::CreateTlasError::Device(device_error)) =
-                        source.downcast_ref::&lt;wgc::ray_tracing::CreateTlasError&gt;()
-                    {
-                        <span class="prelude-val">Some</span>(device_error)
-                    } <span class="kw">else </span>{
-                        <span class="prelude-val">None
-                    </span>};
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(wgc::device::DeviceError::OutOfMemory) = device_error {
-                    <span class="kw">break </span><span class="kw">crate</span>::Error::OutOfMemory {
-                        source: source_error,
-                    };
-                }
-                source_opt = source.source();
-            } <span class="kw">else </span>{
-                <span class="comment">// Otherwise, it is a validation error
-                </span><span class="kw">break </span><span class="kw">crate</span>::Error::Validation {
-                    description: <span class="self">self</span>.format_error(<span class="kw-2">&amp;*</span>source_error),
-                    source: source_error,
-                };
             }
+            ErrorType::OutOfMemory =&gt; <span class="kw">crate</span>::Error::OutOfMemory { source },
+            ErrorType::Validation =&gt; {
+                <span class="kw">let </span>description = description();
+                <span class="kw">crate</span>::Error::Validation {
+                    source,
+                    description,
+                }
+            }
+            ErrorType::DeviceLost { reason: <span class="kw">_ </span>} =&gt; <span class="kw">return</span>,
         };
         sink.handle_error(error);
     }
@@ -4081,11 +4033,12 @@
     </span><span class="kw">fn </span>handle_error(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
-        source: <span class="kw">impl </span>Error + WasmNotSendSync + <span class="lifetime">'static</span>,
+        source: <span class="kw">impl </span>WebGpuError + WasmNotSendSync + <span class="lifetime">'static</span>,
         label: Label&lt;<span class="lifetime">'_</span>&gt;,
         fn_ident: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     ) {
-        <span class="self">self</span>.handle_error_inner(sink_mutex, Box::new(source), label, fn_ident)
+        <span class="kw">let </span>error_type = source.webgpu_error_type();
+        <span class="self">self</span>.handle_error_inner(sink_mutex, error_type, Box::new(source), label, fn_ident)
     }
 
     <span class="attr">#[inline]
@@ -4093,10 +4046,11 @@
     </span><span class="kw">fn </span>handle_error_nolabel(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
-        source: <span class="kw">impl </span>Error + WasmNotSendSync + <span class="lifetime">'static</span>,
+        source: <span class="kw">impl </span>WebGpuError + WasmNotSendSync + <span class="lifetime">'static</span>,
         fn_ident: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     ) {
-        <span class="self">self</span>.handle_error_inner(sink_mutex, Box::new(source), <span class="prelude-val">None</span>, fn_ident)
+        <span class="kw">let </span>error_type = source.webgpu_error_type();
+        <span class="self">self</span>.handle_error_inner(sink_mutex, error_type, Box::new(source), <span class="prelude-val">None</span>, fn_ident)
     }
 
     <span class="attr">#[track_caller]

@@ -86,7 +86,21 @@
 <a href="#85" id="85">85</a>
 <a href="#86" id="86">86</a>
 <a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
+<span class="kw">use </span>wgt::error::{ErrorType, WebGpuError};
 
 <span class="kw">use crate</span>::{
     command::{CommandBuffer, CommandEncoderError, EncoderStateError},
@@ -173,5 +187,17 @@
     </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
     <span class="attr">#[error(transparent)]
     </span>ResourceUsage(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>TransitionResourcesError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Device(e) =&gt; e,
+            <span class="self">Self</span>::EncoderState(e) =&gt; e,
+            <span class="self">Self</span>::InvalidResource(e) =&gt; e,
+            <span class="self">Self</span>::ResourceUsage(e) =&gt; e,
+        };
+        e.webgpu_error_type()
+    }
 }
 </code></pre></div></section></main></body></html>

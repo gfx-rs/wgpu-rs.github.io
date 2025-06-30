@@ -1426,7 +1426,57 @@
 <a href="#1425" id="1425">1425</a>
 <a href="#1426" id="1426">1426</a>
 <a href="#1427" id="1427">1427</a>
-<a href="#1428" id="1428">1428</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
+<a href="#1428" id="1428">1428</a>
+<a href="#1429" id="1429">1429</a>
+<a href="#1430" id="1430">1430</a>
+<a href="#1431" id="1431">1431</a>
+<a href="#1432" id="1432">1432</a>
+<a href="#1433" id="1433">1433</a>
+<a href="#1434" id="1434">1434</a>
+<a href="#1435" id="1435">1435</a>
+<a href="#1436" id="1436">1436</a>
+<a href="#1437" id="1437">1437</a>
+<a href="#1438" id="1438">1438</a>
+<a href="#1439" id="1439">1439</a>
+<a href="#1440" id="1440">1440</a>
+<a href="#1441" id="1441">1441</a>
+<a href="#1442" id="1442">1442</a>
+<a href="#1443" id="1443">1443</a>
+<a href="#1444" id="1444">1444</a>
+<a href="#1445" id="1445">1445</a>
+<a href="#1446" id="1446">1446</a>
+<a href="#1447" id="1447">1447</a>
+<a href="#1448" id="1448">1448</a>
+<a href="#1449" id="1449">1449</a>
+<a href="#1450" id="1450">1450</a>
+<a href="#1451" id="1451">1451</a>
+<a href="#1452" id="1452">1452</a>
+<a href="#1453" id="1453">1453</a>
+<a href="#1454" id="1454">1454</a>
+<a href="#1455" id="1455">1455</a>
+<a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
+<a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
+<a href="#1462" id="1462">1462</a>
+<a href="#1463" id="1463">1463</a>
+<a href="#1464" id="1464">1464</a>
+<a href="#1465" id="1465">1465</a>
+<a href="#1466" id="1466">1466</a>
+<a href="#1467" id="1467">1467</a>
+<a href="#1468" id="1468">1468</a>
+<a href="#1469" id="1469">1469</a>
+<a href="#1470" id="1470">1470</a>
+<a href="#1471" id="1471">1471</a>
+<a href="#1472" id="1472">1472</a>
+<a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
 <span class="kw">mod </span>clear;
@@ -1474,6 +1524,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::track::{DeviceTracker, ResourceUsageCompatibilityError, Tracker, UsageScope};
 <span class="kw">use crate</span>::{api_log, global::Global, id, resource_log, Label};
 <span class="kw">use crate</span>::{hal_label, LabelHelpers};
+
+<span class="kw">use </span>wgt::error::{ErrorType, WebGpuError};
 
 <span class="kw">use </span>thiserror::Error;
 
@@ -2428,6 +2480,18 @@
     </span>Submitted,
 }
 
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>EncoderStateError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">match </span><span class="self">self </span>{
+            EncoderStateError::Invalid
+            | EncoderStateError::Ended
+            | EncoderStateError::Locked
+            | EncoderStateError::Unlocked
+            | EncoderStateError::Submitted =&gt; ErrorType::Validation,
+        }
+    }
+}
+
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>CommandEncoderError {
@@ -2478,6 +2542,27 @@
     }
 }
 
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>CommandEncoderError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Device(e) =&gt; e,
+            <span class="self">Self</span>::InvalidResource(e) =&gt; e,
+            <span class="self">Self</span>::MissingFeatures(e) =&gt; e,
+            <span class="self">Self</span>::State(e) =&gt; e,
+            <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
+            <span class="self">Self</span>::Transfer(e) =&gt; e,
+            <span class="self">Self</span>::Clear(e) =&gt; e,
+            <span class="self">Self</span>::Query(e) =&gt; e,
+            <span class="self">Self</span>::BuildAccelerationStructure(e) =&gt; e,
+            <span class="self">Self</span>::TransitionResources(e) =&gt; e,
+            <span class="self">Self</span>::ResourceUsage(e) =&gt; e,
+            <span class="self">Self</span>::ComputePass(e) =&gt; e,
+            <span class="self">Self</span>::RenderPass(e) =&gt; e,
+        };
+        e.webgpu_error_type()
+    }
+}
+
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>TimestampWritesError {
@@ -2487,6 +2572,14 @@
     </span>IndicesEqual { idx: u32 },
     <span class="attr">#[error(<span class="string">"no begin or end indices were specified for pass timestamp writes, expected at least one to be set"</span>)]
     </span>IndicesMissing,
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>TimestampWritesError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::IndicesEqual { .. } | <span class="self">Self</span>::IndicesMissing =&gt; ErrorType::Validation,
+        }
+    }
 }
 
 <span class="kw">impl </span>Global {
@@ -2853,5 +2946,12 @@
     <span class="kw">pub </span>scope: PassErrorScope,
     <span class="attr">#[source]
     </span><span class="kw">pub</span>(<span class="kw">super</span>) inner: EncoderStateError,
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>PassStateError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span><span class="self">Self </span>{ scope: <span class="kw">_</span>, inner } = <span class="self">self</span>;
+        inner.webgpu_error_type()
+    }
 }
 </code></pre></div></section></main></body></html>

@@ -369,7 +369,44 @@
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
 <a href="#370" id="370">370</a>
-<a href="#371" id="371">371</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
 
@@ -395,7 +432,10 @@ extract it from the hub.
 };
 
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::SurfaceStatus <span class="kw">as </span>Status;
+<span class="kw">use </span>wgt::{
+    error::{ErrorType, WebGpuError},
+    SurfaceStatus <span class="kw">as </span>Status,
+};
 
 <span class="kw">const </span>FRAME_TIMEOUT_MS: u32 = <span class="number">1000</span>;
 
@@ -419,6 +459,19 @@ extract it from the hub.
     </span>AlreadyAcquired,
     <span class="attr">#[error(<span class="string">"Texture has been destroyed"</span>)]
     </span>TextureDestroyed,
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>SurfaceError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Device(e) =&gt; e,
+            <span class="self">Self</span>::Invalid
+            | <span class="self">Self</span>::NotConfigured
+            | <span class="self">Self</span>::AlreadyAcquired
+            | <span class="self">Self</span>::TextureDestroyed =&gt; <span class="kw">return </span>ErrorType::Validation,
+        };
+        e.webgpu_error_type()
+    }
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -475,6 +528,27 @@ extract it from the hub.
             WaitIdleError::WrongSubmissionIndex(..) =&gt; <span class="macro">unreachable!</span>(),
             WaitIdleError::Timeout =&gt; ConfigureSurfaceError::GpuWaitTimeout,
         }
+    }
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>ConfigureSurfaceError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Device(e) =&gt; e,
+            <span class="self">Self</span>::MissingDownlevelFlags(e) =&gt; e,
+            <span class="self">Self</span>::InvalidSurface
+            | <span class="self">Self</span>::InvalidViewFormat(..)
+            | <span class="self">Self</span>::PreviousOutputExists
+            | <span class="self">Self</span>::GpuWaitTimeout
+            | <span class="self">Self</span>::ZeroArea
+            | <span class="self">Self</span>::TooLarge { .. }
+            | <span class="self">Self</span>::UnsupportedQueueFamily
+            | <span class="self">Self</span>::UnsupportedFormat { .. }
+            | <span class="self">Self</span>::UnsupportedPresentMode { .. }
+            | <span class="self">Self</span>::UnsupportedAlphaMode { .. }
+            | <span class="self">Self</span>::UnsupportedUsage { .. } =&gt; <span class="kw">return </span>ErrorType::Validation,
+        };
+        e.webgpu_error_type()
     }
 }
 

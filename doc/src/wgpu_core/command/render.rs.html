@@ -3546,12 +3546,74 @@
 <a href="#3545" id="3545">3545</a>
 <a href="#3546" id="3546">3546</a>
 <a href="#3547" id="3547">3547</a>
-<a href="#3548" id="3548">3548</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
+<a href="#3548" id="3548">3548</a>
+<a href="#3549" id="3549">3549</a>
+<a href="#3550" id="3550">3550</a>
+<a href="#3551" id="3551">3551</a>
+<a href="#3552" id="3552">3552</a>
+<a href="#3553" id="3553">3553</a>
+<a href="#3554" id="3554">3554</a>
+<a href="#3555" id="3555">3555</a>
+<a href="#3556" id="3556">3556</a>
+<a href="#3557" id="3557">3557</a>
+<a href="#3558" id="3558">3558</a>
+<a href="#3559" id="3559">3559</a>
+<a href="#3560" id="3560">3560</a>
+<a href="#3561" id="3561">3561</a>
+<a href="#3562" id="3562">3562</a>
+<a href="#3563" id="3563">3563</a>
+<a href="#3564" id="3564">3564</a>
+<a href="#3565" id="3565">3565</a>
+<a href="#3566" id="3566">3566</a>
+<a href="#3567" id="3567">3567</a>
+<a href="#3568" id="3568">3568</a>
+<a href="#3569" id="3569">3569</a>
+<a href="#3570" id="3570">3570</a>
+<a href="#3571" id="3571">3571</a>
+<a href="#3572" id="3572">3572</a>
+<a href="#3573" id="3573">3573</a>
+<a href="#3574" id="3574">3574</a>
+<a href="#3575" id="3575">3575</a>
+<a href="#3576" id="3576">3576</a>
+<a href="#3577" id="3577">3577</a>
+<a href="#3578" id="3578">3578</a>
+<a href="#3579" id="3579">3579</a>
+<a href="#3580" id="3580">3580</a>
+<a href="#3581" id="3581">3581</a>
+<a href="#3582" id="3582">3582</a>
+<a href="#3583" id="3583">3583</a>
+<a href="#3584" id="3584">3584</a>
+<a href="#3585" id="3585">3585</a>
+<a href="#3586" id="3586">3586</a>
+<a href="#3587" id="3587">3587</a>
+<a href="#3588" id="3588">3588</a>
+<a href="#3589" id="3589">3589</a>
+<a href="#3590" id="3590">3590</a>
+<a href="#3591" id="3591">3591</a>
+<a href="#3592" id="3592">3592</a>
+<a href="#3593" id="3593">3593</a>
+<a href="#3594" id="3594">3594</a>
+<a href="#3595" id="3595">3595</a>
+<a href="#3596" id="3596">3596</a>
+<a href="#3597" id="3597">3597</a>
+<a href="#3598" id="3598">3598</a>
+<a href="#3599" id="3599">3599</a>
+<a href="#3600" id="3600">3600</a>
+<a href="#3601" id="3601">3601</a>
+<a href="#3602" id="3602">3602</a>
+<a href="#3603" id="3603">3603</a>
+<a href="#3604" id="3604">3604</a>
+<a href="#3605" id="3605">3605</a>
+<a href="#3606" id="3606">3606</a>
+<a href="#3607" id="3607">3607</a>
+<a href="#3608" id="3608">3608</a>
+<a href="#3609" id="3609">3609</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{fmt, num::NonZeroU32, ops::Range, str};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{
+    error::{ErrorType, WebGpuError},
     BufferAddress, BufferSize, BufferUsages, Color, DynamicOffset, IndexFormat, ShaderStages,
     TextureSelector, TextureUsages, TextureViewDimension, VertexStepMode,
 };
@@ -4168,6 +4230,12 @@
     },
 }
 
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>ColorAttachmentError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        ErrorType::Validation
+    }
+}
+
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>AttachmentError {
@@ -4185,6 +4253,12 @@
     </span>NoClearValue,
     <span class="attr">#[error(<span class="string">"Clear value ({0}) must be between 0.0 and 1.0, inclusive"</span>)]
     </span>ClearValueOutOfRange(f32),
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>AttachmentError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        ErrorType::Validation
+    }
 }
 
 <span class="doccomment">/// Error encountered when performing a render pass.
@@ -4361,6 +4435,54 @@
             scope,
             inner: <span class="self">self</span>.into(),
         }
+    }
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>RenderPassError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span><span class="self">Self </span>{ scope: <span class="kw">_</span>, inner } = <span class="self">self</span>;
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span>inner {
+            RenderPassErrorInner::Device(e) =&gt; e,
+            RenderPassErrorInner::ColorAttachment(e) =&gt; e,
+            RenderPassErrorInner::EncoderState(e) =&gt; e,
+            RenderPassErrorInner::MissingFeatures(e) =&gt; e,
+            RenderPassErrorInner::MissingDownlevelFlags(e) =&gt; e,
+            RenderPassErrorInner::RenderCommand(e) =&gt; e,
+            RenderPassErrorInner::Draw(e) =&gt; e,
+            RenderPassErrorInner::Bind(e) =&gt; e,
+            RenderPassErrorInner::QueryUse(e) =&gt; e,
+            RenderPassErrorInner::DestroyedResource(e) =&gt; e,
+            RenderPassErrorInner::InvalidResource(e) =&gt; e,
+            RenderPassErrorInner::IncompatibleBundleTargets(e) =&gt; e,
+            RenderPassErrorInner::InvalidAttachment(e) =&gt; e,
+            RenderPassErrorInner::TimestampWrites(e) =&gt; e,
+            RenderPassErrorInner::InvalidValuesOffset(e) =&gt; e,
+            RenderPassErrorInner::InvalidPopDebugGroup(e) =&gt; e,
+
+            RenderPassErrorInner::InvalidParentEncoder
+            | RenderPassErrorInner::UnsupportedResolveTargetFormat { .. }
+            | RenderPassErrorInner::MissingAttachments
+            | RenderPassErrorInner::TextureViewIsNotRenderable { .. }
+            | RenderPassErrorInner::AttachmentsDimensionMismatch { .. }
+            | RenderPassErrorInner::AttachmentSampleCountMismatch { .. }
+            | RenderPassErrorInner::InvalidResolveSampleCounts { .. }
+            | RenderPassErrorInner::MismatchedResolveTextureFormat { .. }
+            | RenderPassErrorInner::InvalidDepthOps
+            | RenderPassErrorInner::InvalidStencilOps
+            | RenderPassErrorInner::UnalignedIndirectBufferOffset(..)
+            | RenderPassErrorInner::IndirectBufferOverrun { .. }
+            | RenderPassErrorInner::IndirectCountBufferOverrun { .. }
+            | RenderPassErrorInner::ResourceUsageCompatibility(..)
+            | RenderPassErrorInner::IncompatibleBundleReadOnlyDepthStencil { .. }
+            | RenderPassErrorInner::PushConstantOffsetAlignment
+            | RenderPassErrorInner::PushConstantSizeAlignment
+            | RenderPassErrorInner::PushConstantOutOfMemory
+            | RenderPassErrorInner::MultiViewMismatch
+            | RenderPassErrorInner::MultiViewDimensionMismatch
+            | RenderPassErrorInner::MissingOcclusionQuerySet
+            | RenderPassErrorInner::PassEnded =&gt; <span class="kw">return </span>ErrorType::Validation,
+        };
+        e.webgpu_error_type()
     }
 }
 

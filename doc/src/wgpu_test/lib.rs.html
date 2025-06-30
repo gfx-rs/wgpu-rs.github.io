@@ -115,7 +115,20 @@
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a></pre></div><pre class="rust"><code><span class="doccomment">//! Test utilities for the wgpu repository.
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a></pre></div><pre class="rust"><code><span class="doccomment">//! Test utilities for the wgpu repository.
 
 </span><span class="attr">#![allow(clippy::arc_with_non_send_sync)] </span><span class="comment">// False positive on wasm
 
@@ -207,14 +220,27 @@
     }
 }
 
-<span class="doccomment">/// Returns true if the provided callback fails validation.
-</span><span class="kw">pub fn </span>did_fail&lt;T&gt;(device: <span class="kw-2">&amp;</span>wgpu::Device, callback: <span class="kw">impl </span>FnOnce() -&gt; T) -&gt; (bool, T) {
-    device.push_error_scope(wgpu::ErrorFilter::Validation);
+<span class="kw">fn </span>did_fill_error_scope&lt;T&gt;(
+    device: <span class="kw-2">&amp;</span>wgpu::Device,
+    callback: <span class="kw">impl </span>FnOnce() -&gt; T,
+    filter: wgpu::ErrorFilter,
+) -&gt; (bool, T) {
+    device.push_error_scope(filter);
     <span class="kw">let </span>result = callback();
     <span class="kw">let </span>validation_error = pollster::block_on(device.pop_error_scope());
     <span class="kw">let </span>failed = validation_error.is_some();
 
     (failed, result)
+}
+
+<span class="doccomment">/// Returns true if the provided callback fails validation.
+</span><span class="kw">pub fn </span>did_fail&lt;T&gt;(device: <span class="kw-2">&amp;</span>wgpu::Device, callback: <span class="kw">impl </span>FnOnce() -&gt; T) -&gt; (bool, T) {
+    did_fill_error_scope(device, callback, wgpu::ErrorFilter::Validation)
+}
+
+<span class="doccomment">/// Returns true if the provided callback encounters an out-of-memory error.
+</span><span class="kw">pub fn </span>did_oom&lt;T&gt;(device: <span class="kw-2">&amp;</span>wgpu::Device, callback: <span class="kw">impl </span>FnOnce() -&gt; T) -&gt; (bool, T) {
+    did_fill_error_scope(device, callback, wgpu::ErrorFilter::OutOfMemory)
 }
 
 <span class="doccomment">/// Adds the necessary main function for our gpu test harness.

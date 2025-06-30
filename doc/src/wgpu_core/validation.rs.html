@@ -1342,7 +1342,53 @@
 <a href="#1341" id="1341">1341</a>
 <a href="#1342" id="1342">1342</a>
 <a href="#1343" id="1343">1343</a>
-<a href="#1344" id="1344">1344</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
+<a href="#1366" id="1366">1366</a>
+<a href="#1367" id="1367">1367</a>
+<a href="#1368" id="1368">1368</a>
+<a href="#1369" id="1369">1369</a>
+<a href="#1370" id="1370">1370</a>
+<a href="#1371" id="1371">1371</a>
+<a href="#1372" id="1372">1372</a>
+<a href="#1373" id="1373">1373</a>
+<a href="#1374" id="1374">1374</a>
+<a href="#1375" id="1375">1375</a>
+<a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
+<a href="#1378" id="1378">1378</a>
+<a href="#1379" id="1379">1379</a>
+<a href="#1380" id="1380">1380</a>
+<a href="#1381" id="1381">1381</a>
+<a href="#1382" id="1382">1382</a>
+<a href="#1383" id="1383">1383</a>
+<a href="#1384" id="1384">1384</a>
+<a href="#1385" id="1385">1385</a>
+<a href="#1386" id="1386">1386</a>
+<a href="#1387" id="1387">1387</a>
+<a href="#1388" id="1388">1388</a>
+<a href="#1389" id="1389">1389</a>
+<a href="#1390" id="1390">1390</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
     vec::Vec,
@@ -1352,7 +1398,10 @@
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>hashbrown::hash_map::Entry;
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::{BindGroupLayoutEntry, BindingType};
+<span class="kw">use </span>wgt::{
+    error::{ErrorType, WebGpuError},
+    BindGroupLayoutEntry, BindingType,
+};
 
 <span class="kw">use crate</span>::{device::bgl, resource::InvalidResourceError, FastHashMap, FastHashSet};
 
@@ -1565,6 +1614,12 @@
     </span>BadStorageFormat(wgt::TextureFormat),
 }
 
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>BindingError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        ErrorType::Validation
+    }
+}
+
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>FilteringError {
@@ -1572,6 +1627,12 @@
     </span>Integer,
     <span class="attr">#[error(<span class="string">"Non-filterable float textures can't be sampled with a filtering sampler"</span>)]
     </span>Float,
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>FilteringError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        ErrorType::Validation
+    }
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -1585,6 +1646,12 @@
     </span>InterpolationMismatch(<span class="prelude-ty">Option</span>&lt;naga::Interpolation&gt;),
     <span class="attr">#[error(<span class="string">"Input sampling doesn't match provided {0:?}"</span>)]
     </span>SamplingMismatch(<span class="prelude-ty">Option</span>&lt;naga::Sampling&gt;),
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>InputError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        ErrorType::Validation
+    }
 }
 
 <span class="doccomment">/// Errors produced when validating a programmable stage of a pipeline.
@@ -1632,6 +1699,31 @@
     </span>MultipleEntryPointsFound,
     <span class="attr">#[error(transparent)]
     </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>StageError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Binding(<span class="kw">_</span>, e) =&gt; e,
+            <span class="self">Self</span>::InvalidResource(e) =&gt; e,
+            <span class="self">Self</span>::Filtering {
+                texture: <span class="kw">_</span>,
+                sampler: <span class="kw">_</span>,
+                error,
+            } =&gt; error,
+            <span class="self">Self</span>::Input {
+                location: <span class="kw">_</span>,
+                var: <span class="kw">_</span>,
+                error,
+            } =&gt; error,
+            <span class="self">Self</span>::InvalidWorkgroupSize { .. }
+            | <span class="self">Self</span>::TooManyVaryings { .. }
+            | <span class="self">Self</span>::MissingEntryPoint(..)
+            | <span class="self">Self</span>::NoEntryPointFound
+            | <span class="self">Self</span>::MultipleEntryPointsFound =&gt; <span class="kw">return </span>ErrorType::Validation,
+        };
+        e.webgpu_error_type()
+    }
 }
 
 <span class="kw">pub fn </span>map_storage_format_to_naga(format: wgt::TextureFormat) -&gt; <span class="prelude-ty">Option</span>&lt;naga::StorageFormat&gt; {

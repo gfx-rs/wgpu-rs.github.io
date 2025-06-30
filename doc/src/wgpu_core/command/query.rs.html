@@ -489,7 +489,49 @@
 <a href="#488" id="488">488</a>
 <a href="#489" id="489">489</a>
 <a href="#490" id="490">490</a>
-<a href="#491" id="491">491</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec, vec::Vec};
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec, vec::Vec};
 <span class="kw">use </span>core::{iter, mem};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -508,7 +550,10 @@
     FastHashMap,
 };
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::BufferAddress;
+<span class="kw">use </span>wgt::{
+    error::{ErrorType, WebGpuError},
+    BufferAddress,
+};
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>QueryResetMap {
@@ -600,6 +645,21 @@
     </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>QueryError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::EncoderState(e) =&gt; e,
+            <span class="self">Self</span>::Use(e) =&gt; e,
+            <span class="self">Self</span>::Resolve(e) =&gt; e,
+            <span class="self">Self</span>::InvalidResource(e) =&gt; e,
+            <span class="self">Self</span>::Device(e) =&gt; e,
+            <span class="self">Self</span>::MissingFeature(e) =&gt; e,
+            <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
+        };
+        e.webgpu_error_type()
+    }
+}
+
 <span class="doccomment">/// Error encountered while trying to use queries
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
@@ -627,6 +687,19 @@
     },
 }
 
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>QueryUseError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Device(e) =&gt; e.webgpu_error_type(),
+            <span class="self">Self</span>::OutOfBounds { .. }
+            | <span class="self">Self</span>::UsedTwiceInsideRenderpass { .. }
+            | <span class="self">Self</span>::AlreadyStarted { .. }
+            | <span class="self">Self</span>::AlreadyStopped
+            | <span class="self">Self</span>::IncompatibleType { .. } =&gt; ErrorType::Validation,
+        }
+    }
+}
+
 <span class="doccomment">/// Error encountered while trying to resolve a query.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
@@ -650,6 +723,17 @@
         buffer_start_offset: BufferAddress,
         bytes_used: BufferAddress,
     },
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>ResolveError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::MissingBufferUsage(e) =&gt; e.webgpu_error_type(),
+            <span class="self">Self</span>::BufferOffsetAlignment
+            | <span class="self">Self</span>::QueryOverrun { .. }
+            | <span class="self">Self</span>::BufferOverrun { .. } =&gt; ErrorType::Validation,
+        }
+    }
 }
 
 <span class="kw">impl </span>QuerySet {

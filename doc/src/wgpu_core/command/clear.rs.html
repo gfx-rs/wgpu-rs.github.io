@@ -507,7 +507,30 @@
 <a href="#506" id="506">506</a>
 <a href="#507" id="507">507</a>
 <a href="#508" id="508">508</a>
-<a href="#509" id="509">509</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 <span class="kw">use </span>core::ops::Range;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -530,8 +553,9 @@
 
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{
-    math::align_to, BufferAddress, BufferUsages, ImageSubresourceRange, TextureAspect,
-    TextureSelector,
+    error::{ErrorType, WebGpuError},
+    math::align_to,
+    BufferAddress, BufferUsages, ImageSubresourceRange, TextureAspect, TextureSelector,
 };
 
 <span class="doccomment">/// Error encountered while attempting a clear.
@@ -586,6 +610,28 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     </span>EncoderState(<span class="attr">#[from] </span>EncoderStateError),
     <span class="attr">#[error(transparent)]
     </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>ClearError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
+            <span class="self">Self</span>::MissingBufferUsage(e) =&gt; e,
+            <span class="self">Self</span>::Device(e) =&gt; e,
+            <span class="self">Self</span>::EncoderState(e) =&gt; e,
+            <span class="self">Self</span>::InvalidResource(e) =&gt; e,
+            <span class="self">Self</span>::NoValidTextureClearMode(..)
+            | <span class="self">Self</span>::MissingClearTextureFeature
+            | <span class="self">Self</span>::UnalignedFillSize(..)
+            | <span class="self">Self</span>::UnalignedBufferOffset(..)
+            | <span class="self">Self</span>::OffsetPlusSizeExceeds64BitBounds { .. }
+            | <span class="self">Self</span>::BufferOverrun { .. }
+            | <span class="self">Self</span>::MissingTextureAspect { .. }
+            | <span class="self">Self</span>::InvalidTextureLevelRange { .. }
+            | <span class="self">Self</span>::InvalidTextureLayerRange { .. } =&gt; <span class="kw">return </span>ErrorType::Validation,
+        };
+        e.webgpu_error_type()
+    }
 }
 
 <span class="kw">impl </span>Global {

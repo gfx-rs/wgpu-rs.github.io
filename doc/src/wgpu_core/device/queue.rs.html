@@ -1745,7 +1745,39 @@
 <a href="#1744" id="1744">1744</a>
 <a href="#1745" id="1745">1745</a>
 <a href="#1746" id="1746">1746</a>
-<a href="#1747" id="1747">1747</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::ToString, sync::Arc, vec, vec::Vec};
+<a href="#1747" id="1747">1747</a>
+<a href="#1748" id="1748">1748</a>
+<a href="#1749" id="1749">1749</a>
+<a href="#1750" id="1750">1750</a>
+<a href="#1751" id="1751">1751</a>
+<a href="#1752" id="1752">1752</a>
+<a href="#1753" id="1753">1753</a>
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a>
+<a href="#1757" id="1757">1757</a>
+<a href="#1758" id="1758">1758</a>
+<a href="#1759" id="1759">1759</a>
+<a href="#1760" id="1760">1760</a>
+<a href="#1761" id="1761">1761</a>
+<a href="#1762" id="1762">1762</a>
+<a href="#1763" id="1763">1763</a>
+<a href="#1764" id="1764">1764</a>
+<a href="#1765" id="1765">1765</a>
+<a href="#1766" id="1766">1766</a>
+<a href="#1767" id="1767">1767</a>
+<a href="#1768" id="1768">1768</a>
+<a href="#1769" id="1769">1769</a>
+<a href="#1770" id="1770">1770</a>
+<a href="#1771" id="1771">1771</a>
+<a href="#1772" id="1772">1772</a>
+<a href="#1773" id="1773">1773</a>
+<a href="#1774" id="1774">1774</a>
+<a href="#1775" id="1775">1775</a>
+<a href="#1776" id="1776">1776</a>
+<a href="#1777" id="1777">1777</a>
+<a href="#1778" id="1778">1778</a>
+<a href="#1779" id="1779">1779</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::ToString, sync::Arc, vec, vec::Vec};
 <span class="kw">use </span>core::{
     iter,
     mem::{<span class="self">self</span>, ManuallyDrop},
@@ -1755,7 +1787,10 @@
 };
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::AccelerationStructureFlags;
+<span class="kw">use </span>wgt::{
+    error::{ErrorType, WebGpuError},
+    AccelerationStructureFlags,
+};
 
 <span class="kw">use super</span>::{life::LifetimeTracker, Device};
 <span class="kw">use </span><span class="kw">crate</span>::device::resource::CommandIndices;
@@ -2202,6 +2237,19 @@
     </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>QueueWriteError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Queue(e) =&gt; e,
+            <span class="self">Self</span>::Transfer(e) =&gt; e,
+            <span class="self">Self</span>::MemoryInitFailure(e) =&gt; e,
+            <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
+            <span class="self">Self</span>::InvalidResource(e) =&gt; e,
+        };
+        e.webgpu_error_type()
+    }
+}
+
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>QueueSubmitError {
@@ -2219,6 +2267,22 @@
     </span>CommandEncoder(<span class="attr">#[from] </span>CommandEncoderError),
     <span class="attr">#[error(transparent)]
     </span>ValidateAsActionsError(<span class="attr">#[from] </span><span class="kw">crate</span>::ray_tracing::ValidateAsActionsError),
+}
+
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>QueueSubmitError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Queue(e) =&gt; e,
+            <span class="self">Self</span>::Unmap(e) =&gt; e,
+            <span class="self">Self</span>::CommandEncoder(e) =&gt; e,
+            <span class="self">Self</span>::ValidateAsActionsError(e) =&gt; e,
+            <span class="self">Self</span>::InvalidResource(e) =&gt; e,
+            <span class="self">Self</span>::DestroyedResource(<span class="kw">_</span>) | <span class="self">Self</span>::BufferStillMapped(<span class="kw">_</span>) =&gt; {
+                <span class="kw">return </span>ErrorType::Validation
+            }
+        };
+        e.webgpu_error_type()
+    }
 }
 
 <span class="comment">//TODO: move out common parts of write_xxx.
