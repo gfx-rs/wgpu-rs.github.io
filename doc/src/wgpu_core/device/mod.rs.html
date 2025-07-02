@@ -524,16 +524,7 @@
 <a href="#523" id="523">523</a>
 <a href="#524" id="524">524</a>
 <a href="#525" id="525">525</a>
-<a href="#526" id="526">526</a>
-<a href="#527" id="527">527</a>
-<a href="#528" id="528">528</a>
-<a href="#529" id="529">529</a>
-<a href="#530" id="530">530</a>
-<a href="#531" id="531">531</a>
-<a href="#532" id="532">532</a>
-<a href="#533" id="533">533</a>
-<a href="#534" id="534">534</a>
-<a href="#535" id="535">535</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, vec::Vec};
+<a href="#526" id="526">526</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, vec::Vec};
 <span class="kw">use </span>core::{fmt, num::NonZeroU32};
 
 <span class="kw">use crate</span>::{
@@ -867,14 +858,10 @@
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>DeviceError {
-    <span class="attr">#[error(<span class="string">"{0} is invalid."</span>)]
-    </span>Invalid(ResourceErrorIdent),
     <span class="attr">#[error(<span class="string">"Parent device is lost"</span>)]
     </span>Lost,
     <span class="attr">#[error(<span class="string">"Not enough memory left."</span>)]
     </span>OutOfMemory,
-    <span class="attr">#[error(<span class="string">"Creation of a resource failed for a reason other than running out of memory."</span>)]
-    </span>ResourceCreationFailed,
     <span class="attr">#[error(transparent)]
     </span>DeviceMismatch(<span class="attr">#[from] </span>Box&lt;DeviceMismatch&gt;),
 }
@@ -882,12 +869,8 @@
 <span class="kw">impl </span>WebGpuError <span class="kw">for </span>DeviceError {
     <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
         <span class="kw">match </span><span class="self">self </span>{
-            DeviceError::DeviceMismatch(e) =&gt; e.webgpu_error_type(),
-            <span class="self">Self</span>::Invalid(<span class="kw">_</span>) =&gt; ErrorType::Validation,
-            <span class="self">Self</span>::ResourceCreationFailed =&gt; ErrorType::OutOfMemory,
-            <span class="self">Self</span>::Lost =&gt; ErrorType::DeviceLost {
-                reason: DeviceLostReason::Unknown,
-            },
+            <span class="self">Self</span>::DeviceMismatch(e) =&gt; e.webgpu_error_type(),
+            <span class="self">Self</span>::Lost =&gt; ErrorType::DeviceLost,
             <span class="self">Self</span>::OutOfMemory =&gt; ErrorType::OutOfMemory,
         }
     }
@@ -901,7 +884,6 @@
         <span class="kw">match </span>error {
             hal::DeviceError::Lost =&gt; <span class="self">Self</span>::Lost,
             hal::DeviceError::OutOfMemory =&gt; <span class="self">Self</span>::OutOfMemory,
-            hal::DeviceError::ResourceCreationFailed =&gt; <span class="self">Self</span>::ResourceCreationFailed,
             hal::DeviceError::Unexpected =&gt; <span class="self">Self</span>::Lost,
         }
     }

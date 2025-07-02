@@ -531,7 +531,12 @@
 <a href="#530" id="530">530</a>
 <a href="#531" id="531">531</a>
 <a href="#532" id="532">532</a>
-<a href="#533" id="533">533</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec, vec::Vec};
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec, vec::Vec};
 <span class="kw">use </span>core::{iter, mem};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -900,10 +905,6 @@
             .get(command_encoder_id.into_command_buffer_id());
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         cmd_buf_data.record_with(|cmd_buf_data| -&gt; <span class="prelude-ty">Result</span>&lt;(), QueryError&gt; {
-            cmd_buf
-                .device
-                .require_features(wgt::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS)<span class="question-mark">?</span>;
-
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
                 list.push(TraceCommand::WriteTimestamp {
@@ -912,9 +913,16 @@
                 });
             }
 
+            cmd_buf.device.check_is_valid()<span class="question-mark">?</span>;
+
+            cmd_buf
+                .device
+                .require_features(wgt::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS)<span class="question-mark">?</span>;
+
             <span class="kw">let </span>raw_encoder = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
 
             <span class="kw">let </span>query_set = hub.query_sets.get(query_set_id).get()<span class="question-mark">?</span>;
+            query_set.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
             query_set.validate_and_write_timestamp(raw_encoder, query_index, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
@@ -950,6 +958,8 @@
                     destination_offset,
                 });
             }
+
+            cmd_buf.device.check_is_valid()<span class="question-mark">?</span>;
 
             <span class="kw">if </span>destination_offset % wgt::QUERY_RESOLVE_BUFFER_ALIGNMENT != <span class="number">0 </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(QueryError::Resolve(ResolveError::BufferOffsetAlignment));
