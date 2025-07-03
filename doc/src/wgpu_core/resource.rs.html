@@ -2362,7 +2362,18 @@
 <a href="#2361" id="2361">2361</a>
 <a href="#2362" id="2362">2362</a>
 <a href="#2363" id="2363">2363</a>
-<a href="#2364" id="2364">2364</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#2364" id="2364">2364</a>
+<a href="#2365" id="2365">2365</a>
+<a href="#2366" id="2366">2366</a>
+<a href="#2367" id="2367">2367</a>
+<a href="#2368" id="2368">2368</a>
+<a href="#2369" id="2369">2369</a>
+<a href="#2370" id="2370">2370</a>
+<a href="#2371" id="2371">2371</a>
+<a href="#2372" id="2372">2372</a>
+<a href="#2373" id="2373">2373</a>
+<a href="#2374" id="2374">2374</a>
+<a href="#2375" id="2375">2375</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{
     borrow::Borrow,
     fmt,
@@ -2822,9 +2833,9 @@
             .ok_or_else(|| DestroyedResourceError(<span class="self">self</span>.error_ident()))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>check_destroyed&lt;<span class="lifetime">'a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
-        guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>check_destroyed(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        guard: <span class="kw-2">&amp;</span>SnatchGuard,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyedResourceError&gt; {
         <span class="self">self</span>.raw
             .get(guard)
@@ -3581,6 +3592,16 @@
             .ok_or_else(|| DestroyedResourceError(<span class="self">self</span>.error_ident()))
     }
 
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>check_destroyed(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        guard: <span class="kw-2">&amp;</span>SnatchGuard,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyedResourceError&gt; {
+        <span class="self">self</span>.inner
+            .get(guard)
+            .map(|<span class="kw">_</span>| ())
+            .ok_or_else(|| DestroyedResourceError(<span class="self">self</span>.error_ident()))
+    }
+
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_clear_view&lt;<span class="lifetime">'a</span>&gt;(
         clear_mode: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>TextureClearMode,
         desc: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>wgt::TextureDescriptor&lt;(), Vec&lt;wgt::TextureFormat&gt;&gt;,
@@ -4174,6 +4195,7 @@
         <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
         guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>hal::DynTextureView, DestroyedResourceError&gt; {
+        <span class="self">self</span>.parent.check_destroyed(guard)<span class="question-mark">?</span>;
         <span class="self">self</span>.raw
             .get(guard)
             .map(|it| it.as_ref())
