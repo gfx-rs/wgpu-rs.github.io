@@ -7908,7 +7908,8 @@
 <a href="#7907" id="7907">7907</a>
 <a href="#7908" id="7908">7908</a>
 <a href="#7909" id="7909">7909</a>
-<a href="#7910" id="7910">7910</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7910" id="7910">7910</a>
+<a href="#7911" id="7911">7911</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -10868,11 +10869,12 @@
             storage | binding
         };
         <span class="kw">let </span>atomic = attachment | atomic_64;
-        <span class="kw">let </span>rg11b10f = <span class="kw">if </span>device_features.contains(Features::RG11B10UFLOAT_RENDERABLE) {
-            attachment
-        } <span class="kw">else </span>{
-            basic
-        };
+        <span class="kw">let </span>(rg11b10f_f, rg11b10f_u) =
+            <span class="kw">if </span>device_features.contains(Features::RG11B10UFLOAT_RENDERABLE) {
+                (msaa_resolve, attachment)
+            } <span class="kw">else </span>{
+                (msaa, basic)
+            };
         <span class="kw">let </span>(bgra8unorm_f, bgra8unorm) = <span class="kw">if </span>device_features.contains(Features::BGRA8UNORM_STORAGE) {
             (
                 msaa_resolve | TextureFormatFeatureFlags::STORAGE_WRITE_ONLY,
@@ -10913,7 +10915,7 @@
             <span class="self">Self</span>::Bgra8UnormSrgb =&gt;       (msaa_resolve, attachment),
             <span class="self">Self</span>::Rgb10a2Uint =&gt;          (        msaa, attachment),
             <span class="self">Self</span>::Rgb10a2Unorm =&gt;         (msaa_resolve, attachment),
-            <span class="self">Self</span>::Rg11b10Ufloat =&gt;        (        msaa,   rg11b10f),
+            <span class="self">Self</span>::Rg11b10Ufloat =&gt;        (  rg11b10f_f, rg11b10f_u),
             <span class="self">Self</span>::R64Uint =&gt;              (     s_ro_wo,  atomic_64),
             <span class="self">Self</span>::Rg32Uint =&gt;             (     s_ro_wo,  all_flags),
             <span class="self">Self</span>::Rg32Sint =&gt;             (     s_ro_wo,  all_flags),
