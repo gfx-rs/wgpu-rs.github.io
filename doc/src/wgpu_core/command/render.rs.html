@@ -3605,19 +3605,20 @@
 <a href="#3604" id="3604">3604</a>
 <a href="#3605" id="3605">3605</a>
 <a href="#3606" id="3606">3606</a>
-<a href="#3607" id="3607">3607</a>
-<a href="#3608" id="3608">3608</a>
-<a href="#3609" id="3609">3609</a>
-<a href="#3610" id="3610">3610</a>
-<a href="#3611" id="3611">3611</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
-<span class="kw">use </span>core::{fmt, num::NonZeroU32, ops::Range, str};
+<a href="#3607" id="3607">3607</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
+<span class="kw">use </span>core::{
+    fmt,
+    num::{NonZeroU32, NonZeroU64},
+    str,
+};
+<span class="kw">use </span>hal::ShouldBeNonZeroExt;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{
     error::{ErrorType, WebGpuError},
-    BufferAddress, BufferSize, BufferUsages, Color, DynamicOffset, IndexFormat, ShaderStages,
-    TextureSelector, TextureUsages, TextureViewDimension, VertexStepMode,
+    BufferAddress, BufferSize, BufferSizeOrZero, BufferUsages, Color, DynamicOffset, IndexFormat,
+    ShaderStages, TextureSelector, TextureUsages, TextureViewDimension, VertexStepMode,
 };
 
 <span class="kw">use </span><span class="kw">crate</span>::command::{
@@ -3967,13 +3968,17 @@
 }
 
 <span class="kw">impl </span>IndexState {
-    <span class="kw">fn </span>update_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: Range&lt;BufferAddress&gt;, format: IndexFormat) {
+    <span class="kw">fn </span>update_buffer&lt;B: hal::DynBuffer + <span class="question-mark">?</span>Sized&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        binding: <span class="kw-2">&amp;</span>hal::BufferBinding&lt;<span class="lifetime">'_</span>, B&gt;,
+        format: IndexFormat,
+    ) {
         <span class="self">self</span>.buffer_format = <span class="prelude-val">Some</span>(format);
         <span class="kw">let </span>shift = <span class="kw">match </span>format {
             IndexFormat::Uint16 =&gt; <span class="number">1</span>,
             IndexFormat::Uint32 =&gt; <span class="number">2</span>,
         };
-        <span class="self">self</span>.limit = (range.end - range.start) &gt;&gt; shift;
+        <span class="self">self</span>.limit = binding.size.get() &gt;&gt; shift;
     }
 
     <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -5933,13 +5938,14 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">fn </span>set_index_buffer(
+<span class="comment">// This function is duplicative of `bundle::set_index_buffer`.
+</span><span class="kw">fn </span>set_index_buffer(
     state: <span class="kw-2">&amp;mut </span>State,
     cmd_buf: <span class="kw-2">&amp;</span>Arc&lt;CommandBuffer&gt;,
     buffer: Arc&lt;<span class="kw">crate</span>::resource::Buffer&gt;,
     index_format: IndexFormat,
     offset: u64,
-    size: <span class="prelude-ty">Option</span>&lt;BufferSize&gt;,
+    size: <span class="prelude-ty">Option</span>&lt;BufferSizeOrZero&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassErrorInner&gt; {
     <span class="macro">api_log!</span>(<span class="string">"RenderPass::set_index_buffer {}"</span>, buffer.error_ident());
 
@@ -5952,40 +5958,34 @@
     buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
     buffer.check_usage(BufferUsages::INDEX)<span class="question-mark">?</span>;
-    <span class="kw">let </span>buf_raw = buffer.try_raw(state.general.snatch_guard)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>end = <span class="kw">match </span>size {
-        <span class="prelude-val">Some</span>(s) =&gt; offset + s.get(),
-        <span class="prelude-val">None </span>=&gt; buffer.size,
-    };
-    state.index.update_buffer(offset..end, index_format);
+    <span class="kw">let </span>binding = buffer
+        .binding(offset, size, state.general.snatch_guard)
+        .map_err(RenderCommandError::from)<span class="question-mark">?</span>;
+    state.index.update_buffer(<span class="kw-2">&amp;</span>binding, index_format);
 
     state.general.buffer_memory_init_actions.extend(
         buffer.initialization_status.read().create_action(
             <span class="kw-2">&amp;</span>buffer,
-            offset..end,
+            offset..(offset + binding.size.get()),
             MemoryInitKind::NeedsInitializedMemory,
         ),
     );
 
-    <span class="kw">let </span>bb = hal::BufferBinding {
-        buffer: buf_raw,
-        offset,
-        size,
-    };
     <span class="kw">unsafe </span>{
-        hal::DynCommandEncoder::set_index_buffer(state.general.raw_encoder, bb, index_format);
+        hal::DynCommandEncoder::set_index_buffer(state.general.raw_encoder, binding, index_format);
     }
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">fn </span>set_vertex_buffer(
+<span class="comment">// This function is duplicative of `render::set_vertex_buffer`.
+</span><span class="kw">fn </span>set_vertex_buffer(
     state: <span class="kw-2">&amp;mut </span>State,
     cmd_buf: <span class="kw-2">&amp;</span>Arc&lt;CommandBuffer&gt;,
     slot: u32,
     buffer: Arc&lt;<span class="kw">crate</span>::resource::Buffer&gt;,
     offset: u64,
-    size: <span class="prelude-ty">Option</span>&lt;BufferSize&gt;,
+    size: <span class="prelude-ty">Option</span>&lt;BufferSizeOrZero&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassErrorInner&gt; {
     <span class="macro">api_log!</span>(
         <span class="string">"RenderPass::set_vertex_buffer {slot} {}"</span>,
@@ -6010,30 +6010,22 @@
     }
 
     buffer.check_usage(BufferUsages::VERTEX)<span class="question-mark">?</span>;
-    <span class="kw">let </span>buf_raw = buffer.try_raw(state.general.snatch_guard)<span class="question-mark">?</span>;
 
-    <span class="comment">//TODO: where are we checking that the offset is in bound?
-    </span><span class="kw">let </span>buffer_size = <span class="kw">match </span>size {
-        <span class="prelude-val">Some</span>(s) =&gt; s.get(),
-        <span class="prelude-val">None </span>=&gt; buffer.size - offset,
-    };
-    state.vertex.buffer_sizes[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(buffer_size);
+    <span class="kw">let </span>binding = buffer
+        .binding(offset, size, state.general.snatch_guard)
+        .map_err(RenderCommandError::from)<span class="question-mark">?</span>;
+    state.vertex.buffer_sizes[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(binding.size.get());
 
     state.general.buffer_memory_init_actions.extend(
         buffer.initialization_status.read().create_action(
             <span class="kw-2">&amp;</span>buffer,
-            offset..(offset + buffer_size),
+            offset..(offset + binding.size.get()),
             MemoryInitKind::NeedsInitializedMemory,
         ),
     );
 
-    <span class="kw">let </span>bb = hal::BufferBinding {
-        buffer: buf_raw,
-        offset,
-        size,
-    };
     <span class="kw">unsafe </span>{
-        hal::DynCommandEncoder::set_vertex_buffer(state.general.raw_encoder, slot, bb);
+        hal::DynCommandEncoder::set_vertex_buffer(state.general.raw_encoder, slot, binding);
     }
     <span class="kw">if let </span><span class="prelude-val">Some</span>(pipeline) = state.pipeline.as_ref() {
         state.vertex.update_limits(<span class="kw-2">&amp;</span>pipeline.vertex_steps);
@@ -6704,7 +6696,7 @@
             buffer: <span class="macro">pass_try!</span>(base, scope, <span class="self">self</span>.resolve_render_pass_buffer_id(buffer_id)),
             index_format,
             offset,
-            size,
+            size: size.map(NonZeroU64::get),
         });
 
         <span class="prelude-val">Ok</span>(())
@@ -6725,7 +6717,7 @@
             slot,
             buffer: <span class="macro">pass_try!</span>(base, scope, <span class="self">self</span>.resolve_render_pass_buffer_id(buffer_id)),
             offset,
-            size,
+            size: size.map(NonZeroU64::get),
         });
 
         <span class="prelude-val">Ok</span>(())

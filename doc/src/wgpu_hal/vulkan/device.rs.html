@@ -4907,12 +4907,12 @@
                     (buffer_infos, local_buffer_infos) =
                         buffer_infos.extend(desc.buffers[start <span class="kw">as </span>usize..end <span class="kw">as </span>usize].iter().map(
                             |binding| {
+                                <span class="comment">// https://github.com/gfx-rs/wgpu/issues/3170
+                                </span><span class="macro">assert!</span>(binding.size != <span class="number">0</span>, <span class="string">"zero-size bindings are not supported"</span>);
                                 vk::DescriptorBufferInfo::default()
                                     .buffer(binding.buffer.raw)
                                     .offset(binding.offset)
-                                    .range(
-                                        binding.size.map_or(vk::WHOLE_SIZE, wgt::BufferSize::get),
-                                    )
+                                    .range(binding.size)
                             },
                         ));
                     write.buffer_info(local_buffer_infos)

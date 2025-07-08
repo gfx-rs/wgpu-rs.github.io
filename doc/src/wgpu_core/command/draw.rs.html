@@ -133,7 +133,10 @@
 <a href="#132" id="132">132</a>
 <a href="#133" id="133">133</a>
 <a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
 
 <span class="kw">use </span>thiserror::Error;
 
@@ -142,7 +145,7 @@
 <span class="kw">use </span><span class="kw">super</span>::bind::BinderError;
 <span class="kw">use </span><span class="kw">crate</span>::command::pass;
 <span class="kw">use crate</span>::{
-    binding_model::{LateMinBufferBindingSizeMismatch, PushConstantUploadError},
+    binding_model::{BindingError, LateMinBufferBindingSizeMismatch, PushConstantUploadError},
     resource::{
         DestroyedResourceError, MissingBufferUsageError, MissingTextureUsageError,
         ResourceErrorIdent,
@@ -224,6 +227,8 @@
     </span>MissingTextureUsage(<span class="attr">#[from] </span>MissingTextureUsageError),
     <span class="attr">#[error(transparent)]
     </span>PushConstants(<span class="attr">#[from] </span>PushConstantUploadError),
+    <span class="attr">#[error(transparent)]
+    </span>BindingError(<span class="attr">#[from] </span>BindingError),
     <span class="attr">#[error(<span class="string">"Viewport size {{ w: {w}, h: {h} }} greater than device's requested `max_texture_dimension_2d` limit {max}, or less than zero"</span>)]
     </span>InvalidViewportRectSize { w: f32, h: f32, max: u32 },
     <span class="attr">#[error(<span class="string">"Viewport has invalid rect {rect:?} for device's requested `max_texture_dimension_2d` limit; Origin less than -2 * `max_texture_dimension_2d` ({min}), or rect extends past 2 * `max_texture_dimension_2d` - 1 ({max})"</span>)]
@@ -245,6 +250,7 @@
             <span class="self">Self</span>::MissingBufferUsage(e) =&gt; e,
             <span class="self">Self</span>::MissingTextureUsage(e) =&gt; e,
             <span class="self">Self</span>::PushConstants(e) =&gt; e,
+            <span class="self">Self</span>::BindingError(e) =&gt; e,
 
             <span class="self">Self</span>::BindGroupIndexOutOfRange { .. }
             | <span class="self">Self</span>::VertexBufferIndexOutOfRange { .. }

@@ -1762,7 +1762,38 @@
 <a href="#1761" id="1761">1761</a>
 <a href="#1762" id="1762">1762</a>
 <a href="#1763" id="1763">1763</a>
-<a href="#1764" id="1764">1764</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
+<a href="#1764" id="1764">1764</a>
+<a href="#1765" id="1765">1765</a>
+<a href="#1766" id="1766">1766</a>
+<a href="#1767" id="1767">1767</a>
+<a href="#1768" id="1768">1768</a>
+<a href="#1769" id="1769">1769</a>
+<a href="#1770" id="1770">1770</a>
+<a href="#1771" id="1771">1771</a>
+<a href="#1772" id="1772">1772</a>
+<a href="#1773" id="1773">1773</a>
+<a href="#1774" id="1774">1774</a>
+<a href="#1775" id="1775">1775</a>
+<a href="#1776" id="1776">1776</a>
+<a href="#1777" id="1777">1777</a>
+<a href="#1778" id="1778">1778</a>
+<a href="#1779" id="1779">1779</a>
+<a href="#1780" id="1780">1780</a>
+<a href="#1781" id="1781">1781</a>
+<a href="#1782" id="1782">1782</a>
+<a href="#1783" id="1783">1783</a>
+<a href="#1784" id="1784">1784</a>
+<a href="#1785" id="1785">1785</a>
+<a href="#1786" id="1786">1786</a>
+<a href="#1787" id="1787">1787</a>
+<a href="#1788" id="1788">1788</a>
+<a href="#1789" id="1789">1789</a>
+<a href="#1790" id="1790">1790</a>
+<a href="#1791" id="1791">1791</a>
+<a href="#1792" id="1792">1792</a>
+<a href="#1793" id="1793">1793</a>
+<a href="#1794" id="1794">1794</a>
+<a href="#1795" id="1795">1795</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
 command encoder with a single call. A single bundle can replayed any number of
@@ -1857,6 +1888,7 @@ index format changes.
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>thiserror::Error;
 
+<span class="kw">use </span>wgpu_hal::ShouldBeNonZeroExt;
 <span class="kw">use </span>wgt::error::{ErrorType, WebGpuError};
 
 <span class="kw">use crate</span>::{
@@ -2268,7 +2300,7 @@ index format changes.
             buffer_id,
             index_format,
             offset,
-            size,
+            size: size.map(NonZeroU64::get),
         });
     }
 }
@@ -2366,13 +2398,14 @@ index format changes.
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">fn </span>set_index_buffer(
+<span class="comment">// This function is duplicative of `render::set_index_buffer`.
+</span><span class="kw">fn </span>set_index_buffer(
     state: <span class="kw-2">&amp;mut </span>State,
     buffer_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::storage::Storage&lt;Fallible&lt;Buffer&gt;&gt;,
     buffer_id: id::Id&lt;id::markers::Buffer&gt;,
     index_format: wgt::IndexFormat,
     offset: u64,
-    size: <span class="prelude-ty">Option</span>&lt;NonZeroU64&gt;,
+    size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSizeOrZero&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
     <span class="kw">let </span>buffer = buffer_guard.get(buffer_id).get()<span class="question-mark">?</span>;
 
@@ -2384,28 +2417,27 @@ index format changes.
     buffer.same_device(<span class="kw-2">&amp;</span>state.device)<span class="question-mark">?</span>;
     buffer.check_usage(wgt::BufferUsages::INDEX)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>end = <span class="kw">match </span>size {
-        <span class="prelude-val">Some</span>(s) =&gt; offset + s.get(),
-        <span class="prelude-val">None </span>=&gt; buffer.size,
-    };
+    <span class="kw">let </span>end = buffer.resolve_binding_size(offset, size)<span class="question-mark">?</span>;
+
     state
         .buffer_memory_init_actions
         .extend(buffer.initialization_status.read().create_action(
             <span class="kw-2">&amp;</span>buffer,
-            offset..end,
+            offset..end.get(),
             MemoryInitKind::NeedsInitializedMemory,
         ));
-    state.set_index_buffer(buffer, index_format, offset..end);
+    state.set_index_buffer(buffer, index_format, offset..end.get());
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">fn </span>set_vertex_buffer(
+<span class="comment">// This function is duplicative of `render::set_vertex_buffer`.
+</span><span class="kw">fn </span>set_vertex_buffer(
     state: <span class="kw-2">&amp;mut </span>State,
     buffer_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::storage::Storage&lt;Fallible&lt;Buffer&gt;&gt;,
     slot: u32,
     buffer_id: id::Id&lt;id::markers::Buffer&gt;,
     offset: u64,
-    size: <span class="prelude-ty">Option</span>&lt;NonZeroU64&gt;,
+    size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSizeOrZero&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
     <span class="kw">let </span>max_vertex_buffers = state.device.limits.max_vertex_buffers;
     <span class="kw">if </span>slot &gt;= max_vertex_buffers {
@@ -2426,18 +2458,16 @@ index format changes.
     buffer.same_device(<span class="kw-2">&amp;</span>state.device)<span class="question-mark">?</span>;
     buffer.check_usage(wgt::BufferUsages::VERTEX)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>end = <span class="kw">match </span>size {
-        <span class="prelude-val">Some</span>(s) =&gt; offset + s.get(),
-        <span class="prelude-val">None </span>=&gt; buffer.size,
-    };
+    <span class="kw">let </span>end = buffer.resolve_binding_size(offset, size)<span class="question-mark">?</span>;
+
     state
         .buffer_memory_init_actions
         .extend(buffer.initialization_status.read().create_action(
             <span class="kw-2">&amp;</span>buffer,
-            offset..end,
+            offset..end.get(),
             MemoryInitKind::NeedsInitializedMemory,
         ));
-    state.vertex[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(VertexState::new(buffer, offset..end));
+    state.vertex[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(VertexState::new(buffer, offset..end.get()));
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -2729,10 +2759,14 @@ index format changes.
                     size,
                 } =&gt; {
                     <span class="kw">let </span>buffer = buffer.try_raw(snatch_guard)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>bb = hal::BufferBinding {
-                        buffer,
-                        offset: <span class="kw-2">*</span>offset,
-                        size: <span class="kw-2">*</span>size,
+                    <span class="kw">let </span>bb = <span class="kw">unsafe </span>{
+                        <span class="comment">// SAFETY: The binding size was checked against the buffer size
+                        // in `set_index_buffer` and again in `IndexState::flush`.
+                        </span>hal::BufferBinding::new_unchecked(
+                            buffer,
+                            <span class="kw-2">*</span>offset,
+                            size.expect(<span class="string">"size was resolved in `RenderBundleEncoder::finish`"</span>),
+                        )
                     };
                     <span class="kw">unsafe </span>{ raw.set_index_buffer(bb, <span class="kw-2">*</span>index_format) };
                 }
@@ -2743,10 +2777,14 @@ index format changes.
                     size,
                 } =&gt; {
                     <span class="kw">let </span>buffer = buffer.try_raw(snatch_guard)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>bb = hal::BufferBinding {
-                        buffer,
-                        offset: <span class="kw-2">*</span>offset,
-                        size: <span class="kw-2">*</span>size,
+                    <span class="kw">let </span>bb = <span class="kw">unsafe </span>{
+                        <span class="comment">// SAFETY: The binding size was checked against the buffer size
+                        // in `set_vertex_buffer` and again in `VertexState::flush`.
+                        </span>hal::BufferBinding::new_unchecked(
+                            buffer,
+                            <span class="kw-2">*</span>offset,
+                            size.expect(<span class="string">"size was resolved in `RenderBundleEncoder::finish`"</span>),
+                        )
                     };
                     <span class="kw">unsafe </span>{ raw.set_vertex_buffer(<span class="kw-2">*</span>slot, bb) };
                 }
@@ -2895,6 +2933,9 @@ index format changes.
 /// [`RenderBundleEncoder::finish`] records the currently set index buffer here,
 /// and calls [`State::flush_index`] before any indexed draw command to produce
 /// a `SetIndexBuffer` command if one is necessary.
+///
+/// Binding ranges must be validated against the size of the buffer before
+/// being stored in `IndexState`.
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>IndexState {
     buffer: Arc&lt;Buffer&gt;,
@@ -2916,13 +2957,21 @@ index format changes.
     <span class="doccomment">/// Generate a `SetIndexBuffer` command to prepare for an indexed draw
     /// command, if needed.
     </span><span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;ArcRenderCommand&gt; {
+        <span class="comment">// This was all checked before, but let's check again just in case.
+        </span><span class="kw">let </span>binding_size = <span class="self">self
+            </span>.range
+            .end
+            .checked_sub(<span class="self">self</span>.range.start)
+            .filter(|<span class="kw">_</span>| <span class="self">self</span>.range.end &lt;= <span class="self">self</span>.buffer.size)
+            .expect(<span class="string">"index range must be contained in buffer"</span>);
+
         <span class="kw">if </span><span class="self">self</span>.is_dirty {
             <span class="self">self</span>.is_dirty = <span class="bool-val">false</span>;
             <span class="prelude-val">Some</span>(ArcRenderCommand::SetIndexBuffer {
                 buffer: <span class="self">self</span>.buffer.clone(),
                 index_format: <span class="self">self</span>.format,
                 offset: <span class="self">self</span>.range.start,
-                size: wgt::BufferSize::new(<span class="self">self</span>.range.end - <span class="self">self</span>.range.start),
+                size: <span class="prelude-val">Some</span>(binding_size),
             })
         } <span class="kw">else </span>{
             <span class="prelude-val">None
@@ -2938,6 +2987,9 @@ index format changes.
 /// calls this type's [`flush`] method just before any draw command to
 /// produce a `SetVertexBuffer` commands if one is necessary.
 ///
+/// Binding ranges must be validated against the size of the buffer before
+/// being stored in `VertexState`.
+///
 /// [`flush`]: IndexState::flush
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>VertexState {
@@ -2947,7 +2999,10 @@ index format changes.
 }
 
 <span class="kw">impl </span>VertexState {
-    <span class="kw">fn </span>new(buffer: Arc&lt;Buffer&gt;, range: Range&lt;wgt::BufferAddress&gt;) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Create a new `VertexState`.
+    ///
+    /// The `range` must be contained within `buffer`.
+    </span><span class="kw">fn </span>new(buffer: Arc&lt;Buffer&gt;, range: Range&lt;wgt::BufferAddress&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             buffer,
             range,
@@ -2959,13 +3014,20 @@ index format changes.
     ///
     /// `slot` is the index of the vertex buffer slot that `self` tracks.
     </span><span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32) -&gt; <span class="prelude-ty">Option</span>&lt;ArcRenderCommand&gt; {
+        <span class="kw">let </span>binding_size = <span class="self">self
+            </span>.range
+            .end
+            .checked_sub(<span class="self">self</span>.range.start)
+            .filter(|<span class="kw">_</span>| <span class="self">self</span>.range.end &lt;= <span class="self">self</span>.buffer.size)
+            .expect(<span class="string">"vertex range must be contained in buffer"</span>);
+
         <span class="kw">if </span><span class="self">self</span>.is_dirty {
             <span class="self">self</span>.is_dirty = <span class="bool-val">false</span>;
             <span class="prelude-val">Some</span>(ArcRenderCommand::SetVertexBuffer {
                 slot,
                 buffer: <span class="self">self</span>.buffer.clone(),
                 offset: <span class="self">self</span>.range.start,
-                size: wgt::BufferSize::new(<span class="self">self</span>.range.end - <span class="self">self</span>.range.start),
+                size: <span class="prelude-val">Some</span>(binding_size),
             })
         } <span class="kw">else </span>{
             <span class="prelude-val">None
@@ -3329,7 +3391,7 @@ index format changes.
 <span class="kw">pub mod </span>bundle_ffi {
     <span class="kw">use super</span>::{RenderBundleEncoder, RenderCommand};
     <span class="kw">use crate</span>::{id, RawString};
-    <span class="kw">use </span>core::{convert::TryInto, slice};
+    <span class="kw">use </span>core::{convert::TryInto, num::NonZeroU64, slice};
     <span class="kw">use </span>wgt::{BufferAddress, BufferSize, DynamicOffset, IndexFormat};
 
     <span class="doccomment">/// # Safety
@@ -3388,7 +3450,7 @@ index format changes.
             slot,
             buffer_id,
             offset,
-            size,
+            size: size.map(NonZeroU64::get),
         });
     }
 

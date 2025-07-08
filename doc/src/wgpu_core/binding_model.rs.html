@@ -1236,7 +1236,34 @@
 <a href="#1235" id="1235">1235</a>
 <a href="#1236" id="1236">1236</a>
 <a href="#1237" id="1237">1237</a>
-<a href="#1238" id="1238">1238</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::{Cow, ToOwned},
     boxed::Box,
     string::String,
@@ -1332,8 +1359,39 @@
     }
 }
 
-<span class="comment">//TODO: refactor this to move out `enum BindingError`.
+<span class="attr">#[derive(Clone, Debug, Error)]
+#[non_exhaustive]
+</span><span class="kw">pub enum </span>BindingError {
+    <span class="attr">#[error(transparent)]
+    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
+    <span class="attr">#[error(<span class="string">"Buffer {buffer}: Binding with size {binding_size} at offset {offset} would overflow buffer size of {buffer_size}"</span>)]
+    </span>BindingRangeTooLarge {
+        buffer: ResourceErrorIdent,
+        offset: wgt::BufferAddress,
+        binding_size: u64,
+        buffer_size: u64,
+    },
+    <span class="attr">#[error(<span class="string">"Buffer {buffer}: Binding offset {offset} is greater than buffer size {buffer_size}"</span>)]
+    </span>BindingOffsetTooLarge {
+        buffer: ResourceErrorIdent,
+        offset: wgt::BufferAddress,
+        buffer_size: u64,
+    },
+}
 
+<span class="kw">impl </span>WebGpuError <span class="kw">for </span>BindingError {
+    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::DestroyedResource(e) =&gt; e.webgpu_error_type(),
+            <span class="self">Self</span>::BindingRangeTooLarge { .. } | <span class="self">Self</span>::BindingOffsetTooLarge { .. } =&gt; {
+                ErrorType::Validation
+            }
+        }
+    }
+}
+
+<span class="comment">// TODO: there may be additional variants here that can be extracted into
+// `BindingError`.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>CreateBindGroupError {
@@ -1341,6 +1399,8 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
+    <span class="attr">#[error(transparent)]
+    </span>BindingError(<span class="attr">#[from] </span>BindingError),
     <span class="attr">#[error(
         <span class="string">"Binding count declared with at most {expected} items, but {actual} items were provided"
     </span>)]
@@ -1351,12 +1411,6 @@
     </span>BindingArrayLengthMismatch { actual: usize, expected: usize },
     <span class="attr">#[error(<span class="string">"Array binding provided zero elements"</span>)]
     </span>BindingArrayZeroLength,
-    <span class="attr">#[error(<span class="string">"The bound range {range:?} of {buffer} overflows its size ({size})"</span>)]
-    </span>BindingRangeTooLarge {
-        buffer: ResourceErrorIdent,
-        range: Range&lt;wgt::BufferAddress&gt;,
-        size: u64,
-    },
     <span class="attr">#[error(<span class="string">"Binding size {actual} of {buffer} is less than minimum {min}"</span>)]
     </span>BindingSizeTooSmall {
         buffer: ResourceErrorIdent,
@@ -1471,6 +1525,7 @@
         <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Device(e) =&gt; e,
             <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
+            <span class="self">Self</span>::BindingError(e) =&gt; e,
             <span class="self">Self</span>::MissingBufferUsage(e) =&gt; e,
             <span class="self">Self</span>::MissingTextureUsage(e) =&gt; e,
             <span class="self">Self</span>::ResourceUsageCompatibility(e) =&gt; e,
@@ -1478,7 +1533,6 @@
             <span class="self">Self</span>::BindingArrayPartialLengthMismatch { .. }
             | <span class="self">Self</span>::BindingArrayLengthMismatch { .. }
             | <span class="self">Self</span>::BindingArrayZeroLength
-            | <span class="self">Self</span>::BindingRangeTooLarge { .. }
             | <span class="self">Self</span>::BindingSizeTooSmall { .. }
             | <span class="self">Self</span>::BindingsNumMismatch { .. }
             | <span class="self">Self</span>::BindingZeroSize(<span class="kw">_</span>)

@@ -2331,7 +2331,8 @@
 <a href="#2330" id="2330">2330</a>
 <a href="#2331" id="2331">2331</a>
 <a href="#2332" id="2332">2332</a>
-<a href="#2333" id="2333">2333</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#2333" id="2333">2333</a>
+<a href="#2334" id="2334">2334</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{ptr::NonNull, sync::atomic::Ordering};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -2716,6 +2717,7 @@
     /// - `hal_buffer` must be created from `device_id` corresponding raw handle.
     /// - `hal_buffer` must be created respecting `desc`
     /// - `hal_buffer` must be initialized
+    /// - `hal_buffer` must not have zero size.
     </span><span class="kw">pub unsafe fn </span>create_buffer_from_hal&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_buffer: A::Buffer,
@@ -2737,7 +2739,7 @@
             trace.add(trace::Action::CreateBuffer(fid.id(), desc.clone()));
         }
 
-        <span class="kw">let </span>(buffer, err) = device.create_buffer_from_hal(Box::new(hal_buffer), desc);
+        <span class="kw">let </span>(buffer, err) = <span class="kw">unsafe </span>{ device.create_buffer_from_hal(Box::new(hal_buffer), desc) };
 
         <span class="kw">let </span>id = fid.assign(buffer);
         <span class="macro">api_log!</span>(<span class="string">"Device::create_buffer -&gt; {id:?}"</span>);
