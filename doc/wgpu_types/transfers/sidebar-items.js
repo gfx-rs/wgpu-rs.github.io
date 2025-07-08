@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["BufferTextureCopyInfo"]};
+window.SIDEBAR_ITEMS = {"enum":["BufferTextureCopyInfoError"],"struct":["BufferTextureCopyInfo"],"type":["Error"]};
