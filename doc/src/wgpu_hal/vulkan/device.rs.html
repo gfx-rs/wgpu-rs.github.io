@@ -3106,7 +3106,12 @@
 <a href="#3105" id="3105">3105</a>
 <a href="#3106" id="3106">3106</a>
 <a href="#3107" id="3107">3107</a>
-<a href="#3108" id="3108">3108</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3108" id="3108">3108</a>
+<a href="#3109" id="3109">3109</a>
+<a href="#3110" id="3110">3110</a>
+<a href="#3111" id="3111">3111</a>
+<a href="#3112" id="3112">3112</a>
+<a href="#3113" id="3113">3113</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::{Cow, ToOwned <span class="kw">as _</span>},
     collections::BTreeMap,
     ffi::CString,
@@ -3916,17 +3921,6 @@
         })
     }
 
-    <span class="doccomment">/// # Safety
-    ///
-    /// - `vk_buffer`'s memory must be managed by the caller
-    /// - Externally imported buffers can't be mapped by `wgpu`
-    </span><span class="kw">pub unsafe fn </span>buffer_from_raw(vk_buffer: vk::Buffer) -&gt; <span class="kw">super</span>::Buffer {
-        <span class="kw">super</span>::Buffer {
-            raw: vk_buffer,
-            block: <span class="prelude-val">None</span>,
-        }
-    }
-
     <span class="kw">fn </span>create_shader_module_impl(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         spv: <span class="kw-2">&amp;</span>[u32],
@@ -4261,7 +4255,7 @@
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Buffer {
             raw,
-            block: <span class="prelude-val">Some</span>(Mutex::new(block)),
+            block: <span class="prelude-val">Some</span>(Mutex::new(<span class="kw">super</span>::BufferMemoryBacking::Managed(block))),
         })
     }
     <span class="kw">unsafe fn </span>destroy_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw">super</span>::Buffer) {
@@ -4269,7 +4263,14 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(block) = buffer.block {
             <span class="kw">let </span>block = block.into_inner();
             <span class="self">self</span>.counters.buffer_memory.sub(block.size() <span class="kw">as </span>isize);
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.mem_allocator.lock().dealloc(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, block) };
+            <span class="kw">match </span>block {
+                <span class="kw">super</span>::BufferMemoryBacking::Managed(block) =&gt; <span class="kw">unsafe </span>{
+                    <span class="self">self</span>.mem_allocator.lock().dealloc(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, block)
+                },
+                <span class="kw">super</span>::BufferMemoryBacking::VulkanMemory { memory, .. } =&gt; <span class="kw">unsafe </span>{
+                    <span class="self">self</span>.shared.raw.free_memory(memory, <span class="prelude-val">None</span>);
+                },
+            }
         }
 
         <span class="self">self</span>.counters.buffers.sub(<span class="number">1</span>);
@@ -4287,18 +4288,27 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>block) = buffer.block {
             <span class="kw">let </span>size = range.end - range.start;
             <span class="kw">let </span><span class="kw-2">mut </span>block = block.lock();
-            <span class="kw">let </span>ptr = <span class="kw">unsafe </span>{ block.map(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, range.start, size <span class="kw">as </span>usize)<span class="question-mark">? </span>};
-            <span class="kw">let </span>is_coherent = block
-                .props()
-                .contains(gpu_alloc::MemoryPropertyFlags::HOST_COHERENT);
-            <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::BufferMapping { ptr, is_coherent })
+            <span class="kw">if let </span><span class="kw">super</span>::BufferMemoryBacking::Managed(<span class="kw-2">ref mut </span>block) = <span class="kw-2">*</span>block {
+                <span class="kw">let </span>ptr = <span class="kw">unsafe </span>{ block.map(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, range.start, size <span class="kw">as </span>usize)<span class="question-mark">? </span>};
+                <span class="kw">let </span>is_coherent = block
+                    .props()
+                    .contains(gpu_alloc::MemoryPropertyFlags::HOST_COHERENT);
+                <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::BufferMapping { ptr, is_coherent })
+            } <span class="kw">else </span>{
+                <span class="kw">crate</span>::hal_usage_error(<span class="string">"tried to map externally created buffer"</span>)
+            }
         } <span class="kw">else </span>{
             <span class="kw">crate</span>::hal_usage_error(<span class="string">"tried to map external buffer"</span>)
         }
     }
     <span class="kw">unsafe fn </span>unmap_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>block) = buffer.block {
-            <span class="kw">unsafe </span>{ block.lock().unmap(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared) };
+            <span class="kw">match </span><span class="kw-2">&amp;mut *</span>block.lock() {
+                <span class="kw">super</span>::BufferMemoryBacking::Managed(block) =&gt; <span class="kw">unsafe </span>{ block.unmap(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared) },
+                <span class="kw">super</span>::BufferMemoryBacking::VulkanMemory { .. } =&gt; {
+                    <span class="kw">crate</span>::hal_usage_error(<span class="string">"tried to unmap externally created buffer"</span>)
+                }
+            };
         } <span class="kw">else </span>{
             <span class="kw">crate</span>::hal_usage_error(<span class="string">"tried to unmap external buffer"</span>)
         }
