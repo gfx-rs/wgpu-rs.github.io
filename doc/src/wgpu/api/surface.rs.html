@@ -429,7 +429,18 @@
 <a href="#428" id="428">428</a>
 <a href="#429" id="429">429</a>
 <a href="#430" id="430">430</a>
-<a href="#431" id="431">431</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, vec, vec::Vec};
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, vec, vec::Vec};
+<span class="attr">#[cfg(wgpu_core)]
+</span><span class="kw">use </span>core::ops::Deref;
 <span class="kw">use </span>core::{error, fmt};
 
 <span class="kw">use </span>raw_window_handle::{HasDisplayHandle, HasWindowHandle};
@@ -579,28 +590,35 @@
             .ok_or(SurfaceError::Lost)
     }
 
-    <span class="doccomment">/// Returns the inner hal Surface using a callback. The hal surface will be `None` if the
-    /// backend type argument does not match with this wgpu Surface
+    <span class="doccomment">/// Get the [`wgpu_hal`] surface from this `Surface`.
+    ///
+    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+    /// and pass that struct to the to the `A` type parameter.
+    ///
+    /// Returns a guard that dereferences to the type of the hal backend
+    /// which implements [`A::Surface`].
+    ///
+    /// # Errors
+    ///
+    /// This method will return None if:
+    /// - The surface is not from the backend specified by `A`.
+    /// - The surface is from the `webgpu` or `custom` backend.
     ///
     /// # Safety
     ///
-    /// - The raw handle obtained from the hal Surface must not be manually destroyed
+    /// - The returned resource must not be destroyed unless the guard
+    ///   is the last reference to it and it is not in use by the GPU.
+    ///   The guard and handle may be dropped at any time however.
+    /// - All the safety requirements of wgpu-hal must be upheld.
+    ///
+    /// [`A::Surface`]: hal::Api::Surface
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Surface&gt;) -&gt; R, R&gt;(
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        hal_surface_callback: F,
-    ) -&gt; R {
-        <span class="kw">let </span>core_surface = <span class="self">self</span>.inner.as_core_opt();
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Surface&gt; + WasmNotSendSync&gt; {
+        <span class="kw">let </span>core_surface = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(core_surface) = core_surface {
-            <span class="kw">unsafe </span>{
-                core_surface
-                    .context
-                    .surface_as_hal::&lt;A, F, R&gt;(core_surface, hal_surface_callback)
-            }
-        } <span class="kw">else </span>{
-            hal_surface_callback(<span class="prelude-val">None</span>)
-        }
+        <span class="kw">unsafe </span>{ core_surface.context.surface_as_hal::&lt;A&gt;(core_surface) }
     }
 
     <span class="attr">#[cfg(custom)]

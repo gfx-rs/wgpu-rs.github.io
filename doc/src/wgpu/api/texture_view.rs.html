@@ -56,7 +56,28 @@
 <a href="#55" id="55">55</a>
 <a href="#56" id="56">56</a>
 <a href="#57" id="57">57</a>
-<a href="#58" id="58">58</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::<span class="kw-2">*</span>;
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(wgpu_core)]
+</span><span class="kw">use </span>core::ops::Deref;
+
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a texture view.
 ///
@@ -77,26 +98,41 @@
 <span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(TextureView =&gt; .inner);
 
 <span class="kw">impl </span>TextureView {
-    <span class="doccomment">/// Returns the inner hal `TextureView` using a callback. The hal texture will be `None` if the
-    /// backend type argument does not match with this wgpu Texture
+    <span class="doccomment">/// Get the [`wgpu_hal`] texture view from this `TextureView`.
+    ///
+    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+    /// and pass that struct to the to the `A` type parameter.
+    ///
+    /// Returns a guard that dereferences to the type of the hal backend
+    /// which implements [`A::TextureView`].
+    ///
+    /// # Deadlocks
+    ///
+    /// - The returned guard holds a read-lock on a device-local "destruction"
+    ///   lock, which will cause all calls to `destroy` to block until the
+    ///   guard is released.
+    ///
+    /// # Errors
+    ///
+    /// This method will return None if:
+    /// - The texture view is not from the backend specified by `A`.
+    /// - The texture view is from the `webgpu` or `custom` backend.
+    /// - The texture this view points to has had [`Texture::destroy()`] called on it.
     ///
     /// # Safety
     ///
-    /// - The raw handle obtained from the hal `TextureView` must not be manually destroyed
+    /// - The returned resource must not be destroyed unless the guard
+    ///   is the last reference to it and it is not in use by the GPU.
+    ///   The guard and handle may be dropped at any time however.
+    /// - All the safety requirements of wgpu-hal must be upheld.
+    ///
+    /// [`A::TextureView`]: hal::Api::TextureView
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::TextureView&gt;) -&gt; R, R&gt;(
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        hal_texture_view_callback: F,
-    ) -&gt; R {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(core_view) = <span class="self">self</span>.inner.as_core_opt() {
-            <span class="kw">unsafe </span>{
-                core_view
-                    .context
-                    .texture_view_as_hal::&lt;A, F, R&gt;(core_view, hal_texture_view_callback)
-            }
-        } <span class="kw">else </span>{
-            hal_texture_view_callback(<span class="prelude-val">None</span>)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::TextureView&gt;&gt; {
+        <span class="kw">let </span>view = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
+        <span class="kw">unsafe </span>{ view.context.texture_view_as_hal::&lt;A&gt;(view) }
     }
 
     <span class="attr">#[cfg(custom)]

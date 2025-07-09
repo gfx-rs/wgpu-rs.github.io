@@ -406,7 +406,19 @@
 <a href="#405" id="405">405</a>
 <a href="#406" id="406">406</a>
 <a href="#407" id="407">407</a>
-<a href="#408" id="408">408</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(wgpu_core)]
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(wgpu_core)]
 </span><span class="kw">use </span>alloc::vec::Vec;
 <span class="kw">use </span>core::future::Future;
 
@@ -571,16 +583,28 @@
         }
     }
 
-    <span class="doccomment">/// Return a reference to a specific backend instance, if available.
+    <span class="doccomment">/// Get the [`wgpu_hal`] instance from this `Instance`.
     ///
-    /// If this `Instance` has a wgpu-hal [`Instance`] for backend
-    /// `A`, return a reference to it. Otherwise, return `None`.
+    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+    /// and pass that struct to the to the `A` type parameter.
+    ///
+    /// Returns a guard that dereferences to the type of the hal backend
+    /// which implements [`A::Instance`].
+    ///
+    /// # Errors
+    ///
+    /// This method will return None if:
+    /// - The instance is not from the backend specified by `A`.
+    /// - The instance is from the `webgpu` or `custom` backend.
     ///
     /// # Safety
     ///
-    /// - The raw instance handle returned must not be manually destroyed.
+    /// - The returned resource must not be destroyed unless the guard
+    ///   is the last reference to it and it is not in use by the GPU.
+    ///   The guard and handle may be dropped at any time however.
+    /// - All the safety requirements of wgpu-hal must be upheld.
     ///
-    /// [`Instance`]: hal::Api::Instance
+    /// [`A::Instance`]: hal::Api::Instance
     </span><span class="attr">#[cfg(wgpu_core)]
     </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
         <span class="self">self</span>.inner

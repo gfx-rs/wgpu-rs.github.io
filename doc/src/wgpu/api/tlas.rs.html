@@ -141,9 +141,24 @@
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{api::blas::TlasInstance, dispatch};
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{api::blas::TlasInstance, dispatch};
 <span class="kw">use crate</span>::{BindingResource, Label};
 <span class="kw">use </span>alloc::vec::Vec;
+<span class="attr">#[cfg(wgpu_core)]
+</span><span class="kw">use </span>core::ops::Deref;
 <span class="kw">use </span>core::ops::{Index, IndexMut, Range};
 <span class="kw">use </span>wgt::WasmNotSendSync;
 
@@ -171,29 +186,40 @@
 <span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Tlas =&gt; .inner);
 
 <span class="kw">impl </span>Tlas {
-    <span class="doccomment">/// Returns the inner hal Acceleration Structure using a callback. The hal acceleration structure
-    /// will be `None` if the backend type argument does not match with this wgpu Tlas
+    <span class="doccomment">/// Get the [`wgpu_hal`] acceleration structure from this `Tlas`.
     ///
-    /// This method will start the wgpu_core level command recording.
+    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+    /// and pass that struct to the to the `A` type parameter.
+    ///
+    /// Returns a guard that dereferences to the type of the hal backend
+    /// which implements [`A::AccelerationStructure`].
+    ///
+    /// # Deadlocks
+    ///
+    /// - The returned guard holds a read-lock on a device-local "destruction"
+    ///   lock, which will cause all calls to `destroy` to block until the
+    ///   guard is released.
+    ///
+    /// # Errors
+    ///
+    /// This method will return None if:
+    /// - The acceleration structure is not from the backend specified by `A`.
+    /// - The acceleration structure is from the `webgpu` or `custom` backend.
     ///
     /// # Safety
     ///
-    /// - The raw handle obtained from the hal Acceleration Structure must not be manually destroyed
-    /// - If the raw handle is build,
+    /// - The returned resource must not be destroyed unless the guard
+    ///   is the last reference to it and it is not in use by the GPU.
+    ///   The guard and handle may be dropped at any time however.
+    /// - All the safety requirements of wgpu-hal must be upheld.
+    ///
+    /// [`A::AccelerationStructure`]: hal::Api::AccelerationStructure
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::AccelerationStructure&gt;) -&gt; R,
-        R,
-    &gt;(
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        hal_tlas_callback: F,
-    ) -&gt; R {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(tlas) = <span class="self">self</span>.inner.as_core_opt() {
-            <span class="kw">unsafe </span>{ tlas.context.tlas_as_hal::&lt;A, F, R&gt;(tlas, hal_tlas_callback) }
-        } <span class="kw">else </span>{
-            hal_tlas_callback(<span class="prelude-val">None</span>)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::AccelerationStructure&gt;&gt; {
+        <span class="kw">let </span>tlas = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
+        <span class="kw">unsafe </span>{ tlas.context.tlas_as_hal::&lt;A&gt;(tlas) }
     }
 
     <span class="attr">#[cfg(custom)]

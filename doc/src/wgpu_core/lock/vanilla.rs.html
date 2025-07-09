@@ -125,12 +125,40 @@
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a></pre></div><pre class="rust"><code><span class="doccomment">//! Plain, uninstrumented wrappers around [`parking_lot`] lock types.
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a></pre></div><pre class="rust"><code><span class="doccomment">//! Plain, uninstrumented wrappers around [`parking_lot`] lock types.
 //!
 //! These definitions are used when no particular lock instrumentation
 //! Cargo feature is selected.
 
 </span><span class="kw">use </span>core::{fmt, ops};
+
+<span class="kw">use </span><span class="kw">crate</span>::lock::rank::LockRank;
+
+<span class="kw">pub struct </span>RankData;
 
 <span class="doccomment">/// A plain wrapper around [`parking_lot::Mutex`].
 ///
@@ -150,7 +178,7 @@
 </span><span class="kw">pub struct </span>MutexGuard&lt;<span class="lifetime">'a</span>, T&gt;(parking_lot::MutexGuard&lt;<span class="lifetime">'a</span>, T&gt;);
 
 <span class="kw">impl</span>&lt;T&gt; Mutex&lt;T&gt; {
-    <span class="kw">pub fn </span>new(_rank: <span class="kw">super</span>::rank::LockRank, value: T) -&gt; Mutex&lt;T&gt; {
+    <span class="kw">pub fn </span>new(_rank: LockRank, value: T) -&gt; Mutex&lt;T&gt; {
         Mutex(parking_lot::Mutex::new(value))
     }
 
@@ -206,7 +234,7 @@
 </span><span class="kw">pub struct </span>RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt;(parking_lot::RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt;);
 
 <span class="kw">impl</span>&lt;T&gt; RwLock&lt;T&gt; {
-    <span class="kw">pub fn </span>new(_rank: <span class="kw">super</span>::rank::LockRank, value: T) -&gt; RwLock&lt;T&gt; {
+    <span class="kw">pub fn </span>new(_rank: LockRank, value: T) -&gt; RwLock&lt;T&gt; {
         RwLock(parking_lot::RwLock::new(value))
     }
 
@@ -216,6 +244,26 @@
 
     <span class="kw">pub fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RwLockWriteGuard&lt;T&gt; {
         RwLockWriteGuard(<span class="self">self</span>.<span class="number">0</span>.write())
+    }
+
+    <span class="doccomment">/// Force an read-unlock operation on this lock.
+    ///
+    /// Safety:
+    /// - A read lock must be held which is not held by a guard.
+    </span><span class="kw">pub unsafe fn </span>force_unlock_read(<span class="kw-2">&amp;</span><span class="self">self</span>, _data: RankData) {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.force_unlock_read() };
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; RwLockReadGuard&lt;<span class="lifetime">'a</span>, T&gt; {
+    <span class="comment">// Forget the read guard, leaving the lock in a locked state with no guard.
+    //
+    // Equivalent to std::mem::forget, but preserves the information about the lock
+    // rank.
+    </span><span class="kw">pub fn </span>forget(this: <span class="self">Self</span>) -&gt; RankData {
+        core::mem::forget(this.<span class="number">0</span>);
+
+        RankData
     }
 }
 

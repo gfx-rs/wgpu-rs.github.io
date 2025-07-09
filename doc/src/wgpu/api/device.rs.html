@@ -778,10 +778,9 @@
 <a href="#777" id="777">777</a>
 <a href="#778" id="778">778</a>
 <a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, sync::Arc, vec};
+<a href="#780" id="780">780</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, sync::Arc, vec};
+<span class="attr">#[cfg(wgpu_core)]
+</span><span class="kw">use </span>core::ops::Deref;
 <span class="kw">use </span>core::{error, fmt, future::Future};
 
 <span class="kw">use </span><span class="kw">crate</span>::api::blas::{Blas, BlasGeometrySizeDescriptors, CreateBlasDescriptor};
@@ -1245,39 +1244,34 @@
         <span class="self">self</span>.inner.generate_allocator_report()
     }
 
-    <span class="doccomment">/// Apply a callback to this `Device`'s underlying backend device.
+    <span class="doccomment">/// Get the [`wgpu_hal`] device from this `Device`.
     ///
-    /// If this `Device` is implemented by the backend API given by `A` (Vulkan,
-    /// Dx12, etc.), then apply `hal_device_callback` to `Some(&amp;device)`, where
-    /// `device` is the underlying backend device type, [`A::Device`].
+    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+    /// and pass that struct to the to the `A` type parameter.
     ///
-    /// If this `Device` uses a different backend, apply `hal_device_callback`
-    /// to `None`.
+    /// Returns a guard that dereferences to the type of the hal backend
+    /// which implements [`A::Device`].
     ///
-    /// The device is locked for reading while `hal_device_callback` runs. If
-    /// the callback attempts to perform any `wgpu` operations that require
-    /// write access to the device (destroying a buffer, say), deadlock will
-    /// occur. The locks are automatically released when the callback returns.
+    /// # Errors
+    ///
+    /// This method will return None if:
+    /// - The device is not from the backend specified by `A`.
+    /// - The device is from the `webgpu` or `custom` backend.
     ///
     /// # Safety
     ///
-    /// - The raw handle passed to the callback must not be manually destroyed.
+    /// - The returned resource must not be destroyed unless the guard
+    ///   is the last reference to it and it is not in use by the GPU.
+    ///   The guard and handle may be dropped at any time however.
+    /// - All the safety requirements of wgpu-hal must be upheld.
     ///
     /// [`A::Device`]: hal::Api::Device
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Device&gt;) -&gt; R, R&gt;(
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        hal_device_callback: F,
-    ) -&gt; R {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(core_device) = <span class="self">self</span>.inner.as_core_opt() {
-            <span class="kw">unsafe </span>{
-                core_device
-                    .context
-                    .device_as_hal::&lt;A, F, R&gt;(core_device, hal_device_callback)
-            }
-        } <span class="kw">else </span>{
-            hal_device_callback(<span class="prelude-val">None</span>)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Device&gt; + WasmNotSendSync&gt; {
+        <span class="kw">let </span>device = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
+        <span class="kw">unsafe </span>{ device.context.device_as_hal::&lt;A&gt;(device) }
     }
 
     <span class="doccomment">/// Destroy this device.

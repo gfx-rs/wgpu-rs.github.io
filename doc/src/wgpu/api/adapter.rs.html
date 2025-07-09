@@ -198,9 +198,9 @@
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::future::Future;
+<a href="#200" id="200">200</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::future::Future;
+<span class="attr">#[cfg(wgpu_core)]
+</span><span class="kw">use </span>core::ops::Deref;
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -295,39 +295,35 @@
         ))
     }
 
-    <span class="doccomment">/// Apply a callback to this `Adapter`'s underlying backend adapter.
+    <span class="doccomment">/// Get the [`wgpu_hal`] adapter from this `Adapter`.
     ///
-    /// If this `Adapter` is implemented by the backend API given by `A` (Vulkan,
-    /// Dx12, etc.), then apply `hal_adapter_callback` to `Some(&amp;adapter)`, where
-    /// `adapter` is the underlying backend adapter type, [`A::Adapter`].
+    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+    /// and pass that struct to the to the `A` type parameter.
     ///
-    /// If this `Adapter` uses a different backend, apply `hal_adapter_callback`
-    /// to `None`.
+    /// Returns a guard that dereferences to the type of the hal backend
+    /// which implements [`A::Adapter`].
     ///
-    /// The adapter is locked for reading while `hal_adapter_callback` runs. If
-    /// the callback attempts to perform any `wgpu` operations that require
-    /// write access to the adapter, deadlock will occur. The locks are
-    /// automatically released when the callback returns.
+    /// # Errors
+    ///
+    /// This method will return None if:
+    /// - The adapter is not from the backend specified by `A`.
+    /// - The adapter is from the `webgpu` or `custom` backend.
     ///
     /// # Safety
     ///
-    /// - The raw handle passed to the callback must not be manually destroyed.
+    /// - The returned resource must not be destroyed unless the guard
+    ///   is the last reference to it and it is not in use by the GPU.
+    ///   The guard and handle may be dropped at any time however.
+    /// - All the safety requirements of wgpu-hal must be upheld.
     ///
     /// [`A::Adapter`]: hal::Api::Adapter
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Adapter&gt;) -&gt; R, R&gt;(
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        hal_adapter_callback: F,
-    ) -&gt; R {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(adapter) = <span class="self">self</span>.inner.as_core_opt() {
-            <span class="kw">unsafe </span>{
-                adapter
-                    .context
-                    .adapter_as_hal::&lt;A, F, R&gt;(adapter, hal_adapter_callback)
-            }
-        } <span class="kw">else </span>{
-            hal_adapter_callback(<span class="prelude-val">None</span>)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Adapter&gt; + WasmNotSendSync&gt; {
+        <span class="kw">let </span>adapter = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
+
+        <span class="kw">unsafe </span>{ adapter.context.adapter_as_hal::&lt;A&gt;(adapter) }
     }
 
     <span class="attr">#[cfg(custom)]

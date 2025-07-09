@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["FenceGuard","SimpleResourceGuard","SnatchableResourceGuard"]};

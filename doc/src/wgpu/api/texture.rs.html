@@ -141,7 +141,29 @@
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::<span class="kw-2">*</span>;
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(wgpu_core)]
+</span><span class="kw">use </span>core::ops::Deref;
+
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a texture on the GPU.
 ///
@@ -159,25 +181,41 @@
 <span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Texture =&gt; .inner);
 
 <span class="kw">impl </span>Texture {
-    <span class="doccomment">/// Returns the inner hal Texture using a callback. The hal texture will be `None` if the
-    /// backend type argument does not match with this wgpu Texture
+    <span class="doccomment">/// Get the [`wgpu_hal`] texture from this `Texture`.
+    ///
+    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+    /// and pass that struct to the to the `A` type parameter.
+    ///
+    /// Returns a guard that dereferences to the type of the hal backend
+    /// which implements [`A::Texture`].
+    ///
+    /// # Deadlocks
+    ///
+    /// - The returned guard holds a read-lock on a device-local "destruction"
+    ///   lock, which will cause all calls to `destroy` to block until the
+    ///   guard is released.
+    ///
+    /// # Errors
+    ///
+    /// This method will return None if:
+    /// - The texture is not from the backend specified by `A`.
+    /// - The texture is from the `webgpu` or `custom` backend.
+    /// - The texture has had [`Self::destroy()`] called on it.
     ///
     /// # Safety
     ///
-    /// - The raw handle obtained from the hal Texture must not be manually destroyed
+    /// - The returned resource must not be destroyed unless the guard
+    ///   is the last reference to it and it is not in use by the GPU.
+    ///   The guard and handle may be dropped at any time however.
+    /// - All the safety requirements of wgpu-hal must be upheld.
+    ///
+    /// [`A::Texture`]: hal::Api::Texture
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt;) -&gt; R, R&gt;(
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        hal_texture_callback: F,
-    ) -&gt; R {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(tex) = <span class="self">self</span>.inner.as_core_opt() {
-            <span class="kw">unsafe </span>{
-                tex.context
-                    .texture_as_hal::&lt;A, F, R&gt;(tex, hal_texture_callback)
-            }
-        } <span class="kw">else </span>{
-            hal_texture_callback(<span class="prelude-val">None</span>)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Texture&gt;&gt; {
+        <span class="kw">let </span>texture = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
+        <span class="kw">unsafe </span>{ texture.context.texture_as_hal::&lt;A&gt;(texture) }
     }
 
     <span class="attr">#[cfg(custom)]

@@ -3643,50 +3643,7 @@
 <a href="#3642" id="3642">3642</a>
 <a href="#3643" id="3643">3643</a>
 <a href="#3644" id="3644">3644</a>
-<a href="#3645" id="3645">3645</a>
-<a href="#3646" id="3646">3646</a>
-<a href="#3647" id="3647">3647</a>
-<a href="#3648" id="3648">3648</a>
-<a href="#3649" id="3649">3649</a>
-<a href="#3650" id="3650">3650</a>
-<a href="#3651" id="3651">3651</a>
-<a href="#3652" id="3652">3652</a>
-<a href="#3653" id="3653">3653</a>
-<a href="#3654" id="3654">3654</a>
-<a href="#3655" id="3655">3655</a>
-<a href="#3656" id="3656">3656</a>
-<a href="#3657" id="3657">3657</a>
-<a href="#3658" id="3658">3658</a>
-<a href="#3659" id="3659">3659</a>
-<a href="#3660" id="3660">3660</a>
-<a href="#3661" id="3661">3661</a>
-<a href="#3662" id="3662">3662</a>
-<a href="#3663" id="3663">3663</a>
-<a href="#3664" id="3664">3664</a>
-<a href="#3665" id="3665">3665</a>
-<a href="#3666" id="3666">3666</a>
-<a href="#3667" id="3667">3667</a>
-<a href="#3668" id="3668">3668</a>
-<a href="#3669" id="3669">3669</a>
-<a href="#3670" id="3670">3670</a>
-<a href="#3671" id="3671">3671</a>
-<a href="#3672" id="3672">3672</a>
-<a href="#3673" id="3673">3673</a>
-<a href="#3674" id="3674">3674</a>
-<a href="#3675" id="3675">3675</a>
-<a href="#3676" id="3676">3676</a>
-<a href="#3677" id="3677">3677</a>
-<a href="#3678" id="3678">3678</a>
-<a href="#3679" id="3679">3679</a>
-<a href="#3680" id="3680">3680</a>
-<a href="#3681" id="3681">3681</a>
-<a href="#3682" id="3682">3682</a>
-<a href="#3683" id="3683">3683</a>
-<a href="#3684" id="3684">3684</a>
-<a href="#3685" id="3685">3685</a>
-<a href="#3686" id="3686">3686</a>
-<a href="#3687" id="3687">3687</a>
-<a href="#3688" id="3688">3688</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3645" id="3645">3645</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow::{<span class="self">self</span>, Borrowed},
     boxed::Box,
     format,
@@ -3695,7 +3652,15 @@
     vec,
     vec::Vec,
 };
-<span class="kw">use </span>core::{error::Error, fmt, future::ready, ops::Range, pin::Pin, ptr::NonNull, slice};
+<span class="kw">use </span>core::{
+    error::Error,
+    fmt,
+    future::ready,
+    ops::{Deref, Range},
+    pin::Pin,
+    ptr::NonNull,
+    slice,
+};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>smallvec::SmallVec;
@@ -3767,30 +3732,18 @@
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.create_adapter_from_hal(hal_adapter.into(), <span class="prelude-val">None</span>) }
     }
 
-    <span class="kw">pub unsafe fn </span>adapter_as_hal&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Adapter&gt;) -&gt; R,
-        R,
-    &gt;(
+    <span class="kw">pub unsafe fn </span>adapter_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         adapter: <span class="kw-2">&amp;</span>CoreAdapter,
-        hal_adapter_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.<span class="number">0
-                </span>.adapter_as_hal::&lt;A, F, R&gt;(adapter.id, hal_adapter_callback)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Adapter&gt; + WasmNotSendSync&gt; {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.adapter_as_hal::&lt;A&gt;(adapter.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>buffer_as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Buffer&gt;) -&gt; R, R&gt;(
+    <span class="kw">pub unsafe fn </span>buffer_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         buffer: <span class="kw-2">&amp;</span>CoreBuffer,
-        hal_buffer_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.<span class="number">0
-                </span>.buffer_as_hal::&lt;A, F, R&gt;(buffer.id, hal_buffer_callback)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Buffer&gt;&gt; {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.buffer_as_hal::&lt;A&gt;(buffer.id) }
     }
 
     <span class="kw">pub unsafe fn </span>create_device_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
@@ -3887,60 +3840,32 @@
         }
     }
 
-    <span class="kw">pub unsafe fn </span>device_as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Device&gt;) -&gt; R, R&gt;(
+    <span class="kw">pub unsafe fn </span>device_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span>CoreDevice,
-        hal_device_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.<span class="number">0
-                </span>.device_as_hal::&lt;A, F, R&gt;(device.id, hal_device_callback)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Device&gt;&gt; {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.device_as_hal::&lt;A&gt;(device.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>surface_as_hal&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Surface&gt;) -&gt; R,
-        R,
-    &gt;(
+    <span class="kw">pub unsafe fn </span>surface_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface: <span class="kw-2">&amp;</span>CoreSurface,
-        hal_surface_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.<span class="number">0
-                </span>.surface_as_hal::&lt;A, F, R&gt;(surface.id, hal_surface_callback)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Surface&gt;&gt; {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.surface_as_hal::&lt;A&gt;(surface.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>texture_as_hal&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt;) -&gt; R,
-        R,
-    &gt;(
+    <span class="kw">pub unsafe fn </span>texture_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture: <span class="kw-2">&amp;</span>CoreTexture,
-        hal_texture_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.<span class="number">0
-                </span>.texture_as_hal::&lt;A, F, R&gt;(texture.id, hal_texture_callback)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Texture&gt;&gt; {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.texture_as_hal::&lt;A&gt;(texture.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>texture_view_as_hal&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::TextureView&gt;) -&gt; R,
-        R,
-    &gt;(
+    <span class="kw">pub unsafe fn </span>texture_view_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture_view: <span class="kw-2">&amp;</span>CoreTextureView,
-        hal_texture_view_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.<span class="number">0
-                </span>.texture_view_as_hal::&lt;A, F, R&gt;(texture_view.id, hal_texture_view_callback)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::TextureView&gt;&gt; {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.texture_view_as_hal::&lt;A&gt;(texture_view.id) }
     }
 
     <span class="doccomment">/// This method will start the wgpu_core level command recording.
@@ -3961,28 +3886,18 @@
         }
     }
 
-    <span class="kw">pub unsafe fn </span>blas_as_hal&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::AccelerationStructure&gt;) -&gt; R,
-        R,
-    &gt;(
+    <span class="kw">pub unsafe fn </span>blas_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         blas: <span class="kw-2">&amp;</span>CoreBlas,
-        hal_blas_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.blas_as_hal::&lt;A, F, R&gt;(blas.id, hal_blas_callback) }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::AccelerationStructure&gt;&gt; {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.blas_as_hal::&lt;A&gt;(blas.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>tlas_as_hal&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::AccelerationStructure&gt;) -&gt; R,
-        R,
-    &gt;(
+    <span class="kw">pub unsafe fn </span>tlas_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         tlas: <span class="kw-2">&amp;</span>CoreTlas,
-        hal_tlas_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.tlas_as_hal::&lt;A, F, R&gt;(tlas.id, hal_tlas_callback) }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::AccelerationStructure&gt;&gt; {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.tlas_as_hal::&lt;A&gt;(tlas.id) }
     }
 
     <span class="kw">pub fn </span>generate_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgc::global::GlobalReport {
@@ -4093,12 +4008,11 @@
         <span class="macro">format!</span>(<span class="string">"Validation Error\n\nCaused by:\n{output}"</span>)
     }
 
-    <span class="kw">pub unsafe fn </span>queue_as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Queue&gt;) -&gt; R, R&gt;(
+    <span class="kw">pub unsafe fn </span>queue_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span>CoreQueue,
-        hal_queue_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.queue_as_hal::&lt;A, F, R&gt;(queue.id, hal_queue_callback) }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Queue&gt; + WasmNotSendSync&gt; {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.queue_as_hal::&lt;A&gt;(queue.id) }
     }
 }
 

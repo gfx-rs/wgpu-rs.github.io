@@ -315,7 +315,15 @@
 <a href="#314" id="314">314</a>
 <a href="#315" id="315">315</a>
 <a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
 <span class="kw">use </span>core::ops::{Deref, DerefMut};
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -597,26 +605,34 @@
         <span class="self">self</span>.inner.on_submitted_work_done(Box::new(callback));
     }
 
-    <span class="doccomment">/// Returns the inner hal Queue using a callback. The hal queue will be `None` if the
-    /// backend type argument does not match with this wgpu Queue
+    <span class="doccomment">/// Get the [`wgpu_hal`] device from this `Queue`.
+    ///
+    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+    /// and pass that struct to the to the `A` type parameter.
+    ///
+    /// Returns a guard that dereferences to the type of the hal backend
+    /// which implements [`A::Queue`].
+    ///
+    /// # Errors
+    ///
+    /// This method will return None if:
+    /// - The queue is not from the backend specified by `A`.
+    /// - The queue is from the `webgpu` or `custom` backend.
     ///
     /// # Safety
     ///
-    /// - The raw handle obtained from the hal Queue must not be manually destroyed
+    /// - The returned resource must not be destroyed unless the guard
+    ///   is the last reference to it and it is not in use by the GPU.
+    ///   The guard and handle may be dropped at any time however.
+    /// - All the safety requirements of wgpu-hal must be upheld.
+    ///
+    /// [`A::Queue`]: hal::Api::Queue
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Queue&gt;) -&gt; R, R&gt;(
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        hal_queue_callback: F,
-    ) -&gt; R {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(core_queue) = <span class="self">self</span>.inner.as_core_opt() {
-            <span class="kw">unsafe </span>{
-                core_queue
-                    .context
-                    .queue_as_hal::&lt;A, F, R&gt;(core_queue, hal_queue_callback)
-            }
-        } <span class="kw">else </span>{
-            hal_queue_callback(<span class="prelude-val">None</span>)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Queue&gt; + WasmNotSendSync&gt; {
+        <span class="kw">let </span>queue = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
+        <span class="kw">unsafe </span>{ queue.context.queue_as_hal::&lt;A&gt;(queue) }
     }
 
     <span class="doccomment">/// Compact a BLAS, it must have had [`Blas::prepare_compaction_async`] called on it and had the

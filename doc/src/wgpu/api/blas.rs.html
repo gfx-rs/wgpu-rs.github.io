@@ -261,7 +261,25 @@
 <a href="#260" id="260">260</a>
 <a href="#261" id="261">261</a>
 <a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(wgpu_core)]
+</span><span class="kw">use </span>core::ops::Deref;
+
+<span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
 
 <span class="kw">use </span>wgt::{WasmNotSend, WasmNotSendSync};
 
@@ -414,28 +432,40 @@
         <span class="self">self</span>.handle
     }
 
-    <span class="doccomment">/// Returns the inner hal Acceleration Structure using a callback. The hal acceleration structure
-    /// will be `None` if the backend type argument does not match with this wgpu Blas
+    <span class="doccomment">/// Get the [`wgpu_hal`] acceleration structure from this `Blas`.
     ///
-    /// This method will start the wgpu_core level command recording.
+    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+    /// and pass that struct to the to the `A` type parameter.
+    ///
+    /// Returns a guard that dereferences to the type of the hal backend
+    /// which implements [`A::AccelerationStructure`].
+    ///
+    /// # Deadlocks
+    ///
+    /// - The returned guard holds a read-lock on a device-local "destruction"
+    ///   lock, which will cause all calls to `destroy` to block until the
+    ///   guard is released.
+    ///
+    /// # Errors
+    ///
+    /// This method will return None if:
+    /// - The acceleration structure is not from the backend specified by `A`.
+    /// - The acceleration structure is from the `webgpu` or `custom` backend.
     ///
     /// # Safety
     ///
-    /// - The raw handle obtained from the hal Acceleration Structure must not be manually destroyed
+    /// - The returned resource must not be destroyed unless the guard
+    ///   is the last reference to it and it is not in use by the GPU.
+    ///   The guard and handle may be dropped at any time however.
+    /// - All the safety requirements of wgpu-hal must be upheld.
+    ///
+    /// [`A::AccelerationStructure`]: hal::Api::AccelerationStructure
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::AccelerationStructure&gt;) -&gt; R,
-        R,
-    &gt;(
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        hal_blas_callback: F,
-    ) -&gt; R {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(blas) = <span class="self">self</span>.inner.as_core_opt() {
-            <span class="kw">unsafe </span>{ blas.context.blas_as_hal::&lt;A, F, R&gt;(blas, hal_blas_callback) }
-        } <span class="kw">else </span>{
-            hal_blas_callback(<span class="prelude-val">None</span>)
-        }
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::AccelerationStructure&gt; + WasmNotSendSync&gt; {
+        <span class="kw">let </span>blas = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
+        <span class="kw">unsafe </span>{ blas.context.blas_as_hal::&lt;A&gt;(blas) }
     }
 
     <span class="attr">#[cfg(custom)]

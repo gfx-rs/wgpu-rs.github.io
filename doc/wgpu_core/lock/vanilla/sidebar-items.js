@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Mutex","MutexGuard","RwLock","RwLockReadGuard","RwLockWriteGuard"]};
+window.SIDEBAR_ITEMS = {"struct":["Mutex","MutexGuard","RankData","RwLock","RwLockReadGuard","RwLockWriteGuard"]};
