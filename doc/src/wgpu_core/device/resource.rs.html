@@ -3983,7 +3983,23 @@
 <a href="#3982" id="3982">3982</a>
 <a href="#3983" id="3983">3983</a>
 <a href="#3984" id="3984">3984</a>
-<a href="#3985" id="3985">3985</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3985" id="3985">3985</a>
+<a href="#3986" id="3986">3986</a>
+<a href="#3987" id="3987">3987</a>
+<a href="#3988" id="3988">3988</a>
+<a href="#3989" id="3989">3989</a>
+<a href="#3990" id="3990">3990</a>
+<a href="#3991" id="3991">3991</a>
+<a href="#3992" id="3992">3992</a>
+<a href="#3993" id="3993">3993</a>
+<a href="#3994" id="3994">3994</a>
+<a href="#3995" id="3995">3995</a>
+<a href="#3996" id="3996">3996</a>
+<a href="#3997" id="3997">3997</a>
+<a href="#3998" id="3998">3998</a>
+<a href="#3999" id="3999">3999</a>
+<a href="#4000" id="4000">4000</a>
+<a href="#4001" id="4001">4001</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
@@ -3993,10 +4009,9 @@
 <span class="kw">use </span>core::{
     fmt,
     mem::{<span class="self">self</span>, ManuallyDrop},
-    num::{NonZeroU32, NonZeroU64},
+    num::NonZeroU32,
     sync::atomic::{AtomicBool, Ordering},
 };
-<span class="kw">use </span>hal::ShouldBeNonZeroExt;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>bitflags::Flags;
@@ -4688,19 +4703,18 @@
         <span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_buffer(<span class="kw-2">&amp;</span>hal_desc) }
             .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>timestamp_normalization_bind_group = Snatchable::new(<span class="kw">unsafe </span>{
-            <span class="comment">// SAFETY: The size passed here must not overflow the buffer.
-            </span><span class="self">self</span>.timestamp_normalizer
+        <span class="kw">let </span>timestamp_normalization_bind_group = Snatchable::new(
+            <span class="self">self</span>.timestamp_normalizer
                 .get()
                 .unwrap()
                 .create_normalization_bind_group(
                     <span class="self">self</span>,
                     <span class="kw-2">&amp;*</span>buffer,
                     desc.label.as_deref(),
-                    wgt::BufferSize::new(hal_desc.size).unwrap(),
+                    desc.size,
                     desc.usage,
-                )
-        }<span class="question-mark">?</span>);
+                )<span class="question-mark">?</span>,
+        );
 
         <span class="kw">let </span>indirect_validation_bind_groups =
             <span class="self">self</span>.create_indirect_validation_bind_groups(buffer.as_ref(), desc.size, desc.usage)<span class="question-mark">?</span>;
@@ -4796,36 +4810,28 @@
         <span class="prelude-val">Ok</span>(texture)
     }
 
-    <span class="doccomment">/// # Safety
-    ///
-    /// - `hal_buffer` must have been created on this device.
-    /// - `hal_buffer` must have been created respecting `desc` (in particular, the size).
-    /// - `hal_buffer` must be initialized.
-    /// - `hal_buffer` must not have zero size.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>create_buffer_from_hal(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_buffer_from_hal(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         hal_buffer: Box&lt;<span class="kw">dyn </span>hal::DynBuffer&gt;,
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
     ) -&gt; (Fallible&lt;Buffer&gt;, <span class="prelude-ty">Option</span>&lt;resource::CreateBufferError&gt;) {
-        <span class="kw">let </span>timestamp_normalization_bind_group = <span class="kw">unsafe </span>{
-            <span class="kw">match </span><span class="self">self
-                </span>.timestamp_normalizer
-                .get()
-                .unwrap()
-                .create_normalization_bind_group(
-                    <span class="self">self</span>,
-                    <span class="kw-2">&amp;*</span>hal_buffer,
-                    desc.label.as_deref(),
-                    wgt::BufferSize::new(desc.size).unwrap(),
-                    desc.usage,
-                ) {
-                <span class="prelude-val">Ok</span>(bg) =&gt; Snatchable::new(bg),
-                <span class="prelude-val">Err</span>(e) =&gt; {
-                    <span class="kw">return </span>(
-                        Fallible::Invalid(Arc::new(desc.label.to_string())),
-                        <span class="prelude-val">Some</span>(e.into()),
-                    )
-                }
+        <span class="kw">let </span>timestamp_normalization_bind_group = <span class="kw">match </span><span class="self">self
+            </span>.timestamp_normalizer
+            .get()
+            .unwrap()
+            .create_normalization_bind_group(
+                <span class="self">self</span>,
+                <span class="kw-2">&amp;*</span>hal_buffer,
+                desc.label.as_deref(),
+                desc.size,
+                desc.usage,
+            ) {
+            <span class="prelude-val">Ok</span>(bg) =&gt; Snatchable::new(bg),
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="kw">return </span>(
+                    Fallible::Invalid(Arc::new(desc.label.to_string())),
+                    <span class="prelude-val">Some</span>(e.into()),
+                )
             }
         };
 
@@ -6182,9 +6188,31 @@
         buffer.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
         buffer.check_usage(pub_usage)<span class="question-mark">?</span>;
+        <span class="kw">let </span>raw_buffer = buffer.try_raw(snatch_guard)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>bb = buffer.binding(bb.offset, bb.size.map(NonZeroU64::get), snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">let </span>bind_size = bb.size.get();
+        <span class="kw">let </span>(bind_size, bind_end) = <span class="kw">match </span>bb.size {
+            <span class="prelude-val">Some</span>(size) =&gt; {
+                <span class="kw">let </span>end = bb.offset + size.get();
+                <span class="kw">if </span>end &gt; buffer.size {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BindingRangeTooLarge {
+                        buffer: buffer.error_ident(),
+                        range: bb.offset..end,
+                        size: buffer.size,
+                    });
+                }
+                (size.get(), end)
+            }
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="kw">if </span>buffer.size &lt; bb.offset {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BindingRangeTooLarge {
+                        buffer: buffer.error_ident(),
+                        range: bb.offset..bb.offset,
+                        size: buffer.size,
+                    });
+                }
+                (buffer.size - bb.offset, buffer.size)
+            }
+        };
 
         <span class="kw">if </span>bind_size &gt; range_limit <span class="kw">as </span>u64 {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BufferRangeTooLarge {
@@ -6199,8 +6227,8 @@
             dynamic_binding_info.push(binding_model::BindGroupDynamicBindingData {
                 binding_idx: binding,
                 buffer_size: buffer.size,
-                binding_range: bb.offset..bb.offset + bind_size,
-                maximum_dynamic_offset: buffer.size - bb.offset - bind_size,
+                binding_range: bb.offset..bind_end,
+                maximum_dynamic_offset: buffer.size - bind_end,
                 binding_type: binding_ty,
             });
         }
@@ -6238,7 +6266,11 @@
             MemoryInitKind::NeedsInitializedMemory,
         ));
 
-        <span class="prelude-val">Ok</span>(bb)
+        <span class="prelude-val">Ok</span>(hal::BufferBinding {
+            buffer: raw_buffer,
+            offset: bb.offset,
+            size: bb.size,
+        })
     }
 
     <span class="kw">fn </span>create_sampler_binding&lt;<span class="lifetime">'a</span>&gt;(

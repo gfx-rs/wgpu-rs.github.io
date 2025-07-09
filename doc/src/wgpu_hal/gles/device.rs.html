@@ -1644,7 +1644,11 @@
 <a href="#1643" id="1643">1643</a>
 <a href="#1644" id="1644">1644</a>
 <a href="#1645" id="1645">1645</a>
-<a href="#1646" id="1646">1646</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1646" id="1646">1646</a>
+<a href="#1647" id="1647">1647</a>
+<a href="#1648" id="1648">1648</a>
+<a href="#1649" id="1649">1649</a>
+<a href="#1650" id="1650">1650</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned, format, string::String, string::ToString <span class="kw">as _</span>, sync::Arc, vec, vec::Vec,
 };
 <span class="kw">use </span>core::{cmp::max, convert::TryInto, num::NonZeroU32, ptr, sync::atomic::Ordering};
@@ -2180,6 +2184,7 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="kw">super</span>::Buffer {
                 raw: <span class="prelude-val">None</span>,
                 target,
+                size: desc.size,
                 map_flags: <span class="number">0</span>,
                 data: <span class="prelude-val">Some</span>(Arc::new(MaybeMutex::new(<span class="macro">vec!</span>[<span class="number">0</span>; desc.size <span class="kw">as </span>usize]))),
                 offset_of_current_mapping: Arc::new(MaybeMutex::new(<span class="number">0</span>)),
@@ -2279,6 +2284,7 @@
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Buffer {
             raw,
             target,
+            size: desc.size,
             map_flags,
             data,
             offset_of_current_mapping: Arc::new(MaybeMutex::new(<span class="number">0</span>)),
@@ -2907,11 +2913,13 @@
             <span class="kw">let </span>binding = <span class="kw">match </span>layout.ty {
                 wgt::BindingType::Buffer { .. } =&gt; {
                     <span class="kw">let </span>bb = <span class="kw-2">&amp;</span>desc.buffers[entry.resource_index <span class="kw">as </span>usize];
-                    <span class="macro">assert!</span>(bb.size != <span class="number">0</span>, <span class="string">"zero-size bindings are not supported"</span>);
                     <span class="kw">super</span>::RawBinding::Buffer {
                         raw: bb.buffer.raw.unwrap(),
-                        offset: bb.offset.try_into().unwrap(),
-                        size: bb.size.try_into().unwrap(),
+                        offset: bb.offset <span class="kw">as </span>i32,
+                        size: <span class="kw">match </span>bb.size {
+                            <span class="prelude-val">Some</span>(s) =&gt; s.get() <span class="kw">as </span>i32,
+                            <span class="prelude-val">None </span>=&gt; (bb.buffer.size - bb.offset) <span class="kw">as </span>i32,
+                        },
                     }
                 }
                 wgt::BindingType::Sampler { .. } =&gt; {

@@ -658,16 +658,12 @@
         }
     }
 
-    <span class="doccomment">/// Create a bind group for normalizing timestamps in `buffer`.
-    ///
-    /// This function is unsafe because it does not know that `buffer_size` is
-    /// the true size of the buffer.
-    </span><span class="kw">pub unsafe fn </span>create_normalization_bind_group(
+    <span class="kw">pub fn </span>create_normalization_bind_group(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span>Device,
         buffer: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynBuffer,
         buffer_label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-        buffer_size: wgt::BufferSize,
+        buffer_size: u64,
         buffer_usages: wgt::BufferUsages,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TimestampNormalizationBindGroup, DeviceError&gt; {
         <span class="kw">unsafe </span>{
@@ -683,7 +679,7 @@
             // at once to normalize the timestamps, we can't use it. We force the buffer to fail
             // to allocate. The lowest max binding size is 128MB, and query sets must be small
             // (no more than 4096), so this should never be hit in practice by sane programs.
-            </span><span class="kw">if </span>buffer_size.get() &gt; device.adapter.limits().max_storage_buffer_binding_size <span class="kw">as </span>u64 {
+            </span><span class="kw">if </span>buffer_size &gt; device.adapter.limits().max_storage_buffer_binding_size <span class="kw">as </span>u64 {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::OutOfMemory);
             }
 
@@ -702,7 +698,11 @@
                 .create_bind_group(<span class="kw-2">&amp;</span>hal::BindGroupDescriptor {
                     label: <span class="prelude-val">Some</span>(label),
                     layout: <span class="kw-2">&amp;*</span>state.temporary_bind_group_layout,
-                    buffers: <span class="kw-2">&amp;</span>[hal::BufferBinding::new_unchecked(buffer, <span class="number">0</span>, buffer_size)],
+                    buffers: <span class="kw-2">&amp;</span>[hal::BufferBinding {
+                        buffer,
+                        offset: <span class="number">0</span>,
+                        size: <span class="prelude-val">None</span>,
+                    }],
                     samplers: <span class="kw-2">&amp;</span>[],
                     textures: <span class="kw-2">&amp;</span>[],
                     acceleration_structures: <span class="kw-2">&amp;</span>[],
