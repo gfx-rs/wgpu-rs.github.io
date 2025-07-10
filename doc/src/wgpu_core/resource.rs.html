@@ -2128,7 +2128,83 @@
 <a href="#2127" id="2127">2127</a>
 <a href="#2128" id="2128">2128</a>
 <a href="#2129" id="2129">2129</a>
-<a href="#2130" id="2130">2130</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#2130" id="2130">2130</a>
+<a href="#2131" id="2131">2131</a>
+<a href="#2132" id="2132">2132</a>
+<a href="#2133" id="2133">2133</a>
+<a href="#2134" id="2134">2134</a>
+<a href="#2135" id="2135">2135</a>
+<a href="#2136" id="2136">2136</a>
+<a href="#2137" id="2137">2137</a>
+<a href="#2138" id="2138">2138</a>
+<a href="#2139" id="2139">2139</a>
+<a href="#2140" id="2140">2140</a>
+<a href="#2141" id="2141">2141</a>
+<a href="#2142" id="2142">2142</a>
+<a href="#2143" id="2143">2143</a>
+<a href="#2144" id="2144">2144</a>
+<a href="#2145" id="2145">2145</a>
+<a href="#2146" id="2146">2146</a>
+<a href="#2147" id="2147">2147</a>
+<a href="#2148" id="2148">2148</a>
+<a href="#2149" id="2149">2149</a>
+<a href="#2150" id="2150">2150</a>
+<a href="#2151" id="2151">2151</a>
+<a href="#2152" id="2152">2152</a>
+<a href="#2153" id="2153">2153</a>
+<a href="#2154" id="2154">2154</a>
+<a href="#2155" id="2155">2155</a>
+<a href="#2156" id="2156">2156</a>
+<a href="#2157" id="2157">2157</a>
+<a href="#2158" id="2158">2158</a>
+<a href="#2159" id="2159">2159</a>
+<a href="#2160" id="2160">2160</a>
+<a href="#2161" id="2161">2161</a>
+<a href="#2162" id="2162">2162</a>
+<a href="#2163" id="2163">2163</a>
+<a href="#2164" id="2164">2164</a>
+<a href="#2165" id="2165">2165</a>
+<a href="#2166" id="2166">2166</a>
+<a href="#2167" id="2167">2167</a>
+<a href="#2168" id="2168">2168</a>
+<a href="#2169" id="2169">2169</a>
+<a href="#2170" id="2170">2170</a>
+<a href="#2171" id="2171">2171</a>
+<a href="#2172" id="2172">2172</a>
+<a href="#2173" id="2173">2173</a>
+<a href="#2174" id="2174">2174</a>
+<a href="#2175" id="2175">2175</a>
+<a href="#2176" id="2176">2176</a>
+<a href="#2177" id="2177">2177</a>
+<a href="#2178" id="2178">2178</a>
+<a href="#2179" id="2179">2179</a>
+<a href="#2180" id="2180">2180</a>
+<a href="#2181" id="2181">2181</a>
+<a href="#2182" id="2182">2182</a>
+<a href="#2183" id="2183">2183</a>
+<a href="#2184" id="2184">2184</a>
+<a href="#2185" id="2185">2185</a>
+<a href="#2186" id="2186">2186</a>
+<a href="#2187" id="2187">2187</a>
+<a href="#2188" id="2188">2188</a>
+<a href="#2189" id="2189">2189</a>
+<a href="#2190" id="2190">2190</a>
+<a href="#2191" id="2191">2191</a>
+<a href="#2192" id="2192">2192</a>
+<a href="#2193" id="2193">2193</a>
+<a href="#2194" id="2194">2194</a>
+<a href="#2195" id="2195">2195</a>
+<a href="#2196" id="2196">2196</a>
+<a href="#2197" id="2197">2197</a>
+<a href="#2198" id="2198">2198</a>
+<a href="#2199" id="2199">2199</a>
+<a href="#2200" id="2200">2200</a>
+<a href="#2201" id="2201">2201</a>
+<a href="#2202" id="2202">2202</a>
+<a href="#2203" id="2203">2203</a>
+<a href="#2204" id="2204">2204</a>
+<a href="#2205" id="2205">2205</a>
+<a href="#2206" id="2206">2206</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{
     borrow::Borrow,
     fmt,
@@ -2147,7 +2223,7 @@
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
-    binding_model::BindGroup,
+    binding_model::{BindGroup, BindingError},
     device::{
         queue, resource::DeferredDestroy, BufferMapPendingClosure, Device, DeviceError,
         DeviceMismatch, HostMap, MissingDownlevelFlags, MissingFeatures,
@@ -2622,6 +2698,82 @@
                 expected,
             })
         }
+    }
+
+    <span class="doccomment">/// Resolve the size of a binding for buffer with `offset` and `size`.
+    ///
+    /// If `size` is `None`, then the remainder of the buffer starting from
+    /// `offset` is used.
+    ///
+    /// If the binding would overflow the buffer, then an error is returned.
+    ///
+    /// Zero-size bindings are permitted here for historical reasons. Although
+    /// zero-size bindings are permitted by WebGPU, they are not permitted by
+    /// some backends. See [`Buffer::binding`] and
+    /// [#3170](https://github.com/gfx-rs/wgpu/issues/3170).
+    </span><span class="kw">pub fn </span>resolve_binding_size(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        offset: wgt::BufferAddress,
+        binding_size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSize&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;u64, BindingError&gt; {
+        <span class="kw">let </span>buffer_size = <span class="self">self</span>.size;
+
+        <span class="kw">match </span>binding_size {
+            <span class="prelude-val">Some</span>(binding_size) =&gt; <span class="kw">match </span>offset.checked_add(binding_size.get()) {
+                <span class="prelude-val">Some</span>(end) <span class="kw">if </span>end &lt;= buffer_size =&gt; <span class="prelude-val">Ok</span>(binding_size.get()),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(BindingError::BindingRangeTooLarge {
+                    buffer: <span class="self">self</span>.error_ident(),
+                    offset,
+                    binding_size: binding_size.get(),
+                    buffer_size,
+                }),
+            },
+            <span class="prelude-val">None </span>=&gt; {
+                buffer_size
+                    .checked_sub(offset)
+                    .ok_or_else(|| BindingError::BindingOffsetTooLarge {
+                        buffer: <span class="self">self</span>.error_ident(),
+                        offset,
+                        buffer_size,
+                    })
+            }
+        }
+    }
+
+    <span class="doccomment">/// Create a new [`hal::BufferBinding`] for the buffer with `offset` and
+    /// `binding_size`.
+    ///
+    /// If `binding_size` is `None`, then the remainder of the buffer starting
+    /// from `offset` is used.
+    ///
+    /// If the binding would overflow the buffer, then an error is returned.
+    ///
+    /// A zero-size binding at the end of the buffer is permitted here for historical reasons. Although
+    /// zero-size bindings are permitted by WebGPU, they are not permitted by
+    /// some backends. The zero-size binding need to be quashed or remapped to a
+    /// non-zero size, either universally in wgpu-core, or in specific backends
+    /// that do not support them. See
+    /// [#3170](https://github.com/gfx-rs/wgpu/issues/3170).
+    ///
+    /// Although it seems like it would be simpler and safer to use the resolved
+    /// size in the returned [`hal::BufferBinding`], doing this (and removing
+    /// redundant logic in backends to resolve the implicit size) was observed
+    /// to cause problems in certain CTS tests, so an implicit size
+    /// specification is preserved in the output.
+    </span><span class="kw">pub fn </span>binding&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
+        offset: wgt::BufferAddress,
+        binding_size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSize&gt;,
+        snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(hal::BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">dyn </span>hal::DynBuffer&gt;, u64), BindingError&gt; {
+        <span class="kw">let </span>buf_raw = <span class="self">self</span>.try_raw(snatch_guard)<span class="question-mark">?</span>;
+        <span class="kw">let </span>resolved_size = <span class="self">self</span>.resolve_binding_size(offset, binding_size)<span class="question-mark">?</span>;
+        <span class="comment">// SAFETY: The offset and size passed to hal::BufferBinding::new_unchecked must
+        // define a binding contained within the buffer.
+        </span><span class="prelude-val">Ok</span>((
+            hal::BufferBinding::new_unchecked(buf_raw, offset, binding_size),
+            resolved_size,
+        ))
     }
 
     <span class="doccomment">/// Returns the mapping callback in case of error so that the callback can be fired outside
