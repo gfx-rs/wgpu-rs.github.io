@@ -536,7 +536,8 @@
 <a href="#535" id="535">535</a>
 <a href="#536" id="536">536</a>
 <a href="#537" id="537">537</a>
-<a href="#538" id="538">538</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec, vec::Vec};
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec, vec::Vec};
 <span class="kw">use </span>core::{iter, mem};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -748,6 +749,14 @@
         query_index: u32,
         reset_state: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>QueryResetMap&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueryUseError&gt; {
+        <span class="comment">// NOTE: Further code assumes the index is good, so do this first.
+        </span><span class="kw">if </span>query_index &gt;= <span class="self">self</span>.desc.count {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(QueryUseError::OutOfBounds {
+                query_index,
+                query_set_size: <span class="self">self</span>.desc.count,
+            });
+        }
+
         <span class="comment">// We need to defer our resets because we are in a renderpass,
         // add the usage to the reset map.
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(reset) = reset_state {
@@ -762,13 +771,6 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(QueryUseError::IncompatibleType {
                 query_type,
                 set_type: simple_set_type,
-            });
-        }
-
-        <span class="kw">if </span>query_index &gt;= <span class="self">self</span>.desc.count {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(QueryUseError::OutOfBounds {
-                query_index,
-                query_set_size: <span class="self">self</span>.desc.count,
             });
         }
 
