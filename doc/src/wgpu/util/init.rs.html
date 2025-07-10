@@ -124,27 +124,33 @@
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Adapter, Instance, RequestAdapterOptions, Surface};
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Adapter, Instance, RequestAdapterOptions, Surface};
 
 <span class="attr">#[cfg(doc)]
 </span><span class="kw">use </span><span class="kw">crate</span>::Backends;
 
 <span class="doccomment">/// Initialize the adapter obeying the `WGPU_ADAPTER_NAME` environment variable.
 </span><span class="attr">#[cfg(wgpu_core)]
+#[cfg_attr(not(std), expect(unused_variables, unreachable_code))]
 </span><span class="kw">pub fn </span>initialize_adapter_from_env(
     instance: <span class="kw-2">&amp;</span>Instance,
     compatible_surface: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Surface&lt;<span class="lifetime">'_</span>&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Adapter, wgt::RequestAdapterError&gt; {
-    <span class="macro">cfg_if::cfg_if!</span> {
-        <span class="kw">if </span><span class="attr">#[cfg(std)] </span>{
-            <span class="kw">let </span>desired_adapter_name = std::env::var(<span class="string">"WGPU_ADAPTER_NAME"</span>)
-                .as_deref()
-                .map(str::to_lowercase)
-                .map_err(|<span class="kw">_</span>| wgt::RequestAdapterError::EnvNotSet)<span class="question-mark">?</span>;
-        } <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(wgt::RequestAdapterError::EnvNotSet);
+    <span class="kw">let </span>desired_adapter_name: alloc::string::String = {
+        <span class="macro">cfg_if::cfg_if!</span> {
+            <span class="kw">if </span><span class="attr">#[cfg(std)] </span>{
+                std::env::var(<span class="string">"WGPU_ADAPTER_NAME"</span>)
+                    .as_deref()
+                    .map(str::to_lowercase)
+                    .map_err(|<span class="kw">_</span>| wgt::RequestAdapterError::EnvNotSet)<span class="question-mark">?
+            </span>} <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(wgt::RequestAdapterError::EnvNotSet)
+            }
         }
-    }
+    };
 
     <span class="kw">let </span>adapters = instance.enumerate_adapters(<span class="kw">crate</span>::Backends::all());
 
