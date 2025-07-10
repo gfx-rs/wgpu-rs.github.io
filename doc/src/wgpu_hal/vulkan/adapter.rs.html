@@ -2798,13 +2798,7 @@
 <a href="#2797" id="2797">2797</a>
 <a href="#2798" id="2798">2798</a>
 <a href="#2799" id="2799">2799</a>
-<a href="#2800" id="2800">2800</a>
-<a href="#2801" id="2801">2801</a>
-<a href="#2802" id="2802">2802</a>
-<a href="#2803" id="2803">2803</a>
-<a href="#2804" id="2804">2804</a>
-<a href="#2805" id="2805">2805</a>
-<a href="#2806" id="2806">2806</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, boxed::Box, collections::BTreeMap, sync::Arc, vec::Vec};
+<a href="#2800" id="2800">2800</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, boxed::Box, collections::BTreeMap, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{ffi::CStr, marker::PhantomData};
 
 <span class="kw">use </span>ash::{ext, google, khr, vk};
@@ -2881,17 +2875,17 @@
     <span class="doccomment">/// Features provided by `VK_KHR_buffer_device_address`, promoted to Vulkan 1.2.
     ///
     /// We only use this feature for
-    /// [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`], which requires
+    /// [`Features::EXPERIMENTAL_RAY_QUERY`], which requires
     /// `VK_KHR_acceleration_structure`, which depends on
     /// `VK_KHR_buffer_device_address`, so [`Instance::expose_adapter`] only
     /// bothers to check if `VK_KHR_acceleration_structure` is available,
     /// leaving this `None`.
     ///
     /// However, we do populate this when creating a device if
-    /// [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`] is requested.
+    /// [`Features::EXPERIMENTAL_RAY_QUERY`] is requested.
     ///
     /// [`Instance::expose_adapter`]: super::Instance::expose_adapter
-    /// [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`]: wgt::Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE
+    /// [`Features::EXPERIMENTAL_RAY_QUERY`]: wgt::Features::EXPERIMENTAL_RAY_QUERY
     </span>buffer_device_address: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceBufferDeviceAddressFeaturesKHR&lt;<span class="lifetime">'static</span>&gt;&gt;,
 
     <span class="doccomment">/// Features provided by `VK_KHR_ray_query`,
@@ -3605,17 +3599,17 @@
 
         features.set(F::DEPTH32FLOAT_STENCIL8, texture_d32_s8);
 
-        features.set(
-            F::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE
-                | F::EXTENDED_ACCELERATION_STRUCTURE_VERTEX_FORMATS,
-            caps.supports_extension(khr::deferred_host_operations::NAME)
-                &amp;&amp; caps.supports_extension(khr::acceleration_structure::NAME)
-                &amp;&amp; caps.supports_extension(khr::buffer_device_address::NAME),
-        );
+        <span class="kw">let </span>supports_acceleration_structures = caps
+            .supports_extension(khr::deferred_host_operations::NAME)
+            &amp;&amp; caps.supports_extension(khr::acceleration_structure::NAME)
+            &amp;&amp; caps.supports_extension(khr::buffer_device_address::NAME);
 
         features.set(
-            F::EXPERIMENTAL_RAY_QUERY,
-            caps.supports_extension(khr::ray_query::NAME),
+            F::EXPERIMENTAL_RAY_QUERY
+            <span class="comment">// Although this doesn't really require ray queries, it does not make sense to be enabled if acceleration structures
+            // aren't enabled. 
+                </span>| F::EXTENDED_ACCELERATION_STRUCTURE_VERTEX_FORMATS,
+            supports_acceleration_structures &amp;&amp; caps.supports_extension(khr::ray_query::NAME),
         );
 
         <span class="kw">let </span>rg11b10ufloat_renderable = supports_format(
@@ -3904,17 +3898,11 @@
             extensions.push(khr::draw_indirect_count::NAME);
         }
 
-        <span class="comment">// Require `VK_KHR_deferred_host_operations`, `VK_KHR_acceleration_structure` and `VK_KHR_buffer_device_address` if the feature `RAY_TRACING` was requested
-        </span><span class="kw">if </span>requested_features
-            .contains(wgt::Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE)
-        {
+        <span class="comment">// Require `VK_KHR_deferred_host_operations`, `VK_KHR_acceleration_structure` `VK_KHR_buffer_device_address` (for acceleration structures) and`VK_KHR_ray_query` if `EXPERIMENTAL_RAY_QUERY` was requested
+        </span><span class="kw">if </span>requested_features.contains(wgt::Features::EXPERIMENTAL_RAY_QUERY) {
             extensions.push(khr::deferred_host_operations::NAME);
             extensions.push(khr::acceleration_structure::NAME);
             extensions.push(khr::buffer_device_address::NAME);
-        }
-
-        <span class="comment">// Require `VK_KHR_ray_query` if the associated feature was requested
-        </span><span class="kw">if </span>requested_features.contains(wgt::Features::EXPERIMENTAL_RAY_QUERY) {
             extensions.push(khr::ray_query::NAME);
         }
 
