@@ -569,7 +569,12 @@
 <a href="#568" id="568">568</a>
 <a href="#569" id="569">569</a>
 <a href="#570" id="570">570</a>
-<a href="#571" id="571">571</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [HLSL][hlsl] (High-Level Shading Language).
 
 # Supported shader model versions:
@@ -584,11 +589,17 @@ type should be stored in `uniform` and `storage` buffers. The HLSL we
 generate must access values in that form, even when it is not what
 HLSL would use normally.
 
-The rules described here only apply to WGSL `uniform` variables. WGSL
-`storage` buffers are translated as HLSL `ByteAddressBuffers`, for
-which we generate `Load` and `Store` method calls with explicit byte
-offsets. WGSL pipeline inputs must be scalars or vectors; they cannot
-be matrices, which is where the interesting problems arise.
+Matching the WGSL memory layout is a concern only for `uniform`
+variables. WGSL `storage` buffers are translated as HLSL
+`ByteAddressBuffers`, for which we generate `Load` and `Store` method
+calls with explicit byte offsets. WGSL pipeline inputs must be scalars
+or vectors; they cannot be matrices, which is where the interesting
+problems arise. However, when an affected type appears in a struct
+definition, the transformations described here are applied without
+consideration of where the struct is used.
+
+Access to storage buffers is implemented in `storage.rs`. Access to
+uniform buffers is implemented where applicable in `writer.rs`.
 
 ## Row- and column-major ordering for matrices
 
@@ -628,10 +639,9 @@ that the columns of a `matKx2&lt;f32&gt;` need only be [aligned as required
 for `vec2&lt;f32&gt;`][ilov], which is [eight-byte alignment][8bb].
 
 To compensate for this, any time a `matKx2&lt;f32&gt;` appears in a WGSL
-`uniform` variable, whether directly as the variable's type or as part
-of a struct/array, we actually emit `K` separate `float2` members, and
-assemble/disassemble the matrix from its columns (in WGSL; rows in
-HLSL) upon load and store.
+`uniform` value or as part of a struct/array, we actually emit `K`
+separate `float2` members, and assemble/disassemble the matrix from its
+columns (in WGSL; rows in HLSL) upon load and store.
 
 For example, the following WGSL struct type:
 

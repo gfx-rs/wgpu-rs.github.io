@@ -4526,7 +4526,14 @@
 <a href="#4525" id="4525">4525</a>
 <a href="#4526" id="4526">4526</a>
 <a href="#4527" id="4527">4527</a>
-<a href="#4528" id="4528">4528</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4528" id="4528">4528</a>
+<a href="#4529" id="4529">4529</a>
+<a href="#4530" id="4530">4530</a>
+<a href="#4531" id="4531">4531</a>
+<a href="#4532" id="4532">4532</a>
+<a href="#4533" id="4533">4533</a>
+<a href="#4534" id="4534">4534</a>
+<a href="#4535" id="4535">4535</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -4572,6 +4579,11 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2U64_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2u64"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>IMAGE_SAMPLE_BASE_CLAMP_TO_EDGE_FUNCTION: <span class="kw-2">&amp;</span>str =
     <span class="string">"nagaTextureSampleBaseClampToEdge"</span>;
+
+<span class="kw">enum </span>Index {
+    Expression(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
+    Static(u32),
+}
 
 <span class="kw">struct </span>EpStructMember {
     name: String,
@@ -6325,6 +6337,23 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="kw">fn </span>write_index(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        module: <span class="kw-2">&amp;</span>Module,
+        index: Index,
+        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
+    ) -&gt; BackendResult {
+        <span class="kw">match </span>index {
+            Index::Static(index) =&gt; {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{index}"</span>)<span class="question-mark">?</span>;
+            }
+            Index::Expression(index) =&gt; {
+                <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
+            }
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="doccomment">/// Helper method used to write statements
     ///
     /// # Notes
@@ -6473,6 +6502,7 @@
                         StoreValue::Expression(value),
                         func_ctx,
                         level,
+                        <span class="prelude-val">None</span>,
                     )<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
                     <span class="comment">// We treat matrices of the form `matCx2` as a sequence of C `vec2`s.
@@ -6480,13 +6510,15 @@
                     //
                     // We handle matrix Stores here directly (including sub accesses for Vectors and Scalars).
                     // Loads are handled by `Expression::AccessIndex` (since sub accesses work fine for Loads).
-                    </span><span class="kw">struct </span>MatrixAccess {
-                        base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-                        index: u32,
-                    }
-                    <span class="kw">enum </span>Index {
-                        Expression(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-                        Static(u32),
+                    </span><span class="kw">enum </span>MatrixAccess {
+                        Direct {
+                            base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+                            index: u32,
+                        },
+                        Struct {
+                            columns: <span class="kw">crate</span>::VectorSize,
+                            base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+                        },
                     }
 
                     <span class="kw">let </span>get_members = |expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;| {
@@ -6500,187 +6532,28 @@
                         }
                     };
 
-                    <span class="kw">let </span><span class="kw-2">mut </span>matrix = <span class="prelude-val">None</span>;
-                    <span class="kw">let </span><span class="kw-2">mut </span>vector = <span class="prelude-val">None</span>;
-                    <span class="kw">let </span><span class="kw-2">mut </span>scalar = <span class="prelude-val">None</span>;
-
-                    <span class="kw">let </span><span class="kw-2">mut </span>current_expr = pointer;
-                    <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">3 </span>{
-                        <span class="kw">let </span>resolved = func_ctx.resolve_type(current_expr, <span class="kw-2">&amp;</span>module.types);
-
-                        <span class="kw">match </span>(resolved, <span class="kw-2">&amp;</span>func_ctx.expressions[current_expr]) {
-                            (
-                                <span class="kw-2">&amp;</span>TypeInner::Pointer { base: ty, .. },
-                                <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::AccessIndex { base, index },
-                            ) <span class="kw">if </span><span class="macro">matches!</span>(
-                                module.types[ty].inner,
-                                TypeInner::Matrix {
-                                    rows: <span class="kw">crate</span>::VectorSize::Bi,
-                                    ..
-                                }
-                            ) &amp;&amp; get_members(base)
-                                .map(|members| members[index <span class="kw">as </span>usize].binding.is_none())
-                                == <span class="prelude-val">Some</span>(<span class="bool-val">true</span>) =&gt;
-                            {
-                                matrix = <span class="prelude-val">Some</span>(MatrixAccess { base, index });
-                                <span class="kw">break</span>;
-                            }
-                            (
-                                <span class="kw-2">&amp;</span>TypeInner::ValuePointer {
-                                    size: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::VectorSize::Bi),
-                                    ..
-                                },
-                                <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::Access { base, index },
-                            ) =&gt; {
-                                vector = <span class="prelude-val">Some</span>(Index::Expression(index));
-                                current_expr = base;
-                            }
-                            (
-                                <span class="kw-2">&amp;</span>TypeInner::ValuePointer {
-                                    size: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::VectorSize::Bi),
-                                    ..
-                                },
-                                <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::AccessIndex { base, index },
-                            ) =&gt; {
-                                vector = <span class="prelude-val">Some</span>(Index::Static(index));
-                                current_expr = base;
-                            }
-                            (
-                                <span class="kw-2">&amp;</span>TypeInner::ValuePointer { size: <span class="prelude-val">None</span>, .. },
-                                <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::Access { base, index },
-                            ) =&gt; {
-                                scalar = <span class="prelude-val">Some</span>(Index::Expression(index));
-                                current_expr = base;
-                            }
-                            (
-                                <span class="kw-2">&amp;</span>TypeInner::ValuePointer { size: <span class="prelude-val">None</span>, .. },
-                                <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::AccessIndex { base, index },
-                            ) =&gt; {
-                                scalar = <span class="prelude-val">Some</span>(Index::Static(index));
-                                current_expr = base;
-                            }
-                            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
-                        }
-                    }
-
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
 
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(MatrixAccess { index, base }) = matrix {
-                        <span class="kw">let </span>base_ty_res = <span class="kw-2">&amp;</span>func_ctx.info[base].ty;
-                        <span class="kw">let </span>resolved = base_ty_res.inner_with(<span class="kw-2">&amp;</span>module.types);
-                        <span class="kw">let </span>ty = <span class="kw">match </span><span class="kw-2">*</span>resolved {
-                            TypeInner::Pointer { base, .. } =&gt; base,
-                            <span class="kw">_ </span>=&gt; base_ty_res.handle().unwrap(),
-                        };
-
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(Index::Static(vec_index)) = vector {
-                            <span class="self">self</span>.write_expr(module, base, func_ctx)<span class="question-mark">?</span>;
-                            <span class="macro">write!</span>(
-                                <span class="self">self</span>.out,
-                                <span class="string">".{}_{}"</span>,
-                                <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::StructMember(ty, index)],
-                                vec_index
-                            )<span class="question-mark">?</span>;
-
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar_index) = scalar {
-                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"["</span>)<span class="question-mark">?</span>;
-                                <span class="kw">match </span>scalar_index {
-                                    Index::Static(index) =&gt; {
-                                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{index}"</span>)<span class="question-mark">?</span>;
-                                    }
-                                    Index::Expression(index) =&gt; {
-                                        <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
-                                    }
-                                }
-                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"]"</span>)<span class="question-mark">?</span>;
-                            }
-
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
-                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
-                        } <span class="kw">else </span>{
-                            <span class="kw">let </span>access = WrappedStructMatrixAccess { ty, index };
-                            <span class="kw">match </span>(<span class="kw-2">&amp;</span>vector, <span class="kw-2">&amp;</span>scalar) {
-                                (<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; {
-                                    <span class="self">self</span>.write_wrapped_struct_matrix_set_scalar_function_name(
-                                        access,
-                                    )<span class="question-mark">?</span>;
-                                }
-                                (<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="prelude-val">None</span>) =&gt; {
-                                    <span class="self">self</span>.write_wrapped_struct_matrix_set_vec_function_name(access)<span class="question-mark">?</span>;
-                                }
-                                (<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="kw">_</span>) =&gt; {
-                                    <span class="self">self</span>.write_wrapped_struct_matrix_set_function_name(access)<span class="question-mark">?</span>;
-                                }
-                            }
-
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.write_expr(module, base, func_ctx)<span class="question-mark">?</span>;
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
-
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>(Index::Expression(vec_index)) = vector {
-                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                                <span class="self">self</span>.write_expr(module, vec_index, func_ctx)<span class="question-mark">?</span>;
-
-                                <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar_index) = scalar {
-                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                                    <span class="kw">match </span>scalar_index {
-                                        Index::Static(index) =&gt; {
-                                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{index}"</span>)<span class="question-mark">?</span>;
-                                        }
-                                        Index::Expression(index) =&gt; {
-                                            <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
-                                        }
-                                    }
-                                }
-                            }
-                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
-                        }
-                    } <span class="kw">else </span>{
-                        <span class="comment">// We handle `Store`s to __matCx2 column vectors and scalar elements via
-                        // the previously injected functions __set_col_of_matCx2 / __set_el_of_matCx2.
-                        </span><span class="kw">struct </span>MatrixData {
-                            columns: <span class="kw">crate</span>::VectorSize,
-                            base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-                        }
-
-                        <span class="kw">enum </span>Index {
-                            Expression(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-                            Static(u32),
-                        }
-
-                        <span class="kw">let </span><span class="kw-2">mut </span>matrix = <span class="prelude-val">None</span>;
-                        <span class="kw">let </span><span class="kw-2">mut </span>vector = <span class="prelude-val">None</span>;
-                        <span class="kw">let </span><span class="kw-2">mut </span>scalar = <span class="prelude-val">None</span>;
-
-                        <span class="kw">let </span><span class="kw-2">mut </span>current_expr = pointer;
-                        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">3 </span>{
-                            <span class="kw">let </span>resolved = func_ctx.resolve_type(current_expr, <span class="kw-2">&amp;</span>module.types);
-                            <span class="kw">match </span>(resolved, <span class="kw-2">&amp;</span>func_ctx.expressions[current_expr]) {
+                    <span class="kw">let </span>matrix_access_on_lhs =
+                        find_matrix_in_access_chain(module, pointer, func_ctx).and_then(
+                            |(matrix_expr, vector, scalar)| <span class="kw">match </span>(
+                                func_ctx.resolve_type(matrix_expr, <span class="kw-2">&amp;</span>module.types),
+                                <span class="kw-2">&amp;</span>func_ctx.expressions[matrix_expr],
+                            ) {
                                 (
-                                    <span class="kw-2">&amp;</span>TypeInner::ValuePointer {
-                                        size: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::VectorSize::Bi),
-                                        ..
-                                    },
-                                    <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::Access { base, index },
-                                ) =&gt; {
-                                    vector = <span class="prelude-val">Some</span>(index);
-                                    current_expr = base;
-                                }
-                                (
-                                    <span class="kw-2">&amp;</span>TypeInner::ValuePointer { size: <span class="prelude-val">None</span>, .. },
-                                    <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::Access { base, index },
-                                ) =&gt; {
-                                    scalar = <span class="prelude-val">Some</span>(Index::Expression(index));
-                                    current_expr = base;
-                                }
-                                (
-                                    <span class="kw-2">&amp;</span>TypeInner::ValuePointer { size: <span class="prelude-val">None</span>, .. },
+                                    <span class="kw-2">&amp;</span>TypeInner::Pointer { base: ty, .. },
                                     <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::AccessIndex { base, index },
-                                ) =&gt; {
-                                    scalar = <span class="prelude-val">Some</span>(Index::Static(index));
-                                    current_expr = base;
+                                ) <span class="kw">if </span><span class="macro">matches!</span>(
+                                    module.types[ty].inner,
+                                    TypeInner::Matrix {
+                                        rows: <span class="kw">crate</span>::VectorSize::Bi,
+                                        ..
+                                    }
+                                ) &amp;&amp; get_members(base)
+                                    .map(|members| members[index <span class="kw">as </span>usize].binding.is_none())
+                                    == <span class="prelude-val">Some</span>(<span class="bool-val">true</span>) =&gt;
+                                {
+                                    <span class="prelude-val">Some</span>((MatrixAccess::Direct { base, index }, vector, scalar))
                                 }
                                 <span class="kw">_ </span>=&gt; {
                                     <span class="kw">if let </span><span class="prelude-val">Some</span>(MatrixType {
@@ -6689,25 +6562,96 @@
                                         width: <span class="number">4</span>,
                                     }) = get_inner_matrix_of_struct_array_member(
                                         module,
-                                        current_expr,
+                                        matrix_expr,
                                         func_ctx,
                                         <span class="bool-val">true</span>,
                                     ) {
-                                        matrix = <span class="prelude-val">Some</span>(MatrixData {
-                                            columns,
-                                            base: current_expr,
-                                        });
-                                    }
-
-                                    <span class="kw">break</span>;
+                                        <span class="prelude-val">Some</span>((
+                                            MatrixAccess::Struct {
+                                                columns,
+                                                base: matrix_expr,
+                                            },
+                                            vector,
+                                            scalar,
+                                        ))
+                                    } <span class="kw">else </span>{
+                                        <span class="prelude-val">None
+                                    </span>}
                                 }
+                            },
+                        );
+
+                    <span class="kw">match </span>matrix_access_on_lhs {
+                        <span class="prelude-val">Some</span>((MatrixAccess::Direct { index, base }, vector, scalar)) =&gt; {
+                            <span class="kw">let </span>base_ty_res = <span class="kw-2">&amp;</span>func_ctx.info[base].ty;
+                            <span class="kw">let </span>resolved = base_ty_res.inner_with(<span class="kw-2">&amp;</span>module.types);
+                            <span class="kw">let </span>ty = <span class="kw">match </span><span class="kw-2">*</span>resolved {
+                                TypeInner::Pointer { base, .. } =&gt; base,
+                                <span class="kw">_ </span>=&gt; base_ty_res.handle().unwrap(),
+                            };
+
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(Index::Static(vec_index)) = vector {
+                                <span class="self">self</span>.write_expr(module, base, func_ctx)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(
+                                    <span class="self">self</span>.out,
+                                    <span class="string">".{}_{}"</span>,
+                                    <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::StructMember(ty, index)],
+                                    vec_index
+                                )<span class="question-mark">?</span>;
+
+                                <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar_index) = scalar {
+                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"["</span>)<span class="question-mark">?</span>;
+                                    <span class="self">self</span>.write_index(module, scalar_index, func_ctx)<span class="question-mark">?</span>;
+                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"]"</span>)<span class="question-mark">?</span>;
+                                }
+
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
+                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
+                            } <span class="kw">else </span>{
+                                <span class="kw">let </span>access = WrappedStructMatrixAccess { ty, index };
+                                <span class="kw">match </span>(<span class="kw-2">&amp;</span>vector, <span class="kw-2">&amp;</span>scalar) {
+                                    (<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; {
+                                        <span class="self">self</span>.write_wrapped_struct_matrix_set_scalar_function_name(
+                                            access,
+                                        )<span class="question-mark">?</span>;
+                                    }
+                                    (<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="prelude-val">None</span>) =&gt; {
+                                        <span class="self">self</span>.write_wrapped_struct_matrix_set_vec_function_name(
+                                            access,
+                                        )<span class="question-mark">?</span>;
+                                    }
+                                    (<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="kw">_</span>) =&gt; {
+                                        <span class="self">self</span>.write_wrapped_struct_matrix_set_function_name(access)<span class="question-mark">?</span>;
+                                    }
+                                }
+
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_expr(module, base, func_ctx)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
+
+                                <span class="kw">if let </span><span class="prelude-val">Some</span>(Index::Expression(vec_index)) = vector {
+                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                                    <span class="self">self</span>.write_expr(module, vec_index, func_ctx)<span class="question-mark">?</span>;
+
+                                    <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar_index) = scalar {
+                                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                                        <span class="self">self</span>.write_index(module, scalar_index, func_ctx)<span class="question-mark">?</span>;
+                                    }
+                                }
+                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
                             }
                         }
+                        <span class="prelude-val">Some</span>((
+                            MatrixAccess::Struct { columns, base },
+                            <span class="prelude-val">Some</span>(Index::Expression(vec_index)),
+                            scalar,
+                        )) =&gt; {
+                            <span class="comment">// We handle `Store`s to __matCx2 column vectors and scalar elements via
+                            // the previously injected functions __set_col_of_matCx2 / __set_el_of_matCx2.
 
-                        <span class="kw">if let </span>(<span class="prelude-val">Some</span>(MatrixData { columns, base }), <span class="prelude-val">Some</span>(vec_index)) =
-                            (matrix, vector)
-                        {
-                            <span class="kw">if </span>scalar.is_some() {
+                            </span><span class="kw">if </span>scalar.is_some() {
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"__set_el_of_mat{}x2"</span>, columns <span class="kw">as </span>u8)<span class="question-mark">?</span>;
                             } <span class="kw">else </span>{
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"__set_col_of_mat{}x2"</span>, columns <span class="kw">as </span>u8)<span class="question-mark">?</span>;
@@ -6719,21 +6663,17 @@
 
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar_index) = scalar {
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                                <span class="kw">match </span>scalar_index {
-                                    Index::Static(index) =&gt; {
-                                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{index}"</span>)<span class="question-mark">?</span>;
-                                    }
-                                    Index::Expression(index) =&gt; {
-                                        <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
-                                    }
-                                }
+                                <span class="self">self</span>.write_index(module, scalar_index, func_ctx)<span class="question-mark">?</span>;
                             }
 
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
                             <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
 
                             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
-                        } <span class="kw">else </span>{
+                        }
+                        <span class="prelude-val">Some</span>((MatrixAccess::Struct { .. }, <span class="prelude-val">Some</span>(Index::Static(<span class="kw">_</span>)), <span class="kw">_</span>))
+                        | <span class="prelude-val">Some</span>((MatrixAccess::Struct { .. }, <span class="prelude-val">None</span>, <span class="kw">_</span>))
+                        | <span class="prelude-val">None </span>=&gt; {
                             <span class="self">self</span>.write_expr(module, pointer, func_ctx)<span class="question-mark">?</span>;
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
 
@@ -7491,6 +7431,7 @@
                         rows: <span class="kw">crate</span>::VectorSize::Bi,
                         width: <span class="number">4</span>,
                     }) = get_inner_matrix_of_struct_array_member(module, base, func_ctx, <span class="bool-val">true</span>)
+                        .or_else(|| get_global_uniform_matrix(module, base, func_ctx))
                     {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"__get_col_of_mat{}x2("</span>, columns <span class="kw">as </span>u8)<span class="question-mark">?</span>;
                         <span class="self">self</span>.write_expr(module, base, func_ctx)<span class="question-mark">?</span>;
@@ -7603,13 +7544,15 @@
                 {
                     <span class="comment">// do nothing, the chain is written on `Load`/`Store`
                 </span>} <span class="kw">else </span>{
-                    <span class="comment">// We write the matrix column access in a special way since
-                    // the type of `base` is our special __matCx2 struct.
+                    <span class="comment">// See if we need to write the matrix column access in a
+                    // special way since the type of `base` is our special
+                    // __matCx2 struct.
                     </span><span class="kw">if let </span><span class="prelude-val">Some</span>(MatrixType {
                         rows: <span class="kw">crate</span>::VectorSize::Bi,
                         width: <span class="number">4</span>,
                         ..
                     }) = get_inner_matrix_of_struct_array_member(module, base, func_ctx, <span class="bool-val">true</span>)
+                        .or_else(|| get_global_uniform_matrix(module, base, func_ctx))
                     {
                         <span class="self">self</span>.write_expr(module, base, func_ctx)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"._{index}"</span>)<span class="question-mark">?</span>;
@@ -7909,8 +7852,11 @@
                         .or_else(|| get_inner_matrix_of_global_uniform(module, pointer, func_ctx))
                         {
                             <span class="kw">let </span><span class="kw-2">mut </span>resolved = func_ctx.resolve_type(pointer, <span class="kw-2">&amp;</span>module.types);
-                            <span class="kw">if let </span>TypeInner::Pointer { base, .. } = <span class="kw-2">*</span>resolved {
-                                resolved = <span class="kw-2">&amp;</span>module.types[base].inner;
+                            <span class="kw">let </span>ptr_tr = resolved.pointer_base_type();
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(ptr_ty) =
+                                ptr_tr.as_ref().map(|tr| tr.inner_with(<span class="kw-2">&amp;</span>module.types))
+                            {
+                                resolved = ptr_ty;
                             }
 
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"(("</span>)<span class="question-mark">?</span>;
@@ -8944,6 +8890,44 @@
     }
 }
 
+<span class="doccomment">/// If `base` is an access chain of the form `mat`, `mat[col]`, or `mat[col][row]`,
+/// returns a tuple of the matrix, the column (vector) index (if present), and
+/// the row (scalar) index (if present).
+</span><span class="kw">fn </span>find_matrix_in_access_chain(
+    module: <span class="kw-2">&amp;</span>Module,
+    base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+    func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
+) -&gt; <span class="prelude-ty">Option</span>&lt;(Handle&lt;<span class="kw">crate</span>::Expression&gt;, <span class="prelude-ty">Option</span>&lt;Index&gt;, <span class="prelude-ty">Option</span>&lt;Index&gt;)&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>current_base = base;
+    <span class="kw">let </span><span class="kw-2">mut </span>vector = <span class="prelude-val">None</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>scalar = <span class="prelude-val">None</span>;
+    <span class="kw">loop </span>{
+        <span class="kw">let </span>resolved_tr = func_ctx
+            .resolve_type(current_base, <span class="kw-2">&amp;</span>module.types)
+            .pointer_base_type();
+        <span class="kw">let </span>resolved = resolved_tr.as_ref()<span class="question-mark">?</span>.inner_with(<span class="kw-2">&amp;</span>module.types);
+
+        <span class="kw">match </span><span class="kw-2">*</span>resolved {
+            TypeInner::Matrix { .. } =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>((current_base, vector, scalar)),
+            TypeInner::Scalar(<span class="kw">_</span>) | TypeInner::Vector { .. } =&gt; {}
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        }
+
+        <span class="kw">let </span>index;
+        (current_base, index) = <span class="kw">match </span>func_ctx.expressions[current_base] {
+            <span class="kw">crate</span>::Expression::Access { base, index } =&gt; (base, Index::Expression(index)),
+            <span class="kw">crate</span>::Expression::AccessIndex { base, index } =&gt; (base, Index::Static(index)),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        };
+
+        <span class="kw">match </span><span class="kw-2">*</span>resolved {
+            TypeInner::Scalar(<span class="kw">_</span>) =&gt; scalar = <span class="prelude-val">Some</span>(index),
+            TypeInner::Vector { .. } =&gt; vector = <span class="prelude-val">Some</span>(index),
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+        }
+    }
+}
+
 <span class="doccomment">/// Returns the matrix data if the access chain starting at `base`:
 /// - starts with an expression with resolved type of [`TypeInner::Matrix`] if `direct = true`
 /// - contains one or more expressions with resolved type of [`TypeInner::Array`] of [`TypeInner::Matrix`]
@@ -9001,6 +8985,36 @@
     }
     <span class="prelude-val">None
 </span>}
+
+<span class="doccomment">/// Simpler version of get_inner_matrix_of_global_uniform that only looks at the
+/// immediate expression, rather than traversing an access chain.
+</span><span class="kw">fn </span>get_global_uniform_matrix(
+    module: <span class="kw-2">&amp;</span>Module,
+    base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+    func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
+) -&gt; <span class="prelude-ty">Option</span>&lt;MatrixType&gt; {
+    <span class="kw">let </span>base_tr = func_ctx
+        .resolve_type(base, <span class="kw-2">&amp;</span>module.types)
+        .pointer_base_type();
+    <span class="kw">let </span>base_ty = base_tr.as_ref().map(|tr| tr.inner_with(<span class="kw-2">&amp;</span>module.types));
+    <span class="kw">match </span>(<span class="kw-2">&amp;</span>func_ctx.expressions[base], base_ty) {
+        (
+            <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::GlobalVariable(handle),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>TypeInner::Matrix {
+                columns,
+                rows,
+                scalar,
+            }),
+        ) <span class="kw">if </span>module.global_variables[handle].space == <span class="kw">crate</span>::AddressSpace::Uniform =&gt; {
+            <span class="prelude-val">Some</span>(MatrixType {
+                columns,
+                rows,
+                width: scalar.width,
+            })
+        }
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+    }
+}
 
 <span class="doccomment">/// Returns the matrix data if the access chain starting at `base`:
 /// - starts with an expression with resolved type of [`TypeInner::Matrix`]
