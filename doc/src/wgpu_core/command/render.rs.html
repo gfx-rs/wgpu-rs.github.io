@@ -3598,7 +3598,17 @@
 <a href="#3597" id="3597">3597</a>
 <a href="#3598" id="3598">3598</a>
 <a href="#3599" id="3599">3599</a>
-<a href="#3600" id="3600">3600</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
+<a href="#3600" id="3600">3600</a>
+<a href="#3601" id="3601">3601</a>
+<a href="#3602" id="3602">3602</a>
+<a href="#3603" id="3603">3603</a>
+<a href="#3604" id="3604">3604</a>
+<a href="#3605" id="3605">3605</a>
+<a href="#3606" id="3606">3606</a>
+<a href="#3607" id="3607">3607</a>
+<a href="#3608" id="3608">3608</a>
+<a href="#3609" id="3609">3609</a>
+<a href="#3610" id="3610">3610</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{fmt, num::NonZeroU32, ops::Range, str};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -5944,6 +5954,13 @@
 
     buffer.check_usage(BufferUsages::INDEX)<span class="question-mark">?</span>;
 
+    <span class="kw">if </span>offset % u64::try_from(index_format.byte_size()).unwrap() != <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(RenderCommandError::UnalignedIndexBuffer {
+            offset,
+            alignment: index_format.byte_size(),
+        }
+        .into());
+    }
     <span class="kw">let </span>(binding, resolved_size) = buffer
         .binding(offset, size, state.general.snatch_guard)
         .map_err(RenderCommandError::from)<span class="question-mark">?</span>;
@@ -5997,6 +6014,9 @@
 
     buffer.check_usage(BufferUsages::VERTEX)<span class="question-mark">?</span>;
 
+    <span class="kw">if </span>offset % wgt::VERTEX_ALIGNMENT != <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(RenderCommandError::UnalignedVertexBuffer { slot, offset }.into());
+    }
     <span class="kw">let </span>(binding, buffer_size) = buffer
         .binding(offset, size, state.general.snatch_guard)
         .map_err(RenderCommandError::from)<span class="question-mark">?</span>;

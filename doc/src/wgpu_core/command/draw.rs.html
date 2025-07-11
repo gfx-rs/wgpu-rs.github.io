@@ -136,7 +136,15 @@
 <a href="#135" id="135">135</a>
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
 
 <span class="kw">use </span>thiserror::Error;
 
@@ -211,6 +219,12 @@
     </span>BindGroupIndexOutOfRange(<span class="attr">#[from] </span>pass::BindGroupIndexOutOfRange),
     <span class="attr">#[error(<span class="string">"Vertex buffer index {index} is greater than the device's requested `max_vertex_buffers` limit {max}"</span>)]
     </span>VertexBufferIndexOutOfRange { index: u32, max: u32 },
+    <span class="attr">#[error(
+        <span class="string">"Offset {offset} for vertex buffer in slot {slot} is not a multiple of `VERTEX_ALIGNMENT`"
+    </span>)]
+    </span>UnalignedVertexBuffer { slot: u32, offset: u64 },
+    <span class="attr">#[error(<span class="string">"Offset {offset} for index buffer is not a multiple of {alignment}"</span>)]
+    </span>UnalignedIndexBuffer { offset: u64, alignment: usize },
     <span class="attr">#[error(<span class="string">"Render pipeline targets are incompatible with render pass"</span>)]
     </span>IncompatiblePipelineTargets(<span class="attr">#[from] </span><span class="kw">crate</span>::device::RenderPassCompatibilityError),
     <span class="attr">#[error(<span class="string">"{0} writes to depth, while the pass has read-only depth access"</span>)]
@@ -254,6 +268,8 @@
 
             <span class="self">Self</span>::BindGroupIndexOutOfRange { .. }
             | <span class="self">Self</span>::VertexBufferIndexOutOfRange { .. }
+            | <span class="self">Self</span>::UnalignedIndexBuffer { .. }
+            | <span class="self">Self</span>::UnalignedVertexBuffer { .. }
             | <span class="self">Self</span>::IncompatibleDepthAccess(..)
             | <span class="self">Self</span>::IncompatibleStencilAccess(..)
             | <span class="self">Self</span>::InvalidViewportRectSize { .. }
