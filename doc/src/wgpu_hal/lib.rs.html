@@ -2641,7 +2641,24 @@
 <a href="#2640" id="2640">2640</a>
 <a href="#2641" id="2641">2641</a>
 <a href="#2642" id="2642">2642</a>
-<a href="#2643" id="2643">2643</a></pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
+<a href="#2643" id="2643">2643</a>
+<a href="#2644" id="2644">2644</a>
+<a href="#2645" id="2645">2645</a>
+<a href="#2646" id="2646">2646</a>
+<a href="#2647" id="2647">2647</a>
+<a href="#2648" id="2648">2648</a>
+<a href="#2649" id="2649">2649</a>
+<a href="#2650" id="2650">2650</a>
+<a href="#2651" id="2651">2651</a>
+<a href="#2652" id="2652">2652</a>
+<a href="#2653" id="2653">2653</a>
+<a href="#2654" id="2654">2654</a>
+<a href="#2655" id="2655">2655</a>
+<a href="#2656" id="2656">2656</a>
+<a href="#2657" id="2657">2657</a>
+<a href="#2658" id="2658">2658</a>
+<a href="#2659" id="2659">2659</a>
+<a href="#2660" id="2660">2660</a></pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
 //!
 //! This crate defines a set of traits abstracting over modern graphics APIs,
 //! with implementations ("backends") for Vulkan, Metal, Direct3D, and GL.
@@ -3115,7 +3132,16 @@
     }
 }
 
-<span class="kw">pub trait </span>Api: Clone + fmt::Debug + Sized {
+<span class="doccomment">/// All the types and methods that make up a implementation on top of a backend.
+///
+/// Only the types that have non-dyn trait bounds have methods on them. Most methods
+/// are either on [`CommandEncoder`] or [`Device`].
+///
+/// The api can either be used through generics (through use of this trait and associated
+/// types) or dynamically through using the `Dyn*` traits.
+</span><span class="kw">pub trait </span>Api: Clone + fmt::Debug + Sized + WasmNotSendSync + <span class="lifetime">'static </span>{
+    <span class="kw">const </span>VARIANT: wgt::Backend;
+
     <span class="kw">type </span>Instance: DynInstance + Instance&lt;A = <span class="self">Self</span>&gt;;
     <span class="kw">type </span>Surface: DynSurface + Surface&lt;A = <span class="self">Self</span>&gt;;
     <span class="kw">type </span>Adapter: DynAdapter + Adapter&lt;A = <span class="self">Self</span>&gt;;
@@ -4447,7 +4473,11 @@
     <span class="kw">pub </span>downlevel: wgt::DownlevelCapabilities,
 }
 
-<span class="attr">#[derive(Debug)]
+<span class="doccomment">/// An adapter with all the information needed to reason about its capabilities.
+///
+/// These are either made by [`Instance::enumerate_adapters`] or by backend specific
+/// methods on the backend [`Instance`] or [`Adapter`].
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>ExposedAdapter&lt;A: Api&gt; {
     <span class="kw">pub </span>adapter: A::Adapter,
     <span class="kw">pub </span>info: wgt::AdapterInfo,
@@ -4501,7 +4531,11 @@
     </span><span class="kw">pub </span>suboptimal: bool,
 }
 
-<span class="attr">#[derive(Debug)]
+<span class="doccomment">/// An open connection to a device and a queue.
+///
+/// This can be created from [`Adapter::open`] or backend
+/// specific methods on the backend's [`Instance`] or [`Adapter`].
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>OpenDevice&lt;A: Api&gt; {
     <span class="kw">pub </span>device: A::Device,
     <span class="kw">pub </span>queue: A::Queue,

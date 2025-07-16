@@ -1158,8 +1158,7 @@
 <a href="#1157" id="1157">1157</a>
 <a href="#1158" id="1158">1158</a>
 <a href="#1159" id="1159">1159</a>
-<a href="#1160" id="1160">1160</a>
-<a href="#1161" id="1161">1161</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1160" id="1160">1160</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::{Cow, ToOwned <span class="kw">as _</span>},
     boxed::Box,
     string::String,
@@ -1176,7 +1175,6 @@
     api_log, api_log_debug,
     device::{queue::Queue, resource::Device, DeviceDescriptor, DeviceError},
     global::Global,
-    hal_api::HalApi,
     id::{markers, AdapterId, DeviceId, QueueId, SurfaceId},
     lock::{rank, Mutex},
     present::Presentation,
@@ -1278,7 +1276,7 @@
     }
 
     <span class="doccomment">/// Helper for `Instance::new()`; attempts to add a single `wgpu-hal` backend to this instance.
-    </span><span class="kw">fn </span>try_add_hal&lt;A: HalApi&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: A, instance_desc: <span class="kw-2">&amp;</span>wgt::InstanceDescriptor) {
+    </span><span class="kw">fn </span>try_add_hal&lt;A: hal::Api&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: A, instance_desc: <span class="kw-2">&amp;</span>wgt::InstanceDescriptor) {
         <span class="comment">// Whether or not the backend was requested, and whether or not it succeeds,
         // note that we *could* try it.
         </span><span class="self">self</span>.supported_backends |= A::VARIANT.into();
@@ -1312,7 +1310,7 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_hal_instance&lt;A: HalApi&gt;(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_hal_instance&lt;A: hal::Api&gt;(
         name: String,
         hal_instance: &lt;A <span class="kw">as </span>hal::Api&gt;::Instance,
     ) -&gt; <span class="self">Self </span>{
@@ -1336,7 +1334,7 @@
     <span class="doccomment">/// # Safety
     ///
     /// - The raw instance handle returned must not be manually destroyed.
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: hal::Api&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
         <span class="self">self</span>.raw(A::VARIANT).map(|instance| {
             instance
                 .as_any()

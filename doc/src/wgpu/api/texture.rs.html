@@ -163,7 +163,14 @@
 <a href="#162" id="162">162</a>
 <a href="#163" id="163">163</a>
 <a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(wgpu_core)]
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(wgpu_core)]
 </span><span class="kw">use </span>core::ops::Deref;
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -192,6 +199,15 @@
     /// Returns a guard that dereferences to the type of the hal backend
     /// which implements [`A::Texture`].
     ///
+    /// # Types
+    ///
+    /// The returned type depends on the backend:
+    ///
+    </span><span class="attr">#[doc = <span class="macro">crate::hal_type_vulkan!</span>(<span class="string">"Texture"</span>)]
+    #[doc = <span class="macro">crate::hal_type_metal!</span>(<span class="string">"Texture"</span>)]
+    #[doc = <span class="macro">crate::hal_type_dx12!</span>(<span class="string">"Texture"</span>)]
+    #[doc = <span class="macro">crate::hal_type_gles!</span>(<span class="string">"Texture"</span>)]
+    </span><span class="doccomment">///
     /// # Deadlocks
     ///
     /// - The returned guard holds a read-lock on a device-local "destruction"
@@ -214,9 +230,7 @@
     ///
     /// [`A::Texture`]: hal::Api::Texture
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Texture&gt;&gt; {
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: hal::Api&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Texture&gt;&gt; {
         <span class="kw">let </span>texture = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{ texture.context.texture_as_hal::&lt;A&gt;(texture) }
     }

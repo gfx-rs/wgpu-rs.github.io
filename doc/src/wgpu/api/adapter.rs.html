@@ -198,7 +198,16 @@
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::future::Future;
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::future::Future;
 <span class="attr">#[cfg(wgpu_core)]
 </span><span class="kw">use </span>core::ops::Deref;
 
@@ -266,14 +275,14 @@
         }
     }
 
-    <span class="doccomment">/// Create a wgpu [`Device`] and [`Queue`] from a wgpu-hal `OpenDevice`
+    <span class="doccomment">/// Create a wgpu [`Device`] and [`Queue`] from a wgpu-hal [`hal::OpenDevice`].
     ///
     /// # Safety
     ///
     /// - `hal_device` must be created from this adapter internal handle.
-    /// - `desc.features` must be a subset of `hal_device` features.
+    /// - `desc.features` must be a subset of `hal_device`'s supported features.
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>create_device_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    </span><span class="kw">pub unsafe fn </span>create_device_from_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_device: hal::OpenDevice&lt;A&gt;,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor&lt;<span class="lifetime">'_</span>&gt;,
@@ -303,6 +312,15 @@
     /// Returns a guard that dereferences to the type of the hal backend
     /// which implements [`A::Adapter`].
     ///
+    /// # Types
+    ///
+    /// The returned type depends on the backend:
+    ///
+    </span><span class="attr">#[doc = <span class="macro">crate::hal_type_vulkan!</span>(<span class="string">"Adapter"</span>)]
+    #[doc = <span class="macro">crate::hal_type_metal!</span>(<span class="string">"Adapter"</span>)]
+    #[doc = <span class="macro">crate::hal_type_dx12!</span>(<span class="string">"Adapter"</span>)]
+    #[doc = <span class="macro">crate::hal_type_gles!</span>(<span class="string">"Adapter"</span>)]
+    </span><span class="doccomment">///
     /// # Errors
     ///
     /// This method will return None if:
@@ -318,7 +336,7 @@
     ///
     /// [`A::Adapter`]: hal::Api::Adapter
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Adapter&gt; + WasmNotSendSync&gt; {
         <span class="kw">let </span>adapter = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;

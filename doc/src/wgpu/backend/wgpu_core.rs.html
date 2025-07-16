@@ -3706,7 +3706,7 @@
 }
 
 <span class="kw">impl </span>ContextWgpuCore {
-    <span class="kw">pub unsafe fn </span>from_hal_instance&lt;A: wgc::hal_api::HalApi&gt;(hal_instance: A::Instance) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub unsafe fn </span>from_hal_instance&lt;A: hal::Api&gt;(hal_instance: A::Instance) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(<span class="kw">unsafe </span>{
             Arc::new(wgc::global::Global::from_hal_instance::&lt;A&gt;(
                 <span class="string">"wgpu"</span>,
@@ -3718,7 +3718,7 @@
     <span class="doccomment">/// # Safety
     ///
     /// - The raw instance handle returned must not be manually destroyed.
-    </span><span class="kw">pub unsafe fn </span>instance_as_hal&lt;A: wgc::hal_api::HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
+    </span><span class="kw">pub unsafe fn </span>instance_as_hal&lt;A: hal::Api&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.instance_as_hal::&lt;A&gt;() }
     }
 
@@ -3731,28 +3731,28 @@
         <span class="self">self</span>.<span class="number">0</span>.enumerate_adapters(backends)
     }
 
-    <span class="kw">pub unsafe fn </span>create_adapter_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>create_adapter_from_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_adapter: hal::ExposedAdapter&lt;A&gt;,
     ) -&gt; wgc::id::AdapterId {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.create_adapter_from_hal(hal_adapter.into(), <span class="prelude-val">None</span>) }
     }
 
-    <span class="kw">pub unsafe fn </span>adapter_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>adapter_as_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         adapter: <span class="kw-2">&amp;</span>CoreAdapter,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Adapter&gt; + WasmNotSendSync&gt; {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.adapter_as_hal::&lt;A&gt;(adapter.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>buffer_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>buffer_as_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         buffer: <span class="kw-2">&amp;</span>CoreBuffer,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Buffer&gt;&gt; {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.buffer_as_hal::&lt;A&gt;(buffer.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>create_device_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>create_device_from_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         adapter: <span class="kw-2">&amp;</span>CoreAdapter,
         hal_device: hal::OpenDevice&lt;A&gt;,
@@ -3791,7 +3791,7 @@
         <span class="prelude-val">Ok</span>((device, queue))
     }
 
-    <span class="kw">pub unsafe fn </span>create_texture_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>create_texture_from_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_texture: A::Texture,
         device: <span class="kw-2">&amp;</span>CoreDevice,
@@ -3823,7 +3823,7 @@
     /// - `hal_buffer` must be created respecting `desc`
     /// - `hal_buffer` must be initialized
     /// - `hal_buffer` must not have zero size.
-    </span><span class="kw">pub unsafe fn </span>create_buffer_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    </span><span class="kw">pub unsafe fn </span>create_buffer_from_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_buffer: A::Buffer,
         device: <span class="kw-2">&amp;</span>CoreDevice,
@@ -3852,28 +3852,28 @@
         }
     }
 
-    <span class="kw">pub unsafe fn </span>device_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>device_as_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span>CoreDevice,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Device&gt;&gt; {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.device_as_hal::&lt;A&gt;(device.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>surface_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>surface_as_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface: <span class="kw-2">&amp;</span>CoreSurface,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Surface&gt;&gt; {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.surface_as_hal::&lt;A&gt;(surface.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>texture_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>texture_as_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture: <span class="kw-2">&amp;</span>CoreTexture,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Texture&gt;&gt; {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.texture_as_hal::&lt;A&gt;(texture.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>texture_view_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>texture_view_as_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture_view: <span class="kw-2">&amp;</span>CoreTextureView,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::TextureView&gt;&gt; {
@@ -3882,7 +3882,7 @@
 
     <span class="doccomment">/// This method will start the wgpu_core level command recording.
     </span><span class="kw">pub unsafe fn </span>command_encoder_as_hal_mut&lt;
-        A: wgc::hal_api::HalApi,
+        A: hal::Api,
         F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>A::CommandEncoder&gt;) -&gt; R,
         R,
     &gt;(
@@ -3898,14 +3898,14 @@
         }
     }
 
-    <span class="kw">pub unsafe fn </span>blas_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>blas_as_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         blas: <span class="kw-2">&amp;</span>CoreBlas,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::AccelerationStructure&gt;&gt; {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.blas_as_hal::&lt;A&gt;(blas.id) }
     }
 
-    <span class="kw">pub unsafe fn </span>tlas_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>tlas_as_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         tlas: <span class="kw-2">&amp;</span>CoreTlas,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::AccelerationStructure&gt;&gt; {
@@ -4020,7 +4020,7 @@
         <span class="macro">format!</span>(<span class="string">"Validation Error\n\nCaused by:\n{output}"</span>)
     }
 
-    <span class="kw">pub unsafe fn </span>queue_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>queue_as_hal&lt;A: hal::Api&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span>CoreQueue,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Queue&gt; + WasmNotSendSync&gt; {

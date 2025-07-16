@@ -418,7 +418,23 @@
 <a href="#417" id="417">417</a>
 <a href="#418" id="418">418</a>
 <a href="#419" id="419">419</a>
-<a href="#420" id="420">420</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(wgpu_core)]
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(wgpu_core)]
 </span><span class="kw">use </span>alloc::vec::Vec;
 <span class="kw">use </span>core::future::Future;
 
@@ -441,7 +457,7 @@
     }
 }
 
-<span class="doccomment">/// Context for all other wgpu objects. Instance of wgpu.
+<span class="doccomment">/// Contains the various entry points to start interacting with the system's GPUs.
 ///
 /// This is the first thing you create when using wgpu.
 /// Its primary use is to create [`Adapter`]s and [`Surface`]s.
@@ -473,6 +489,51 @@
 }
 
 <span class="kw">impl </span>Instance {
+    <span class="doccomment">/// Create an new instance of wgpu using the given options and enabled backends.
+    ///
+    /// # Panics
+    ///
+    /// - If no backend feature for the active target platform is enabled,
+    ///   this method will panic; see [`Instance::enabled_backend_features()`].
+    </span><span class="attr">#[allow(clippy::allow_attributes, unreachable_code)]
+    </span><span class="kw">pub fn </span>new(desc: <span class="kw-2">&amp;</span>InstanceDescriptor) -&gt; <span class="self">Self </span>{
+        <span class="kw">if </span><span class="self">Self</span>::enabled_backend_features().is_empty() {
+            <span class="macro">panic!</span>(
+                <span class="string">"No wgpu backend feature that is implemented for the target platform was enabled. \
+                 See `wgpu::Instance::enabled_backend_features()` for more information."
+            </span>);
+        }
+
+        <span class="attr">#[cfg(webgpu)]
+        </span>{
+            <span class="kw">let </span>is_only_available_backend = !<span class="macro">cfg!</span>(wgpu_core);
+            <span class="kw">let </span>requested_webgpu = desc.backends.contains(Backends::BROWSER_WEBGPU);
+            <span class="kw">let </span>support_webgpu = <span class="kw">crate</span>::backend::get_browser_gpu_property()
+                .map(|maybe_gpu| maybe_gpu.is_some())
+                .unwrap_or(<span class="bool-val">false</span>);
+
+            <span class="kw">if </span>is_only_available_backend || (requested_webgpu &amp;&amp; support_webgpu) {
+                <span class="kw">return </span><span class="self">Self </span>{
+                    inner: <span class="kw">crate</span>::backend::ContextWebGpu::new(desc).into(),
+                };
+            }
+        }
+
+        <span class="attr">#[cfg(wgpu_core)]
+        </span>{
+            <span class="kw">return </span><span class="self">Self </span>{
+                inner: <span class="kw">crate</span>::backend::ContextWgpuCore::new(desc).into(),
+            };
+        }
+
+        <span class="comment">// Silence unused variable warnings without adding _ to the parameter name (which shows up in docs).
+        </span><span class="kw">let _ </span>= desc;
+
+        <span class="macro">unreachable!</span>(
+            <span class="string">"Earlier check of `enabled_backend_features` should have prevented getting here!"
+        </span>);
+    }
+
     <span class="doccomment">/// Returns which backends can be picked for the current build configuration.
     ///
     /// The returned set depends on a combination of target platform and enabled features.
@@ -504,144 +565,12 @@
         backends
     }
 
-    <span class="doccomment">/// Create an new instance of wgpu.
+    <span class="doccomment">/// Returns the set of [WGSL language extensions] supported by this instance.
     ///
-    /// # Arguments
-    ///
-    /// - `instance_desc` - Has fields for which [backends][Backends] wgpu will choose
-    ///   during instantiation, and which [DX12 shader compiler][Dx12Compiler] wgpu will use.
-    ///
-    ///   [`Backends::BROWSER_WEBGPU`] takes a special role:
-    ///   If it is set and a [`navigator.gpu`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/gpu)
-    ///   object is present, this instance will *only* be able to create WebGPU adapters.
-    ///
-    ///   ⚠️ On some browsers this check is insufficient to determine whether WebGPU is supported,
-    ///   as the browser may define the `navigator.gpu` object, but be unable to create any WebGPU adapters.
-    ///   For targeting _both_ WebGPU &amp; WebGL is recommended to use [`crate::util::new_instance_with_webgpu_detection`].
-    ///
-    ///   If you instead want to force use of WebGL, either disable the `webgpu` compile-time feature
-    ///   or don't add the [`Backends::BROWSER_WEBGPU`] flag to the the `instance_desc`'s `backends` field.
-    ///   If it is set and WebGPU support is *not* detected, the instance will use wgpu-core
-    ///   to create adapters. Meaning that if the `webgl` feature is enabled, it is able to create
-    ///   a WebGL adapter.
-    ///
-    /// # Panics
-    ///
-    /// If no backend feature for the active target platform is enabled,
-    /// this method will panic, see [`Instance::enabled_backend_features()`].
-    </span><span class="attr">#[allow(clippy::allow_attributes, unreachable_code)]
-    </span><span class="kw">pub fn </span>new(_instance_desc: <span class="kw-2">&amp;</span>InstanceDescriptor) -&gt; <span class="self">Self </span>{
-        <span class="kw">if </span><span class="self">Self</span>::enabled_backend_features().is_empty() {
-            <span class="macro">panic!</span>(
-                <span class="string">"No wgpu backend feature that is implemented for the target platform was enabled. \
-                 See `wgpu::Instance::enabled_backend_features()` for more information."
-            </span>);
-        }
-
-        <span class="attr">#[cfg(webgpu)]
-        </span>{
-            <span class="kw">let </span>is_only_available_backend = !<span class="macro">cfg!</span>(wgpu_core);
-            <span class="kw">let </span>requested_webgpu = _instance_desc.backends.contains(Backends::BROWSER_WEBGPU);
-            <span class="kw">let </span>support_webgpu = <span class="kw">crate</span>::backend::get_browser_gpu_property()
-                .map(|maybe_gpu| maybe_gpu.is_some())
-                .unwrap_or(<span class="bool-val">false</span>);
-
-            <span class="kw">if </span>is_only_available_backend || (requested_webgpu &amp;&amp; support_webgpu) {
-                <span class="kw">return </span><span class="self">Self </span>{
-                    inner: <span class="kw">crate</span>::backend::ContextWebGpu::new(_instance_desc).into(),
-                };
-            }
-        }
-
-        <span class="attr">#[cfg(wgpu_core)]
-        </span>{
-            <span class="kw">return </span><span class="self">Self </span>{
-                inner: <span class="kw">crate</span>::backend::ContextWgpuCore::new(_instance_desc).into(),
-            };
-        }
-
-        <span class="macro">unreachable!</span>(
-            <span class="string">"Earlier check of `enabled_backend_features` should have prevented getting here!"
-        </span>);
-    }
-
-    <span class="doccomment">/// Create an new instance of wgpu from a wgpu-hal instance.
-    ///
-    /// # Arguments
-    ///
-    /// - `hal_instance` - wgpu-hal instance.
-    ///
-    /// # Safety
-    ///
-    /// Refer to the creation of wgpu-hal Instance for every backend.
-    </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>from_hal&lt;A: wgc::hal_api::HalApi&gt;(hal_instance: A::Instance) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            inner: <span class="kw">unsafe </span>{
-                <span class="kw">crate</span>::backend::ContextWgpuCore::from_hal_instance::&lt;A&gt;(hal_instance).into()
-            },
-        }
-    }
-
-    <span class="doccomment">/// Get the [`wgpu_hal`] instance from this `Instance`.
-    ///
-    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
-    /// and pass that struct to the to the `A` type parameter.
-    ///
-    /// Returns a guard that dereferences to the type of the hal backend
-    /// which implements [`A::Instance`].
-    ///
-    /// # Errors
-    ///
-    /// This method will return None if:
-    /// - The instance is not from the backend specified by `A`.
-    /// - The instance is from the `webgpu` or `custom` backend.
-    ///
-    /// # Safety
-    ///
-    /// - The returned resource must not be destroyed unless the guard
-    ///   is the last reference to it and it is not in use by the GPU.
-    ///   The guard and handle may be dropped at any time however.
-    /// - All the safety requirements of wgpu-hal must be upheld.
-    ///
-    /// [`A::Instance`]: hal::Api::Instance
-    </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
-        <span class="self">self</span>.inner
-            .as_core_opt()
-            .and_then(|ctx| <span class="kw">unsafe </span>{ ctx.instance_as_hal::&lt;A&gt;() })
-    }
-
-    <span class="doccomment">/// Create an new instance of wgpu from a wgpu-core instance.
-    ///
-    /// # Arguments
-    ///
-    /// - `core_instance` - wgpu-core instance.
-    ///
-    /// # Safety
-    ///
-    /// Refer to the creation of wgpu-core Instance.
-    </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>from_core(core_instance: wgc::instance::Instance) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            inner: <span class="kw">unsafe </span>{
-                <span class="kw">crate</span>::backend::ContextWgpuCore::from_core_instance(core_instance).into()
-            },
-        }
-    }
-
-    <span class="attr">#[cfg(custom)]
-    </span><span class="doccomment">/// Creates instance from custom context implementation
-    </span><span class="kw">pub fn </span>from_custom&lt;T: InstanceInterface&gt;(instance: T) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            inner: dispatch::DispatchInstance::Custom(backend::custom::DynContext::new(instance)),
-        }
-    }
-
-    <span class="attr">#[cfg(custom)]
-    </span><span class="doccomment">/// Returns custom implementation of Instance (if custom backend and is internally T)
-    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::InstanceInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
-        <span class="self">self</span>.inner.as_custom()
+    /// [WGSL language extensions]: https://www.w3.org/TR/webgpu/#gpuwgsllanguagefeatures
+    </span><span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
+    </span><span class="kw">pub fn </span>wgsl_language_features(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WgslLanguageFeatures {
+        <span class="self">self</span>.inner.wgsl_language_features()
     }
 
     <span class="doccomment">/// Retrieves all available [`Adapter`]s that match the given [`Backends`].
@@ -682,26 +611,6 @@
     ) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;Adapter, RequestAdapterError&gt;&gt; + WasmNotSend {
         <span class="kw">let </span>future = <span class="self">self</span>.inner.request_adapter(options);
         <span class="kw">async move </span>{ future.<span class="kw">await</span>.map(|adapter| Adapter { inner: adapter }) }
-    }
-
-    <span class="doccomment">/// Converts a wgpu-hal `ExposedAdapter` to a wgpu [`Adapter`].
-    ///
-    /// # Safety
-    ///
-    /// `hal_adapter` must be created from this instance internal handle.
-    </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>create_adapter_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        hal_adapter: hal::ExposedAdapter&lt;A&gt;,
-    ) -&gt; Adapter {
-        <span class="kw">let </span>core_instance = <span class="self">self</span>.inner.as_core();
-        <span class="kw">let </span>adapter = <span class="kw">unsafe </span>{ core_instance.create_adapter_from_hal(hal_adapter) };
-        <span class="kw">let </span>core = backend::wgpu_core::CoreAdapter {
-            context: core_instance.clone(),
-            id: adapter,
-        };
-
-        Adapter { inner: core.into() }
     }
 
     <span class="doccomment">/// Creates a new surface targeting a given window/canvas/surface/etc..
@@ -829,13 +738,136 @@
     </span><span class="kw">pub fn </span>generate_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;wgc::global::GlobalReport&gt; {
         <span class="self">self</span>.inner.as_core_opt().map(|ctx| ctx.generate_report())
     }
+}
 
-    <span class="doccomment">/// Returns set of supported WGSL language extensions supported by this instance.
+<span class="doccomment">/// Interop with wgpu-hal.
+</span><span class="attr">#[cfg(wgpu_core)]
+</span><span class="kw">impl </span>Instance {
+    <span class="doccomment">/// Create an new instance of wgpu from a wgpu-hal instance. This is often useful
+    /// when you need to do backend specific logic, or interop with an existing backend
+    /// instance.
     ///
-    /// &lt;https://www.w3.org/TR/webgpu/#gpuwgsllanguagefeatures&gt;
-    </span><span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
-    </span><span class="kw">pub fn </span>wgsl_language_features(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WgslLanguageFeatures {
-        <span class="self">self</span>.inner.wgsl_language_features()
+    /// # Types
+    ///
+    /// The type of `A::Instance` depends on the backend:
+    ///
+    </span><span class="attr">#[doc = <span class="macro">crate::hal_type_vulkan!</span>(<span class="string">"Instance"</span>)]
+    #[doc = <span class="macro">crate::hal_type_metal!</span>(<span class="string">"Instance"</span>)]
+    #[doc = <span class="macro">crate::hal_type_dx12!</span>(<span class="string">"Instance"</span>)]
+    #[doc = <span class="macro">crate::hal_type_gles!</span>(<span class="string">"Instance"</span>)]
+    </span><span class="doccomment">///
+    /// # Safety
+    ///
+    /// - The `hal_instance` must be a valid and usable instance of the backend specified by `A`.
+    /// - wgpu will act like it has complete ownership of this instance, and will destroy it
+    ///   when the last reference to the instance, internal or external, is dropped.
+    </span><span class="kw">pub unsafe fn </span>from_hal&lt;A: hal::Api&gt;(hal_instance: A::Instance) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: <span class="kw">unsafe </span>{
+                <span class="kw">crate</span>::backend::ContextWgpuCore::from_hal_instance::&lt;A&gt;(hal_instance).into()
+            },
+        }
+    }
+
+    <span class="doccomment">/// Get the [`wgpu_hal`] instance from this `Instance`.
+    ///
+    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+    /// and pass that struct to the to the `A` type parameter.
+    ///
+    /// Returns a guard that dereferences to the type of the hal backend
+    /// which implements [`A::Instance`].
+    ///
+    /// # Types
+    ///
+    </span><span class="attr">#[doc = <span class="macro">crate::hal_type_vulkan!</span>(<span class="string">"Instance"</span>)]
+    #[doc = <span class="macro">crate::hal_type_metal!</span>(<span class="string">"Instance"</span>)]
+    #[doc = <span class="macro">crate::hal_type_dx12!</span>(<span class="string">"Instance"</span>)]
+    #[doc = <span class="macro">crate::hal_type_gles!</span>(<span class="string">"Instance"</span>)]
+    </span><span class="doccomment">///
+    /// # Errors
+    ///
+    /// This method will return None if:
+    /// - The instance is not from the backend specified by `A`.
+    /// - The instance is from the `webgpu` or `custom` backend.
+    ///
+    /// # Safety
+    ///
+    /// - The returned resource must not be destroyed unless the guard
+    ///   is the last reference to it and it is not in use by the GPU.
+    ///   The guard and handle may be dropped at any time however.
+    /// - All the safety requirements of wgpu-hal must be upheld.
+    ///
+    /// [`A::Instance`]: hal::Api::Instance
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: hal::Api&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
+        <span class="self">self</span>.inner
+            .as_core_opt()
+            .and_then(|ctx| <span class="kw">unsafe </span>{ ctx.instance_as_hal::&lt;A&gt;() })
+    }
+
+    <span class="doccomment">/// Converts a wgpu-hal [`hal::ExposedAdapter`] to a wgpu [`Adapter`].
+    ///
+    /// # Types
+    ///
+    /// The type of `hal_adapter.adapter` depends on the backend:
+    ///
+    </span><span class="attr">#[doc = <span class="macro">crate::hal_type_vulkan!</span>(<span class="string">"Adapter"</span>)]
+    #[doc = <span class="macro">crate::hal_type_metal!</span>(<span class="string">"Adapter"</span>)]
+    #[doc = <span class="macro">crate::hal_type_dx12!</span>(<span class="string">"Adapter"</span>)]
+    #[doc = <span class="macro">crate::hal_type_gles!</span>(<span class="string">"Adapter"</span>)]
+    </span><span class="doccomment">///
+    /// # Safety
+    ///
+    /// `hal_adapter` must be created from this instance internal handle.
+    </span><span class="kw">pub unsafe fn </span>create_adapter_from_hal&lt;A: hal::Api&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        hal_adapter: hal::ExposedAdapter&lt;A&gt;,
+    ) -&gt; Adapter {
+        <span class="kw">let </span>core_instance = <span class="self">self</span>.inner.as_core();
+        <span class="kw">let </span>adapter = <span class="kw">unsafe </span>{ core_instance.create_adapter_from_hal(hal_adapter) };
+        <span class="kw">let </span>core = backend::wgpu_core::CoreAdapter {
+            context: core_instance.clone(),
+            id: adapter,
+        };
+
+        Adapter { inner: core.into() }
+    }
+}
+
+<span class="doccomment">/// Interop with wgpu-core.
+</span><span class="attr">#[cfg(wgpu_core)]
+</span><span class="kw">impl </span>Instance {
+    <span class="doccomment">/// Create an new instance of wgpu from a wgpu-core instance.
+    ///
+    /// # Arguments
+    ///
+    /// - `core_instance` - wgpu-core instance.
+    ///
+    /// # Safety
+    ///
+    /// Refer to the creation of wgpu-core Instance.
+    </span><span class="kw">pub unsafe fn </span>from_core(core_instance: wgc::instance::Instance) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: <span class="kw">unsafe </span>{
+                <span class="kw">crate</span>::backend::ContextWgpuCore::from_core_instance(core_instance).into()
+            },
+        }
+    }
+}
+
+<span class="doccomment">/// Interop with custom backends.
+</span><span class="attr">#[cfg(custom)]
+</span><span class="kw">impl </span>Instance {
+    <span class="doccomment">/// Creates instance from custom context implementation
+    </span><span class="kw">pub fn </span>from_custom&lt;T: InstanceInterface&gt;(instance: T) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: dispatch::DispatchInstance::Custom(backend::custom::DynContext::new(instance)),
+        }
+    }
+
+    <span class="attr">#[cfg(custom)]
+    </span><span class="doccomment">/// Returns custom implementation of Instance (if custom backend and is internally T)
+    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::InstanceInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+        <span class="self">self</span>.inner.as_custom()
     }
 }
 </code></pre></div></section></main></body></html>
