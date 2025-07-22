@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["DeferredDestroy"],"struct":["CommandIndices","Device"]};
+window.SIDEBAR_ITEMS = {"enum":["DeferredDestroy"],"struct":["CommandIndices","Device","ExternalTextureParams"]};
