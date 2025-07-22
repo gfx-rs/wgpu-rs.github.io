@@ -3,7 +3,7 @@
 <a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span><span class="kw">crate</span>::binding_model::{BindError, BindGroup, PushConstantUploadError};
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::command::bind::Binder;
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span><span class="kw">crate</span>::command::memory_init::{CommandBufferTextureMemoryActions, SurfacesInDiscardState};
-<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span><span class="kw">crate</span>::command::{CommandBuffer, QueryResetMap, QueryUseError};
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span><span class="kw">crate</span>::command::{CommandEncoder, QueryResetMap, QueryUseError};
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::device::{Device, DeviceError, MissingFeatures};
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span><span class="kw">crate</span>::pipeline::LateSizedBufferGroup;
@@ -52,15 +52,15 @@
 <a href=#52 id=52 data-nosnippet>52</a>    }
 <a href=#53 id=53 data-nosnippet>53</a>}
 <a href=#54 id=54 data-nosnippet>54</a>
-<a href=#55 id=55 data-nosnippet>55</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BaseState&lt;<span class="lifetime">'scope</span>, <span class="lifetime">'snatch_guard</span>, <span class="lifetime">'cmd_buf</span>, <span class="lifetime">'raw_encoder</span>&gt; {
-<a href=#56 id=56 data-nosnippet>56</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) device: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span>Arc&lt;Device&gt;,
+<a href=#55 id=55 data-nosnippet>55</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BaseState&lt;<span class="lifetime">'scope</span>, <span class="lifetime">'snatch_guard</span>, <span class="lifetime">'cmd_enc</span>, <span class="lifetime">'raw_encoder</span>&gt; {
+<a href=#56 id=56 data-nosnippet>56</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) device: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_enc </span>Arc&lt;Device&gt;,
 <a href=#57 id=57 data-nosnippet>57</a>
 <a href=#58 id=58 data-nosnippet>58</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) raw_encoder: <span class="kw-2">&amp;</span><span class="lifetime">'raw_encoder </span><span class="kw-2">mut </span><span class="kw">dyn </span>hal::DynCommandEncoder,
 <a href=#59 id=59 data-nosnippet>59</a>
-<a href=#60 id=60 data-nosnippet>60</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) tracker: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>Tracker,
-<a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) buffer_memory_init_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>Vec&lt;BufferInitTrackerAction&gt;,
-<a href=#62 id=62 data-nosnippet>62</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) texture_memory_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>CommandBufferTextureMemoryActions,
-<a href=#63 id=63 data-nosnippet>63</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) as_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>Vec&lt;AsAction&gt;,
+<a href=#60 id=60 data-nosnippet>60</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) tracker: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_enc </span><span class="kw-2">mut </span>Tracker,
+<a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) buffer_memory_init_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_enc </span><span class="kw-2">mut </span>Vec&lt;BufferInitTrackerAction&gt;,
+<a href=#62 id=62 data-nosnippet>62</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) texture_memory_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_enc </span><span class="kw-2">mut </span>CommandBufferTextureMemoryActions,
+<a href=#63 id=63 data-nosnippet>63</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) as_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_enc </span><span class="kw-2">mut </span>Vec&lt;AsAction&gt;,
 <a href=#64 id=64 data-nosnippet>64</a>
 <a href=#65 id=65 data-nosnippet>65</a>    <span class="doccomment">/// Immediate texture inits required because of prior discards. Need to
 <a href=#66 id=66 data-nosnippet>66</a>    /// be inserted before texture reads.
@@ -82,7 +82,7 @@
 <a href=#82 id=82 data-nosnippet>82</a>
 <a href=#83 id=83 data-nosnippet>83</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_bind_group&lt;E&gt;(
 <a href=#84 id=84 data-nosnippet>84</a>    state: <span class="kw-2">&amp;mut </span>BaseState,
-<a href=#85 id=85 data-nosnippet>85</a>    cmd_buf: <span class="kw-2">&amp;</span>CommandBuffer,
+<a href=#85 id=85 data-nosnippet>85</a>    cmd_enc: <span class="kw-2">&amp;</span>CommandEncoder,
 <a href=#86 id=86 data-nosnippet>86</a>    dynamic_offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
 <a href=#87 id=87 data-nosnippet>87</a>    index: u32,
 <a href=#88 id=88 data-nosnippet>88</a>    num_dynamic_offsets: usize,
@@ -129,7 +129,7 @@
 <a href=#129 id=129 data-nosnippet>129</a>    <span class="kw">let </span>bind_group = bind_group.unwrap();
 <a href=#130 id=130 data-nosnippet>130</a>    <span class="kw">let </span>bind_group = state.tracker.bind_groups.insert_single(bind_group);
 <a href=#131 id=131 data-nosnippet>131</a>
-<a href=#132 id=132 data-nosnippet>132</a>    bind_group.same_device_as(cmd_buf)<span class="question-mark">?</span>;
+<a href=#132 id=132 data-nosnippet>132</a>    bind_group.same_device_as(cmd_enc)<span class="question-mark">?</span>;
 <a href=#133 id=133 data-nosnippet>133</a>
 <a href=#134 id=134 data-nosnippet>134</a>    bind_group.validate_dynamic_bindings(index, <span class="kw-2">&amp;</span>state.temp_offsets)<span class="question-mark">?</span>;
 <a href=#135 id=135 data-nosnippet>135</a>
@@ -287,7 +287,7 @@
 <a href=#287 id=287 data-nosnippet>287</a>
 <a href=#288 id=288 data-nosnippet>288</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write_timestamp&lt;E&gt;(
 <a href=#289 id=289 data-nosnippet>289</a>    state: <span class="kw-2">&amp;mut </span>BaseState,
-<a href=#290 id=290 data-nosnippet>290</a>    cmd_buf: <span class="kw-2">&amp;</span>CommandBuffer,
+<a href=#290 id=290 data-nosnippet>290</a>    cmd_enc: <span class="kw-2">&amp;</span>CommandEncoder,
 <a href=#291 id=291 data-nosnippet>291</a>    pending_query_resets: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>QueryResetMap&gt;,
 <a href=#292 id=292 data-nosnippet>292</a>    query_set: Arc&lt;QuerySet&gt;,
 <a href=#293 id=293 data-nosnippet>293</a>    query_index: u32,
@@ -300,7 +300,7 @@
 <a href=#300 id=300 data-nosnippet>300</a>        query_set.error_ident()
 <a href=#301 id=301 data-nosnippet>301</a>    );
 <a href=#302 id=302 data-nosnippet>302</a>
-<a href=#303 id=303 data-nosnippet>303</a>    query_set.same_device_as(cmd_buf)<span class="question-mark">?</span>;
+<a href=#303 id=303 data-nosnippet>303</a>    query_set.same_device_as(cmd_enc)<span class="question-mark">?</span>;
 <a href=#304 id=304 data-nosnippet>304</a>
 <a href=#305 id=305 data-nosnippet>305</a>    state
 <a href=#306 id=306 data-nosnippet>306</a>        .device

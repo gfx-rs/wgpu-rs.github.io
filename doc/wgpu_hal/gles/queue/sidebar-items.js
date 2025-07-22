@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["DEBUG_ID"],"fn":["extract_marker","get_2d_target","get_z_offset"]};
+window.SIDEBAR_ITEMS = {"constant":["DEBUG_ID"],"fn":["extract_marker","get_2d_target","get_z_offset","to_debug_str"]};

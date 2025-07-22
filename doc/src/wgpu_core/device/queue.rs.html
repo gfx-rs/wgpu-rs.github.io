@@ -20,7 +20,7 @@
 <a href=#20 id=20 data-nosnippet>20</a>    api_log,
 <a href=#21 id=21 data-nosnippet>21</a>    command::{
 <a href=#22 id=22 data-nosnippet>22</a>        extract_texture_selector, validate_linear_texture_data, validate_texture_copy_range,
-<a href=#23 id=23 data-nosnippet>23</a>        ClearError, CommandAllocator, CommandBuffer, CommandEncoderError, CopySide,
+<a href=#23 id=23 data-nosnippet>23</a>        ClearError, CommandAllocator, CommandBuffer, CommandEncoder, CommandEncoderError, CopySide,
 <a href=#24 id=24 data-nosnippet>24</a>        TexelCopyTextureInfo, TransferError,
 <a href=#25 id=25 data-nosnippet>25</a>    },
 <a href=#26 id=26 data-nosnippet>26</a>    conv,
@@ -278,7 +278,7 @@
 <a href=#278 id=278 data-nosnippet>278</a>/// [`CommandBuffer`]: hal::Api::CommandBuffer
 <a href=#279 id=279 data-nosnippet>279</a>/// [`wgpu_hal::CommandEncoder`]: hal::CommandEncoder
 <a href=#280 id=280 data-nosnippet>280</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>EncoderInFlight {
-<a href=#281 id=281 data-nosnippet>281</a>    inner: <span class="kw">crate</span>::command::CommandEncoder,
+<a href=#281 id=281 data-nosnippet>281</a>    inner: <span class="kw">crate</span>::command::InnerCommandEncoder,
 <a href=#282 id=282 data-nosnippet>282</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) trackers: Tracker,
 <a href=#283 id=283 data-nosnippet>283</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) temp_resources: Vec&lt;TempResource&gt;,
 <a href=#284 id=284 data-nosnippet>284</a>    <span class="doccomment">/// We only need to keep these resources alive.
@@ -394,12 +394,12 @@
 <a href=#394 id=394 data-nosnippet>394</a>                .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
 <a href=#395 id=395 data-nosnippet>395</a>
 <a href=#396 id=396 data-nosnippet>396</a>            <span class="kw">let </span>encoder = EncoderInFlight {
-<a href=#397 id=397 data-nosnippet>397</a>                inner: <span class="kw">crate</span>::command::CommandEncoder {
+<a href=#397 id=397 data-nosnippet>397</a>                inner: <span class="kw">crate</span>::command::InnerCommandEncoder {
 <a href=#398 id=398 data-nosnippet>398</a>                    raw: ManuallyDrop::new(mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.command_encoder, new_encoder)),
 <a href=#399 id=399 data-nosnippet>399</a>                    list: <span class="macro">vec!</span>[cmd_buf],
 <a href=#400 id=400 data-nosnippet>400</a>                    device: device.clone(),
 <a href=#401 id=401 data-nosnippet>401</a>                    is_open: <span class="bool-val">false</span>,
-<a href=#402 id=402 data-nosnippet>402</a>                    hal_label: <span class="prelude-val">None</span>,
+<a href=#402 id=402 data-nosnippet>402</a>                    label: <span class="string">"(wgpu internal) PendingWrites command encoder"</span>.into(),
 <a href=#403 id=403 data-nosnippet>403</a>                },
 <a href=#404 id=404 data-nosnippet>404</a>                trackers: Tracker::new(),
 <a href=#405 id=405 data-nosnippet>405</a>                temp_resources: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_resources),
@@ -1237,7 +1237,7 @@
 <a href=#1237 id=1237 data-nosnippet>1237</a>
 <a href=#1238 id=1238 data-nosnippet>1238</a>                        <span class="comment">//Note: stateless trackers are not merged:
 <a href=#1239 id=1239 data-nosnippet>1239</a>                        // device already knows these resources exist.
-<a href=#1240 id=1240 data-nosnippet>1240</a>                        </span>CommandBuffer::insert_barriers_from_device_tracker(
+<a href=#1240 id=1240 data-nosnippet>1240</a>                        </span>CommandEncoder::insert_barriers_from_device_tracker(
 <a href=#1241 id=1241 data-nosnippet>1241</a>                            baked.encoder.raw.as_mut(),
 <a href=#1242 id=1242 data-nosnippet>1242</a>                            <span class="kw-2">&amp;mut </span>trackers,
 <a href=#1243 id=1243 data-nosnippet>1243</a>                            <span class="kw-2">&amp;</span>baked.trackers,
