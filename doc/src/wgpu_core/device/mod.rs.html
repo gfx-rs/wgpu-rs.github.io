@@ -383,121 +383,133 @@
 <a href=#383 id=383 data-nosnippet>383</a>    }
 <a href=#384 id=384 data-nosnippet>384</a>}
 <a href=#385 id=385 data-nosnippet>385</a>
-<a href=#386 id=386 data-nosnippet>386</a><span class="doccomment">/// Create a validator with the given validation flags.
-<a href=#387 id=387 data-nosnippet>387</a></span><span class="kw">pub fn </span>create_validator(
-<a href=#388 id=388 data-nosnippet>388</a>    features: wgt::Features,
-<a href=#389 id=389 data-nosnippet>389</a>    downlevel: wgt::DownlevelFlags,
-<a href=#390 id=390 data-nosnippet>390</a>    flags: naga::valid::ValidationFlags,
-<a href=#391 id=391 data-nosnippet>391</a>) -&gt; naga::valid::Validator {
-<a href=#392 id=392 data-nosnippet>392</a>    <span class="kw">use </span>naga::valid::Capabilities <span class="kw">as </span>Caps;
-<a href=#393 id=393 data-nosnippet>393</a>    <span class="kw">let </span><span class="kw-2">mut </span>caps = Caps::empty();
-<a href=#394 id=394 data-nosnippet>394</a>    caps.set(
-<a href=#395 id=395 data-nosnippet>395</a>        Caps::PUSH_CONSTANT,
-<a href=#396 id=396 data-nosnippet>396</a>        features.contains(wgt::Features::PUSH_CONSTANTS),
-<a href=#397 id=397 data-nosnippet>397</a>    );
-<a href=#398 id=398 data-nosnippet>398</a>    caps.set(Caps::FLOAT64, features.contains(wgt::Features::SHADER_F64));
-<a href=#399 id=399 data-nosnippet>399</a>    caps.set(
-<a href=#400 id=400 data-nosnippet>400</a>        Caps::SHADER_FLOAT16,
-<a href=#401 id=401 data-nosnippet>401</a>        features.contains(wgt::Features::SHADER_F16),
-<a href=#402 id=402 data-nosnippet>402</a>    );
-<a href=#403 id=403 data-nosnippet>403</a>    caps.set(
-<a href=#404 id=404 data-nosnippet>404</a>        Caps::PRIMITIVE_INDEX,
-<a href=#405 id=405 data-nosnippet>405</a>        features.contains(wgt::Features::SHADER_PRIMITIVE_INDEX),
-<a href=#406 id=406 data-nosnippet>406</a>    );
-<a href=#407 id=407 data-nosnippet>407</a>    caps.set(
-<a href=#408 id=408 data-nosnippet>408</a>        Caps::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
-<a href=#409 id=409 data-nosnippet>409</a>        features
-<a href=#410 id=410 data-nosnippet>410</a>            .contains(wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING),
-<a href=#411 id=411 data-nosnippet>411</a>    );
-<a href=#412 id=412 data-nosnippet>412</a>    caps.set(
-<a href=#413 id=413 data-nosnippet>413</a>        Caps::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
-<a href=#414 id=414 data-nosnippet>414</a>        features.contains(wgt::Features::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING),
-<a href=#415 id=415 data-nosnippet>415</a>    );
-<a href=#416 id=416 data-nosnippet>416</a>    caps.set(
-<a href=#417 id=417 data-nosnippet>417</a>        Caps::UNIFORM_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
-<a href=#418 id=418 data-nosnippet>418</a>        features.contains(wgt::Features::UNIFORM_BUFFER_BINDING_ARRAYS),
-<a href=#419 id=419 data-nosnippet>419</a>    );
-<a href=#420 id=420 data-nosnippet>420</a>    <span class="comment">// TODO: This needs a proper wgpu feature
-<a href=#421 id=421 data-nosnippet>421</a>    </span>caps.set(
-<a href=#422 id=422 data-nosnippet>422</a>        Caps::SAMPLER_NON_UNIFORM_INDEXING,
-<a href=#423 id=423 data-nosnippet>423</a>        features
-<a href=#424 id=424 data-nosnippet>424</a>            .contains(wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING),
-<a href=#425 id=425 data-nosnippet>425</a>    );
-<a href=#426 id=426 data-nosnippet>426</a>    caps.set(
-<a href=#427 id=427 data-nosnippet>427</a>        Caps::STORAGE_TEXTURE_16BIT_NORM_FORMATS,
-<a href=#428 id=428 data-nosnippet>428</a>        features.contains(wgt::Features::TEXTURE_FORMAT_16BIT_NORM),
-<a href=#429 id=429 data-nosnippet>429</a>    );
-<a href=#430 id=430 data-nosnippet>430</a>    caps.set(Caps::MULTIVIEW, features.contains(wgt::Features::MULTIVIEW));
-<a href=#431 id=431 data-nosnippet>431</a>    caps.set(
-<a href=#432 id=432 data-nosnippet>432</a>        Caps::EARLY_DEPTH_TEST,
-<a href=#433 id=433 data-nosnippet>433</a>        features.contains(wgt::Features::SHADER_EARLY_DEPTH_TEST),
-<a href=#434 id=434 data-nosnippet>434</a>    );
-<a href=#435 id=435 data-nosnippet>435</a>    caps.set(
-<a href=#436 id=436 data-nosnippet>436</a>        Caps::SHADER_INT64,
-<a href=#437 id=437 data-nosnippet>437</a>        features.contains(wgt::Features::SHADER_INT64),
-<a href=#438 id=438 data-nosnippet>438</a>    );
-<a href=#439 id=439 data-nosnippet>439</a>    caps.set(
-<a href=#440 id=440 data-nosnippet>440</a>        Caps::SHADER_INT64_ATOMIC_MIN_MAX,
-<a href=#441 id=441 data-nosnippet>441</a>        features.intersects(
-<a href=#442 id=442 data-nosnippet>442</a>            wgt::Features::SHADER_INT64_ATOMIC_MIN_MAX | wgt::Features::SHADER_INT64_ATOMIC_ALL_OPS,
-<a href=#443 id=443 data-nosnippet>443</a>        ),
-<a href=#444 id=444 data-nosnippet>444</a>    );
-<a href=#445 id=445 data-nosnippet>445</a>    caps.set(
-<a href=#446 id=446 data-nosnippet>446</a>        Caps::SHADER_INT64_ATOMIC_ALL_OPS,
-<a href=#447 id=447 data-nosnippet>447</a>        features.contains(wgt::Features::SHADER_INT64_ATOMIC_ALL_OPS),
-<a href=#448 id=448 data-nosnippet>448</a>    );
-<a href=#449 id=449 data-nosnippet>449</a>    caps.set(
-<a href=#450 id=450 data-nosnippet>450</a>        Caps::TEXTURE_ATOMIC,
-<a href=#451 id=451 data-nosnippet>451</a>        features.contains(wgt::Features::TEXTURE_ATOMIC),
-<a href=#452 id=452 data-nosnippet>452</a>    );
-<a href=#453 id=453 data-nosnippet>453</a>    caps.set(
-<a href=#454 id=454 data-nosnippet>454</a>        Caps::TEXTURE_INT64_ATOMIC,
-<a href=#455 id=455 data-nosnippet>455</a>        features.contains(wgt::Features::TEXTURE_INT64_ATOMIC),
+<a href=#386 id=386 data-nosnippet>386</a><span class="doccomment">/// Create a validator for Naga [`Module`]s.
+<a href=#387 id=387 data-nosnippet>387</a>///
+<a href=#388 id=388 data-nosnippet>388</a>/// Create a Naga [`Validator`] that ensures that each [`naga::Module`]
+<a href=#389 id=389 data-nosnippet>389</a>/// presented to it is valid, and uses no features not included in
+<a href=#390 id=390 data-nosnippet>390</a>/// `features` and `downlevel`.
+<a href=#391 id=391 data-nosnippet>391</a>///
+<a href=#392 id=392 data-nosnippet>392</a>/// The validator can only catch invalid modules and feature misuse
+<a href=#393 id=393 data-nosnippet>393</a>/// reliably when the `flags` argument includes all the flags in
+<a href=#394 id=394 data-nosnippet>394</a>/// [`ValidationFlags::default()`].
+<a href=#395 id=395 data-nosnippet>395</a>///
+<a href=#396 id=396 data-nosnippet>396</a>/// [`Validator`]: naga::valid::Validator
+<a href=#397 id=397 data-nosnippet>397</a>/// [`Module`]: naga::Module
+<a href=#398 id=398 data-nosnippet>398</a>/// [`ValidationFlags::default()`]: naga::valid::ValidationFlags::default
+<a href=#399 id=399 data-nosnippet>399</a></span><span class="kw">pub fn </span>create_validator(
+<a href=#400 id=400 data-nosnippet>400</a>    features: wgt::Features,
+<a href=#401 id=401 data-nosnippet>401</a>    downlevel: wgt::DownlevelFlags,
+<a href=#402 id=402 data-nosnippet>402</a>    flags: naga::valid::ValidationFlags,
+<a href=#403 id=403 data-nosnippet>403</a>) -&gt; naga::valid::Validator {
+<a href=#404 id=404 data-nosnippet>404</a>    <span class="kw">use </span>naga::valid::Capabilities <span class="kw">as </span>Caps;
+<a href=#405 id=405 data-nosnippet>405</a>    <span class="kw">let </span><span class="kw-2">mut </span>caps = Caps::empty();
+<a href=#406 id=406 data-nosnippet>406</a>    caps.set(
+<a href=#407 id=407 data-nosnippet>407</a>        Caps::PUSH_CONSTANT,
+<a href=#408 id=408 data-nosnippet>408</a>        features.contains(wgt::Features::PUSH_CONSTANTS),
+<a href=#409 id=409 data-nosnippet>409</a>    );
+<a href=#410 id=410 data-nosnippet>410</a>    caps.set(Caps::FLOAT64, features.contains(wgt::Features::SHADER_F64));
+<a href=#411 id=411 data-nosnippet>411</a>    caps.set(
+<a href=#412 id=412 data-nosnippet>412</a>        Caps::SHADER_FLOAT16,
+<a href=#413 id=413 data-nosnippet>413</a>        features.contains(wgt::Features::SHADER_F16),
+<a href=#414 id=414 data-nosnippet>414</a>    );
+<a href=#415 id=415 data-nosnippet>415</a>    caps.set(
+<a href=#416 id=416 data-nosnippet>416</a>        Caps::PRIMITIVE_INDEX,
+<a href=#417 id=417 data-nosnippet>417</a>        features.contains(wgt::Features::SHADER_PRIMITIVE_INDEX),
+<a href=#418 id=418 data-nosnippet>418</a>    );
+<a href=#419 id=419 data-nosnippet>419</a>    caps.set(
+<a href=#420 id=420 data-nosnippet>420</a>        Caps::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
+<a href=#421 id=421 data-nosnippet>421</a>        features
+<a href=#422 id=422 data-nosnippet>422</a>            .contains(wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING),
+<a href=#423 id=423 data-nosnippet>423</a>    );
+<a href=#424 id=424 data-nosnippet>424</a>    caps.set(
+<a href=#425 id=425 data-nosnippet>425</a>        Caps::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
+<a href=#426 id=426 data-nosnippet>426</a>        features.contains(wgt::Features::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING),
+<a href=#427 id=427 data-nosnippet>427</a>    );
+<a href=#428 id=428 data-nosnippet>428</a>    caps.set(
+<a href=#429 id=429 data-nosnippet>429</a>        Caps::UNIFORM_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
+<a href=#430 id=430 data-nosnippet>430</a>        features.contains(wgt::Features::UNIFORM_BUFFER_BINDING_ARRAYS),
+<a href=#431 id=431 data-nosnippet>431</a>    );
+<a href=#432 id=432 data-nosnippet>432</a>    <span class="comment">// TODO: This needs a proper wgpu feature
+<a href=#433 id=433 data-nosnippet>433</a>    </span>caps.set(
+<a href=#434 id=434 data-nosnippet>434</a>        Caps::SAMPLER_NON_UNIFORM_INDEXING,
+<a href=#435 id=435 data-nosnippet>435</a>        features
+<a href=#436 id=436 data-nosnippet>436</a>            .contains(wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING),
+<a href=#437 id=437 data-nosnippet>437</a>    );
+<a href=#438 id=438 data-nosnippet>438</a>    caps.set(
+<a href=#439 id=439 data-nosnippet>439</a>        Caps::STORAGE_TEXTURE_16BIT_NORM_FORMATS,
+<a href=#440 id=440 data-nosnippet>440</a>        features.contains(wgt::Features::TEXTURE_FORMAT_16BIT_NORM),
+<a href=#441 id=441 data-nosnippet>441</a>    );
+<a href=#442 id=442 data-nosnippet>442</a>    caps.set(Caps::MULTIVIEW, features.contains(wgt::Features::MULTIVIEW));
+<a href=#443 id=443 data-nosnippet>443</a>    caps.set(
+<a href=#444 id=444 data-nosnippet>444</a>        Caps::EARLY_DEPTH_TEST,
+<a href=#445 id=445 data-nosnippet>445</a>        features.contains(wgt::Features::SHADER_EARLY_DEPTH_TEST),
+<a href=#446 id=446 data-nosnippet>446</a>    );
+<a href=#447 id=447 data-nosnippet>447</a>    caps.set(
+<a href=#448 id=448 data-nosnippet>448</a>        Caps::SHADER_INT64,
+<a href=#449 id=449 data-nosnippet>449</a>        features.contains(wgt::Features::SHADER_INT64),
+<a href=#450 id=450 data-nosnippet>450</a>    );
+<a href=#451 id=451 data-nosnippet>451</a>    caps.set(
+<a href=#452 id=452 data-nosnippet>452</a>        Caps::SHADER_INT64_ATOMIC_MIN_MAX,
+<a href=#453 id=453 data-nosnippet>453</a>        features.intersects(
+<a href=#454 id=454 data-nosnippet>454</a>            wgt::Features::SHADER_INT64_ATOMIC_MIN_MAX | wgt::Features::SHADER_INT64_ATOMIC_ALL_OPS,
+<a href=#455 id=455 data-nosnippet>455</a>        ),
 <a href=#456 id=456 data-nosnippet>456</a>    );
 <a href=#457 id=457 data-nosnippet>457</a>    caps.set(
-<a href=#458 id=458 data-nosnippet>458</a>        Caps::SHADER_FLOAT32_ATOMIC,
-<a href=#459 id=459 data-nosnippet>459</a>        features.contains(wgt::Features::SHADER_FLOAT32_ATOMIC),
+<a href=#458 id=458 data-nosnippet>458</a>        Caps::SHADER_INT64_ATOMIC_ALL_OPS,
+<a href=#459 id=459 data-nosnippet>459</a>        features.contains(wgt::Features::SHADER_INT64_ATOMIC_ALL_OPS),
 <a href=#460 id=460 data-nosnippet>460</a>    );
 <a href=#461 id=461 data-nosnippet>461</a>    caps.set(
-<a href=#462 id=462 data-nosnippet>462</a>        Caps::MULTISAMPLED_SHADING,
-<a href=#463 id=463 data-nosnippet>463</a>        downlevel.contains(wgt::DownlevelFlags::MULTISAMPLED_SHADING),
+<a href=#462 id=462 data-nosnippet>462</a>        Caps::TEXTURE_ATOMIC,
+<a href=#463 id=463 data-nosnippet>463</a>        features.contains(wgt::Features::TEXTURE_ATOMIC),
 <a href=#464 id=464 data-nosnippet>464</a>    );
 <a href=#465 id=465 data-nosnippet>465</a>    caps.set(
-<a href=#466 id=466 data-nosnippet>466</a>        Caps::DUAL_SOURCE_BLENDING,
-<a href=#467 id=467 data-nosnippet>467</a>        features.contains(wgt::Features::DUAL_SOURCE_BLENDING),
+<a href=#466 id=466 data-nosnippet>466</a>        Caps::TEXTURE_INT64_ATOMIC,
+<a href=#467 id=467 data-nosnippet>467</a>        features.contains(wgt::Features::TEXTURE_INT64_ATOMIC),
 <a href=#468 id=468 data-nosnippet>468</a>    );
 <a href=#469 id=469 data-nosnippet>469</a>    caps.set(
-<a href=#470 id=470 data-nosnippet>470</a>        Caps::CLIP_DISTANCE,
-<a href=#471 id=471 data-nosnippet>471</a>        features.contains(wgt::Features::CLIP_DISTANCES),
+<a href=#470 id=470 data-nosnippet>470</a>        Caps::SHADER_FLOAT32_ATOMIC,
+<a href=#471 id=471 data-nosnippet>471</a>        features.contains(wgt::Features::SHADER_FLOAT32_ATOMIC),
 <a href=#472 id=472 data-nosnippet>472</a>    );
 <a href=#473 id=473 data-nosnippet>473</a>    caps.set(
-<a href=#474 id=474 data-nosnippet>474</a>        Caps::CUBE_ARRAY_TEXTURES,
-<a href=#475 id=475 data-nosnippet>475</a>        downlevel.contains(wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES),
+<a href=#474 id=474 data-nosnippet>474</a>        Caps::MULTISAMPLED_SHADING,
+<a href=#475 id=475 data-nosnippet>475</a>        downlevel.contains(wgt::DownlevelFlags::MULTISAMPLED_SHADING),
 <a href=#476 id=476 data-nosnippet>476</a>    );
 <a href=#477 id=477 data-nosnippet>477</a>    caps.set(
-<a href=#478 id=478 data-nosnippet>478</a>        Caps::SUBGROUP,
-<a href=#479 id=479 data-nosnippet>479</a>        features.intersects(wgt::Features::SUBGROUP | wgt::Features::SUBGROUP_VERTEX),
+<a href=#478 id=478 data-nosnippet>478</a>        Caps::DUAL_SOURCE_BLENDING,
+<a href=#479 id=479 data-nosnippet>479</a>        features.contains(wgt::Features::DUAL_SOURCE_BLENDING),
 <a href=#480 id=480 data-nosnippet>480</a>    );
 <a href=#481 id=481 data-nosnippet>481</a>    caps.set(
-<a href=#482 id=482 data-nosnippet>482</a>        Caps::SUBGROUP_BARRIER,
-<a href=#483 id=483 data-nosnippet>483</a>        features.intersects(wgt::Features::SUBGROUP_BARRIER),
+<a href=#482 id=482 data-nosnippet>482</a>        Caps::CLIP_DISTANCE,
+<a href=#483 id=483 data-nosnippet>483</a>        features.contains(wgt::Features::CLIP_DISTANCES),
 <a href=#484 id=484 data-nosnippet>484</a>    );
 <a href=#485 id=485 data-nosnippet>485</a>    caps.set(
-<a href=#486 id=486 data-nosnippet>486</a>        Caps::RAY_QUERY,
-<a href=#487 id=487 data-nosnippet>487</a>        features.intersects(wgt::Features::EXPERIMENTAL_RAY_QUERY),
+<a href=#486 id=486 data-nosnippet>486</a>        Caps::CUBE_ARRAY_TEXTURES,
+<a href=#487 id=487 data-nosnippet>487</a>        downlevel.contains(wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES),
 <a href=#488 id=488 data-nosnippet>488</a>    );
 <a href=#489 id=489 data-nosnippet>489</a>    caps.set(
-<a href=#490 id=490 data-nosnippet>490</a>        Caps::SUBGROUP_VERTEX_STAGE,
-<a href=#491 id=491 data-nosnippet>491</a>        features.contains(wgt::Features::SUBGROUP_VERTEX),
+<a href=#490 id=490 data-nosnippet>490</a>        Caps::SUBGROUP,
+<a href=#491 id=491 data-nosnippet>491</a>        features.intersects(wgt::Features::SUBGROUP | wgt::Features::SUBGROUP_VERTEX),
 <a href=#492 id=492 data-nosnippet>492</a>    );
 <a href=#493 id=493 data-nosnippet>493</a>    caps.set(
-<a href=#494 id=494 data-nosnippet>494</a>        Caps::RAY_HIT_VERTEX_POSITION,
-<a href=#495 id=495 data-nosnippet>495</a>        features.intersects(wgt::Features::EXPERIMENTAL_RAY_HIT_VERTEX_RETURN),
+<a href=#494 id=494 data-nosnippet>494</a>        Caps::SUBGROUP_BARRIER,
+<a href=#495 id=495 data-nosnippet>495</a>        features.intersects(wgt::Features::SUBGROUP_BARRIER),
 <a href=#496 id=496 data-nosnippet>496</a>    );
 <a href=#497 id=497 data-nosnippet>497</a>    caps.set(
-<a href=#498 id=498 data-nosnippet>498</a>        Caps::TEXTURE_EXTERNAL,
-<a href=#499 id=499 data-nosnippet>499</a>        features.intersects(wgt::Features::EXTERNAL_TEXTURE),
+<a href=#498 id=498 data-nosnippet>498</a>        Caps::RAY_QUERY,
+<a href=#499 id=499 data-nosnippet>499</a>        features.intersects(wgt::Features::EXPERIMENTAL_RAY_QUERY),
 <a href=#500 id=500 data-nosnippet>500</a>    );
-<a href=#501 id=501 data-nosnippet>501</a>
-<a href=#502 id=502 data-nosnippet>502</a>    naga::valid::Validator::new(flags, caps)
-<a href=#503 id=503 data-nosnippet>503</a>}</code></pre></div></section></main></body></html>
+<a href=#501 id=501 data-nosnippet>501</a>    caps.set(
+<a href=#502 id=502 data-nosnippet>502</a>        Caps::SUBGROUP_VERTEX_STAGE,
+<a href=#503 id=503 data-nosnippet>503</a>        features.contains(wgt::Features::SUBGROUP_VERTEX),
+<a href=#504 id=504 data-nosnippet>504</a>    );
+<a href=#505 id=505 data-nosnippet>505</a>    caps.set(
+<a href=#506 id=506 data-nosnippet>506</a>        Caps::RAY_HIT_VERTEX_POSITION,
+<a href=#507 id=507 data-nosnippet>507</a>        features.intersects(wgt::Features::EXPERIMENTAL_RAY_HIT_VERTEX_RETURN),
+<a href=#508 id=508 data-nosnippet>508</a>    );
+<a href=#509 id=509 data-nosnippet>509</a>    caps.set(
+<a href=#510 id=510 data-nosnippet>510</a>        Caps::TEXTURE_EXTERNAL,
+<a href=#511 id=511 data-nosnippet>511</a>        features.intersects(wgt::Features::EXTERNAL_TEXTURE),
+<a href=#512 id=512 data-nosnippet>512</a>    );
+<a href=#513 id=513 data-nosnippet>513</a>
+<a href=#514 id=514 data-nosnippet>514</a>    naga::valid::Validator::new(flags, caps)
+<a href=#515 id=515 data-nosnippet>515</a>}</code></pre></div></section></main></body></html>
