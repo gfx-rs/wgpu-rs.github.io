@@ -1442,79 +1442,91 @@
 <a href=#1442 id=1442 data-nosnippet>1442</a>    MultiDrawIndirectCount,
 <a href=#1443 id=1443 data-nosnippet>1443</a>}
 <a href=#1444 id=1444 data-nosnippet>1444</a>
-<a href=#1445 id=1445 data-nosnippet>1445</a><span class="doccomment">/// A command that can be recorded in a pass or bundle.
-<a href=#1446 id=1446 data-nosnippet>1446</a>///
-<a href=#1447 id=1447 data-nosnippet>1447</a>/// This is used to provide context for errors during command recording.
-<a href=#1448 id=1448 data-nosnippet>1448</a>/// [`MapPassErr`] is used as a helper to attach a `PassErrorScope` to
-<a href=#1449 id=1449 data-nosnippet>1449</a>/// an error.
-<a href=#1450 id=1450 data-nosnippet>1450</a>///
-<a href=#1451 id=1451 data-nosnippet>1451</a>/// The [`PassErrorScope::Bundle`] and [`PassErrorScope::Pass`] variants
-<a href=#1452 id=1452 data-nosnippet>1452</a>/// are used when the error occurs during the opening or closing of the
-<a href=#1453 id=1453 data-nosnippet>1453</a>/// pass or bundle.
-<a href=#1454 id=1454 data-nosnippet>1454</a></span><span class="attr">#[derive(Clone, Copy, Debug, Error)]
-<a href=#1455 id=1455 data-nosnippet>1455</a></span><span class="kw">pub enum </span>PassErrorScope {
-<a href=#1456 id=1456 data-nosnippet>1456</a>    <span class="comment">// TODO: Extract out the 2 error variants below so that we can always
-<a href=#1457 id=1457 data-nosnippet>1457</a>    // include the ResourceErrorIdent of the pass around all inner errors
-<a href=#1458 id=1458 data-nosnippet>1458</a>    </span><span class="attr">#[error(<span class="string">"In a bundle parameter"</span>)]
-<a href=#1459 id=1459 data-nosnippet>1459</a>    </span>Bundle,
-<a href=#1460 id=1460 data-nosnippet>1460</a>    <span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
-<a href=#1461 id=1461 data-nosnippet>1461</a>    </span>Pass,
-<a href=#1462 id=1462 data-nosnippet>1462</a>    <span class="attr">#[error(<span class="string">"In a set_bind_group command"</span>)]
-<a href=#1463 id=1463 data-nosnippet>1463</a>    </span>SetBindGroup,
-<a href=#1464 id=1464 data-nosnippet>1464</a>    <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
-<a href=#1465 id=1465 data-nosnippet>1465</a>    </span>SetPipelineRender,
-<a href=#1466 id=1466 data-nosnippet>1466</a>    <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
-<a href=#1467 id=1467 data-nosnippet>1467</a>    </span>SetPipelineCompute,
-<a href=#1468 id=1468 data-nosnippet>1468</a>    <span class="attr">#[error(<span class="string">"In a set_push_constant command"</span>)]
-<a href=#1469 id=1469 data-nosnippet>1469</a>    </span>SetPushConstant,
-<a href=#1470 id=1470 data-nosnippet>1470</a>    <span class="attr">#[error(<span class="string">"In a set_vertex_buffer command"</span>)]
-<a href=#1471 id=1471 data-nosnippet>1471</a>    </span>SetVertexBuffer,
-<a href=#1472 id=1472 data-nosnippet>1472</a>    <span class="attr">#[error(<span class="string">"In a set_index_buffer command"</span>)]
-<a href=#1473 id=1473 data-nosnippet>1473</a>    </span>SetIndexBuffer,
-<a href=#1474 id=1474 data-nosnippet>1474</a>    <span class="attr">#[error(<span class="string">"In a set_blend_constant command"</span>)]
-<a href=#1475 id=1475 data-nosnippet>1475</a>    </span>SetBlendConstant,
-<a href=#1476 id=1476 data-nosnippet>1476</a>    <span class="attr">#[error(<span class="string">"In a set_stencil_reference command"</span>)]
-<a href=#1477 id=1477 data-nosnippet>1477</a>    </span>SetStencilReference,
-<a href=#1478 id=1478 data-nosnippet>1478</a>    <span class="attr">#[error(<span class="string">"In a set_viewport command"</span>)]
-<a href=#1479 id=1479 data-nosnippet>1479</a>    </span>SetViewport,
-<a href=#1480 id=1480 data-nosnippet>1480</a>    <span class="attr">#[error(<span class="string">"In a set_scissor_rect command"</span>)]
-<a href=#1481 id=1481 data-nosnippet>1481</a>    </span>SetScissorRect,
-<a href=#1482 id=1482 data-nosnippet>1482</a>    <span class="attr">#[error(<span class="string">"In a draw command, kind: {kind:?}"</span>)]
-<a href=#1483 id=1483 data-nosnippet>1483</a>    </span>Draw { kind: DrawKind, indexed: bool },
-<a href=#1484 id=1484 data-nosnippet>1484</a>    <span class="attr">#[error(<span class="string">"In a write_timestamp command"</span>)]
-<a href=#1485 id=1485 data-nosnippet>1485</a>    </span>WriteTimestamp,
-<a href=#1486 id=1486 data-nosnippet>1486</a>    <span class="attr">#[error(<span class="string">"In a begin_occlusion_query command"</span>)]
-<a href=#1487 id=1487 data-nosnippet>1487</a>    </span>BeginOcclusionQuery,
-<a href=#1488 id=1488 data-nosnippet>1488</a>    <span class="attr">#[error(<span class="string">"In a end_occlusion_query command"</span>)]
-<a href=#1489 id=1489 data-nosnippet>1489</a>    </span>EndOcclusionQuery,
-<a href=#1490 id=1490 data-nosnippet>1490</a>    <span class="attr">#[error(<span class="string">"In a begin_pipeline_statistics_query command"</span>)]
-<a href=#1491 id=1491 data-nosnippet>1491</a>    </span>BeginPipelineStatisticsQuery,
-<a href=#1492 id=1492 data-nosnippet>1492</a>    <span class="attr">#[error(<span class="string">"In a end_pipeline_statistics_query command"</span>)]
-<a href=#1493 id=1493 data-nosnippet>1493</a>    </span>EndPipelineStatisticsQuery,
-<a href=#1494 id=1494 data-nosnippet>1494</a>    <span class="attr">#[error(<span class="string">"In a execute_bundle command"</span>)]
-<a href=#1495 id=1495 data-nosnippet>1495</a>    </span>ExecuteBundle,
-<a href=#1496 id=1496 data-nosnippet>1496</a>    <span class="attr">#[error(<span class="string">"In a dispatch command, indirect:{indirect}"</span>)]
-<a href=#1497 id=1497 data-nosnippet>1497</a>    </span>Dispatch { indirect: bool },
-<a href=#1498 id=1498 data-nosnippet>1498</a>    <span class="attr">#[error(<span class="string">"In a push_debug_group command"</span>)]
-<a href=#1499 id=1499 data-nosnippet>1499</a>    </span>PushDebugGroup,
-<a href=#1500 id=1500 data-nosnippet>1500</a>    <span class="attr">#[error(<span class="string">"In a pop_debug_group command"</span>)]
-<a href=#1501 id=1501 data-nosnippet>1501</a>    </span>PopDebugGroup,
-<a href=#1502 id=1502 data-nosnippet>1502</a>    <span class="attr">#[error(<span class="string">"In a insert_debug_marker command"</span>)]
-<a href=#1503 id=1503 data-nosnippet>1503</a>    </span>InsertDebugMarker,
-<a href=#1504 id=1504 data-nosnippet>1504</a>}
-<a href=#1505 id=1505 data-nosnippet>1505</a>
-<a href=#1506 id=1506 data-nosnippet>1506</a><span class="doccomment">/// Variant of `EncoderStateError` that includes the pass scope.
-<a href=#1507 id=1507 data-nosnippet>1507</a></span><span class="attr">#[derive(Clone, Debug, Error)]
-<a href=#1508 id=1508 data-nosnippet>1508</a>#[error(<span class="string">"{scope}"</span>)]
-<a href=#1509 id=1509 data-nosnippet>1509</a></span><span class="kw">pub struct </span>PassStateError {
-<a href=#1510 id=1510 data-nosnippet>1510</a>    <span class="kw">pub </span>scope: PassErrorScope,
-<a href=#1511 id=1511 data-nosnippet>1511</a>    <span class="attr">#[source]
-<a href=#1512 id=1512 data-nosnippet>1512</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) inner: EncoderStateError,
-<a href=#1513 id=1513 data-nosnippet>1513</a>}
-<a href=#1514 id=1514 data-nosnippet>1514</a>
-<a href=#1515 id=1515 data-nosnippet>1515</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>PassStateError {
-<a href=#1516 id=1516 data-nosnippet>1516</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
-<a href=#1517 id=1517 data-nosnippet>1517</a>        <span class="kw">let </span><span class="self">Self </span>{ scope: <span class="kw">_</span>, inner } = <span class="self">self</span>;
-<a href=#1518 id=1518 data-nosnippet>1518</a>        inner.webgpu_error_type()
-<a href=#1519 id=1519 data-nosnippet>1519</a>    }
-<a href=#1520 id=1520 data-nosnippet>1520</a>}</code></pre></div></section></main></body></html>
+<a href=#1445 id=1445 data-nosnippet>1445</a><span class="doccomment">/// The type of draw command(indexed or not, or mesh shader)
+<a href=#1446 id=1446 data-nosnippet>1446</a></span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#1447 id=1447 data-nosnippet>1447</a>#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+<a href=#1448 id=1448 data-nosnippet>1448</a></span><span class="kw">pub enum </span>DrawCommandFamily {
+<a href=#1449 id=1449 data-nosnippet>1449</a>    Draw,
+<a href=#1450 id=1450 data-nosnippet>1450</a>    DrawIndexed,
+<a href=#1451 id=1451 data-nosnippet>1451</a>    DrawMeshTasks,
+<a href=#1452 id=1452 data-nosnippet>1452</a>}
+<a href=#1453 id=1453 data-nosnippet>1453</a>
+<a href=#1454 id=1454 data-nosnippet>1454</a><span class="doccomment">/// A command that can be recorded in a pass or bundle.
+<a href=#1455 id=1455 data-nosnippet>1455</a>///
+<a href=#1456 id=1456 data-nosnippet>1456</a>/// This is used to provide context for errors during command recording.
+<a href=#1457 id=1457 data-nosnippet>1457</a>/// [`MapPassErr`] is used as a helper to attach a `PassErrorScope` to
+<a href=#1458 id=1458 data-nosnippet>1458</a>/// an error.
+<a href=#1459 id=1459 data-nosnippet>1459</a>///
+<a href=#1460 id=1460 data-nosnippet>1460</a>/// The [`PassErrorScope::Bundle`] and [`PassErrorScope::Pass`] variants
+<a href=#1461 id=1461 data-nosnippet>1461</a>/// are used when the error occurs during the opening or closing of the
+<a href=#1462 id=1462 data-nosnippet>1462</a>/// pass or bundle.
+<a href=#1463 id=1463 data-nosnippet>1463</a></span><span class="attr">#[derive(Clone, Copy, Debug, Error)]
+<a href=#1464 id=1464 data-nosnippet>1464</a></span><span class="kw">pub enum </span>PassErrorScope {
+<a href=#1465 id=1465 data-nosnippet>1465</a>    <span class="comment">// TODO: Extract out the 2 error variants below so that we can always
+<a href=#1466 id=1466 data-nosnippet>1466</a>    // include the ResourceErrorIdent of the pass around all inner errors
+<a href=#1467 id=1467 data-nosnippet>1467</a>    </span><span class="attr">#[error(<span class="string">"In a bundle parameter"</span>)]
+<a href=#1468 id=1468 data-nosnippet>1468</a>    </span>Bundle,
+<a href=#1469 id=1469 data-nosnippet>1469</a>    <span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
+<a href=#1470 id=1470 data-nosnippet>1470</a>    </span>Pass,
+<a href=#1471 id=1471 data-nosnippet>1471</a>    <span class="attr">#[error(<span class="string">"In a set_bind_group command"</span>)]
+<a href=#1472 id=1472 data-nosnippet>1472</a>    </span>SetBindGroup,
+<a href=#1473 id=1473 data-nosnippet>1473</a>    <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
+<a href=#1474 id=1474 data-nosnippet>1474</a>    </span>SetPipelineRender,
+<a href=#1475 id=1475 data-nosnippet>1475</a>    <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
+<a href=#1476 id=1476 data-nosnippet>1476</a>    </span>SetPipelineCompute,
+<a href=#1477 id=1477 data-nosnippet>1477</a>    <span class="attr">#[error(<span class="string">"In a set_push_constant command"</span>)]
+<a href=#1478 id=1478 data-nosnippet>1478</a>    </span>SetPushConstant,
+<a href=#1479 id=1479 data-nosnippet>1479</a>    <span class="attr">#[error(<span class="string">"In a set_vertex_buffer command"</span>)]
+<a href=#1480 id=1480 data-nosnippet>1480</a>    </span>SetVertexBuffer,
+<a href=#1481 id=1481 data-nosnippet>1481</a>    <span class="attr">#[error(<span class="string">"In a set_index_buffer command"</span>)]
+<a href=#1482 id=1482 data-nosnippet>1482</a>    </span>SetIndexBuffer,
+<a href=#1483 id=1483 data-nosnippet>1483</a>    <span class="attr">#[error(<span class="string">"In a set_blend_constant command"</span>)]
+<a href=#1484 id=1484 data-nosnippet>1484</a>    </span>SetBlendConstant,
+<a href=#1485 id=1485 data-nosnippet>1485</a>    <span class="attr">#[error(<span class="string">"In a set_stencil_reference command"</span>)]
+<a href=#1486 id=1486 data-nosnippet>1486</a>    </span>SetStencilReference,
+<a href=#1487 id=1487 data-nosnippet>1487</a>    <span class="attr">#[error(<span class="string">"In a set_viewport command"</span>)]
+<a href=#1488 id=1488 data-nosnippet>1488</a>    </span>SetViewport,
+<a href=#1489 id=1489 data-nosnippet>1489</a>    <span class="attr">#[error(<span class="string">"In a set_scissor_rect command"</span>)]
+<a href=#1490 id=1490 data-nosnippet>1490</a>    </span>SetScissorRect,
+<a href=#1491 id=1491 data-nosnippet>1491</a>    <span class="attr">#[error(<span class="string">"In a draw command, kind: {kind:?}"</span>)]
+<a href=#1492 id=1492 data-nosnippet>1492</a>    </span>Draw {
+<a href=#1493 id=1493 data-nosnippet>1493</a>        kind: DrawKind,
+<a href=#1494 id=1494 data-nosnippet>1494</a>        family: DrawCommandFamily,
+<a href=#1495 id=1495 data-nosnippet>1495</a>    },
+<a href=#1496 id=1496 data-nosnippet>1496</a>    <span class="attr">#[error(<span class="string">"In a write_timestamp command"</span>)]
+<a href=#1497 id=1497 data-nosnippet>1497</a>    </span>WriteTimestamp,
+<a href=#1498 id=1498 data-nosnippet>1498</a>    <span class="attr">#[error(<span class="string">"In a begin_occlusion_query command"</span>)]
+<a href=#1499 id=1499 data-nosnippet>1499</a>    </span>BeginOcclusionQuery,
+<a href=#1500 id=1500 data-nosnippet>1500</a>    <span class="attr">#[error(<span class="string">"In a end_occlusion_query command"</span>)]
+<a href=#1501 id=1501 data-nosnippet>1501</a>    </span>EndOcclusionQuery,
+<a href=#1502 id=1502 data-nosnippet>1502</a>    <span class="attr">#[error(<span class="string">"In a begin_pipeline_statistics_query command"</span>)]
+<a href=#1503 id=1503 data-nosnippet>1503</a>    </span>BeginPipelineStatisticsQuery,
+<a href=#1504 id=1504 data-nosnippet>1504</a>    <span class="attr">#[error(<span class="string">"In a end_pipeline_statistics_query command"</span>)]
+<a href=#1505 id=1505 data-nosnippet>1505</a>    </span>EndPipelineStatisticsQuery,
+<a href=#1506 id=1506 data-nosnippet>1506</a>    <span class="attr">#[error(<span class="string">"In a execute_bundle command"</span>)]
+<a href=#1507 id=1507 data-nosnippet>1507</a>    </span>ExecuteBundle,
+<a href=#1508 id=1508 data-nosnippet>1508</a>    <span class="attr">#[error(<span class="string">"In a dispatch command, indirect:{indirect}"</span>)]
+<a href=#1509 id=1509 data-nosnippet>1509</a>    </span>Dispatch { indirect: bool },
+<a href=#1510 id=1510 data-nosnippet>1510</a>    <span class="attr">#[error(<span class="string">"In a push_debug_group command"</span>)]
+<a href=#1511 id=1511 data-nosnippet>1511</a>    </span>PushDebugGroup,
+<a href=#1512 id=1512 data-nosnippet>1512</a>    <span class="attr">#[error(<span class="string">"In a pop_debug_group command"</span>)]
+<a href=#1513 id=1513 data-nosnippet>1513</a>    </span>PopDebugGroup,
+<a href=#1514 id=1514 data-nosnippet>1514</a>    <span class="attr">#[error(<span class="string">"In a insert_debug_marker command"</span>)]
+<a href=#1515 id=1515 data-nosnippet>1515</a>    </span>InsertDebugMarker,
+<a href=#1516 id=1516 data-nosnippet>1516</a>}
+<a href=#1517 id=1517 data-nosnippet>1517</a>
+<a href=#1518 id=1518 data-nosnippet>1518</a><span class="doccomment">/// Variant of `EncoderStateError` that includes the pass scope.
+<a href=#1519 id=1519 data-nosnippet>1519</a></span><span class="attr">#[derive(Clone, Debug, Error)]
+<a href=#1520 id=1520 data-nosnippet>1520</a>#[error(<span class="string">"{scope}"</span>)]
+<a href=#1521 id=1521 data-nosnippet>1521</a></span><span class="kw">pub struct </span>PassStateError {
+<a href=#1522 id=1522 data-nosnippet>1522</a>    <span class="kw">pub </span>scope: PassErrorScope,
+<a href=#1523 id=1523 data-nosnippet>1523</a>    <span class="attr">#[source]
+<a href=#1524 id=1524 data-nosnippet>1524</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) inner: EncoderStateError,
+<a href=#1525 id=1525 data-nosnippet>1525</a>}
+<a href=#1526 id=1526 data-nosnippet>1526</a>
+<a href=#1527 id=1527 data-nosnippet>1527</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>PassStateError {
+<a href=#1528 id=1528 data-nosnippet>1528</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+<a href=#1529 id=1529 data-nosnippet>1529</a>        <span class="kw">let </span><span class="self">Self </span>{ scope: <span class="kw">_</span>, inner } = <span class="self">self</span>;
+<a href=#1530 id=1530 data-nosnippet>1530</a>        inner.webgpu_error_type()
+<a href=#1531 id=1531 data-nosnippet>1531</a>    }
+<a href=#1532 id=1532 data-nosnippet>1532</a>}</code></pre></div></section></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["compile_glsl","main"],"struct":["Example"]};

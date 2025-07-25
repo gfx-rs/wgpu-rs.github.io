@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["FragmentState","RenderPipeline","RenderPipelineDescriptor","VertexBufferLayout","VertexState"]};
+window.SIDEBAR_ITEMS = {"struct":["FragmentState","MeshPipelineDescriptor","MeshState","RenderPipeline","RenderPipelineDescriptor","TaskState","VertexBufferLayout","VertexState"]};
