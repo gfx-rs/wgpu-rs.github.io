@@ -11,16 +11,28 @@
     pub load_transform: [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.f32.html">f32</a>; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.array.html">6</a>],
 }</code></pre><h2 id="fields" class="fields section-header">Fields<a href="#fields" class="anchor">§</a></h2><span id="structfield.label" class="structfield section-header"><a href="#structfield.label" class="anchor field">§</a><code>label: <a class="enum" href="https://doc.rust-lang.org/1.88.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.str.html">str</a>&gt;</code></span><div class="docblock"><p>Debug label of the external texture. This will show up in graphics
 debuggers for easy identification.</p>
-</div><span id="structfield.width" class="structfield section-header"><a href="#structfield.width" class="anchor field">§</a><code>width: <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u32.html">u32</a></code></span><div class="docblock"><p>Width of the external texture. Note that both this and <code>height</code> may
-not match the dimensions of the underlying texture(s). This could be
-due to a crop rect or rotation.</p>
+</div><span id="structfield.width" class="structfield section-header"><a href="#structfield.width" class="anchor field">§</a><code>width: <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u32.html">u32</a></code></span><div class="docblock"><p>Width of the external texture.</p>
 </div><span id="structfield.height" class="structfield section-header"><a href="#structfield.height" class="anchor field">§</a><code>height: <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u32.html">u32</a></code></span><div class="docblock"><p>Height of the external texture.</p>
 </div><span id="structfield.format" class="structfield section-header"><a href="#structfield.format" class="anchor field">§</a><code>format: <a class="enum" href="enum.ExternalTextureFormat.html" title="enum wgpu::ExternalTextureFormat">ExternalTextureFormat</a></code></span><div class="docblock"><p>Format of the external texture.</p>
 </div><span id="structfield.yuv_conversion_matrix" class="structfield section-header"><a href="#structfield.yuv_conversion_matrix" class="anchor field">§</a><code>yuv_conversion_matrix: [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.f32.html">f32</a>; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.array.html">16</a>]</code></span><div class="docblock"><p>4x4 column-major matrix with which to convert sampled YCbCr values
 to RGBA.
 This is ignored when <code>format</code> is [<code>ExternalTextureFormat::Rgba</code>].</p>
-</div><span id="structfield.sample_transform" class="structfield section-header"><a href="#structfield.sample_transform" class="anchor field">§</a><code>sample_transform: [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.f32.html">f32</a>; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.array.html">6</a>]</code></span><div class="docblock"><p>3x2 column-major matrix with which to multiply normalized texture
-coordinates prior to sampling from the external texture.</p>
-</div><span id="structfield.load_transform" class="structfield section-header"><a href="#structfield.load_transform" class="anchor field">§</a><code>load_transform: [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.f32.html">f32</a>; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.array.html">6</a>]</code></span><div class="docblock"><p>3x2 column-major matrix with which to multiply unnormalized texture
-coordinates prior to loading from the external texture.</p>
+</div><span id="structfield.sample_transform" class="structfield section-header"><a href="#structfield.sample_transform" class="anchor field">§</a><code>sample_transform: [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.f32.html">f32</a>; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.array.html">6</a>]</code></span><div class="docblock"><p>Transform to apply to <a href="https://docs.rs/naga/latest/naga/ir/enum.Expression.html#variant.ImageSample"><code>ImageSample</code></a> coordinates.</p>
+<p>This is a 3x2 column-major matrix representing an affine transform from
+normalized texture coordinates to the normalized coordinates that should
+be sampled from the external texture’s underlying plane(s).</p>
+<p>This transform may scale, translate, flip, and rotate in 90-degree
+increments, but the result of transforming the rectangle (0,0)..(1,1)
+must be an axis-aligned rectangle that falls within the bounds of
+(0,0)..(1,1).</p>
+</div><span id="structfield.load_transform" class="structfield section-header"><a href="#structfield.load_transform" class="anchor field">§</a><code>load_transform: [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.f32.html">f32</a>; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.array.html">6</a>]</code></span><div class="docblock"><p>Transform to apply to <a href="https://docs.rs/naga/latest/naga/ir/enum.Expression.html#variant.ImageLoad"><code>ImageLoad</code></a> coordinates.</p>
+<p>This is a 3x2 column-major matrix representing an affine transform from
+non-normalized texel coordinates to the non-normalized coordinates of
+the texel that should be loaded from the external texture’s underlying
+plane 0. For planes 1 and 2, if present, plane 0’s coordinates are
+scaled according to the textures’ relative sizes.</p>
+<p>This transform may scale, translate, flip, and rotate in 90-degree
+increments, but the result of transforming the rectangle (0,0)..(<a href="Self::width"><code>width</code></a>,
+<a href="Self::height"><code>height</code></a>) must be an axis-aligned rectangle that falls within the bounds
+of (0,0)..(<a href="Self::width"><code>width</code></a>, <a href="Self::height"><code>height</code></a>).</p>
 </div><script src="../type.impl/wgpu_types/struct.ExternalTextureDescriptor.js" data-self-path="wgpu::api::external_texture::ExternalTextureDescriptor" async></script></section></div></main></body></html>
