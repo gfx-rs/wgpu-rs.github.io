@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["CAPABILITIES"],"mod":["buffer","command"],"struct":["Api","Buffer","CommandBuffer","Context","Encoder","Fence","Resource"],"type":["DeviceResult"]};
+window.SIDEBAR_ITEMS = {"constant":["CAPABILITIES"],"fn":["adapter_info"],"mod":["buffer","command"],"struct":["Api","Buffer","CommandBuffer","Context","Encoder","Fence","Resource"],"type":["DeviceResult"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["GpuTestConfiguration"],"trait":["RunTestSend","RunTestSendSync"],"type":["RunTestAsync"]};
+window.SIDEBAR_ITEMS = {"struct":["GpuTestConfiguration"],"trait":["RunTestSend","RunTestSendSync"],"type":["GpuTestInitializer","RunTestAsync"]};
