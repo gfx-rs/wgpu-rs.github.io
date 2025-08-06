@@ -2369,189 +2369,212 @@
 <a href=#2369 id=2369 data-nosnippet>2369</a>    /// In WGSL, this type would be:
 <a href=#2370 id=2370 data-nosnippet>2370</a>    ///
 <a href=#2371 id=2371 data-nosnippet>2371</a>    /// ```ignore
-<a href=#2372 id=2372 data-nosnippet>2372</a>    /// struct NagaExternalTextureParams {      // align size offset
-<a href=#2373 id=2373 data-nosnippet>2373</a>    ///     yuv_conversion_matrix: mat4x4&lt;f32&gt;, //    16   64      0
-<a href=#2374 id=2374 data-nosnippet>2374</a>    ///     sample_transform: mat3x2&lt;f32&gt;,      //     8   24     64
-<a href=#2375 id=2375 data-nosnippet>2375</a>    ///     load_transform: mat3x2&lt;f32&gt;,        //     8   24     88
-<a href=#2376 id=2376 data-nosnippet>2376</a>    ///     size: vec2&lt;u32&gt;,                    //     8    8    112
-<a href=#2377 id=2377 data-nosnippet>2377</a>    ///     num_planes: u32,                    //     4    4    120
-<a href=#2378 id=2378 data-nosnippet>2378</a>    /// }                         // whole struct:    16  128
-<a href=#2379 id=2379 data-nosnippet>2379</a>    /// ```
-<a href=#2380 id=2380 data-nosnippet>2380</a>    ///
-<a href=#2381 id=2381 data-nosnippet>2381</a>    /// Call [`Module::generate_external_texture_params_type`] to populate this
-<a href=#2382 id=2382 data-nosnippet>2382</a>    /// if needed and return the handle.
-<a href=#2383 id=2383 data-nosnippet>2383</a>    </span><span class="kw">pub </span>external_texture_params: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&gt;&gt;,
-<a href=#2384 id=2384 data-nosnippet>2384</a>
-<a href=#2385 id=2385 data-nosnippet>2385</a>    <span class="doccomment">/// Types for predeclared wgsl types instantiated on demand.
-<a href=#2386 id=2386 data-nosnippet>2386</a>    ///
-<a href=#2387 id=2387 data-nosnippet>2387</a>    /// Call [`Module::generate_predeclared_type`] to populate this if
-<a href=#2388 id=2388 data-nosnippet>2388</a>    /// needed and return the handle.
-<a href=#2389 id=2389 data-nosnippet>2389</a>    </span><span class="kw">pub </span>predeclared_types: FastIndexMap&lt;PredeclaredType, Handle&lt;Type&gt;&gt;,
-<a href=#2390 id=2390 data-nosnippet>2390</a>}
-<a href=#2391 id=2391 data-nosnippet>2391</a>
-<a href=#2392 id=2392 data-nosnippet>2392</a><span class="macro">bitflags::bitflags!</span> {
-<a href=#2393 id=2393 data-nosnippet>2393</a>    <span class="doccomment">/// Ray flags used when casting rays.
-<a href=#2394 id=2394 data-nosnippet>2394</a>    /// Matching vulkan constants can be found in
-<a href=#2395 id=2395 data-nosnippet>2395</a>    /// https://github.com/KhronosGroup/SPIRV-Registry/blob/main/extensions/KHR/ray_common/ray_flags_section.txt
-<a href=#2396 id=2396 data-nosnippet>2396</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
-<a href=#2397 id=2397 data-nosnippet>2397</a>    #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
-<a href=#2398 id=2398 data-nosnippet>2398</a>    #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
-<a href=#2399 id=2399 data-nosnippet>2399</a>    #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-<a href=#2400 id=2400 data-nosnippet>2400</a>    </span><span class="kw">pub struct </span>RayFlag: u32 {
-<a href=#2401 id=2401 data-nosnippet>2401</a>        <span class="doccomment">/// Force all intersections to be treated as opaque.
-<a href=#2402 id=2402 data-nosnippet>2402</a>        </span><span class="kw">const </span>FORCE_OPAQUE = <span class="number">0x1</span>;
-<a href=#2403 id=2403 data-nosnippet>2403</a>        <span class="doccomment">/// Force all intersections to be treated as non-opaque.
-<a href=#2404 id=2404 data-nosnippet>2404</a>        </span><span class="kw">const </span>FORCE_NO_OPAQUE = <span class="number">0x2</span>;
-<a href=#2405 id=2405 data-nosnippet>2405</a>        <span class="doccomment">/// Stop traversal after the first hit.
-<a href=#2406 id=2406 data-nosnippet>2406</a>        </span><span class="kw">const </span>TERMINATE_ON_FIRST_HIT = <span class="number">0x4</span>;
-<a href=#2407 id=2407 data-nosnippet>2407</a>        <span class="doccomment">/// Don't execute the closest hit shader.
-<a href=#2408 id=2408 data-nosnippet>2408</a>        </span><span class="kw">const </span>SKIP_CLOSEST_HIT_SHADER = <span class="number">0x8</span>;
-<a href=#2409 id=2409 data-nosnippet>2409</a>        <span class="doccomment">/// Cull back facing geometry.
-<a href=#2410 id=2410 data-nosnippet>2410</a>        </span><span class="kw">const </span>CULL_BACK_FACING = <span class="number">0x10</span>;
-<a href=#2411 id=2411 data-nosnippet>2411</a>        <span class="doccomment">/// Cull front facing geometry.
-<a href=#2412 id=2412 data-nosnippet>2412</a>        </span><span class="kw">const </span>CULL_FRONT_FACING = <span class="number">0x20</span>;
-<a href=#2413 id=2413 data-nosnippet>2413</a>        <span class="doccomment">/// Cull opaque geometry.
-<a href=#2414 id=2414 data-nosnippet>2414</a>        </span><span class="kw">const </span>CULL_OPAQUE = <span class="number">0x40</span>;
-<a href=#2415 id=2415 data-nosnippet>2415</a>        <span class="doccomment">/// Cull non-opaque geometry.
-<a href=#2416 id=2416 data-nosnippet>2416</a>        </span><span class="kw">const </span>CULL_NO_OPAQUE = <span class="number">0x80</span>;
-<a href=#2417 id=2417 data-nosnippet>2417</a>        <span class="doccomment">/// Skip triangular geometry.
-<a href=#2418 id=2418 data-nosnippet>2418</a>        </span><span class="kw">const </span>SKIP_TRIANGLES = <span class="number">0x100</span>;
-<a href=#2419 id=2419 data-nosnippet>2419</a>        <span class="doccomment">/// Skip axis-aligned bounding boxes.
-<a href=#2420 id=2420 data-nosnippet>2420</a>        </span><span class="kw">const </span>SKIP_AABBS = <span class="number">0x200</span>;
-<a href=#2421 id=2421 data-nosnippet>2421</a>    }
-<a href=#2422 id=2422 data-nosnippet>2422</a>}
-<a href=#2423 id=2423 data-nosnippet>2423</a>
-<a href=#2424 id=2424 data-nosnippet>2424</a><span class="doccomment">/// Type of a ray query intersection.
-<a href=#2425 id=2425 data-nosnippet>2425</a>/// Matching vulkan constants can be found in
-<a href=#2426 id=2426 data-nosnippet>2426</a>/// &lt;https://github.com/KhronosGroup/SPIRV-Registry/blob/main/extensions/KHR/SPV_KHR_ray_query.asciidoc&gt;
-<a href=#2427 id=2427 data-nosnippet>2427</a>/// but the actual values are different for candidate intersections.
-<a href=#2428 id=2428 data-nosnippet>2428</a></span><span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
-<a href=#2429 id=2429 data-nosnippet>2429</a>#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
-<a href=#2430 id=2430 data-nosnippet>2430</a>#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
-<a href=#2431 id=2431 data-nosnippet>2431</a>#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-<a href=#2432 id=2432 data-nosnippet>2432</a></span><span class="kw">pub enum </span>RayQueryIntersection {
-<a href=#2433 id=2433 data-nosnippet>2433</a>    <span class="doccomment">/// No intersection found.
-<a href=#2434 id=2434 data-nosnippet>2434</a>    /// Matches `RayQueryCommittedIntersectionNoneKHR`.
-<a href=#2435 id=2435 data-nosnippet>2435</a>    </span><span class="attr">#[default]
-<a href=#2436 id=2436 data-nosnippet>2436</a>    </span><span class="prelude-val">None </span>= <span class="number">0</span>,
-<a href=#2437 id=2437 data-nosnippet>2437</a>    <span class="doccomment">/// Intersecting with triangles.
-<a href=#2438 id=2438 data-nosnippet>2438</a>    /// Matches `RayQueryCommittedIntersectionTriangleKHR` and `RayQueryCandidateIntersectionTriangleKHR`.
-<a href=#2439 id=2439 data-nosnippet>2439</a>    </span>Triangle = <span class="number">1</span>,
-<a href=#2440 id=2440 data-nosnippet>2440</a>    <span class="doccomment">/// Intersecting with generated primitives.
-<a href=#2441 id=2441 data-nosnippet>2441</a>    /// Matches `RayQueryCommittedIntersectionGeneratedKHR`.
-<a href=#2442 id=2442 data-nosnippet>2442</a>    </span>Generated = <span class="number">2</span>,
-<a href=#2443 id=2443 data-nosnippet>2443</a>    <span class="doccomment">/// Intersecting with Axis Aligned Bounding Boxes.
-<a href=#2444 id=2444 data-nosnippet>2444</a>    /// Matches `RayQueryCandidateIntersectionAABBKHR`.
-<a href=#2445 id=2445 data-nosnippet>2445</a>    </span>Aabb = <span class="number">3</span>,
-<a href=#2446 id=2446 data-nosnippet>2446</a>}
-<a href=#2447 id=2447 data-nosnippet>2447</a>
-<a href=#2448 id=2448 data-nosnippet>2448</a><span class="doccomment">/// Doc comments preceding items.
-<a href=#2449 id=2449 data-nosnippet>2449</a>///
-<a href=#2450 id=2450 data-nosnippet>2450</a>/// These can be used to generate automated documentation,
-<a href=#2451 id=2451 data-nosnippet>2451</a>/// IDE hover information or translate shaders with their context comments.
-<a href=#2452 id=2452 data-nosnippet>2452</a></span><span class="attr">#[derive(Debug, Default, Clone)]
-<a href=#2453 id=2453 data-nosnippet>2453</a>#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
-<a href=#2454 id=2454 data-nosnippet>2454</a>#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
-<a href=#2455 id=2455 data-nosnippet>2455</a>#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
-<a href=#2456 id=2456 data-nosnippet>2456</a></span><span class="kw">pub struct </span>DocComments {
-<a href=#2457 id=2457 data-nosnippet>2457</a>    <span class="kw">pub </span>types: FastIndexMap&lt;Handle&lt;Type&gt;, Vec&lt;String&gt;&gt;,
-<a href=#2458 id=2458 data-nosnippet>2458</a>    <span class="comment">// The key is:
-<a href=#2459 id=2459 data-nosnippet>2459</a>    // - key.0: the handle to the Struct
-<a href=#2460 id=2460 data-nosnippet>2460</a>    // - key.1: the index of the `StructMember`.
-<a href=#2461 id=2461 data-nosnippet>2461</a>    </span><span class="kw">pub </span>struct_members: FastIndexMap&lt;(Handle&lt;Type&gt;, usize), Vec&lt;String&gt;&gt;,
-<a href=#2462 id=2462 data-nosnippet>2462</a>    <span class="kw">pub </span>entry_points: FastIndexMap&lt;usize, Vec&lt;String&gt;&gt;,
-<a href=#2463 id=2463 data-nosnippet>2463</a>    <span class="kw">pub </span>functions: FastIndexMap&lt;Handle&lt;Function&gt;, Vec&lt;String&gt;&gt;,
-<a href=#2464 id=2464 data-nosnippet>2464</a>    <span class="kw">pub </span>constants: FastIndexMap&lt;Handle&lt;Constant&gt;, Vec&lt;String&gt;&gt;,
-<a href=#2465 id=2465 data-nosnippet>2465</a>    <span class="kw">pub </span>global_variables: FastIndexMap&lt;Handle&lt;GlobalVariable&gt;, Vec&lt;String&gt;&gt;,
-<a href=#2466 id=2466 data-nosnippet>2466</a>    <span class="comment">// Top level comments, appearing before any space.
-<a href=#2467 id=2467 data-nosnippet>2467</a>    </span><span class="kw">pub </span>module: Vec&lt;String&gt;,
-<a href=#2468 id=2468 data-nosnippet>2468</a>}
-<a href=#2469 id=2469 data-nosnippet>2469</a>
-<a href=#2470 id=2470 data-nosnippet>2470</a><span class="doccomment">/// Shader module.
-<a href=#2471 id=2471 data-nosnippet>2471</a>///
-<a href=#2472 id=2472 data-nosnippet>2472</a>/// A module is a set of constants, global variables and functions, as well as
-<a href=#2473 id=2473 data-nosnippet>2473</a>/// the types required to define them.
-<a href=#2474 id=2474 data-nosnippet>2474</a>///
-<a href=#2475 id=2475 data-nosnippet>2475</a>/// Some functions are marked as entry points, to be used in a certain shader stage.
-<a href=#2476 id=2476 data-nosnippet>2476</a>///
-<a href=#2477 id=2477 data-nosnippet>2477</a>/// To create a new module, use the `Default` implementation.
-<a href=#2478 id=2478 data-nosnippet>2478</a>/// Alternatively, you can load an existing shader using one of the [available front ends].
-<a href=#2479 id=2479 data-nosnippet>2479</a>///
-<a href=#2480 id=2480 data-nosnippet>2480</a>/// When finished, you can export modules using one of the [available backends].
-<a href=#2481 id=2481 data-nosnippet>2481</a>///
-<a href=#2482 id=2482 data-nosnippet>2482</a>/// ## Module arenas
-<a href=#2483 id=2483 data-nosnippet>2483</a>///
-<a href=#2484 id=2484 data-nosnippet>2484</a>/// Most module contents are stored in [`Arena`]s. In a valid module, arena
-<a href=#2485 id=2485 data-nosnippet>2485</a>/// elements only refer to prior arena elements. That is, whenever an element in
-<a href=#2486 id=2486 data-nosnippet>2486</a>/// some `Arena&lt;T&gt;` contains a `Handle&lt;T&gt;` referring to another element the same
-<a href=#2487 id=2487 data-nosnippet>2487</a>/// arena, the handle's referent always precedes the element containing the
-<a href=#2488 id=2488 data-nosnippet>2488</a>/// handle.
-<a href=#2489 id=2489 data-nosnippet>2489</a>///
-<a href=#2490 id=2490 data-nosnippet>2490</a>/// The elements of [`Module::types`] may refer to [`Expression`]s in
-<a href=#2491 id=2491 data-nosnippet>2491</a>/// [`Module::global_expressions`], and those expressions may in turn refer back
-<a href=#2492 id=2492 data-nosnippet>2492</a>/// to [`Type`]s in [`Module::types`]. In a valid module, there exists an order
-<a href=#2493 id=2493 data-nosnippet>2493</a>/// in which all types and global expressions can be visited such that:
+<a href=#2372 id=2372 data-nosnippet>2372</a>    /// struct NagaExternalTextureParams {         // align size offset
+<a href=#2373 id=2373 data-nosnippet>2373</a>    ///     yuv_conversion_matrix: mat4x4&lt;f32&gt;,    //    16   64      0
+<a href=#2374 id=2374 data-nosnippet>2374</a>    ///     gamut_conversion_matrix: mat3x3&lt;f32&gt;,  //    16   48     64
+<a href=#2375 id=2375 data-nosnippet>2375</a>    ///     src_tf: NagaExternalTextureTransferFn, //     4   16    112
+<a href=#2376 id=2376 data-nosnippet>2376</a>    ///     dst_tf: NagaExternalTextureTransferFn, //     4   16    128
+<a href=#2377 id=2377 data-nosnippet>2377</a>    ///     sample_transform: mat3x2&lt;f32&gt;,         //     8   24    144
+<a href=#2378 id=2378 data-nosnippet>2378</a>    ///     load_transform: mat3x2&lt;f32&gt;,           //     8   24    168
+<a href=#2379 id=2379 data-nosnippet>2379</a>    ///     size: vec2&lt;u32&gt;,                       //     8    8    192
+<a href=#2380 id=2380 data-nosnippet>2380</a>    ///     num_planes: u32,                       //     4    4    200
+<a href=#2381 id=2381 data-nosnippet>2381</a>    /// }                            // whole struct:    16  208
+<a href=#2382 id=2382 data-nosnippet>2382</a>    /// ```
+<a href=#2383 id=2383 data-nosnippet>2383</a>    ///
+<a href=#2384 id=2384 data-nosnippet>2384</a>    /// Call [`Module::generate_external_texture_types`] to populate this if
+<a href=#2385 id=2385 data-nosnippet>2385</a>    /// needed.
+<a href=#2386 id=2386 data-nosnippet>2386</a>    </span><span class="kw">pub </span>external_texture_params: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&gt;&gt;,
+<a href=#2387 id=2387 data-nosnippet>2387</a>
+<a href=#2388 id=2388 data-nosnippet>2388</a>    <span class="doccomment">/// Struct describing a gamma encoding transfer function. Member of
+<a href=#2389 id=2389 data-nosnippet>2389</a>    /// `NagaExternalTextureParams`, describing how the backend should perform
+<a href=#2390 id=2390 data-nosnippet>2390</a>    /// color space conversion when sampling from [`ImageClass::External`]
+<a href=#2391 id=2391 data-nosnippet>2391</a>    /// textures.
+<a href=#2392 id=2392 data-nosnippet>2392</a>    ///
+<a href=#2393 id=2393 data-nosnippet>2393</a>    /// In WGSL, this type would be:
+<a href=#2394 id=2394 data-nosnippet>2394</a>    ///
+<a href=#2395 id=2395 data-nosnippet>2395</a>    /// ```ignore
+<a href=#2396 id=2396 data-nosnippet>2396</a>    /// struct NagaExternalTextureTransferFn { // align size offset
+<a href=#2397 id=2397 data-nosnippet>2397</a>    ///     a: f32,                            //     4    4      0
+<a href=#2398 id=2398 data-nosnippet>2398</a>    ///     b: f32,                            //     4    4      4
+<a href=#2399 id=2399 data-nosnippet>2399</a>    ///     g: f32,                            //     4    4      8
+<a href=#2400 id=2400 data-nosnippet>2400</a>    ///     k: f32,                            //     4    4     12
+<a href=#2401 id=2401 data-nosnippet>2401</a>    /// }                         // whole struct:    4   16
+<a href=#2402 id=2402 data-nosnippet>2402</a>    /// ```
+<a href=#2403 id=2403 data-nosnippet>2403</a>    ///
+<a href=#2404 id=2404 data-nosnippet>2404</a>    /// Call [`Module::generate_external_texture_types`] to populate this if
+<a href=#2405 id=2405 data-nosnippet>2405</a>    /// needed.
+<a href=#2406 id=2406 data-nosnippet>2406</a>    </span><span class="kw">pub </span>external_texture_transfer_function: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&gt;&gt;,
+<a href=#2407 id=2407 data-nosnippet>2407</a>
+<a href=#2408 id=2408 data-nosnippet>2408</a>    <span class="doccomment">/// Types for predeclared wgsl types instantiated on demand.
+<a href=#2409 id=2409 data-nosnippet>2409</a>    ///
+<a href=#2410 id=2410 data-nosnippet>2410</a>    /// Call [`Module::generate_predeclared_type`] to populate this if
+<a href=#2411 id=2411 data-nosnippet>2411</a>    /// needed and return the handle.
+<a href=#2412 id=2412 data-nosnippet>2412</a>    </span><span class="kw">pub </span>predeclared_types: FastIndexMap&lt;PredeclaredType, Handle&lt;Type&gt;&gt;,
+<a href=#2413 id=2413 data-nosnippet>2413</a>}
+<a href=#2414 id=2414 data-nosnippet>2414</a>
+<a href=#2415 id=2415 data-nosnippet>2415</a><span class="macro">bitflags::bitflags!</span> {
+<a href=#2416 id=2416 data-nosnippet>2416</a>    <span class="doccomment">/// Ray flags used when casting rays.
+<a href=#2417 id=2417 data-nosnippet>2417</a>    /// Matching vulkan constants can be found in
+<a href=#2418 id=2418 data-nosnippet>2418</a>    /// https://github.com/KhronosGroup/SPIRV-Registry/blob/main/extensions/KHR/ray_common/ray_flags_section.txt
+<a href=#2419 id=2419 data-nosnippet>2419</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+<a href=#2420 id=2420 data-nosnippet>2420</a>    #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
+<a href=#2421 id=2421 data-nosnippet>2421</a>    #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
+<a href=#2422 id=2422 data-nosnippet>2422</a>    #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+<a href=#2423 id=2423 data-nosnippet>2423</a>    </span><span class="kw">pub struct </span>RayFlag: u32 {
+<a href=#2424 id=2424 data-nosnippet>2424</a>        <span class="doccomment">/// Force all intersections to be treated as opaque.
+<a href=#2425 id=2425 data-nosnippet>2425</a>        </span><span class="kw">const </span>FORCE_OPAQUE = <span class="number">0x1</span>;
+<a href=#2426 id=2426 data-nosnippet>2426</a>        <span class="doccomment">/// Force all intersections to be treated as non-opaque.
+<a href=#2427 id=2427 data-nosnippet>2427</a>        </span><span class="kw">const </span>FORCE_NO_OPAQUE = <span class="number">0x2</span>;
+<a href=#2428 id=2428 data-nosnippet>2428</a>        <span class="doccomment">/// Stop traversal after the first hit.
+<a href=#2429 id=2429 data-nosnippet>2429</a>        </span><span class="kw">const </span>TERMINATE_ON_FIRST_HIT = <span class="number">0x4</span>;
+<a href=#2430 id=2430 data-nosnippet>2430</a>        <span class="doccomment">/// Don't execute the closest hit shader.
+<a href=#2431 id=2431 data-nosnippet>2431</a>        </span><span class="kw">const </span>SKIP_CLOSEST_HIT_SHADER = <span class="number">0x8</span>;
+<a href=#2432 id=2432 data-nosnippet>2432</a>        <span class="doccomment">/// Cull back facing geometry.
+<a href=#2433 id=2433 data-nosnippet>2433</a>        </span><span class="kw">const </span>CULL_BACK_FACING = <span class="number">0x10</span>;
+<a href=#2434 id=2434 data-nosnippet>2434</a>        <span class="doccomment">/// Cull front facing geometry.
+<a href=#2435 id=2435 data-nosnippet>2435</a>        </span><span class="kw">const </span>CULL_FRONT_FACING = <span class="number">0x20</span>;
+<a href=#2436 id=2436 data-nosnippet>2436</a>        <span class="doccomment">/// Cull opaque geometry.
+<a href=#2437 id=2437 data-nosnippet>2437</a>        </span><span class="kw">const </span>CULL_OPAQUE = <span class="number">0x40</span>;
+<a href=#2438 id=2438 data-nosnippet>2438</a>        <span class="doccomment">/// Cull non-opaque geometry.
+<a href=#2439 id=2439 data-nosnippet>2439</a>        </span><span class="kw">const </span>CULL_NO_OPAQUE = <span class="number">0x80</span>;
+<a href=#2440 id=2440 data-nosnippet>2440</a>        <span class="doccomment">/// Skip triangular geometry.
+<a href=#2441 id=2441 data-nosnippet>2441</a>        </span><span class="kw">const </span>SKIP_TRIANGLES = <span class="number">0x100</span>;
+<a href=#2442 id=2442 data-nosnippet>2442</a>        <span class="doccomment">/// Skip axis-aligned bounding boxes.
+<a href=#2443 id=2443 data-nosnippet>2443</a>        </span><span class="kw">const </span>SKIP_AABBS = <span class="number">0x200</span>;
+<a href=#2444 id=2444 data-nosnippet>2444</a>    }
+<a href=#2445 id=2445 data-nosnippet>2445</a>}
+<a href=#2446 id=2446 data-nosnippet>2446</a>
+<a href=#2447 id=2447 data-nosnippet>2447</a><span class="doccomment">/// Type of a ray query intersection.
+<a href=#2448 id=2448 data-nosnippet>2448</a>/// Matching vulkan constants can be found in
+<a href=#2449 id=2449 data-nosnippet>2449</a>/// &lt;https://github.com/KhronosGroup/SPIRV-Registry/blob/main/extensions/KHR/SPV_KHR_ray_query.asciidoc&gt;
+<a href=#2450 id=2450 data-nosnippet>2450</a>/// but the actual values are different for candidate intersections.
+<a href=#2451 id=2451 data-nosnippet>2451</a></span><span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+<a href=#2452 id=2452 data-nosnippet>2452</a>#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
+<a href=#2453 id=2453 data-nosnippet>2453</a>#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
+<a href=#2454 id=2454 data-nosnippet>2454</a>#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+<a href=#2455 id=2455 data-nosnippet>2455</a></span><span class="kw">pub enum </span>RayQueryIntersection {
+<a href=#2456 id=2456 data-nosnippet>2456</a>    <span class="doccomment">/// No intersection found.
+<a href=#2457 id=2457 data-nosnippet>2457</a>    /// Matches `RayQueryCommittedIntersectionNoneKHR`.
+<a href=#2458 id=2458 data-nosnippet>2458</a>    </span><span class="attr">#[default]
+<a href=#2459 id=2459 data-nosnippet>2459</a>    </span><span class="prelude-val">None </span>= <span class="number">0</span>,
+<a href=#2460 id=2460 data-nosnippet>2460</a>    <span class="doccomment">/// Intersecting with triangles.
+<a href=#2461 id=2461 data-nosnippet>2461</a>    /// Matches `RayQueryCommittedIntersectionTriangleKHR` and `RayQueryCandidateIntersectionTriangleKHR`.
+<a href=#2462 id=2462 data-nosnippet>2462</a>    </span>Triangle = <span class="number">1</span>,
+<a href=#2463 id=2463 data-nosnippet>2463</a>    <span class="doccomment">/// Intersecting with generated primitives.
+<a href=#2464 id=2464 data-nosnippet>2464</a>    /// Matches `RayQueryCommittedIntersectionGeneratedKHR`.
+<a href=#2465 id=2465 data-nosnippet>2465</a>    </span>Generated = <span class="number">2</span>,
+<a href=#2466 id=2466 data-nosnippet>2466</a>    <span class="doccomment">/// Intersecting with Axis Aligned Bounding Boxes.
+<a href=#2467 id=2467 data-nosnippet>2467</a>    /// Matches `RayQueryCandidateIntersectionAABBKHR`.
+<a href=#2468 id=2468 data-nosnippet>2468</a>    </span>Aabb = <span class="number">3</span>,
+<a href=#2469 id=2469 data-nosnippet>2469</a>}
+<a href=#2470 id=2470 data-nosnippet>2470</a>
+<a href=#2471 id=2471 data-nosnippet>2471</a><span class="doccomment">/// Doc comments preceding items.
+<a href=#2472 id=2472 data-nosnippet>2472</a>///
+<a href=#2473 id=2473 data-nosnippet>2473</a>/// These can be used to generate automated documentation,
+<a href=#2474 id=2474 data-nosnippet>2474</a>/// IDE hover information or translate shaders with their context comments.
+<a href=#2475 id=2475 data-nosnippet>2475</a></span><span class="attr">#[derive(Debug, Default, Clone)]
+<a href=#2476 id=2476 data-nosnippet>2476</a>#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+<a href=#2477 id=2477 data-nosnippet>2477</a>#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
+<a href=#2478 id=2478 data-nosnippet>2478</a>#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
+<a href=#2479 id=2479 data-nosnippet>2479</a></span><span class="kw">pub struct </span>DocComments {
+<a href=#2480 id=2480 data-nosnippet>2480</a>    <span class="kw">pub </span>types: FastIndexMap&lt;Handle&lt;Type&gt;, Vec&lt;String&gt;&gt;,
+<a href=#2481 id=2481 data-nosnippet>2481</a>    <span class="comment">// The key is:
+<a href=#2482 id=2482 data-nosnippet>2482</a>    // - key.0: the handle to the Struct
+<a href=#2483 id=2483 data-nosnippet>2483</a>    // - key.1: the index of the `StructMember`.
+<a href=#2484 id=2484 data-nosnippet>2484</a>    </span><span class="kw">pub </span>struct_members: FastIndexMap&lt;(Handle&lt;Type&gt;, usize), Vec&lt;String&gt;&gt;,
+<a href=#2485 id=2485 data-nosnippet>2485</a>    <span class="kw">pub </span>entry_points: FastIndexMap&lt;usize, Vec&lt;String&gt;&gt;,
+<a href=#2486 id=2486 data-nosnippet>2486</a>    <span class="kw">pub </span>functions: FastIndexMap&lt;Handle&lt;Function&gt;, Vec&lt;String&gt;&gt;,
+<a href=#2487 id=2487 data-nosnippet>2487</a>    <span class="kw">pub </span>constants: FastIndexMap&lt;Handle&lt;Constant&gt;, Vec&lt;String&gt;&gt;,
+<a href=#2488 id=2488 data-nosnippet>2488</a>    <span class="kw">pub </span>global_variables: FastIndexMap&lt;Handle&lt;GlobalVariable&gt;, Vec&lt;String&gt;&gt;,
+<a href=#2489 id=2489 data-nosnippet>2489</a>    <span class="comment">// Top level comments, appearing before any space.
+<a href=#2490 id=2490 data-nosnippet>2490</a>    </span><span class="kw">pub </span>module: Vec&lt;String&gt;,
+<a href=#2491 id=2491 data-nosnippet>2491</a>}
+<a href=#2492 id=2492 data-nosnippet>2492</a>
+<a href=#2493 id=2493 data-nosnippet>2493</a><span class="doccomment">/// Shader module.
 <a href=#2494 id=2494 data-nosnippet>2494</a>///
-<a href=#2495 id=2495 data-nosnippet>2495</a>/// - types and expressions are visited in the order in which they appear in
-<a href=#2496 id=2496 data-nosnippet>2496</a>///   their arenas, and
+<a href=#2495 id=2495 data-nosnippet>2495</a>/// A module is a set of constants, global variables and functions, as well as
+<a href=#2496 id=2496 data-nosnippet>2496</a>/// the types required to define them.
 <a href=#2497 id=2497 data-nosnippet>2497</a>///
-<a href=#2498 id=2498 data-nosnippet>2498</a>/// - every element refers only to previously visited elements.
+<a href=#2498 id=2498 data-nosnippet>2498</a>/// Some functions are marked as entry points, to be used in a certain shader stage.
 <a href=#2499 id=2499 data-nosnippet>2499</a>///
-<a href=#2500 id=2500 data-nosnippet>2500</a>/// This implies that the graph of types and global expressions is acyclic.
-<a href=#2501 id=2501 data-nosnippet>2501</a>/// (However, it is a stronger condition: there are cycle-free arrangements of
-<a href=#2502 id=2502 data-nosnippet>2502</a>/// types and expressions for which an order like the one described above does
-<a href=#2503 id=2503 data-nosnippet>2503</a>/// not exist. Modules arranged in such a way are not valid.)
+<a href=#2500 id=2500 data-nosnippet>2500</a>/// To create a new module, use the `Default` implementation.
+<a href=#2501 id=2501 data-nosnippet>2501</a>/// Alternatively, you can load an existing shader using one of the [available front ends].
+<a href=#2502 id=2502 data-nosnippet>2502</a>///
+<a href=#2503 id=2503 data-nosnippet>2503</a>/// When finished, you can export modules using one of the [available backends].
 <a href=#2504 id=2504 data-nosnippet>2504</a>///
-<a href=#2505 id=2505 data-nosnippet>2505</a>/// [available front ends]: crate::front
-<a href=#2506 id=2506 data-nosnippet>2506</a>/// [available backends]: crate::back
-<a href=#2507 id=2507 data-nosnippet>2507</a></span><span class="attr">#[derive(Debug, Default, Clone)]
-<a href=#2508 id=2508 data-nosnippet>2508</a>#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
-<a href=#2509 id=2509 data-nosnippet>2509</a>#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
-<a href=#2510 id=2510 data-nosnippet>2510</a>#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
-<a href=#2511 id=2511 data-nosnippet>2511</a></span><span class="kw">pub struct </span>Module {
-<a href=#2512 id=2512 data-nosnippet>2512</a>    <span class="doccomment">/// Arena for the types defined in this module.
-<a href=#2513 id=2513 data-nosnippet>2513</a>    ///
-<a href=#2514 id=2514 data-nosnippet>2514</a>    /// See the [`Module`] docs for more details about this field.
-<a href=#2515 id=2515 data-nosnippet>2515</a>    </span><span class="kw">pub </span>types: UniqueArena&lt;Type&gt;,
-<a href=#2516 id=2516 data-nosnippet>2516</a>    <span class="doccomment">/// Dictionary of special type handles.
-<a href=#2517 id=2517 data-nosnippet>2517</a>    </span><span class="kw">pub </span>special_types: SpecialTypes,
-<a href=#2518 id=2518 data-nosnippet>2518</a>    <span class="doccomment">/// Arena for the constants defined in this module.
-<a href=#2519 id=2519 data-nosnippet>2519</a>    </span><span class="kw">pub </span>constants: Arena&lt;Constant&gt;,
-<a href=#2520 id=2520 data-nosnippet>2520</a>    <span class="doccomment">/// Arena for the pipeline-overridable constants defined in this module.
-<a href=#2521 id=2521 data-nosnippet>2521</a>    </span><span class="kw">pub </span>overrides: Arena&lt;Override&gt;,
-<a href=#2522 id=2522 data-nosnippet>2522</a>    <span class="doccomment">/// Arena for the global variables defined in this module.
-<a href=#2523 id=2523 data-nosnippet>2523</a>    </span><span class="kw">pub </span>global_variables: Arena&lt;GlobalVariable&gt;,
-<a href=#2524 id=2524 data-nosnippet>2524</a>    <span class="doccomment">/// [Constant expressions] and [override expressions] used by this module.
-<a href=#2525 id=2525 data-nosnippet>2525</a>    ///
-<a href=#2526 id=2526 data-nosnippet>2526</a>    /// If an expression is in this arena, then its subexpressions are in this
-<a href=#2527 id=2527 data-nosnippet>2527</a>    /// arena too. In other words, every `Handle&lt;Expression&gt;` in this arena
-<a href=#2528 id=2528 data-nosnippet>2528</a>    /// refers to an [`Expression`] in this arena too.
-<a href=#2529 id=2529 data-nosnippet>2529</a>    ///
-<a href=#2530 id=2530 data-nosnippet>2530</a>    /// See the [`Module`] docs for more details about this field.
-<a href=#2531 id=2531 data-nosnippet>2531</a>    ///
-<a href=#2532 id=2532 data-nosnippet>2532</a>    /// [Constant expressions]: index.html#constant-expressions
-<a href=#2533 id=2533 data-nosnippet>2533</a>    /// [override expressions]: index.html#override-expressions
-<a href=#2534 id=2534 data-nosnippet>2534</a>    </span><span class="kw">pub </span>global_expressions: Arena&lt;Expression&gt;,
-<a href=#2535 id=2535 data-nosnippet>2535</a>    <span class="doccomment">/// Arena for the functions defined in this module.
+<a href=#2505 id=2505 data-nosnippet>2505</a>/// ## Module arenas
+<a href=#2506 id=2506 data-nosnippet>2506</a>///
+<a href=#2507 id=2507 data-nosnippet>2507</a>/// Most module contents are stored in [`Arena`]s. In a valid module, arena
+<a href=#2508 id=2508 data-nosnippet>2508</a>/// elements only refer to prior arena elements. That is, whenever an element in
+<a href=#2509 id=2509 data-nosnippet>2509</a>/// some `Arena&lt;T&gt;` contains a `Handle&lt;T&gt;` referring to another element the same
+<a href=#2510 id=2510 data-nosnippet>2510</a>/// arena, the handle's referent always precedes the element containing the
+<a href=#2511 id=2511 data-nosnippet>2511</a>/// handle.
+<a href=#2512 id=2512 data-nosnippet>2512</a>///
+<a href=#2513 id=2513 data-nosnippet>2513</a>/// The elements of [`Module::types`] may refer to [`Expression`]s in
+<a href=#2514 id=2514 data-nosnippet>2514</a>/// [`Module::global_expressions`], and those expressions may in turn refer back
+<a href=#2515 id=2515 data-nosnippet>2515</a>/// to [`Type`]s in [`Module::types`]. In a valid module, there exists an order
+<a href=#2516 id=2516 data-nosnippet>2516</a>/// in which all types and global expressions can be visited such that:
+<a href=#2517 id=2517 data-nosnippet>2517</a>///
+<a href=#2518 id=2518 data-nosnippet>2518</a>/// - types and expressions are visited in the order in which they appear in
+<a href=#2519 id=2519 data-nosnippet>2519</a>///   their arenas, and
+<a href=#2520 id=2520 data-nosnippet>2520</a>///
+<a href=#2521 id=2521 data-nosnippet>2521</a>/// - every element refers only to previously visited elements.
+<a href=#2522 id=2522 data-nosnippet>2522</a>///
+<a href=#2523 id=2523 data-nosnippet>2523</a>/// This implies that the graph of types and global expressions is acyclic.
+<a href=#2524 id=2524 data-nosnippet>2524</a>/// (However, it is a stronger condition: there are cycle-free arrangements of
+<a href=#2525 id=2525 data-nosnippet>2525</a>/// types and expressions for which an order like the one described above does
+<a href=#2526 id=2526 data-nosnippet>2526</a>/// not exist. Modules arranged in such a way are not valid.)
+<a href=#2527 id=2527 data-nosnippet>2527</a>///
+<a href=#2528 id=2528 data-nosnippet>2528</a>/// [available front ends]: crate::front
+<a href=#2529 id=2529 data-nosnippet>2529</a>/// [available backends]: crate::back
+<a href=#2530 id=2530 data-nosnippet>2530</a></span><span class="attr">#[derive(Debug, Default, Clone)]
+<a href=#2531 id=2531 data-nosnippet>2531</a>#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+<a href=#2532 id=2532 data-nosnippet>2532</a>#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
+<a href=#2533 id=2533 data-nosnippet>2533</a>#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
+<a href=#2534 id=2534 data-nosnippet>2534</a></span><span class="kw">pub struct </span>Module {
+<a href=#2535 id=2535 data-nosnippet>2535</a>    <span class="doccomment">/// Arena for the types defined in this module.
 <a href=#2536 id=2536 data-nosnippet>2536</a>    ///
-<a href=#2537 id=2537 data-nosnippet>2537</a>    /// Each function must appear in this arena strictly before all its callers.
-<a href=#2538 id=2538 data-nosnippet>2538</a>    /// Recursion is not supported.
-<a href=#2539 id=2539 data-nosnippet>2539</a>    </span><span class="kw">pub </span>functions: Arena&lt;Function&gt;,
-<a href=#2540 id=2540 data-nosnippet>2540</a>    <span class="doccomment">/// Entry points.
-<a href=#2541 id=2541 data-nosnippet>2541</a>    </span><span class="kw">pub </span>entry_points: Vec&lt;EntryPoint&gt;,
-<a href=#2542 id=2542 data-nosnippet>2542</a>    <span class="doccomment">/// Arena for all diagnostic filter rules parsed in this module, including those in functions
-<a href=#2543 id=2543 data-nosnippet>2543</a>    /// and statements.
-<a href=#2544 id=2544 data-nosnippet>2544</a>    ///
-<a href=#2545 id=2545 data-nosnippet>2545</a>    /// This arena contains elements of a _tree_ of diagnostic filter rules. When nodes are built
-<a href=#2546 id=2546 data-nosnippet>2546</a>    /// by a front-end, they refer to a parent scope
-<a href=#2547 id=2547 data-nosnippet>2547</a>    </span><span class="kw">pub </span>diagnostic_filters: Arena&lt;DiagnosticFilterNode&gt;,
-<a href=#2548 id=2548 data-nosnippet>2548</a>    <span class="doccomment">/// The leaf of all diagnostic filter rules tree parsed from directives in this module.
-<a href=#2549 id=2549 data-nosnippet>2549</a>    ///
-<a href=#2550 id=2550 data-nosnippet>2550</a>    /// In WGSL, this corresponds to `diagnostic(…);` directives.
-<a href=#2551 id=2551 data-nosnippet>2551</a>    ///
-<a href=#2552 id=2552 data-nosnippet>2552</a>    /// See [`DiagnosticFilterNode`] for details on how the tree is represented and used in
-<a href=#2553 id=2553 data-nosnippet>2553</a>    /// validation.
-<a href=#2554 id=2554 data-nosnippet>2554</a>    </span><span class="kw">pub </span>diagnostic_filter_leaf: <span class="prelude-ty">Option</span>&lt;Handle&lt;DiagnosticFilterNode&gt;&gt;,
-<a href=#2555 id=2555 data-nosnippet>2555</a>    <span class="doccomment">/// Doc comments.
-<a href=#2556 id=2556 data-nosnippet>2556</a>    </span><span class="kw">pub </span>doc_comments: <span class="prelude-ty">Option</span>&lt;Box&lt;DocComments&gt;&gt;,
-<a href=#2557 id=2557 data-nosnippet>2557</a>}</code></pre></div></section></main></body></html>
+<a href=#2537 id=2537 data-nosnippet>2537</a>    /// See the [`Module`] docs for more details about this field.
+<a href=#2538 id=2538 data-nosnippet>2538</a>    </span><span class="kw">pub </span>types: UniqueArena&lt;Type&gt;,
+<a href=#2539 id=2539 data-nosnippet>2539</a>    <span class="doccomment">/// Dictionary of special type handles.
+<a href=#2540 id=2540 data-nosnippet>2540</a>    </span><span class="kw">pub </span>special_types: SpecialTypes,
+<a href=#2541 id=2541 data-nosnippet>2541</a>    <span class="doccomment">/// Arena for the constants defined in this module.
+<a href=#2542 id=2542 data-nosnippet>2542</a>    </span><span class="kw">pub </span>constants: Arena&lt;Constant&gt;,
+<a href=#2543 id=2543 data-nosnippet>2543</a>    <span class="doccomment">/// Arena for the pipeline-overridable constants defined in this module.
+<a href=#2544 id=2544 data-nosnippet>2544</a>    </span><span class="kw">pub </span>overrides: Arena&lt;Override&gt;,
+<a href=#2545 id=2545 data-nosnippet>2545</a>    <span class="doccomment">/// Arena for the global variables defined in this module.
+<a href=#2546 id=2546 data-nosnippet>2546</a>    </span><span class="kw">pub </span>global_variables: Arena&lt;GlobalVariable&gt;,
+<a href=#2547 id=2547 data-nosnippet>2547</a>    <span class="doccomment">/// [Constant expressions] and [override expressions] used by this module.
+<a href=#2548 id=2548 data-nosnippet>2548</a>    ///
+<a href=#2549 id=2549 data-nosnippet>2549</a>    /// If an expression is in this arena, then its subexpressions are in this
+<a href=#2550 id=2550 data-nosnippet>2550</a>    /// arena too. In other words, every `Handle&lt;Expression&gt;` in this arena
+<a href=#2551 id=2551 data-nosnippet>2551</a>    /// refers to an [`Expression`] in this arena too.
+<a href=#2552 id=2552 data-nosnippet>2552</a>    ///
+<a href=#2553 id=2553 data-nosnippet>2553</a>    /// See the [`Module`] docs for more details about this field.
+<a href=#2554 id=2554 data-nosnippet>2554</a>    ///
+<a href=#2555 id=2555 data-nosnippet>2555</a>    /// [Constant expressions]: index.html#constant-expressions
+<a href=#2556 id=2556 data-nosnippet>2556</a>    /// [override expressions]: index.html#override-expressions
+<a href=#2557 id=2557 data-nosnippet>2557</a>    </span><span class="kw">pub </span>global_expressions: Arena&lt;Expression&gt;,
+<a href=#2558 id=2558 data-nosnippet>2558</a>    <span class="doccomment">/// Arena for the functions defined in this module.
+<a href=#2559 id=2559 data-nosnippet>2559</a>    ///
+<a href=#2560 id=2560 data-nosnippet>2560</a>    /// Each function must appear in this arena strictly before all its callers.
+<a href=#2561 id=2561 data-nosnippet>2561</a>    /// Recursion is not supported.
+<a href=#2562 id=2562 data-nosnippet>2562</a>    </span><span class="kw">pub </span>functions: Arena&lt;Function&gt;,
+<a href=#2563 id=2563 data-nosnippet>2563</a>    <span class="doccomment">/// Entry points.
+<a href=#2564 id=2564 data-nosnippet>2564</a>    </span><span class="kw">pub </span>entry_points: Vec&lt;EntryPoint&gt;,
+<a href=#2565 id=2565 data-nosnippet>2565</a>    <span class="doccomment">/// Arena for all diagnostic filter rules parsed in this module, including those in functions
+<a href=#2566 id=2566 data-nosnippet>2566</a>    /// and statements.
+<a href=#2567 id=2567 data-nosnippet>2567</a>    ///
+<a href=#2568 id=2568 data-nosnippet>2568</a>    /// This arena contains elements of a _tree_ of diagnostic filter rules. When nodes are built
+<a href=#2569 id=2569 data-nosnippet>2569</a>    /// by a front-end, they refer to a parent scope
+<a href=#2570 id=2570 data-nosnippet>2570</a>    </span><span class="kw">pub </span>diagnostic_filters: Arena&lt;DiagnosticFilterNode&gt;,
+<a href=#2571 id=2571 data-nosnippet>2571</a>    <span class="doccomment">/// The leaf of all diagnostic filter rules tree parsed from directives in this module.
+<a href=#2572 id=2572 data-nosnippet>2572</a>    ///
+<a href=#2573 id=2573 data-nosnippet>2573</a>    /// In WGSL, this corresponds to `diagnostic(…);` directives.
+<a href=#2574 id=2574 data-nosnippet>2574</a>    ///
+<a href=#2575 id=2575 data-nosnippet>2575</a>    /// See [`DiagnosticFilterNode`] for details on how the tree is represented and used in
+<a href=#2576 id=2576 data-nosnippet>2576</a>    /// validation.
+<a href=#2577 id=2577 data-nosnippet>2577</a>    </span><span class="kw">pub </span>diagnostic_filter_leaf: <span class="prelude-ty">Option</span>&lt;Handle&lt;DiagnosticFilterNode&gt;&gt;,
+<a href=#2578 id=2578 data-nosnippet>2578</a>    <span class="doccomment">/// Doc comments.
+<a href=#2579 id=2579 data-nosnippet>2579</a>    </span><span class="kw">pub </span>doc_comments: <span class="prelude-ty">Option</span>&lt;Box&lt;DocComments&gt;&gt;,
+<a href=#2580 id=2580 data-nosnippet>2580</a>}</code></pre></div></section></main></body></html>
