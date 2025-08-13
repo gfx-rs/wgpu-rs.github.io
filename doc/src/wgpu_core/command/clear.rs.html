@@ -373,167 +373,169 @@
 <a href=#373 id=373 data-nosnippet>373</a>) {
 <a href=#374 id=374 data-nosnippet>374</a>    <span class="macro">assert!</span>(!texture_desc.format.is_depth_stencil_format());
 <a href=#375 id=375 data-nosnippet>375</a>
-<a href=#376 id=376 data-nosnippet>376</a>    <span class="kw">if </span>texture_desc.format == wgt::TextureFormat::NV12 {
-<a href=#377 id=377 data-nosnippet>377</a>        <span class="comment">// TODO: Currently COPY_DST for NV12 textures is unsupported.
-<a href=#378 id=378 data-nosnippet>378</a>        </span><span class="kw">return</span>;
-<a href=#379 id=379 data-nosnippet>379</a>    }
-<a href=#380 id=380 data-nosnippet>380</a>
-<a href=#381 id=381 data-nosnippet>381</a>    <span class="comment">// Gather list of zero_buffer copies and issue a single command then to perform them
-<a href=#382 id=382 data-nosnippet>382</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>zero_buffer_copy_regions = Vec::new();
-<a href=#383 id=383 data-nosnippet>383</a>    <span class="kw">let </span>buffer_copy_pitch = alignments.buffer_copy_pitch.get() <span class="kw">as </span>u32;
-<a href=#384 id=384 data-nosnippet>384</a>    <span class="kw">let </span>(block_width, block_height) = texture_desc.format.block_dimensions();
-<a href=#385 id=385 data-nosnippet>385</a>    <span class="kw">let </span>block_size = texture_desc.format.block_copy_size(<span class="prelude-val">None</span>).unwrap();
-<a href=#386 id=386 data-nosnippet>386</a>
-<a href=#387 id=387 data-nosnippet>387</a>    <span class="kw">let </span>bytes_per_row_alignment = get_lowest_common_denom(buffer_copy_pitch, block_size);
+<a href=#376 id=376 data-nosnippet>376</a>    <span class="kw">if </span>texture_desc.format == wgt::TextureFormat::NV12
+<a href=#377 id=377 data-nosnippet>377</a>        || texture_desc.format == wgt::TextureFormat::P010
+<a href=#378 id=378 data-nosnippet>378</a>    {
+<a href=#379 id=379 data-nosnippet>379</a>        <span class="comment">// TODO: Currently COPY_DST for NV12 and P010 textures is unsupported.
+<a href=#380 id=380 data-nosnippet>380</a>        </span><span class="kw">return</span>;
+<a href=#381 id=381 data-nosnippet>381</a>    }
+<a href=#382 id=382 data-nosnippet>382</a>
+<a href=#383 id=383 data-nosnippet>383</a>    <span class="comment">// Gather list of zero_buffer copies and issue a single command then to perform them
+<a href=#384 id=384 data-nosnippet>384</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>zero_buffer_copy_regions = Vec::new();
+<a href=#385 id=385 data-nosnippet>385</a>    <span class="kw">let </span>buffer_copy_pitch = alignments.buffer_copy_pitch.get() <span class="kw">as </span>u32;
+<a href=#386 id=386 data-nosnippet>386</a>    <span class="kw">let </span>(block_width, block_height) = texture_desc.format.block_dimensions();
+<a href=#387 id=387 data-nosnippet>387</a>    <span class="kw">let </span>block_size = texture_desc.format.block_copy_size(<span class="prelude-val">None</span>).unwrap();
 <a href=#388 id=388 data-nosnippet>388</a>
-<a href=#389 id=389 data-nosnippet>389</a>    <span class="kw">for </span>mip_level <span class="kw">in </span>range.mip_range {
-<a href=#390 id=390 data-nosnippet>390</a>        <span class="kw">let </span><span class="kw-2">mut </span>mip_size = texture_desc.mip_level_size(mip_level).unwrap();
-<a href=#391 id=391 data-nosnippet>391</a>        <span class="comment">// Round to multiple of block size
-<a href=#392 id=392 data-nosnippet>392</a>        </span>mip_size.width = align_to(mip_size.width, block_width);
-<a href=#393 id=393 data-nosnippet>393</a>        mip_size.height = align_to(mip_size.height, block_height);
-<a href=#394 id=394 data-nosnippet>394</a>
-<a href=#395 id=395 data-nosnippet>395</a>        <span class="kw">let </span>bytes_per_row = align_to(
-<a href=#396 id=396 data-nosnippet>396</a>            mip_size.width / block_width * block_size,
-<a href=#397 id=397 data-nosnippet>397</a>            bytes_per_row_alignment,
-<a href=#398 id=398 data-nosnippet>398</a>        );
-<a href=#399 id=399 data-nosnippet>399</a>
-<a href=#400 id=400 data-nosnippet>400</a>        <span class="kw">let </span>max_rows_per_copy = <span class="kw">crate</span>::device::ZERO_BUFFER_SIZE <span class="kw">as </span>u32 / bytes_per_row;
-<a href=#401 id=401 data-nosnippet>401</a>        <span class="comment">// round down to a multiple of rows needed by the texture format
-<a href=#402 id=402 data-nosnippet>402</a>        </span><span class="kw">let </span>max_rows_per_copy = max_rows_per_copy / block_height * block_height;
-<a href=#403 id=403 data-nosnippet>403</a>        <span class="macro">assert!</span>(
-<a href=#404 id=404 data-nosnippet>404</a>            max_rows_per_copy &gt; <span class="number">0</span>,
-<a href=#405 id=405 data-nosnippet>405</a>            <span class="string">"Zero buffer size is too small to fill a single row \
-<a href=#406 id=406 data-nosnippet>406</a>            of a texture with format {:?} and desc {:?}"</span>,
-<a href=#407 id=407 data-nosnippet>407</a>            texture_desc.format,
-<a href=#408 id=408 data-nosnippet>408</a>            texture_desc.size
-<a href=#409 id=409 data-nosnippet>409</a>        );
-<a href=#410 id=410 data-nosnippet>410</a>
-<a href=#411 id=411 data-nosnippet>411</a>        <span class="kw">let </span>z_range = <span class="number">0</span>..(<span class="kw">if </span>texture_desc.dimension == wgt::TextureDimension::D3 {
-<a href=#412 id=412 data-nosnippet>412</a>            mip_size.depth_or_array_layers
-<a href=#413 id=413 data-nosnippet>413</a>        } <span class="kw">else </span>{
-<a href=#414 id=414 data-nosnippet>414</a>            <span class="number">1
-<a href=#415 id=415 data-nosnippet>415</a>        </span>});
-<a href=#416 id=416 data-nosnippet>416</a>
-<a href=#417 id=417 data-nosnippet>417</a>        <span class="kw">for </span>array_layer <span class="kw">in </span>range.layer_range.clone() {
-<a href=#418 id=418 data-nosnippet>418</a>            <span class="comment">// TODO: Only doing one layer at a time for volume textures right now.
-<a href=#419 id=419 data-nosnippet>419</a>            </span><span class="kw">for </span>z <span class="kw">in </span>z_range.clone() {
-<a href=#420 id=420 data-nosnippet>420</a>                <span class="comment">// May need multiple copies for each subresource! However, we
-<a href=#421 id=421 data-nosnippet>421</a>                // assume that we never need to split a row.
-<a href=#422 id=422 data-nosnippet>422</a>                </span><span class="kw">let </span><span class="kw-2">mut </span>num_rows_left = mip_size.height;
-<a href=#423 id=423 data-nosnippet>423</a>                <span class="kw">while </span>num_rows_left &gt; <span class="number">0 </span>{
-<a href=#424 id=424 data-nosnippet>424</a>                    <span class="kw">let </span>num_rows = num_rows_left.min(max_rows_per_copy);
-<a href=#425 id=425 data-nosnippet>425</a>
-<a href=#426 id=426 data-nosnippet>426</a>                    zero_buffer_copy_regions.push(hal::BufferTextureCopy {
-<a href=#427 id=427 data-nosnippet>427</a>                        buffer_layout: wgt::TexelCopyBufferLayout {
-<a href=#428 id=428 data-nosnippet>428</a>                            offset: <span class="number">0</span>,
-<a href=#429 id=429 data-nosnippet>429</a>                            bytes_per_row: <span class="prelude-val">Some</span>(bytes_per_row),
-<a href=#430 id=430 data-nosnippet>430</a>                            rows_per_image: <span class="prelude-val">None</span>,
-<a href=#431 id=431 data-nosnippet>431</a>                        },
-<a href=#432 id=432 data-nosnippet>432</a>                        texture_base: hal::TextureCopyBase {
-<a href=#433 id=433 data-nosnippet>433</a>                            mip_level,
-<a href=#434 id=434 data-nosnippet>434</a>                            array_layer,
-<a href=#435 id=435 data-nosnippet>435</a>                            origin: wgt::Origin3d {
-<a href=#436 id=436 data-nosnippet>436</a>                                x: <span class="number">0</span>, <span class="comment">// Always full rows
-<a href=#437 id=437 data-nosnippet>437</a>                                </span>y: mip_size.height - num_rows_left,
-<a href=#438 id=438 data-nosnippet>438</a>                                z,
-<a href=#439 id=439 data-nosnippet>439</a>                            },
-<a href=#440 id=440 data-nosnippet>440</a>                            aspect: hal::FormatAspects::COLOR,
-<a href=#441 id=441 data-nosnippet>441</a>                        },
-<a href=#442 id=442 data-nosnippet>442</a>                        size: hal::CopyExtent {
-<a href=#443 id=443 data-nosnippet>443</a>                            width: mip_size.width, <span class="comment">// full row
-<a href=#444 id=444 data-nosnippet>444</a>                            </span>height: num_rows,
-<a href=#445 id=445 data-nosnippet>445</a>                            depth: <span class="number">1</span>, <span class="comment">// Only single slice of volume texture at a time right now
-<a href=#446 id=446 data-nosnippet>446</a>                        </span>},
-<a href=#447 id=447 data-nosnippet>447</a>                    });
-<a href=#448 id=448 data-nosnippet>448</a>
-<a href=#449 id=449 data-nosnippet>449</a>                    num_rows_left -= num_rows;
-<a href=#450 id=450 data-nosnippet>450</a>                }
-<a href=#451 id=451 data-nosnippet>451</a>            }
-<a href=#452 id=452 data-nosnippet>452</a>        }
-<a href=#453 id=453 data-nosnippet>453</a>    }
-<a href=#454 id=454 data-nosnippet>454</a>
-<a href=#455 id=455 data-nosnippet>455</a>    <span class="kw">unsafe </span>{
-<a href=#456 id=456 data-nosnippet>456</a>        encoder.copy_buffer_to_texture(zero_buffer, dst_raw, <span class="kw-2">&amp;</span>zero_buffer_copy_regions);
-<a href=#457 id=457 data-nosnippet>457</a>    }
-<a href=#458 id=458 data-nosnippet>458</a>}
-<a href=#459 id=459 data-nosnippet>459</a>
-<a href=#460 id=460 data-nosnippet>460</a><span class="kw">fn </span>clear_texture_via_render_passes(
-<a href=#461 id=461 data-nosnippet>461</a>    dst_texture: <span class="kw-2">&amp;</span>Texture,
-<a href=#462 id=462 data-nosnippet>462</a>    range: TextureInitRange,
-<a href=#463 id=463 data-nosnippet>463</a>    is_color: bool,
-<a href=#464 id=464 data-nosnippet>464</a>    encoder: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>hal::DynCommandEncoder,
-<a href=#465 id=465 data-nosnippet>465</a>    instance_flags: wgt::InstanceFlags,
-<a href=#466 id=466 data-nosnippet>466</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
-<a href=#467 id=467 data-nosnippet>467</a>    <span class="macro">assert_eq!</span>(dst_texture.desc.dimension, wgt::TextureDimension::D2);
-<a href=#468 id=468 data-nosnippet>468</a>
-<a href=#469 id=469 data-nosnippet>469</a>    <span class="kw">let </span>extent_base = wgt::Extent3d {
-<a href=#470 id=470 data-nosnippet>470</a>        width: dst_texture.desc.size.width,
-<a href=#471 id=471 data-nosnippet>471</a>        height: dst_texture.desc.size.height,
-<a href=#472 id=472 data-nosnippet>472</a>        depth_or_array_layers: <span class="number">1</span>, <span class="comment">// Only one layer is cleared at a time.
-<a href=#473 id=473 data-nosnippet>473</a>    </span>};
-<a href=#474 id=474 data-nosnippet>474</a>
-<a href=#475 id=475 data-nosnippet>475</a>    <span class="kw">let </span>clear_mode = dst_texture.clear_mode.read();
+<a href=#389 id=389 data-nosnippet>389</a>    <span class="kw">let </span>bytes_per_row_alignment = get_lowest_common_denom(buffer_copy_pitch, block_size);
+<a href=#390 id=390 data-nosnippet>390</a>
+<a href=#391 id=391 data-nosnippet>391</a>    <span class="kw">for </span>mip_level <span class="kw">in </span>range.mip_range {
+<a href=#392 id=392 data-nosnippet>392</a>        <span class="kw">let </span><span class="kw-2">mut </span>mip_size = texture_desc.mip_level_size(mip_level).unwrap();
+<a href=#393 id=393 data-nosnippet>393</a>        <span class="comment">// Round to multiple of block size
+<a href=#394 id=394 data-nosnippet>394</a>        </span>mip_size.width = align_to(mip_size.width, block_width);
+<a href=#395 id=395 data-nosnippet>395</a>        mip_size.height = align_to(mip_size.height, block_height);
+<a href=#396 id=396 data-nosnippet>396</a>
+<a href=#397 id=397 data-nosnippet>397</a>        <span class="kw">let </span>bytes_per_row = align_to(
+<a href=#398 id=398 data-nosnippet>398</a>            mip_size.width / block_width * block_size,
+<a href=#399 id=399 data-nosnippet>399</a>            bytes_per_row_alignment,
+<a href=#400 id=400 data-nosnippet>400</a>        );
+<a href=#401 id=401 data-nosnippet>401</a>
+<a href=#402 id=402 data-nosnippet>402</a>        <span class="kw">let </span>max_rows_per_copy = <span class="kw">crate</span>::device::ZERO_BUFFER_SIZE <span class="kw">as </span>u32 / bytes_per_row;
+<a href=#403 id=403 data-nosnippet>403</a>        <span class="comment">// round down to a multiple of rows needed by the texture format
+<a href=#404 id=404 data-nosnippet>404</a>        </span><span class="kw">let </span>max_rows_per_copy = max_rows_per_copy / block_height * block_height;
+<a href=#405 id=405 data-nosnippet>405</a>        <span class="macro">assert!</span>(
+<a href=#406 id=406 data-nosnippet>406</a>            max_rows_per_copy &gt; <span class="number">0</span>,
+<a href=#407 id=407 data-nosnippet>407</a>            <span class="string">"Zero buffer size is too small to fill a single row \
+<a href=#408 id=408 data-nosnippet>408</a>            of a texture with format {:?} and desc {:?}"</span>,
+<a href=#409 id=409 data-nosnippet>409</a>            texture_desc.format,
+<a href=#410 id=410 data-nosnippet>410</a>            texture_desc.size
+<a href=#411 id=411 data-nosnippet>411</a>        );
+<a href=#412 id=412 data-nosnippet>412</a>
+<a href=#413 id=413 data-nosnippet>413</a>        <span class="kw">let </span>z_range = <span class="number">0</span>..(<span class="kw">if </span>texture_desc.dimension == wgt::TextureDimension::D3 {
+<a href=#414 id=414 data-nosnippet>414</a>            mip_size.depth_or_array_layers
+<a href=#415 id=415 data-nosnippet>415</a>        } <span class="kw">else </span>{
+<a href=#416 id=416 data-nosnippet>416</a>            <span class="number">1
+<a href=#417 id=417 data-nosnippet>417</a>        </span>});
+<a href=#418 id=418 data-nosnippet>418</a>
+<a href=#419 id=419 data-nosnippet>419</a>        <span class="kw">for </span>array_layer <span class="kw">in </span>range.layer_range.clone() {
+<a href=#420 id=420 data-nosnippet>420</a>            <span class="comment">// TODO: Only doing one layer at a time for volume textures right now.
+<a href=#421 id=421 data-nosnippet>421</a>            </span><span class="kw">for </span>z <span class="kw">in </span>z_range.clone() {
+<a href=#422 id=422 data-nosnippet>422</a>                <span class="comment">// May need multiple copies for each subresource! However, we
+<a href=#423 id=423 data-nosnippet>423</a>                // assume that we never need to split a row.
+<a href=#424 id=424 data-nosnippet>424</a>                </span><span class="kw">let </span><span class="kw-2">mut </span>num_rows_left = mip_size.height;
+<a href=#425 id=425 data-nosnippet>425</a>                <span class="kw">while </span>num_rows_left &gt; <span class="number">0 </span>{
+<a href=#426 id=426 data-nosnippet>426</a>                    <span class="kw">let </span>num_rows = num_rows_left.min(max_rows_per_copy);
+<a href=#427 id=427 data-nosnippet>427</a>
+<a href=#428 id=428 data-nosnippet>428</a>                    zero_buffer_copy_regions.push(hal::BufferTextureCopy {
+<a href=#429 id=429 data-nosnippet>429</a>                        buffer_layout: wgt::TexelCopyBufferLayout {
+<a href=#430 id=430 data-nosnippet>430</a>                            offset: <span class="number">0</span>,
+<a href=#431 id=431 data-nosnippet>431</a>                            bytes_per_row: <span class="prelude-val">Some</span>(bytes_per_row),
+<a href=#432 id=432 data-nosnippet>432</a>                            rows_per_image: <span class="prelude-val">None</span>,
+<a href=#433 id=433 data-nosnippet>433</a>                        },
+<a href=#434 id=434 data-nosnippet>434</a>                        texture_base: hal::TextureCopyBase {
+<a href=#435 id=435 data-nosnippet>435</a>                            mip_level,
+<a href=#436 id=436 data-nosnippet>436</a>                            array_layer,
+<a href=#437 id=437 data-nosnippet>437</a>                            origin: wgt::Origin3d {
+<a href=#438 id=438 data-nosnippet>438</a>                                x: <span class="number">0</span>, <span class="comment">// Always full rows
+<a href=#439 id=439 data-nosnippet>439</a>                                </span>y: mip_size.height - num_rows_left,
+<a href=#440 id=440 data-nosnippet>440</a>                                z,
+<a href=#441 id=441 data-nosnippet>441</a>                            },
+<a href=#442 id=442 data-nosnippet>442</a>                            aspect: hal::FormatAspects::COLOR,
+<a href=#443 id=443 data-nosnippet>443</a>                        },
+<a href=#444 id=444 data-nosnippet>444</a>                        size: hal::CopyExtent {
+<a href=#445 id=445 data-nosnippet>445</a>                            width: mip_size.width, <span class="comment">// full row
+<a href=#446 id=446 data-nosnippet>446</a>                            </span>height: num_rows,
+<a href=#447 id=447 data-nosnippet>447</a>                            depth: <span class="number">1</span>, <span class="comment">// Only single slice of volume texture at a time right now
+<a href=#448 id=448 data-nosnippet>448</a>                        </span>},
+<a href=#449 id=449 data-nosnippet>449</a>                    });
+<a href=#450 id=450 data-nosnippet>450</a>
+<a href=#451 id=451 data-nosnippet>451</a>                    num_rows_left -= num_rows;
+<a href=#452 id=452 data-nosnippet>452</a>                }
+<a href=#453 id=453 data-nosnippet>453</a>            }
+<a href=#454 id=454 data-nosnippet>454</a>        }
+<a href=#455 id=455 data-nosnippet>455</a>    }
+<a href=#456 id=456 data-nosnippet>456</a>
+<a href=#457 id=457 data-nosnippet>457</a>    <span class="kw">unsafe </span>{
+<a href=#458 id=458 data-nosnippet>458</a>        encoder.copy_buffer_to_texture(zero_buffer, dst_raw, <span class="kw-2">&amp;</span>zero_buffer_copy_regions);
+<a href=#459 id=459 data-nosnippet>459</a>    }
+<a href=#460 id=460 data-nosnippet>460</a>}
+<a href=#461 id=461 data-nosnippet>461</a>
+<a href=#462 id=462 data-nosnippet>462</a><span class="kw">fn </span>clear_texture_via_render_passes(
+<a href=#463 id=463 data-nosnippet>463</a>    dst_texture: <span class="kw-2">&amp;</span>Texture,
+<a href=#464 id=464 data-nosnippet>464</a>    range: TextureInitRange,
+<a href=#465 id=465 data-nosnippet>465</a>    is_color: bool,
+<a href=#466 id=466 data-nosnippet>466</a>    encoder: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>hal::DynCommandEncoder,
+<a href=#467 id=467 data-nosnippet>467</a>    instance_flags: wgt::InstanceFlags,
+<a href=#468 id=468 data-nosnippet>468</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
+<a href=#469 id=469 data-nosnippet>469</a>    <span class="macro">assert_eq!</span>(dst_texture.desc.dimension, wgt::TextureDimension::D2);
+<a href=#470 id=470 data-nosnippet>470</a>
+<a href=#471 id=471 data-nosnippet>471</a>    <span class="kw">let </span>extent_base = wgt::Extent3d {
+<a href=#472 id=472 data-nosnippet>472</a>        width: dst_texture.desc.size.width,
+<a href=#473 id=473 data-nosnippet>473</a>        height: dst_texture.desc.size.height,
+<a href=#474 id=474 data-nosnippet>474</a>        depth_or_array_layers: <span class="number">1</span>, <span class="comment">// Only one layer is cleared at a time.
+<a href=#475 id=475 data-nosnippet>475</a>    </span>};
 <a href=#476 id=476 data-nosnippet>476</a>
-<a href=#477 id=477 data-nosnippet>477</a>    <span class="kw">for </span>mip_level <span class="kw">in </span>range.mip_range {
-<a href=#478 id=478 data-nosnippet>478</a>        <span class="kw">let </span>extent = extent_base.mip_level_size(mip_level, dst_texture.desc.dimension);
-<a href=#479 id=479 data-nosnippet>479</a>        <span class="kw">for </span>depth_or_layer <span class="kw">in </span>range.layer_range.clone() {
-<a href=#480 id=480 data-nosnippet>480</a>            <span class="kw">let </span>color_attachments_tmp;
-<a href=#481 id=481 data-nosnippet>481</a>            <span class="kw">let </span>(color_attachments, depth_stencil_attachment) = <span class="kw">if </span>is_color {
-<a href=#482 id=482 data-nosnippet>482</a>                color_attachments_tmp = [<span class="prelude-val">Some</span>(hal::ColorAttachment {
-<a href=#483 id=483 data-nosnippet>483</a>                    target: hal::Attachment {
-<a href=#484 id=484 data-nosnippet>484</a>                        view: Texture::get_clear_view(
-<a href=#485 id=485 data-nosnippet>485</a>                            <span class="kw-2">&amp;</span>clear_mode,
-<a href=#486 id=486 data-nosnippet>486</a>                            <span class="kw-2">&amp;</span>dst_texture.desc,
-<a href=#487 id=487 data-nosnippet>487</a>                            mip_level,
-<a href=#488 id=488 data-nosnippet>488</a>                            depth_or_layer,
-<a href=#489 id=489 data-nosnippet>489</a>                        ),
-<a href=#490 id=490 data-nosnippet>490</a>                        usage: wgt::TextureUses::COLOR_TARGET,
-<a href=#491 id=491 data-nosnippet>491</a>                    },
-<a href=#492 id=492 data-nosnippet>492</a>                    depth_slice: <span class="prelude-val">None</span>,
-<a href=#493 id=493 data-nosnippet>493</a>                    resolve_target: <span class="prelude-val">None</span>,
-<a href=#494 id=494 data-nosnippet>494</a>                    ops: hal::AttachmentOps::STORE,
-<a href=#495 id=495 data-nosnippet>495</a>                    clear_value: wgt::Color::TRANSPARENT,
-<a href=#496 id=496 data-nosnippet>496</a>                })];
-<a href=#497 id=497 data-nosnippet>497</a>                (<span class="kw-2">&amp;</span>color_attachments_tmp[..], <span class="prelude-val">None</span>)
-<a href=#498 id=498 data-nosnippet>498</a>            } <span class="kw">else </span>{
-<a href=#499 id=499 data-nosnippet>499</a>                (
-<a href=#500 id=500 data-nosnippet>500</a>                    <span class="kw-2">&amp;</span>[][..],
-<a href=#501 id=501 data-nosnippet>501</a>                    <span class="prelude-val">Some</span>(hal::DepthStencilAttachment {
-<a href=#502 id=502 data-nosnippet>502</a>                        target: hal::Attachment {
-<a href=#503 id=503 data-nosnippet>503</a>                            view: Texture::get_clear_view(
-<a href=#504 id=504 data-nosnippet>504</a>                                <span class="kw-2">&amp;</span>clear_mode,
-<a href=#505 id=505 data-nosnippet>505</a>                                <span class="kw-2">&amp;</span>dst_texture.desc,
-<a href=#506 id=506 data-nosnippet>506</a>                                mip_level,
-<a href=#507 id=507 data-nosnippet>507</a>                                depth_or_layer,
-<a href=#508 id=508 data-nosnippet>508</a>                            ),
-<a href=#509 id=509 data-nosnippet>509</a>                            usage: wgt::TextureUses::DEPTH_STENCIL_WRITE,
-<a href=#510 id=510 data-nosnippet>510</a>                        },
-<a href=#511 id=511 data-nosnippet>511</a>                        depth_ops: hal::AttachmentOps::STORE,
-<a href=#512 id=512 data-nosnippet>512</a>                        stencil_ops: hal::AttachmentOps::STORE,
-<a href=#513 id=513 data-nosnippet>513</a>                        clear_value: (<span class="number">0.0</span>, <span class="number">0</span>),
-<a href=#514 id=514 data-nosnippet>514</a>                    }),
-<a href=#515 id=515 data-nosnippet>515</a>                )
-<a href=#516 id=516 data-nosnippet>516</a>            };
-<a href=#517 id=517 data-nosnippet>517</a>            <span class="kw">unsafe </span>{
-<a href=#518 id=518 data-nosnippet>518</a>                encoder
-<a href=#519 id=519 data-nosnippet>519</a>                    .begin_render_pass(<span class="kw-2">&amp;</span>hal::RenderPassDescriptor {
-<a href=#520 id=520 data-nosnippet>520</a>                        label: hal_label(
-<a href=#521 id=521 data-nosnippet>521</a>                            <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) clear_texture clear pass"</span>),
-<a href=#522 id=522 data-nosnippet>522</a>                            instance_flags,
-<a href=#523 id=523 data-nosnippet>523</a>                        ),
-<a href=#524 id=524 data-nosnippet>524</a>                        extent,
-<a href=#525 id=525 data-nosnippet>525</a>                        sample_count: dst_texture.desc.sample_count,
-<a href=#526 id=526 data-nosnippet>526</a>                        color_attachments,
-<a href=#527 id=527 data-nosnippet>527</a>                        depth_stencil_attachment,
-<a href=#528 id=528 data-nosnippet>528</a>                        multiview: <span class="prelude-val">None</span>,
-<a href=#529 id=529 data-nosnippet>529</a>                        timestamp_writes: <span class="prelude-val">None</span>,
-<a href=#530 id=530 data-nosnippet>530</a>                        occlusion_query_set: <span class="prelude-val">None</span>,
-<a href=#531 id=531 data-nosnippet>531</a>                    })
-<a href=#532 id=532 data-nosnippet>532</a>                    .map_err(|e| dst_texture.device.handle_hal_error(e))<span class="question-mark">?</span>;
-<a href=#533 id=533 data-nosnippet>533</a>                encoder.end_render_pass();
-<a href=#534 id=534 data-nosnippet>534</a>            }
-<a href=#535 id=535 data-nosnippet>535</a>        }
-<a href=#536 id=536 data-nosnippet>536</a>    }
-<a href=#537 id=537 data-nosnippet>537</a>
-<a href=#538 id=538 data-nosnippet>538</a>    <span class="prelude-val">Ok</span>(())
-<a href=#539 id=539 data-nosnippet>539</a>}</code></pre></div></section></main></body></html>
+<a href=#477 id=477 data-nosnippet>477</a>    <span class="kw">let </span>clear_mode = dst_texture.clear_mode.read();
+<a href=#478 id=478 data-nosnippet>478</a>
+<a href=#479 id=479 data-nosnippet>479</a>    <span class="kw">for </span>mip_level <span class="kw">in </span>range.mip_range {
+<a href=#480 id=480 data-nosnippet>480</a>        <span class="kw">let </span>extent = extent_base.mip_level_size(mip_level, dst_texture.desc.dimension);
+<a href=#481 id=481 data-nosnippet>481</a>        <span class="kw">for </span>depth_or_layer <span class="kw">in </span>range.layer_range.clone() {
+<a href=#482 id=482 data-nosnippet>482</a>            <span class="kw">let </span>color_attachments_tmp;
+<a href=#483 id=483 data-nosnippet>483</a>            <span class="kw">let </span>(color_attachments, depth_stencil_attachment) = <span class="kw">if </span>is_color {
+<a href=#484 id=484 data-nosnippet>484</a>                color_attachments_tmp = [<span class="prelude-val">Some</span>(hal::ColorAttachment {
+<a href=#485 id=485 data-nosnippet>485</a>                    target: hal::Attachment {
+<a href=#486 id=486 data-nosnippet>486</a>                        view: Texture::get_clear_view(
+<a href=#487 id=487 data-nosnippet>487</a>                            <span class="kw-2">&amp;</span>clear_mode,
+<a href=#488 id=488 data-nosnippet>488</a>                            <span class="kw-2">&amp;</span>dst_texture.desc,
+<a href=#489 id=489 data-nosnippet>489</a>                            mip_level,
+<a href=#490 id=490 data-nosnippet>490</a>                            depth_or_layer,
+<a href=#491 id=491 data-nosnippet>491</a>                        ),
+<a href=#492 id=492 data-nosnippet>492</a>                        usage: wgt::TextureUses::COLOR_TARGET,
+<a href=#493 id=493 data-nosnippet>493</a>                    },
+<a href=#494 id=494 data-nosnippet>494</a>                    depth_slice: <span class="prelude-val">None</span>,
+<a href=#495 id=495 data-nosnippet>495</a>                    resolve_target: <span class="prelude-val">None</span>,
+<a href=#496 id=496 data-nosnippet>496</a>                    ops: hal::AttachmentOps::STORE,
+<a href=#497 id=497 data-nosnippet>497</a>                    clear_value: wgt::Color::TRANSPARENT,
+<a href=#498 id=498 data-nosnippet>498</a>                })];
+<a href=#499 id=499 data-nosnippet>499</a>                (<span class="kw-2">&amp;</span>color_attachments_tmp[..], <span class="prelude-val">None</span>)
+<a href=#500 id=500 data-nosnippet>500</a>            } <span class="kw">else </span>{
+<a href=#501 id=501 data-nosnippet>501</a>                (
+<a href=#502 id=502 data-nosnippet>502</a>                    <span class="kw-2">&amp;</span>[][..],
+<a href=#503 id=503 data-nosnippet>503</a>                    <span class="prelude-val">Some</span>(hal::DepthStencilAttachment {
+<a href=#504 id=504 data-nosnippet>504</a>                        target: hal::Attachment {
+<a href=#505 id=505 data-nosnippet>505</a>                            view: Texture::get_clear_view(
+<a href=#506 id=506 data-nosnippet>506</a>                                <span class="kw-2">&amp;</span>clear_mode,
+<a href=#507 id=507 data-nosnippet>507</a>                                <span class="kw-2">&amp;</span>dst_texture.desc,
+<a href=#508 id=508 data-nosnippet>508</a>                                mip_level,
+<a href=#509 id=509 data-nosnippet>509</a>                                depth_or_layer,
+<a href=#510 id=510 data-nosnippet>510</a>                            ),
+<a href=#511 id=511 data-nosnippet>511</a>                            usage: wgt::TextureUses::DEPTH_STENCIL_WRITE,
+<a href=#512 id=512 data-nosnippet>512</a>                        },
+<a href=#513 id=513 data-nosnippet>513</a>                        depth_ops: hal::AttachmentOps::STORE,
+<a href=#514 id=514 data-nosnippet>514</a>                        stencil_ops: hal::AttachmentOps::STORE,
+<a href=#515 id=515 data-nosnippet>515</a>                        clear_value: (<span class="number">0.0</span>, <span class="number">0</span>),
+<a href=#516 id=516 data-nosnippet>516</a>                    }),
+<a href=#517 id=517 data-nosnippet>517</a>                )
+<a href=#518 id=518 data-nosnippet>518</a>            };
+<a href=#519 id=519 data-nosnippet>519</a>            <span class="kw">unsafe </span>{
+<a href=#520 id=520 data-nosnippet>520</a>                encoder
+<a href=#521 id=521 data-nosnippet>521</a>                    .begin_render_pass(<span class="kw-2">&amp;</span>hal::RenderPassDescriptor {
+<a href=#522 id=522 data-nosnippet>522</a>                        label: hal_label(
+<a href=#523 id=523 data-nosnippet>523</a>                            <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) clear_texture clear pass"</span>),
+<a href=#524 id=524 data-nosnippet>524</a>                            instance_flags,
+<a href=#525 id=525 data-nosnippet>525</a>                        ),
+<a href=#526 id=526 data-nosnippet>526</a>                        extent,
+<a href=#527 id=527 data-nosnippet>527</a>                        sample_count: dst_texture.desc.sample_count,
+<a href=#528 id=528 data-nosnippet>528</a>                        color_attachments,
+<a href=#529 id=529 data-nosnippet>529</a>                        depth_stencil_attachment,
+<a href=#530 id=530 data-nosnippet>530</a>                        multiview: <span class="prelude-val">None</span>,
+<a href=#531 id=531 data-nosnippet>531</a>                        timestamp_writes: <span class="prelude-val">None</span>,
+<a href=#532 id=532 data-nosnippet>532</a>                        occlusion_query_set: <span class="prelude-val">None</span>,
+<a href=#533 id=533 data-nosnippet>533</a>                    })
+<a href=#534 id=534 data-nosnippet>534</a>                    .map_err(|e| dst_texture.device.handle_hal_error(e))<span class="question-mark">?</span>;
+<a href=#535 id=535 data-nosnippet>535</a>                encoder.end_render_pass();
+<a href=#536 id=536 data-nosnippet>536</a>            }
+<a href=#537 id=537 data-nosnippet>537</a>        }
+<a href=#538 id=538 data-nosnippet>538</a>    }
+<a href=#539 id=539 data-nosnippet>539</a>
+<a href=#540 id=540 data-nosnippet>540</a>    <span class="prelude-val">Ok</span>(())
+<a href=#541 id=541 data-nosnippet>541</a>}</code></pre></div></section></main></body></html>
