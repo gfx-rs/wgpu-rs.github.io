@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["SEPARATOR"],"enum":["ExternalTextureNameKey","NameKey"],"struct":["AsciiUniCase","Namer"],"type":["EntryPointIndex"]};
+window.SIDEBAR_ITEMS = {"constant":["SEPARATOR"],"enum":["ExternalTextureNameKey","NameKey"],"struct":["Namer"],"type":["EntryPointIndex"]};
