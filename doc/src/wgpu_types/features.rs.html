@@ -1498,130 +1498,152 @@
 <a href=#1498 id=1498 data-nosnippet>1498</a>        ]))
 <a href=#1499 id=1499 data-nosnippet>1499</a>    }
 <a href=#1500 id=1500 data-nosnippet>1500</a>
-<a href=#1501 id=1501 data-nosnippet>1501</a>    <span class="doccomment">/// Vertex formats allowed for creating and building BLASes
+<a href=#1501 id=1501 data-nosnippet>1501</a>    <span class="doccomment">/// Mask of all features which are experimental.
 <a href=#1502 id=1502 data-nosnippet>1502</a>    </span><span class="attr">#[must_use]
-<a href=#1503 id=1503 data-nosnippet>1503</a>    </span><span class="kw">pub fn </span>allowed_vertex_formats_for_blas(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;VertexFormat&gt; {
-<a href=#1504 id=1504 data-nosnippet>1504</a>        <span class="kw">let </span><span class="kw-2">mut </span>formats = Vec::new();
-<a href=#1505 id=1505 data-nosnippet>1505</a>        <span class="kw">if </span><span class="self">self</span>.intersects(<span class="self">Self</span>::EXPERIMENTAL_RAY_QUERY) {
-<a href=#1506 id=1506 data-nosnippet>1506</a>            formats.push(VertexFormat::Float32x3);
-<a href=#1507 id=1507 data-nosnippet>1507</a>        }
-<a href=#1508 id=1508 data-nosnippet>1508</a>        <span class="kw">if </span><span class="self">self</span>.contains(<span class="self">Self</span>::EXTENDED_ACCELERATION_STRUCTURE_VERTEX_FORMATS) {
-<a href=#1509 id=1509 data-nosnippet>1509</a>            formats.push(VertexFormat::Float32x2);
-<a href=#1510 id=1510 data-nosnippet>1510</a>            formats.push(VertexFormat::Float16x2);
-<a href=#1511 id=1511 data-nosnippet>1511</a>            formats.push(VertexFormat::Float16x4);
-<a href=#1512 id=1512 data-nosnippet>1512</a>            formats.push(VertexFormat::Snorm16x2);
-<a href=#1513 id=1513 data-nosnippet>1513</a>            formats.push(VertexFormat::Snorm16x4);
-<a href=#1514 id=1514 data-nosnippet>1514</a>        }
-<a href=#1515 id=1515 data-nosnippet>1515</a>        formats
-<a href=#1516 id=1516 data-nosnippet>1516</a>    }
-<a href=#1517 id=1517 data-nosnippet>1517</a>}
-<a href=#1518 id=1518 data-nosnippet>1518</a>
-<a href=#1519 id=1519 data-nosnippet>1519</a><span class="attr">#[cfg(test)]
-<a href=#1520 id=1520 data-nosnippet>1520</a></span><span class="kw">mod </span>tests {
-<a href=#1521 id=1521 data-nosnippet>1521</a>    <span class="kw">use crate</span>::{Features, FeaturesWGPU, FeaturesWebGPU};
-<a href=#1522 id=1522 data-nosnippet>1522</a>
-<a href=#1523 id=1523 data-nosnippet>1523</a>    <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
-<a href=#1524 id=1524 data-nosnippet>1524</a>    #[test]
-<a href=#1525 id=1525 data-nosnippet>1525</a>    </span><span class="kw">fn </span>check_hex() {
-<a href=#1526 id=1526 data-nosnippet>1526</a>        <span class="kw">use </span><span class="kw">crate</span>::FeatureBits;
-<a href=#1527 id=1527 data-nosnippet>1527</a>
-<a href=#1528 id=1528 data-nosnippet>1528</a>        <span class="kw">use </span>bitflags::{
-<a href=#1529 id=1529 data-nosnippet>1529</a>            parser::{ParseHex <span class="kw">as _</span>, WriteHex <span class="kw">as _</span>},
-<a href=#1530 id=1530 data-nosnippet>1530</a>            Bits <span class="kw">as _</span>,
-<a href=#1531 id=1531 data-nosnippet>1531</a>        };
-<a href=#1532 id=1532 data-nosnippet>1532</a>
-<a href=#1533 id=1533 data-nosnippet>1533</a>        <span class="kw">let </span><span class="kw-2">mut </span>hex = alloc::string::String::new();
-<a href=#1534 id=1534 data-nosnippet>1534</a>        FeatureBits::ALL.write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
-<a href=#1535 id=1535 data-nosnippet>1535</a>        <span class="macro">assert_eq!</span>(
-<a href=#1536 id=1536 data-nosnippet>1536</a>            FeatureBits::parse_hex(hex.as_str()).unwrap(),
-<a href=#1537 id=1537 data-nosnippet>1537</a>            FeatureBits::ALL
-<a href=#1538 id=1538 data-nosnippet>1538</a>        );
-<a href=#1539 id=1539 data-nosnippet>1539</a>
-<a href=#1540 id=1540 data-nosnippet>1540</a>        hex.clear();
-<a href=#1541 id=1541 data-nosnippet>1541</a>        FeatureBits::EMPTY.write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
-<a href=#1542 id=1542 data-nosnippet>1542</a>        <span class="macro">assert_eq!</span>(
-<a href=#1543 id=1543 data-nosnippet>1543</a>            FeatureBits::parse_hex(hex.as_str()).unwrap(),
-<a href=#1544 id=1544 data-nosnippet>1544</a>            FeatureBits::EMPTY
-<a href=#1545 id=1545 data-nosnippet>1545</a>        );
-<a href=#1546 id=1546 data-nosnippet>1546</a>
-<a href=#1547 id=1547 data-nosnippet>1547</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
-<a href=#1548 id=1548 data-nosnippet>1548</a>            hex.clear();
-<a href=#1549 id=1549 data-nosnippet>1549</a>            feature.value().bits().write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
-<a href=#1550 id=1550 data-nosnippet>1550</a>            <span class="macro">assert_eq!</span>(
-<a href=#1551 id=1551 data-nosnippet>1551</a>                FeatureBits::parse_hex(hex.as_str()).unwrap(),
-<a href=#1552 id=1552 data-nosnippet>1552</a>                feature.value().bits(),
-<a href=#1553 id=1553 data-nosnippet>1553</a>                <span class="string">"{hex}"
-<a href=#1554 id=1554 data-nosnippet>1554</a>            </span>);
-<a href=#1555 id=1555 data-nosnippet>1555</a>        }
-<a href=#1556 id=1556 data-nosnippet>1556</a>    }
-<a href=#1557 id=1557 data-nosnippet>1557</a>
-<a href=#1558 id=1558 data-nosnippet>1558</a>    <span class="attr">#[test]
-<a href=#1559 id=1559 data-nosnippet>1559</a>    </span><span class="kw">fn </span>check_features_display() {
-<a href=#1560 id=1560 data-nosnippet>1560</a>        <span class="kw">use </span>alloc::format;
-<a href=#1561 id=1561 data-nosnippet>1561</a>
-<a href=#1562 id=1562 data-nosnippet>1562</a>        <span class="kw">let </span>feature = Features::CLEAR_TEXTURE;
-<a href=#1563 id=1563 data-nosnippet>1563</a>        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{feature}"</span>), <span class="string">"CLEAR_TEXTURE"</span>);
-<a href=#1564 id=1564 data-nosnippet>1564</a>
-<a href=#1565 id=1565 data-nosnippet>1565</a>        <span class="kw">let </span>feature = Features::CLEAR_TEXTURE | Features::BGRA8UNORM_STORAGE;
-<a href=#1566 id=1566 data-nosnippet>1566</a>        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{feature}"</span>), <span class="string">"CLEAR_TEXTURE | BGRA8UNORM_STORAGE"</span>);
-<a href=#1567 id=1567 data-nosnippet>1567</a>    }
-<a href=#1568 id=1568 data-nosnippet>1568</a>
-<a href=#1569 id=1569 data-nosnippet>1569</a>    <span class="attr">#[test]
-<a href=#1570 id=1570 data-nosnippet>1570</a>    </span><span class="kw">fn </span>check_features_bits() {
-<a href=#1571 id=1571 data-nosnippet>1571</a>        <span class="kw">let </span>bits = Features::all().bits();
-<a href=#1572 id=1572 data-nosnippet>1572</a>        <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), Features::all());
-<a href=#1573 id=1573 data-nosnippet>1573</a>
-<a href=#1574 id=1574 data-nosnippet>1574</a>        <span class="kw">let </span>bits = Features::empty().bits();
-<a href=#1575 id=1575 data-nosnippet>1575</a>        <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), Features::empty());
-<a href=#1576 id=1576 data-nosnippet>1576</a>
-<a href=#1577 id=1577 data-nosnippet>1577</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
-<a href=#1578 id=1578 data-nosnippet>1578</a>            <span class="kw">let </span>bits = feature.value().bits();
-<a href=#1579 id=1579 data-nosnippet>1579</a>            <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), <span class="kw-2">*</span>feature.value());
-<a href=#1580 id=1580 data-nosnippet>1580</a>        }
+<a href=#1503 id=1503 data-nosnippet>1503</a>    </span><span class="kw">pub const fn </span>all_experimental_mask() -&gt; <span class="self">Self </span>{
+<a href=#1504 id=1504 data-nosnippet>1504</a>        <span class="self">Self</span>::from_bits_truncate(FeatureBits([
+<a href=#1505 id=1505 data-nosnippet>1505</a>            FeaturesWGPU::EXPERIMENTAL_MESH_SHADER.bits()
+<a href=#1506 id=1506 data-nosnippet>1506</a>                | FeaturesWGPU::EXPERIMENTAL_MESH_SHADER_MULTIVIEW.bits()
+<a href=#1507 id=1507 data-nosnippet>1507</a>                | FeaturesWGPU::EXPERIMENTAL_RAY_QUERY.bits()
+<a href=#1508 id=1508 data-nosnippet>1508</a>                | FeaturesWGPU::EXPERIMENTAL_RAY_HIT_VERTEX_RETURN.bits()
+<a href=#1509 id=1509 data-nosnippet>1509</a>                | FeaturesWGPU::EXPERIMENTAL_PASSTHROUGH_SHADERS.bits(),
+<a href=#1510 id=1510 data-nosnippet>1510</a>            FeaturesWebGPU::empty().bits(),
+<a href=#1511 id=1511 data-nosnippet>1511</a>        ]))
+<a href=#1512 id=1512 data-nosnippet>1512</a>    }
+<a href=#1513 id=1513 data-nosnippet>1513</a>
+<a href=#1514 id=1514 data-nosnippet>1514</a>    <span class="doccomment">/// Vertex formats allowed for creating and building BLASes
+<a href=#1515 id=1515 data-nosnippet>1515</a>    </span><span class="attr">#[must_use]
+<a href=#1516 id=1516 data-nosnippet>1516</a>    </span><span class="kw">pub fn </span>allowed_vertex_formats_for_blas(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;VertexFormat&gt; {
+<a href=#1517 id=1517 data-nosnippet>1517</a>        <span class="kw">let </span><span class="kw-2">mut </span>formats = Vec::new();
+<a href=#1518 id=1518 data-nosnippet>1518</a>        <span class="kw">if </span><span class="self">self</span>.intersects(<span class="self">Self</span>::EXPERIMENTAL_RAY_QUERY) {
+<a href=#1519 id=1519 data-nosnippet>1519</a>            formats.push(VertexFormat::Float32x3);
+<a href=#1520 id=1520 data-nosnippet>1520</a>        }
+<a href=#1521 id=1521 data-nosnippet>1521</a>        <span class="kw">if </span><span class="self">self</span>.contains(<span class="self">Self</span>::EXTENDED_ACCELERATION_STRUCTURE_VERTEX_FORMATS) {
+<a href=#1522 id=1522 data-nosnippet>1522</a>            formats.push(VertexFormat::Float32x2);
+<a href=#1523 id=1523 data-nosnippet>1523</a>            formats.push(VertexFormat::Float16x2);
+<a href=#1524 id=1524 data-nosnippet>1524</a>            formats.push(VertexFormat::Float16x4);
+<a href=#1525 id=1525 data-nosnippet>1525</a>            formats.push(VertexFormat::Snorm16x2);
+<a href=#1526 id=1526 data-nosnippet>1526</a>            formats.push(VertexFormat::Snorm16x4);
+<a href=#1527 id=1527 data-nosnippet>1527</a>        }
+<a href=#1528 id=1528 data-nosnippet>1528</a>        formats
+<a href=#1529 id=1529 data-nosnippet>1529</a>    }
+<a href=#1530 id=1530 data-nosnippet>1530</a>}
+<a href=#1531 id=1531 data-nosnippet>1531</a>
+<a href=#1532 id=1532 data-nosnippet>1532</a><span class="attr">#[cfg(test)]
+<a href=#1533 id=1533 data-nosnippet>1533</a></span><span class="kw">mod </span>tests {
+<a href=#1534 id=1534 data-nosnippet>1534</a>    <span class="kw">use crate</span>::{Features, FeaturesWGPU, FeaturesWebGPU};
+<a href=#1535 id=1535 data-nosnippet>1535</a>
+<a href=#1536 id=1536 data-nosnippet>1536</a>    <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
+<a href=#1537 id=1537 data-nosnippet>1537</a>    #[test]
+<a href=#1538 id=1538 data-nosnippet>1538</a>    </span><span class="kw">fn </span>check_hex() {
+<a href=#1539 id=1539 data-nosnippet>1539</a>        <span class="kw">use </span><span class="kw">crate</span>::FeatureBits;
+<a href=#1540 id=1540 data-nosnippet>1540</a>
+<a href=#1541 id=1541 data-nosnippet>1541</a>        <span class="kw">use </span>bitflags::{
+<a href=#1542 id=1542 data-nosnippet>1542</a>            parser::{ParseHex <span class="kw">as _</span>, WriteHex <span class="kw">as _</span>},
+<a href=#1543 id=1543 data-nosnippet>1543</a>            Bits <span class="kw">as _</span>,
+<a href=#1544 id=1544 data-nosnippet>1544</a>        };
+<a href=#1545 id=1545 data-nosnippet>1545</a>
+<a href=#1546 id=1546 data-nosnippet>1546</a>        <span class="kw">let </span><span class="kw-2">mut </span>hex = alloc::string::String::new();
+<a href=#1547 id=1547 data-nosnippet>1547</a>        FeatureBits::ALL.write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
+<a href=#1548 id=1548 data-nosnippet>1548</a>        <span class="macro">assert_eq!</span>(
+<a href=#1549 id=1549 data-nosnippet>1549</a>            FeatureBits::parse_hex(hex.as_str()).unwrap(),
+<a href=#1550 id=1550 data-nosnippet>1550</a>            FeatureBits::ALL
+<a href=#1551 id=1551 data-nosnippet>1551</a>        );
+<a href=#1552 id=1552 data-nosnippet>1552</a>
+<a href=#1553 id=1553 data-nosnippet>1553</a>        hex.clear();
+<a href=#1554 id=1554 data-nosnippet>1554</a>        FeatureBits::EMPTY.write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
+<a href=#1555 id=1555 data-nosnippet>1555</a>        <span class="macro">assert_eq!</span>(
+<a href=#1556 id=1556 data-nosnippet>1556</a>            FeatureBits::parse_hex(hex.as_str()).unwrap(),
+<a href=#1557 id=1557 data-nosnippet>1557</a>            FeatureBits::EMPTY
+<a href=#1558 id=1558 data-nosnippet>1558</a>        );
+<a href=#1559 id=1559 data-nosnippet>1559</a>
+<a href=#1560 id=1560 data-nosnippet>1560</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
+<a href=#1561 id=1561 data-nosnippet>1561</a>            hex.clear();
+<a href=#1562 id=1562 data-nosnippet>1562</a>            feature.value().bits().write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
+<a href=#1563 id=1563 data-nosnippet>1563</a>            <span class="macro">assert_eq!</span>(
+<a href=#1564 id=1564 data-nosnippet>1564</a>                FeatureBits::parse_hex(hex.as_str()).unwrap(),
+<a href=#1565 id=1565 data-nosnippet>1565</a>                feature.value().bits(),
+<a href=#1566 id=1566 data-nosnippet>1566</a>                <span class="string">"{hex}"
+<a href=#1567 id=1567 data-nosnippet>1567</a>            </span>);
+<a href=#1568 id=1568 data-nosnippet>1568</a>        }
+<a href=#1569 id=1569 data-nosnippet>1569</a>    }
+<a href=#1570 id=1570 data-nosnippet>1570</a>
+<a href=#1571 id=1571 data-nosnippet>1571</a>    <span class="attr">#[test]
+<a href=#1572 id=1572 data-nosnippet>1572</a>    </span><span class="kw">fn </span>check_features_display() {
+<a href=#1573 id=1573 data-nosnippet>1573</a>        <span class="kw">use </span>alloc::format;
+<a href=#1574 id=1574 data-nosnippet>1574</a>
+<a href=#1575 id=1575 data-nosnippet>1575</a>        <span class="kw">let </span>feature = Features::CLEAR_TEXTURE;
+<a href=#1576 id=1576 data-nosnippet>1576</a>        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{feature}"</span>), <span class="string">"CLEAR_TEXTURE"</span>);
+<a href=#1577 id=1577 data-nosnippet>1577</a>
+<a href=#1578 id=1578 data-nosnippet>1578</a>        <span class="kw">let </span>feature = Features::CLEAR_TEXTURE | Features::BGRA8UNORM_STORAGE;
+<a href=#1579 id=1579 data-nosnippet>1579</a>        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{feature}"</span>), <span class="string">"CLEAR_TEXTURE | BGRA8UNORM_STORAGE"</span>);
+<a href=#1580 id=1580 data-nosnippet>1580</a>    }
 <a href=#1581 id=1581 data-nosnippet>1581</a>
-<a href=#1582 id=1582 data-nosnippet>1582</a>        <span class="kw">let </span>bits = Features::all().bits();
-<a href=#1583 id=1583 data-nosnippet>1583</a>        <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), Features::all());
-<a href=#1584 id=1584 data-nosnippet>1584</a>
-<a href=#1585 id=1585 data-nosnippet>1585</a>        <span class="kw">let </span>bits = Features::empty().bits();
-<a href=#1586 id=1586 data-nosnippet>1586</a>        <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), Features::empty());
-<a href=#1587 id=1587 data-nosnippet>1587</a>
-<a href=#1588 id=1588 data-nosnippet>1588</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
-<a href=#1589 id=1589 data-nosnippet>1589</a>            <span class="kw">let </span>bits = feature.value().bits();
-<a href=#1590 id=1590 data-nosnippet>1590</a>            <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), <span class="kw-2">*</span>feature.value());
-<a href=#1591 id=1591 data-nosnippet>1591</a>        }
-<a href=#1592 id=1592 data-nosnippet>1592</a>
-<a href=#1593 id=1593 data-nosnippet>1593</a>        <span class="kw">let </span>bits = Features::all().bits();
-<a href=#1594 id=1594 data-nosnippet>1594</a>        <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), Features::all());
-<a href=#1595 id=1595 data-nosnippet>1595</a>
-<a href=#1596 id=1596 data-nosnippet>1596</a>        <span class="kw">let </span>bits = Features::empty().bits();
-<a href=#1597 id=1597 data-nosnippet>1597</a>        <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), Features::empty());
-<a href=#1598 id=1598 data-nosnippet>1598</a>
-<a href=#1599 id=1599 data-nosnippet>1599</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
-<a href=#1600 id=1600 data-nosnippet>1600</a>            <span class="kw">let </span>bits = feature.value().bits();
-<a href=#1601 id=1601 data-nosnippet>1601</a>            <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), <span class="kw-2">*</span>feature.value());
-<a href=#1602 id=1602 data-nosnippet>1602</a>        }
-<a href=#1603 id=1603 data-nosnippet>1603</a>    }
-<a href=#1604 id=1604 data-nosnippet>1604</a>
-<a href=#1605 id=1605 data-nosnippet>1605</a>    <span class="attr">#[test]
-<a href=#1606 id=1606 data-nosnippet>1606</a>    </span><span class="kw">fn </span>create_features_from_parts() {
-<a href=#1607 id=1607 data-nosnippet>1607</a>        <span class="kw">let </span>features: Features = FeaturesWGPU::TEXTURE_ATOMIC.into();
-<a href=#1608 id=1608 data-nosnippet>1608</a>        <span class="macro">assert_eq!</span>(features, Features::TEXTURE_ATOMIC);
-<a href=#1609 id=1609 data-nosnippet>1609</a>
-<a href=#1610 id=1610 data-nosnippet>1610</a>        <span class="kw">let </span>features: Features = FeaturesWebGPU::TIMESTAMP_QUERY.into();
-<a href=#1611 id=1611 data-nosnippet>1611</a>        <span class="macro">assert_eq!</span>(features, Features::TIMESTAMP_QUERY);
-<a href=#1612 id=1612 data-nosnippet>1612</a>
-<a href=#1613 id=1613 data-nosnippet>1613</a>        <span class="kw">let </span>features: Features = Features::from(FeaturesWGPU::TEXTURE_ATOMIC)
-<a href=#1614 id=1614 data-nosnippet>1614</a>            | Features::from(FeaturesWebGPU::TIMESTAMP_QUERY);
-<a href=#1615 id=1615 data-nosnippet>1615</a>        <span class="macro">assert_eq!</span>(
-<a href=#1616 id=1616 data-nosnippet>1616</a>            features,
-<a href=#1617 id=1617 data-nosnippet>1617</a>            Features::TEXTURE_ATOMIC | Features::TIMESTAMP_QUERY
-<a href=#1618 id=1618 data-nosnippet>1618</a>        );
-<a href=#1619 id=1619 data-nosnippet>1619</a>        <span class="macro">assert_eq!</span>(
-<a href=#1620 id=1620 data-nosnippet>1620</a>            features,
-<a href=#1621 id=1621 data-nosnippet>1621</a>            Features::from_internal_flags(
-<a href=#1622 id=1622 data-nosnippet>1622</a>                FeaturesWGPU::TEXTURE_ATOMIC,
-<a href=#1623 id=1623 data-nosnippet>1623</a>                FeaturesWebGPU::TIMESTAMP_QUERY
-<a href=#1624 id=1624 data-nosnippet>1624</a>            )
-<a href=#1625 id=1625 data-nosnippet>1625</a>        );
-<a href=#1626 id=1626 data-nosnippet>1626</a>    }
-<a href=#1627 id=1627 data-nosnippet>1627</a>}</code></pre></div></section></main></body></html>
+<a href=#1582 id=1582 data-nosnippet>1582</a>    <span class="attr">#[test]
+<a href=#1583 id=1583 data-nosnippet>1583</a>    </span><span class="kw">fn </span>check_features_bits() {
+<a href=#1584 id=1584 data-nosnippet>1584</a>        <span class="kw">let </span>bits = Features::all().bits();
+<a href=#1585 id=1585 data-nosnippet>1585</a>        <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), Features::all());
+<a href=#1586 id=1586 data-nosnippet>1586</a>
+<a href=#1587 id=1587 data-nosnippet>1587</a>        <span class="kw">let </span>bits = Features::empty().bits();
+<a href=#1588 id=1588 data-nosnippet>1588</a>        <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), Features::empty());
+<a href=#1589 id=1589 data-nosnippet>1589</a>
+<a href=#1590 id=1590 data-nosnippet>1590</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
+<a href=#1591 id=1591 data-nosnippet>1591</a>            <span class="kw">let </span>bits = feature.value().bits();
+<a href=#1592 id=1592 data-nosnippet>1592</a>            <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), <span class="kw-2">*</span>feature.value());
+<a href=#1593 id=1593 data-nosnippet>1593</a>        }
+<a href=#1594 id=1594 data-nosnippet>1594</a>
+<a href=#1595 id=1595 data-nosnippet>1595</a>        <span class="kw">let </span>bits = Features::all().bits();
+<a href=#1596 id=1596 data-nosnippet>1596</a>        <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), Features::all());
+<a href=#1597 id=1597 data-nosnippet>1597</a>
+<a href=#1598 id=1598 data-nosnippet>1598</a>        <span class="kw">let </span>bits = Features::empty().bits();
+<a href=#1599 id=1599 data-nosnippet>1599</a>        <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), Features::empty());
+<a href=#1600 id=1600 data-nosnippet>1600</a>
+<a href=#1601 id=1601 data-nosnippet>1601</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
+<a href=#1602 id=1602 data-nosnippet>1602</a>            <span class="kw">let </span>bits = feature.value().bits();
+<a href=#1603 id=1603 data-nosnippet>1603</a>            <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), <span class="kw-2">*</span>feature.value());
+<a href=#1604 id=1604 data-nosnippet>1604</a>        }
+<a href=#1605 id=1605 data-nosnippet>1605</a>
+<a href=#1606 id=1606 data-nosnippet>1606</a>        <span class="kw">let </span>bits = Features::all().bits();
+<a href=#1607 id=1607 data-nosnippet>1607</a>        <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), Features::all());
+<a href=#1608 id=1608 data-nosnippet>1608</a>
+<a href=#1609 id=1609 data-nosnippet>1609</a>        <span class="kw">let </span>bits = Features::empty().bits();
+<a href=#1610 id=1610 data-nosnippet>1610</a>        <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), Features::empty());
+<a href=#1611 id=1611 data-nosnippet>1611</a>
+<a href=#1612 id=1612 data-nosnippet>1612</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
+<a href=#1613 id=1613 data-nosnippet>1613</a>            <span class="kw">let </span>bits = feature.value().bits();
+<a href=#1614 id=1614 data-nosnippet>1614</a>            <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), <span class="kw-2">*</span>feature.value());
+<a href=#1615 id=1615 data-nosnippet>1615</a>        }
+<a href=#1616 id=1616 data-nosnippet>1616</a>    }
+<a href=#1617 id=1617 data-nosnippet>1617</a>
+<a href=#1618 id=1618 data-nosnippet>1618</a>    <span class="attr">#[test]
+<a href=#1619 id=1619 data-nosnippet>1619</a>    </span><span class="kw">fn </span>create_features_from_parts() {
+<a href=#1620 id=1620 data-nosnippet>1620</a>        <span class="kw">let </span>features: Features = FeaturesWGPU::TEXTURE_ATOMIC.into();
+<a href=#1621 id=1621 data-nosnippet>1621</a>        <span class="macro">assert_eq!</span>(features, Features::TEXTURE_ATOMIC);
+<a href=#1622 id=1622 data-nosnippet>1622</a>
+<a href=#1623 id=1623 data-nosnippet>1623</a>        <span class="kw">let </span>features: Features = FeaturesWebGPU::TIMESTAMP_QUERY.into();
+<a href=#1624 id=1624 data-nosnippet>1624</a>        <span class="macro">assert_eq!</span>(features, Features::TIMESTAMP_QUERY);
+<a href=#1625 id=1625 data-nosnippet>1625</a>
+<a href=#1626 id=1626 data-nosnippet>1626</a>        <span class="kw">let </span>features: Features = Features::from(FeaturesWGPU::TEXTURE_ATOMIC)
+<a href=#1627 id=1627 data-nosnippet>1627</a>            | Features::from(FeaturesWebGPU::TIMESTAMP_QUERY);
+<a href=#1628 id=1628 data-nosnippet>1628</a>        <span class="macro">assert_eq!</span>(
+<a href=#1629 id=1629 data-nosnippet>1629</a>            features,
+<a href=#1630 id=1630 data-nosnippet>1630</a>            Features::TEXTURE_ATOMIC | Features::TIMESTAMP_QUERY
+<a href=#1631 id=1631 data-nosnippet>1631</a>        );
+<a href=#1632 id=1632 data-nosnippet>1632</a>        <span class="macro">assert_eq!</span>(
+<a href=#1633 id=1633 data-nosnippet>1633</a>            features,
+<a href=#1634 id=1634 data-nosnippet>1634</a>            Features::from_internal_flags(
+<a href=#1635 id=1635 data-nosnippet>1635</a>                FeaturesWGPU::TEXTURE_ATOMIC,
+<a href=#1636 id=1636 data-nosnippet>1636</a>                FeaturesWebGPU::TIMESTAMP_QUERY
+<a href=#1637 id=1637 data-nosnippet>1637</a>            )
+<a href=#1638 id=1638 data-nosnippet>1638</a>        );
+<a href=#1639 id=1639 data-nosnippet>1639</a>    }
+<a href=#1640 id=1640 data-nosnippet>1640</a>
+<a href=#1641 id=1641 data-nosnippet>1641</a>    <span class="attr">#[test]
+<a href=#1642 id=1642 data-nosnippet>1642</a>    </span><span class="kw">fn </span>experimental_features_part_of_experimental_mask() {
+<a href=#1643 id=1643 data-nosnippet>1643</a>        <span class="kw">for </span>(name, feature) <span class="kw">in </span>Features::all().iter_names() {
+<a href=#1644 id=1644 data-nosnippet>1644</a>            <span class="kw">let </span>prefixed_with_experimental = name.starts_with(<span class="string">"EXPERIMENTAL_"</span>);
+<a href=#1645 id=1645 data-nosnippet>1645</a>            <span class="kw">let </span>in_experimental_mask = Features::all_experimental_mask().contains(feature);
+<a href=#1646 id=1646 data-nosnippet>1646</a>            <span class="macro">assert_eq!</span>(in_experimental_mask, prefixed_with_experimental);
+<a href=#1647 id=1647 data-nosnippet>1647</a>        }
+<a href=#1648 id=1648 data-nosnippet>1648</a>    }
+<a href=#1649 id=1649 data-nosnippet>1649</a>}</code></pre></div></section></main></body></html>
