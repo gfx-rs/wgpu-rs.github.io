@@ -58,16 +58,16 @@
 <a href=#58 id=58 data-nosnippet>58</a>/// Reading into this buffer won't yield the contents of the buffer from the
 <a href=#59 id=59 data-nosnippet>59</a>/// GPU and is likely to be slow. Because of this, although [`AsMut`] is
 <a href=#60 id=60 data-nosnippet>60</a>/// implemented for this type, [`AsRef`] is not.
-<a href=#61 id=61 data-nosnippet>61</a></span><span class="kw">pub struct </span>QueueWriteBufferView&lt;<span class="lifetime">'a</span>&gt; {
-<a href=#62 id=62 data-nosnippet>62</a>    queue: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Queue,
-<a href=#63 id=63 data-nosnippet>63</a>    buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
+<a href=#61 id=61 data-nosnippet>61</a></span><span class="kw">pub struct </span>QueueWriteBufferView {
+<a href=#62 id=62 data-nosnippet>62</a>    queue: Queue,
+<a href=#63 id=63 data-nosnippet>63</a>    buffer: Buffer,
 <a href=#64 id=64 data-nosnippet>64</a>    offset: BufferAddress,
 <a href=#65 id=65 data-nosnippet>65</a>    inner: dispatch::DispatchQueueWriteBuffer,
 <a href=#66 id=66 data-nosnippet>66</a>}
 <a href=#67 id=67 data-nosnippet>67</a><span class="attr">#[cfg(send_sync)]
-<a href=#68 id=68 data-nosnippet>68</a></span><span class="macro">static_assertions::assert_impl_all!</span>(QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
+<a href=#68 id=68 data-nosnippet>68</a></span><span class="macro">static_assertions::assert_impl_all!</span>(QueueWriteBufferView: Send, Sync);
 <a href=#69 id=69 data-nosnippet>69</a>
-<a href=#70 id=70 data-nosnippet>70</a><span class="kw">impl </span>QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt; {
+<a href=#70 id=70 data-nosnippet>70</a><span class="kw">impl </span>QueueWriteBufferView {
 <a href=#71 id=71 data-nosnippet>71</a>    <span class="attr">#[cfg(custom)]
 <a href=#72 id=72 data-nosnippet>72</a>    </span><span class="doccomment">/// Returns custom implementation of QueueWriteBufferView (if custom backend and is internally T)
 <a href=#73 id=73 data-nosnippet>73</a>    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::QueueWriteBufferInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
@@ -75,7 +75,7 @@
 <a href=#75 id=75 data-nosnippet>75</a>    }
 <a href=#76 id=76 data-nosnippet>76</a>}
 <a href=#77 id=77 data-nosnippet>77</a>
-<a href=#78 id=78 data-nosnippet>78</a><span class="kw">impl </span>Deref <span class="kw">for </span>QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt; {
+<a href=#78 id=78 data-nosnippet>78</a><span class="kw">impl </span>Deref <span class="kw">for </span>QueueWriteBufferView {
 <a href=#79 id=79 data-nosnippet>79</a>    <span class="kw">type </span>Target = [u8];
 <a href=#80 id=80 data-nosnippet>80</a>
 <a href=#81 id=81 data-nosnippet>81</a>    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
@@ -84,19 +84,19 @@
 <a href=#84 id=84 data-nosnippet>84</a>    }
 <a href=#85 id=85 data-nosnippet>85</a>}
 <a href=#86 id=86 data-nosnippet>86</a>
-<a href=#87 id=87 data-nosnippet>87</a><span class="kw">impl </span>DerefMut <span class="kw">for </span>QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt; {
+<a href=#87 id=87 data-nosnippet>87</a><span class="kw">impl </span>DerefMut <span class="kw">for </span>QueueWriteBufferView {
 <a href=#88 id=88 data-nosnippet>88</a>    <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
 <a href=#89 id=89 data-nosnippet>89</a>        <span class="self">self</span>.inner.slice_mut()
 <a href=#90 id=90 data-nosnippet>90</a>    }
 <a href=#91 id=91 data-nosnippet>91</a>}
 <a href=#92 id=92 data-nosnippet>92</a>
-<a href=#93 id=93 data-nosnippet>93</a><span class="kw">impl </span>AsMut&lt;[u8]&gt; <span class="kw">for </span>QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt; {
+<a href=#93 id=93 data-nosnippet>93</a><span class="kw">impl </span>AsMut&lt;[u8]&gt; <span class="kw">for </span>QueueWriteBufferView {
 <a href=#94 id=94 data-nosnippet>94</a>    <span class="kw">fn </span>as_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
 <a href=#95 id=95 data-nosnippet>95</a>        <span class="self">self</span>.inner.slice_mut()
 <a href=#96 id=96 data-nosnippet>96</a>    }
 <a href=#97 id=97 data-nosnippet>97</a>}
 <a href=#98 id=98 data-nosnippet>98</a>
-<a href=#99 id=99 data-nosnippet>99</a><span class="kw">impl </span>Drop <span class="kw">for </span>QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt; {
+<a href=#99 id=99 data-nosnippet>99</a><span class="kw">impl </span>Drop <span class="kw">for </span>QueueWriteBufferView {
 <a href=#100 id=100 data-nosnippet>100</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
 <a href=#101 id=101 data-nosnippet>101</a>        <span class="self">self</span>.queue
 <a href=#102 id=102 data-nosnippet>102</a>            .inner
@@ -182,19 +182,19 @@
 <a href=#182 id=182 data-nosnippet>182</a>    ///   allocations, you might be able to use [`StagingBelt`](crate::util::StagingBelt),
 <a href=#183 id=183 data-nosnippet>183</a>    ///   or buffers you explicitly create, map, and unmap yourself.
 <a href=#184 id=184 data-nosnippet>184</a>    </span><span class="attr">#[must_use]
-<a href=#185 id=185 data-nosnippet>185</a>    </span><span class="kw">pub fn </span>write_buffer_with&lt;<span class="lifetime">'a</span>&gt;(
-<a href=#186 id=186 data-nosnippet>186</a>        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
-<a href=#187 id=187 data-nosnippet>187</a>        buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
+<a href=#185 id=185 data-nosnippet>185</a>    </span><span class="kw">pub fn </span>write_buffer_with(
+<a href=#186 id=186 data-nosnippet>186</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#187 id=187 data-nosnippet>187</a>        buffer: <span class="kw-2">&amp;</span>Buffer,
 <a href=#188 id=188 data-nosnippet>188</a>        offset: BufferAddress,
 <a href=#189 id=189 data-nosnippet>189</a>        size: BufferSize,
-<a href=#190 id=190 data-nosnippet>190</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;QueueWriteBufferView&lt;<span class="lifetime">'a</span>&gt;&gt; {
+<a href=#190 id=190 data-nosnippet>190</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;QueueWriteBufferView&gt; {
 <a href=#191 id=191 data-nosnippet>191</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_buffer_with"</span>);
 <a href=#192 id=192 data-nosnippet>192</a>        <span class="self">self</span>.inner
 <a href=#193 id=193 data-nosnippet>193</a>            .validate_write_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, size)<span class="question-mark">?</span>;
 <a href=#194 id=194 data-nosnippet>194</a>        <span class="kw">let </span>staging_buffer = <span class="self">self</span>.inner.create_staging_buffer(size)<span class="question-mark">?</span>;
 <a href=#195 id=195 data-nosnippet>195</a>        <span class="prelude-val">Some</span>(QueueWriteBufferView {
-<a href=#196 id=196 data-nosnippet>196</a>            queue: <span class="self">self</span>,
-<a href=#197 id=197 data-nosnippet>197</a>            buffer,
+<a href=#196 id=196 data-nosnippet>196</a>            queue: <span class="self">self</span>.clone(),
+<a href=#197 id=197 data-nosnippet>197</a>            buffer: buffer.clone(),
 <a href=#198 id=198 data-nosnippet>198</a>            offset,
 <a href=#199 id=199 data-nosnippet>199</a>            inner: staging_buffer,
 <a href=#200 id=200 data-nosnippet>200</a>        })
