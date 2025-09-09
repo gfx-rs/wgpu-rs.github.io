@@ -1848,23 +1848,23 @@
 <a href=#1848 id=1848 data-nosnippet>1848</a>            <span class="kw">let </span><span class="kw-2">mut </span>indirect_draw_validation_batcher =
 <a href=#1849 id=1849 data-nosnippet>1849</a>                <span class="kw">crate</span>::indirect_validation::DrawBatcher::new();
 <a href=#1850 id=1850 data-nosnippet>1850</a>
-<a href=#1851 id=1851 data-nosnippet>1851</a>            <span class="kw">let </span>(scope, pending_discard_init_fixups) = {
+<a href=#1851 id=1851 data-nosnippet>1851</a>            <span class="kw">let </span>(scope, pending_discard_init_fixups, <span class="kw-2">mut </span>pending_query_resets) = {
 <a href=#1852 id=1852 data-nosnippet>1852</a>                <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
 <a href=#1853 id=1853 data-nosnippet>1853</a>                <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
 <a href=#1854 id=1854 data-nosnippet>1854</a>                <span class="kw">let </span>buffer_memory_init_actions = <span class="kw-2">&amp;mut </span>cmd_buf_data.buffer_memory_init_actions;
 <a href=#1855 id=1855 data-nosnippet>1855</a>                <span class="kw">let </span>texture_memory_actions = <span class="kw-2">&amp;mut </span>cmd_buf_data.texture_memory_actions;
-<a href=#1856 id=1856 data-nosnippet>1856</a>                <span class="kw">let </span>pending_query_resets = <span class="kw-2">&amp;mut </span>cmd_buf_data.pending_query_resets;
-<a href=#1857 id=1857 data-nosnippet>1857</a>                <span class="kw">let </span>indirect_draw_validation_resources =
-<a href=#1858 id=1858 data-nosnippet>1858</a>                    <span class="kw-2">&amp;mut </span>cmd_buf_data.indirect_draw_validation_resources;
-<a href=#1859 id=1859 data-nosnippet>1859</a>
-<a href=#1860 id=1860 data-nosnippet>1860</a>                <span class="comment">// We automatically keep extending command buffers over time, and because
-<a href=#1861 id=1861 data-nosnippet>1861</a>                // we want to insert a command buffer _before_ what we're about to record,
-<a href=#1862 id=1862 data-nosnippet>1862</a>                // we need to make sure to close the previous one.
-<a href=#1863 id=1863 data-nosnippet>1863</a>                </span>encoder.close_if_open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
-<a href=#1864 id=1864 data-nosnippet>1864</a>                encoder
-<a href=#1865 id=1865 data-nosnippet>1865</a>                    .open_pass(base.label.as_deref())
-<a href=#1866 id=1866 data-nosnippet>1866</a>                    .map_pass_err(pass_scope)<span class="question-mark">?</span>;
-<a href=#1867 id=1867 data-nosnippet>1867</a>
+<a href=#1856 id=1856 data-nosnippet>1856</a>                <span class="kw">let </span>indirect_draw_validation_resources =
+<a href=#1857 id=1857 data-nosnippet>1857</a>                    <span class="kw-2">&amp;mut </span>cmd_buf_data.indirect_draw_validation_resources;
+<a href=#1858 id=1858 data-nosnippet>1858</a>
+<a href=#1859 id=1859 data-nosnippet>1859</a>                <span class="comment">// We automatically keep extending command buffers over time, and because
+<a href=#1860 id=1860 data-nosnippet>1860</a>                // we want to insert a command buffer _before_ what we're about to record,
+<a href=#1861 id=1861 data-nosnippet>1861</a>                // we need to make sure to close the previous one.
+<a href=#1862 id=1862 data-nosnippet>1862</a>                </span>encoder.close_if_open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+<a href=#1863 id=1863 data-nosnippet>1863</a>                encoder
+<a href=#1864 id=1864 data-nosnippet>1864</a>                    .open_pass(base.label.as_deref())
+<a href=#1865 id=1865 data-nosnippet>1865</a>                    .map_pass_err(pass_scope)<span class="question-mark">?</span>;
+<a href=#1866 id=1866 data-nosnippet>1866</a>
+<a href=#1867 id=1867 data-nosnippet>1867</a>                <span class="kw">let </span><span class="kw-2">mut </span>pending_query_resets = QueryResetMap::new();
 <a href=#1868 id=1868 data-nosnippet>1868</a>                <span class="kw">let </span><span class="kw-2">mut </span>pending_discard_init_fixups = SurfacesInDiscardState::new();
 <a href=#1869 id=1869 data-nosnippet>1869</a>
 <a href=#1870 id=1870 data-nosnippet>1870</a>                <span class="kw">let </span>info = RenderPassInfo::start(
@@ -1879,7 +1879,7 @@
 <a href=#1879 id=1879 data-nosnippet>1879</a>                    encoder,
 <a href=#1880 id=1880 data-nosnippet>1880</a>                    tracker,
 <a href=#1881 id=1881 data-nosnippet>1881</a>                    texture_memory_actions,
-<a href=#1882 id=1882 data-nosnippet>1882</a>                    pending_query_resets,
+<a href=#1882 id=1882 data-nosnippet>1882</a>                    <span class="kw-2">&amp;mut </span>pending_query_resets,
 <a href=#1883 id=1883 data-nosnippet>1883</a>                    <span class="kw-2">&amp;mut </span>pending_discard_init_fixups,
 <a href=#1884 id=1884 data-nosnippet>1884</a>                    snatch_guard,
 <a href=#1885 id=1885 data-nosnippet>1885</a>                )
@@ -2139,7 +2139,7 @@
 <a href=#2139 id=2139 data-nosnippet>2139</a>                            pass::write_timestamp::&lt;RenderPassErrorInner&gt;(
 <a href=#2140 id=2140 data-nosnippet>2140</a>                                <span class="kw-2">&amp;mut </span>state.general,
 <a href=#2141 id=2141 data-nosnippet>2141</a>                                cmd_enc.as_ref(),
-<a href=#2142 id=2142 data-nosnippet>2142</a>                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>cmd_buf_data.pending_query_resets),
+<a href=#2142 id=2142 data-nosnippet>2142</a>                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>pending_query_resets),
 <a href=#2143 id=2143 data-nosnippet>2143</a>                                query_set,
 <a href=#2144 id=2144 data-nosnippet>2144</a>                                query_index,
 <a href=#2145 id=2145 data-nosnippet>2145</a>                            )
@@ -2160,7 +2160,7 @@
 <a href=#2160 id=2160 data-nosnippet>2160</a>                                state.general.raw_encoder,
 <a href=#2161 id=2161 data-nosnippet>2161</a>                                <span class="kw-2">&amp;mut </span>state.general.tracker.query_sets,
 <a href=#2162 id=2162 data-nosnippet>2162</a>                                query_index,
-<a href=#2163 id=2163 data-nosnippet>2163</a>                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>cmd_buf_data.pending_query_resets),
+<a href=#2163 id=2163 data-nosnippet>2163</a>                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>pending_query_resets),
 <a href=#2164 id=2164 data-nosnippet>2164</a>                                <span class="kw-2">&amp;mut </span>state.active_occlusion_query,
 <a href=#2165 id=2165 data-nosnippet>2165</a>                            )
 <a href=#2166 id=2166 data-nosnippet>2166</a>                            .map_pass_err(scope)<span class="question-mark">?</span>;
@@ -2191,7 +2191,7 @@
 <a href=#2191 id=2191 data-nosnippet>2191</a>                                <span class="kw-2">&amp;mut </span>state.general.tracker.query_sets,
 <a href=#2192 id=2192 data-nosnippet>2192</a>                                cmd_enc.as_ref(),
 <a href=#2193 id=2193 data-nosnippet>2193</a>                                query_index,
-<a href=#2194 id=2194 data-nosnippet>2194</a>                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>cmd_buf_data.pending_query_resets),
+<a href=#2194 id=2194 data-nosnippet>2194</a>                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>pending_query_resets),
 <a href=#2195 id=2195 data-nosnippet>2195</a>                                <span class="kw-2">&amp;mut </span>state.active_pipeline_statistics_query,
 <a href=#2196 id=2196 data-nosnippet>2196</a>                            )
 <a href=#2197 id=2197 data-nosnippet>2197</a>                            .map_pass_err(scope)<span class="question-mark">?</span>;
@@ -2243,7 +2243,7 @@
 <a href=#2243 id=2243 data-nosnippet>2243</a>                <span class="kw">let </span>pending_discard_init_fixups = state.general.pending_discard_init_fixups;
 <a href=#2244 id=2244 data-nosnippet>2244</a>
 <a href=#2245 id=2245 data-nosnippet>2245</a>                encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
-<a href=#2246 id=2246 data-nosnippet>2246</a>                (trackers, pending_discard_init_fixups)
+<a href=#2246 id=2246 data-nosnippet>2246</a>                (trackers, pending_discard_init_fixups, pending_query_resets)
 <a href=#2247 id=2247 data-nosnippet>2247</a>            };
 <a href=#2248 id=2248 data-nosnippet>2248</a>
 <a href=#2249 id=2249 data-nosnippet>2249</a>            <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
@@ -2265,7 +2265,7 @@
 <a href=#2265 id=2265 data-nosnippet>2265</a>                    snatch_guard,
 <a href=#2266 id=2266 data-nosnippet>2266</a>                );
 <a href=#2267 id=2267 data-nosnippet>2267</a>
-<a href=#2268 id=2268 data-nosnippet>2268</a>                cmd_buf_data.pending_query_resets.reset_queries(transit);
+<a href=#2268 id=2268 data-nosnippet>2268</a>                pending_query_resets.reset_queries(transit);
 <a href=#2269 id=2269 data-nosnippet>2269</a>
 <a href=#2270 id=2270 data-nosnippet>2270</a>                CommandEncoder::insert_barriers_from_scope(transit, tracker, <span class="kw-2">&amp;</span>scope, snatch_guard);
 <a href=#2271 id=2271 data-nosnippet>2271</a>
