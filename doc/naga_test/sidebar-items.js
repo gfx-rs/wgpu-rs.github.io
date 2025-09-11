@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["deserialize_binding_map"],"struct":["BindingMapSerialization","FragmentModule","Input","Parameters","SpirvInParameters","SpirvOutParameters","SpvOutVersion","Targets","WgslInParameters","WgslOutParameters"]};
