@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["build_blas","iter_blas","iter_buffers","map_blas"],"struct":["BlasStore","TlasStore","TriangleBufferStore","UnsafeTlasStore"]};
+window.SIDEBAR_ITEMS = {"fn":["build_acceleration_structures","build_blas","iter_blas","iter_buffers","map_blas"],"struct":["BlasStore","TlasStore","TriangleBufferStore","UnsafeTlasStore"]};
