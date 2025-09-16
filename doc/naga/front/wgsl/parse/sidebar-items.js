@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Rule"],"mod":["ast","conv","directive","lexer","number"],"struct":["BindingParser","ExpressionContext","Options","ParsedAttribute","Parser"]};
+window.SIDEBAR_ITEMS = {"enum":["Rule"],"fn":["is_start_of_compound_statement"],"mod":["ast","conv","directive","lexer","number"],"struct":["BindingParser","ExpressionContext","Options","ParsedAttribute","Parser"]};
