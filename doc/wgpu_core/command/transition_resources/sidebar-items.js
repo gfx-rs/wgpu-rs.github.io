@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["TransitionResourcesError"]};
+window.SIDEBAR_ITEMS = {"enum":["TransitionResourcesError"],"fn":["transition_resources"]};

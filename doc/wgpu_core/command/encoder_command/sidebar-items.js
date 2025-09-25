@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Command"]};
+window.SIDEBAR_ITEMS = {"enum":["ArcCommand","Command"]};
