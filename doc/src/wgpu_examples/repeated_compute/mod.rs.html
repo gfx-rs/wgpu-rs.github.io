@@ -105,145 +105,148 @@
 <a href=#105 id=105 data-nosnippet>105</a>    // One of those can be calling `Device::poll`. This isn't necessary on the web as devices
 <a href=#106 id=106 data-nosnippet>106</a>    // are polled automatically but natively, we need to make sure this happens manually.
 <a href=#107 id=107 data-nosnippet>107</a>    // `PollType::Wait` will cause the thread to wait on native but not on WebGpu.
-<a href=#108 id=108 data-nosnippet>108</a>    </span>context.device.poll(wgpu::PollType::wait()).unwrap();
-<a href=#109 id=109 data-nosnippet>109</a>    <span class="macro">log::info!</span>(<span class="string">"Device polled."</span>);
-<a href=#110 id=110 data-nosnippet>110</a>    <span class="comment">// Now we await the receiving and panic if anything went wrong because we're lazy.
-<a href=#111 id=111 data-nosnippet>111</a>    </span>receiver.recv_async().<span class="kw">await</span>.unwrap().unwrap();
-<a href=#112 id=112 data-nosnippet>112</a>    <span class="macro">log::info!</span>(<span class="string">"Result received."</span>);
-<a href=#113 id=113 data-nosnippet>113</a>    <span class="comment">// NOW we can call get_mapped_range.
-<a href=#114 id=114 data-nosnippet>114</a>    </span>{
-<a href=#115 id=115 data-nosnippet>115</a>        <span class="kw">let </span>view = buffer_slice.get_mapped_range();
-<a href=#116 id=116 data-nosnippet>116</a>        local_buffer.copy_from_slice(bytemuck::cast_slice(<span class="kw-2">&amp;</span>view));
-<a href=#117 id=117 data-nosnippet>117</a>    }
-<a href=#118 id=118 data-nosnippet>118</a>    <span class="macro">log::info!</span>(<span class="string">"Results written to local buffer."</span>);
-<a href=#119 id=119 data-nosnippet>119</a>    <span class="comment">// We need to make sure all `BufferView`'s are dropped before we do what we're about
-<a href=#120 id=120 data-nosnippet>120</a>    // to do.
-<a href=#121 id=121 data-nosnippet>121</a>    // Unmap so that we can copy to the staging buffer in the next iteration.
-<a href=#122 id=122 data-nosnippet>122</a>    </span>context.output_staging_buffer.unmap();
-<a href=#123 id=123 data-nosnippet>123</a>}
-<a href=#124 id=124 data-nosnippet>124</a>
-<a href=#125 id=125 data-nosnippet>125</a><span class="kw">pub fn </span>main() {
-<a href=#126 id=126 data-nosnippet>126</a>    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
-<a href=#127 id=127 data-nosnippet>127</a>    </span>{
-<a href=#128 id=128 data-nosnippet>128</a>        env_logger::builder()
-<a href=#129 id=129 data-nosnippet>129</a>            .filter_level(log::LevelFilter::Info)
-<a href=#130 id=130 data-nosnippet>130</a>            .format_timestamp_nanos()
-<a href=#131 id=131 data-nosnippet>131</a>            .init();
-<a href=#132 id=132 data-nosnippet>132</a>        pollster::block_on(run());
-<a href=#133 id=133 data-nosnippet>133</a>    }
-<a href=#134 id=134 data-nosnippet>134</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
-<a href=#135 id=135 data-nosnippet>135</a>    </span>{
-<a href=#136 id=136 data-nosnippet>136</a>        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-<a href=#137 id=137 data-nosnippet>137</a>        console_log::init_with_level(log::Level::Info).expect(<span class="string">"could not initialize logger"</span>);
-<a href=#138 id=138 data-nosnippet>138</a>
-<a href=#139 id=139 data-nosnippet>139</a>        <span class="kw">crate</span>::utils::add_web_nothing_to_see_msg();
-<a href=#140 id=140 data-nosnippet>140</a>
-<a href=#141 id=141 data-nosnippet>141</a>        wasm_bindgen_futures::spawn_local(run());
-<a href=#142 id=142 data-nosnippet>142</a>    }
-<a href=#143 id=143 data-nosnippet>143</a>}
-<a href=#144 id=144 data-nosnippet>144</a>
-<a href=#145 id=145 data-nosnippet>145</a><span class="doccomment">/// A convenient way to hold together all the useful wgpu stuff together.
-<a href=#146 id=146 data-nosnippet>146</a></span><span class="kw">struct </span>WgpuContext {
-<a href=#147 id=147 data-nosnippet>147</a>    device: wgpu::Device,
-<a href=#148 id=148 data-nosnippet>148</a>    queue: wgpu::Queue,
-<a href=#149 id=149 data-nosnippet>149</a>    pipeline: wgpu::ComputePipeline,
-<a href=#150 id=150 data-nosnippet>150</a>    bind_group: wgpu::BindGroup,
-<a href=#151 id=151 data-nosnippet>151</a>    storage_buffer: wgpu::Buffer,
-<a href=#152 id=152 data-nosnippet>152</a>    output_staging_buffer: wgpu::Buffer,
-<a href=#153 id=153 data-nosnippet>153</a>}
-<a href=#154 id=154 data-nosnippet>154</a>
-<a href=#155 id=155 data-nosnippet>155</a><span class="kw">impl </span>WgpuContext {
-<a href=#156 id=156 data-nosnippet>156</a>    <span class="kw">async fn </span>new(buffer_size: usize) -&gt; WgpuContext {
-<a href=#157 id=157 data-nosnippet>157</a>        <span class="kw">let </span>instance = wgpu::Instance::default();
-<a href=#158 id=158 data-nosnippet>158</a>        <span class="kw">let </span>adapter = instance
-<a href=#159 id=159 data-nosnippet>159</a>            .request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions::default())
-<a href=#160 id=160 data-nosnippet>160</a>            .<span class="kw">await
-<a href=#161 id=161 data-nosnippet>161</a>            </span>.unwrap();
-<a href=#162 id=162 data-nosnippet>162</a>        <span class="kw">let </span>(device, queue) = adapter
-<a href=#163 id=163 data-nosnippet>163</a>            .request_device(<span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
-<a href=#164 id=164 data-nosnippet>164</a>                label: <span class="prelude-val">None</span>,
-<a href=#165 id=165 data-nosnippet>165</a>                required_features: wgpu::Features::empty(),
-<a href=#166 id=166 data-nosnippet>166</a>                required_limits: wgpu::Limits::downlevel_defaults(),
-<a href=#167 id=167 data-nosnippet>167</a>                experimental_features: wgpu::ExperimentalFeatures::disabled(),
-<a href=#168 id=168 data-nosnippet>168</a>                memory_hints: wgpu::MemoryHints::Performance,
-<a href=#169 id=169 data-nosnippet>169</a>                trace: wgpu::Trace::Off,
-<a href=#170 id=170 data-nosnippet>170</a>            })
-<a href=#171 id=171 data-nosnippet>171</a>            .<span class="kw">await
-<a href=#172 id=172 data-nosnippet>172</a>            </span>.unwrap();
-<a href=#173 id=173 data-nosnippet>173</a>
-<a href=#174 id=174 data-nosnippet>174</a>        <span class="comment">// Our shader, kindly compiled with Naga.
-<a href=#175 id=175 data-nosnippet>175</a>        </span><span class="kw">let </span>shader = device.create_shader_module(<span class="macro">wgpu::include_wgsl!</span>(<span class="string">"shader.wgsl"</span>));
+<a href=#108 id=108 data-nosnippet>108</a>    </span>context
+<a href=#109 id=109 data-nosnippet>109</a>        .device
+<a href=#110 id=110 data-nosnippet>110</a>        .poll(wgpu::PollType::wait_indefinitely())
+<a href=#111 id=111 data-nosnippet>111</a>        .unwrap();
+<a href=#112 id=112 data-nosnippet>112</a>    <span class="macro">log::info!</span>(<span class="string">"Device polled."</span>);
+<a href=#113 id=113 data-nosnippet>113</a>    <span class="comment">// Now we await the receiving and panic if anything went wrong because we're lazy.
+<a href=#114 id=114 data-nosnippet>114</a>    </span>receiver.recv_async().<span class="kw">await</span>.unwrap().unwrap();
+<a href=#115 id=115 data-nosnippet>115</a>    <span class="macro">log::info!</span>(<span class="string">"Result received."</span>);
+<a href=#116 id=116 data-nosnippet>116</a>    <span class="comment">// NOW we can call get_mapped_range.
+<a href=#117 id=117 data-nosnippet>117</a>    </span>{
+<a href=#118 id=118 data-nosnippet>118</a>        <span class="kw">let </span>view = buffer_slice.get_mapped_range();
+<a href=#119 id=119 data-nosnippet>119</a>        local_buffer.copy_from_slice(bytemuck::cast_slice(<span class="kw-2">&amp;</span>view));
+<a href=#120 id=120 data-nosnippet>120</a>    }
+<a href=#121 id=121 data-nosnippet>121</a>    <span class="macro">log::info!</span>(<span class="string">"Results written to local buffer."</span>);
+<a href=#122 id=122 data-nosnippet>122</a>    <span class="comment">// We need to make sure all `BufferView`'s are dropped before we do what we're about
+<a href=#123 id=123 data-nosnippet>123</a>    // to do.
+<a href=#124 id=124 data-nosnippet>124</a>    // Unmap so that we can copy to the staging buffer in the next iteration.
+<a href=#125 id=125 data-nosnippet>125</a>    </span>context.output_staging_buffer.unmap();
+<a href=#126 id=126 data-nosnippet>126</a>}
+<a href=#127 id=127 data-nosnippet>127</a>
+<a href=#128 id=128 data-nosnippet>128</a><span class="kw">pub fn </span>main() {
+<a href=#129 id=129 data-nosnippet>129</a>    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
+<a href=#130 id=130 data-nosnippet>130</a>    </span>{
+<a href=#131 id=131 data-nosnippet>131</a>        env_logger::builder()
+<a href=#132 id=132 data-nosnippet>132</a>            .filter_level(log::LevelFilter::Info)
+<a href=#133 id=133 data-nosnippet>133</a>            .format_timestamp_nanos()
+<a href=#134 id=134 data-nosnippet>134</a>            .init();
+<a href=#135 id=135 data-nosnippet>135</a>        pollster::block_on(run());
+<a href=#136 id=136 data-nosnippet>136</a>    }
+<a href=#137 id=137 data-nosnippet>137</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
+<a href=#138 id=138 data-nosnippet>138</a>    </span>{
+<a href=#139 id=139 data-nosnippet>139</a>        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+<a href=#140 id=140 data-nosnippet>140</a>        console_log::init_with_level(log::Level::Info).expect(<span class="string">"could not initialize logger"</span>);
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a>        <span class="kw">crate</span>::utils::add_web_nothing_to_see_msg();
+<a href=#143 id=143 data-nosnippet>143</a>
+<a href=#144 id=144 data-nosnippet>144</a>        wasm_bindgen_futures::spawn_local(run());
+<a href=#145 id=145 data-nosnippet>145</a>    }
+<a href=#146 id=146 data-nosnippet>146</a>}
+<a href=#147 id=147 data-nosnippet>147</a>
+<a href=#148 id=148 data-nosnippet>148</a><span class="doccomment">/// A convenient way to hold together all the useful wgpu stuff together.
+<a href=#149 id=149 data-nosnippet>149</a></span><span class="kw">struct </span>WgpuContext {
+<a href=#150 id=150 data-nosnippet>150</a>    device: wgpu::Device,
+<a href=#151 id=151 data-nosnippet>151</a>    queue: wgpu::Queue,
+<a href=#152 id=152 data-nosnippet>152</a>    pipeline: wgpu::ComputePipeline,
+<a href=#153 id=153 data-nosnippet>153</a>    bind_group: wgpu::BindGroup,
+<a href=#154 id=154 data-nosnippet>154</a>    storage_buffer: wgpu::Buffer,
+<a href=#155 id=155 data-nosnippet>155</a>    output_staging_buffer: wgpu::Buffer,
+<a href=#156 id=156 data-nosnippet>156</a>}
+<a href=#157 id=157 data-nosnippet>157</a>
+<a href=#158 id=158 data-nosnippet>158</a><span class="kw">impl </span>WgpuContext {
+<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">async fn </span>new(buffer_size: usize) -&gt; WgpuContext {
+<a href=#160 id=160 data-nosnippet>160</a>        <span class="kw">let </span>instance = wgpu::Instance::default();
+<a href=#161 id=161 data-nosnippet>161</a>        <span class="kw">let </span>adapter = instance
+<a href=#162 id=162 data-nosnippet>162</a>            .request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions::default())
+<a href=#163 id=163 data-nosnippet>163</a>            .<span class="kw">await
+<a href=#164 id=164 data-nosnippet>164</a>            </span>.unwrap();
+<a href=#165 id=165 data-nosnippet>165</a>        <span class="kw">let </span>(device, queue) = adapter
+<a href=#166 id=166 data-nosnippet>166</a>            .request_device(<span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
+<a href=#167 id=167 data-nosnippet>167</a>                label: <span class="prelude-val">None</span>,
+<a href=#168 id=168 data-nosnippet>168</a>                required_features: wgpu::Features::empty(),
+<a href=#169 id=169 data-nosnippet>169</a>                required_limits: wgpu::Limits::downlevel_defaults(),
+<a href=#170 id=170 data-nosnippet>170</a>                experimental_features: wgpu::ExperimentalFeatures::disabled(),
+<a href=#171 id=171 data-nosnippet>171</a>                memory_hints: wgpu::MemoryHints::Performance,
+<a href=#172 id=172 data-nosnippet>172</a>                trace: wgpu::Trace::Off,
+<a href=#173 id=173 data-nosnippet>173</a>            })
+<a href=#174 id=174 data-nosnippet>174</a>            .<span class="kw">await
+<a href=#175 id=175 data-nosnippet>175</a>            </span>.unwrap();
 <a href=#176 id=176 data-nosnippet>176</a>
-<a href=#177 id=177 data-nosnippet>177</a>        <span class="comment">// This is where the GPU will read from and write to.
-<a href=#178 id=178 data-nosnippet>178</a>        </span><span class="kw">let </span>storage_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
-<a href=#179 id=179 data-nosnippet>179</a>            label: <span class="prelude-val">None</span>,
-<a href=#180 id=180 data-nosnippet>180</a>            size: buffer_size <span class="kw">as </span>wgpu::BufferAddress,
-<a href=#181 id=181 data-nosnippet>181</a>            usage: wgpu::BufferUsages::STORAGE
-<a href=#182 id=182 data-nosnippet>182</a>                | wgpu::BufferUsages::COPY_DST
-<a href=#183 id=183 data-nosnippet>183</a>                | wgpu::BufferUsages::COPY_SRC,
-<a href=#184 id=184 data-nosnippet>184</a>            mapped_at_creation: <span class="bool-val">false</span>,
-<a href=#185 id=185 data-nosnippet>185</a>        });
-<a href=#186 id=186 data-nosnippet>186</a>        <span class="comment">// For portability reasons, WebGPU draws a distinction between memory that is
-<a href=#187 id=187 data-nosnippet>187</a>        // accessible by the CPU and memory that is accessible by the GPU. Only
-<a href=#188 id=188 data-nosnippet>188</a>        // buffers accessible by the CPU can be mapped and accessed by the CPU and
-<a href=#189 id=189 data-nosnippet>189</a>        // only buffers visible to the GPU can be used in shaders. In order to get
-<a href=#190 id=190 data-nosnippet>190</a>        // data from the GPU, we need to use CommandEncoder::copy_buffer_to_buffer
-<a href=#191 id=191 data-nosnippet>191</a>        // (which we will later) to copy the buffer modified by the GPU into a
-<a href=#192 id=192 data-nosnippet>192</a>        // mappable, CPU-accessible buffer which we'll create here.
-<a href=#193 id=193 data-nosnippet>193</a>        </span><span class="kw">let </span>output_staging_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
-<a href=#194 id=194 data-nosnippet>194</a>            label: <span class="prelude-val">None</span>,
-<a href=#195 id=195 data-nosnippet>195</a>            size: buffer_size <span class="kw">as </span>wgpu::BufferAddress,
-<a href=#196 id=196 data-nosnippet>196</a>            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-<a href=#197 id=197 data-nosnippet>197</a>            mapped_at_creation: <span class="bool-val">false</span>,
-<a href=#198 id=198 data-nosnippet>198</a>        });
-<a href=#199 id=199 data-nosnippet>199</a>
-<a href=#200 id=200 data-nosnippet>200</a>        <span class="comment">// This can be though of as the function signature for our CPU-GPU function.
-<a href=#201 id=201 data-nosnippet>201</a>        </span><span class="kw">let </span>bind_group_layout = device.create_bind_group_layout(<span class="kw-2">&amp;</span>wgpu::BindGroupLayoutDescriptor {
-<a href=#202 id=202 data-nosnippet>202</a>            label: <span class="prelude-val">None</span>,
-<a href=#203 id=203 data-nosnippet>203</a>            entries: <span class="kw-2">&amp;</span>[wgpu::BindGroupLayoutEntry {
-<a href=#204 id=204 data-nosnippet>204</a>                binding: <span class="number">0</span>,
-<a href=#205 id=205 data-nosnippet>205</a>                visibility: wgpu::ShaderStages::COMPUTE,
-<a href=#206 id=206 data-nosnippet>206</a>                ty: wgpu::BindingType::Buffer {
-<a href=#207 id=207 data-nosnippet>207</a>                    ty: wgpu::BufferBindingType::Storage { read_only: <span class="bool-val">false </span>},
-<a href=#208 id=208 data-nosnippet>208</a>                    has_dynamic_offset: <span class="bool-val">false</span>,
-<a href=#209 id=209 data-nosnippet>209</a>                    <span class="comment">// Going to have this be None just to be safe.
-<a href=#210 id=210 data-nosnippet>210</a>                    </span>min_binding_size: <span class="prelude-val">None</span>,
-<a href=#211 id=211 data-nosnippet>211</a>                },
-<a href=#212 id=212 data-nosnippet>212</a>                count: <span class="prelude-val">None</span>,
-<a href=#213 id=213 data-nosnippet>213</a>            }],
-<a href=#214 id=214 data-nosnippet>214</a>        });
-<a href=#215 id=215 data-nosnippet>215</a>        <span class="comment">// This ties actual resources stored in the GPU to our metaphorical function
-<a href=#216 id=216 data-nosnippet>216</a>        // through the binding slots we defined above.
-<a href=#217 id=217 data-nosnippet>217</a>        </span><span class="kw">let </span>bind_group = device.create_bind_group(<span class="kw-2">&amp;</span>wgpu::BindGroupDescriptor {
-<a href=#218 id=218 data-nosnippet>218</a>            label: <span class="prelude-val">None</span>,
-<a href=#219 id=219 data-nosnippet>219</a>            layout: <span class="kw-2">&amp;</span>bind_group_layout,
-<a href=#220 id=220 data-nosnippet>220</a>            entries: <span class="kw-2">&amp;</span>[wgpu::BindGroupEntry {
-<a href=#221 id=221 data-nosnippet>221</a>                binding: <span class="number">0</span>,
-<a href=#222 id=222 data-nosnippet>222</a>                resource: storage_buffer.as_entire_binding(),
-<a href=#223 id=223 data-nosnippet>223</a>            }],
-<a href=#224 id=224 data-nosnippet>224</a>        });
-<a href=#225 id=225 data-nosnippet>225</a>
-<a href=#226 id=226 data-nosnippet>226</a>        <span class="kw">let </span>pipeline_layout = device.create_pipeline_layout(<span class="kw-2">&amp;</span>wgpu::PipelineLayoutDescriptor {
-<a href=#227 id=227 data-nosnippet>227</a>            label: <span class="prelude-val">None</span>,
-<a href=#228 id=228 data-nosnippet>228</a>            bind_group_layouts: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>bind_group_layout],
-<a href=#229 id=229 data-nosnippet>229</a>            push_constant_ranges: <span class="kw-2">&amp;</span>[],
-<a href=#230 id=230 data-nosnippet>230</a>        });
-<a href=#231 id=231 data-nosnippet>231</a>        <span class="kw">let </span>pipeline = device.create_compute_pipeline(<span class="kw-2">&amp;</span>wgpu::ComputePipelineDescriptor {
-<a href=#232 id=232 data-nosnippet>232</a>            label: <span class="prelude-val">None</span>,
-<a href=#233 id=233 data-nosnippet>233</a>            layout: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>pipeline_layout),
-<a href=#234 id=234 data-nosnippet>234</a>            module: <span class="kw-2">&amp;</span>shader,
-<a href=#235 id=235 data-nosnippet>235</a>            entry_point: <span class="prelude-val">Some</span>(<span class="string">"main"</span>),
-<a href=#236 id=236 data-nosnippet>236</a>            compilation_options: Default::default(),
-<a href=#237 id=237 data-nosnippet>237</a>            cache: <span class="prelude-val">None</span>,
-<a href=#238 id=238 data-nosnippet>238</a>        });
-<a href=#239 id=239 data-nosnippet>239</a>
-<a href=#240 id=240 data-nosnippet>240</a>        WgpuContext {
-<a href=#241 id=241 data-nosnippet>241</a>            device,
-<a href=#242 id=242 data-nosnippet>242</a>            queue,
-<a href=#243 id=243 data-nosnippet>243</a>            pipeline,
-<a href=#244 id=244 data-nosnippet>244</a>            bind_group,
-<a href=#245 id=245 data-nosnippet>245</a>            storage_buffer,
-<a href=#246 id=246 data-nosnippet>246</a>            output_staging_buffer,
-<a href=#247 id=247 data-nosnippet>247</a>        }
-<a href=#248 id=248 data-nosnippet>248</a>    }
-<a href=#249 id=249 data-nosnippet>249</a>}</code></pre></div></section></main></body></html>
+<a href=#177 id=177 data-nosnippet>177</a>        <span class="comment">// Our shader, kindly compiled with Naga.
+<a href=#178 id=178 data-nosnippet>178</a>        </span><span class="kw">let </span>shader = device.create_shader_module(<span class="macro">wgpu::include_wgsl!</span>(<span class="string">"shader.wgsl"</span>));
+<a href=#179 id=179 data-nosnippet>179</a>
+<a href=#180 id=180 data-nosnippet>180</a>        <span class="comment">// This is where the GPU will read from and write to.
+<a href=#181 id=181 data-nosnippet>181</a>        </span><span class="kw">let </span>storage_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
+<a href=#182 id=182 data-nosnippet>182</a>            label: <span class="prelude-val">None</span>,
+<a href=#183 id=183 data-nosnippet>183</a>            size: buffer_size <span class="kw">as </span>wgpu::BufferAddress,
+<a href=#184 id=184 data-nosnippet>184</a>            usage: wgpu::BufferUsages::STORAGE
+<a href=#185 id=185 data-nosnippet>185</a>                | wgpu::BufferUsages::COPY_DST
+<a href=#186 id=186 data-nosnippet>186</a>                | wgpu::BufferUsages::COPY_SRC,
+<a href=#187 id=187 data-nosnippet>187</a>            mapped_at_creation: <span class="bool-val">false</span>,
+<a href=#188 id=188 data-nosnippet>188</a>        });
+<a href=#189 id=189 data-nosnippet>189</a>        <span class="comment">// For portability reasons, WebGPU draws a distinction between memory that is
+<a href=#190 id=190 data-nosnippet>190</a>        // accessible by the CPU and memory that is accessible by the GPU. Only
+<a href=#191 id=191 data-nosnippet>191</a>        // buffers accessible by the CPU can be mapped and accessed by the CPU and
+<a href=#192 id=192 data-nosnippet>192</a>        // only buffers visible to the GPU can be used in shaders. In order to get
+<a href=#193 id=193 data-nosnippet>193</a>        // data from the GPU, we need to use CommandEncoder::copy_buffer_to_buffer
+<a href=#194 id=194 data-nosnippet>194</a>        // (which we will later) to copy the buffer modified by the GPU into a
+<a href=#195 id=195 data-nosnippet>195</a>        // mappable, CPU-accessible buffer which we'll create here.
+<a href=#196 id=196 data-nosnippet>196</a>        </span><span class="kw">let </span>output_staging_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
+<a href=#197 id=197 data-nosnippet>197</a>            label: <span class="prelude-val">None</span>,
+<a href=#198 id=198 data-nosnippet>198</a>            size: buffer_size <span class="kw">as </span>wgpu::BufferAddress,
+<a href=#199 id=199 data-nosnippet>199</a>            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+<a href=#200 id=200 data-nosnippet>200</a>            mapped_at_creation: <span class="bool-val">false</span>,
+<a href=#201 id=201 data-nosnippet>201</a>        });
+<a href=#202 id=202 data-nosnippet>202</a>
+<a href=#203 id=203 data-nosnippet>203</a>        <span class="comment">// This can be though of as the function signature for our CPU-GPU function.
+<a href=#204 id=204 data-nosnippet>204</a>        </span><span class="kw">let </span>bind_group_layout = device.create_bind_group_layout(<span class="kw-2">&amp;</span>wgpu::BindGroupLayoutDescriptor {
+<a href=#205 id=205 data-nosnippet>205</a>            label: <span class="prelude-val">None</span>,
+<a href=#206 id=206 data-nosnippet>206</a>            entries: <span class="kw-2">&amp;</span>[wgpu::BindGroupLayoutEntry {
+<a href=#207 id=207 data-nosnippet>207</a>                binding: <span class="number">0</span>,
+<a href=#208 id=208 data-nosnippet>208</a>                visibility: wgpu::ShaderStages::COMPUTE,
+<a href=#209 id=209 data-nosnippet>209</a>                ty: wgpu::BindingType::Buffer {
+<a href=#210 id=210 data-nosnippet>210</a>                    ty: wgpu::BufferBindingType::Storage { read_only: <span class="bool-val">false </span>},
+<a href=#211 id=211 data-nosnippet>211</a>                    has_dynamic_offset: <span class="bool-val">false</span>,
+<a href=#212 id=212 data-nosnippet>212</a>                    <span class="comment">// Going to have this be None just to be safe.
+<a href=#213 id=213 data-nosnippet>213</a>                    </span>min_binding_size: <span class="prelude-val">None</span>,
+<a href=#214 id=214 data-nosnippet>214</a>                },
+<a href=#215 id=215 data-nosnippet>215</a>                count: <span class="prelude-val">None</span>,
+<a href=#216 id=216 data-nosnippet>216</a>            }],
+<a href=#217 id=217 data-nosnippet>217</a>        });
+<a href=#218 id=218 data-nosnippet>218</a>        <span class="comment">// This ties actual resources stored in the GPU to our metaphorical function
+<a href=#219 id=219 data-nosnippet>219</a>        // through the binding slots we defined above.
+<a href=#220 id=220 data-nosnippet>220</a>        </span><span class="kw">let </span>bind_group = device.create_bind_group(<span class="kw-2">&amp;</span>wgpu::BindGroupDescriptor {
+<a href=#221 id=221 data-nosnippet>221</a>            label: <span class="prelude-val">None</span>,
+<a href=#222 id=222 data-nosnippet>222</a>            layout: <span class="kw-2">&amp;</span>bind_group_layout,
+<a href=#223 id=223 data-nosnippet>223</a>            entries: <span class="kw-2">&amp;</span>[wgpu::BindGroupEntry {
+<a href=#224 id=224 data-nosnippet>224</a>                binding: <span class="number">0</span>,
+<a href=#225 id=225 data-nosnippet>225</a>                resource: storage_buffer.as_entire_binding(),
+<a href=#226 id=226 data-nosnippet>226</a>            }],
+<a href=#227 id=227 data-nosnippet>227</a>        });
+<a href=#228 id=228 data-nosnippet>228</a>
+<a href=#229 id=229 data-nosnippet>229</a>        <span class="kw">let </span>pipeline_layout = device.create_pipeline_layout(<span class="kw-2">&amp;</span>wgpu::PipelineLayoutDescriptor {
+<a href=#230 id=230 data-nosnippet>230</a>            label: <span class="prelude-val">None</span>,
+<a href=#231 id=231 data-nosnippet>231</a>            bind_group_layouts: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>bind_group_layout],
+<a href=#232 id=232 data-nosnippet>232</a>            push_constant_ranges: <span class="kw-2">&amp;</span>[],
+<a href=#233 id=233 data-nosnippet>233</a>        });
+<a href=#234 id=234 data-nosnippet>234</a>        <span class="kw">let </span>pipeline = device.create_compute_pipeline(<span class="kw-2">&amp;</span>wgpu::ComputePipelineDescriptor {
+<a href=#235 id=235 data-nosnippet>235</a>            label: <span class="prelude-val">None</span>,
+<a href=#236 id=236 data-nosnippet>236</a>            layout: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>pipeline_layout),
+<a href=#237 id=237 data-nosnippet>237</a>            module: <span class="kw-2">&amp;</span>shader,
+<a href=#238 id=238 data-nosnippet>238</a>            entry_point: <span class="prelude-val">Some</span>(<span class="string">"main"</span>),
+<a href=#239 id=239 data-nosnippet>239</a>            compilation_options: Default::default(),
+<a href=#240 id=240 data-nosnippet>240</a>            cache: <span class="prelude-val">None</span>,
+<a href=#241 id=241 data-nosnippet>241</a>        });
+<a href=#242 id=242 data-nosnippet>242</a>
+<a href=#243 id=243 data-nosnippet>243</a>        WgpuContext {
+<a href=#244 id=244 data-nosnippet>244</a>            device,
+<a href=#245 id=245 data-nosnippet>245</a>            queue,
+<a href=#246 id=246 data-nosnippet>246</a>            pipeline,
+<a href=#247 id=247 data-nosnippet>247</a>            bind_group,
+<a href=#248 id=248 data-nosnippet>248</a>            storage_buffer,
+<a href=#249 id=249 data-nosnippet>249</a>            output_staging_buffer,
+<a href=#250 id=250 data-nosnippet>250</a>        }
+<a href=#251 id=251 data-nosnippet>251</a>    }
+<a href=#252 id=252 data-nosnippet>252</a>}</code></pre></div></section></main></body></html>
