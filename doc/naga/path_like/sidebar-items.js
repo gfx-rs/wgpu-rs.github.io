@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["path_like_impls","path_like_owned_std_impls","path_like_ref_std_impls","sealed"],"struct":["PathLikeOwned","PathLikeRef"],"trait":["PathLike"]};
