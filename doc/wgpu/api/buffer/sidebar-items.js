@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["MapMode","RangeMappingKind"],"fn":["check_buffer_bounds","range_overlaps","range_to_offset_size"],"struct":["Buffer","BufferAsyncError","BufferSlice","BufferView","BufferViewMut","MapContext","Subrange"],"type":["BufferDescriptor"]};
+window.SIDEBAR_ITEMS = {"enum":["MapMode","RangeMappingKind"],"fn":["check_buffer_bounds","range_contains","range_overlaps","range_to_offset_size"],"struct":["Buffer","BufferAsyncError","BufferSlice","BufferView","BufferViewMut","MapContext","Subrange"],"type":["BufferDescriptor"]};
