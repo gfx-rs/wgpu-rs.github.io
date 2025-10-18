@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A macro for matching on `LiteralVector` variants."><title>match_literal_vector in naga::proc::constant_evaluator - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc macro"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../naga/index.html">naga</a><span class="version">27.0.0</span></h2></div><div class="sidebar-elems"><div id="rustdoc-modnav"><h2><a href="index.html">In naga::<wbr>proc::<wbr>constant_<wbr>evaluator</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">naga</a>::<wbr><a href="../index.html">proc</a>::<wbr><a href="index.html">constant_evaluator</a></div><h1>Macro <span class="macro">match_literal_vector</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/naga/proc/constant_evaluator.rs.html#505-655">Source</a> </span></div><pre class="rust item-decl"><code>macro_rules! match_literal_vector {
+    (match $lit_vec:expr =&gt; $out:ident {
+        $(
+            $ty:ident =&gt; |$($var:ident),+| $(-&gt; $ret:ident)? { $body:expr }
+        ),+
+        $(,)?
+    }) =&gt; { ... };
+    (@inner_start
+        $lit_vec:expr;
+        $out:ident;
+        [$($ty:ident),+];
+        [$({ $($var:ident),+ ; $($ret:ident)? ; $body:expr }),+]
+    ) =&gt; { ... };
+    (@inner
+        $lit_vec:expr;
+        $out:ident;
+        [$ty:ident $(, $ty1:ident)*];
+        [$({$_ty:ident ; $($_var:ident),+ ; $($_ret:ident)? ; $_body:expr}),*] &lt;&gt;
+        [$({ $($var:ident),+ ; $($ret:ident)? ; $body:expr }),+]
+    ) =&gt; { ... };
+    (@inner
+        Integer;
+        $lit_vec:expr;
+        $out:ident;
+        [$($ty:ident),*];
+        [$({$_ty:ident ; $($_var:ident),+ ; $($_ret:ident)? ; $_body:expr}),*] &lt;&gt;
+        [
+            { $($var:ident),+ ; $($ret:ident)? ; $body:expr }
+            $(,{ $($var1:ident),+ ; $($ret1:ident)? ; $body1:expr })*
+        ]
+    ) =&gt; { ... };
+    (@inner
+        Float;
+        $lit_vec:expr;
+        $out:ident;
+        [$($ty:ident),*];
+        [$({$_ty:ident ; $($_var:ident),+ ; $($_ret:ident)? ; $_body:expr}),*] &lt;&gt;
+        [
+            { $($var:ident),+ ; $($ret:ident)? ; $body:expr }
+            $(,{ $($var1:ident),+ ; $($ret1:ident)? ; $body1:expr })*
+        ]
+    ) =&gt; { ... };
+    (@inner
+        $ty:ident;
+        $lit_vec:expr;
+        $out:ident;
+        [$ty1:ident $(,$ty2:ident)*];
+        [$({$_ty:ident ; $($_var:ident),+ ; $($_ret:ident)? ; $_body:expr}),*] &lt;&gt; [
+            { $($var:ident),+ ; $($ret:ident)? ; $body:expr }
+            $(, { $($var1:ident),+ ; $($ret1:ident)? ; $body1:expr })*
+        ]
+    ) =&gt; { ... };
+    (@inner
+        $ty:ident;
+        $lit_vec:expr;
+        $out:ident;
+        [];
+        [$({$_ty:ident ; $($_var:ident),+ ; $($_ret:ident)? ; $_body:expr}),*] &lt;&gt;
+        [{ $($var:ident),+ ; $($ret:ident)? ; $body:expr }]
+    ) =&gt; { ... };
+    (@inner_finish
+        $lit_vec:expr;
+        $out:ident;
+        [$({$ty:ident ; $($var:ident),+ ; $($ret:ident)? ; $body:expr}),+]
+    ) =&gt; { ... };
+    (@expand_ret $out:ident; $ty:ident; $body:expr) =&gt; { ... };
+    (@expand_ret $out:ident; $_ty:ident; $ret:ident; $body:expr) =&gt; { ... };
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A macro for matching on <a href="enum.LiteralVector.html" title="enum naga::proc::constant_evaluator::LiteralVector"><code>LiteralVector</code></a> variants.</p>
+<p><code>Float</code> variant expands to <code>F16</code>, <code>F32</code>, <code>F64</code> and <code>AbstractFloat</code>.
+<code>Integer</code> variant expands to <code>I32</code>, <code>I64</code>, <code>U32</code>, <code>U64</code> and <code>AbstractInt</code>.</p>
+<p>For output both <a href="../../ir/enum.Literal.html" title="enum naga::ir::Literal"><code>Literal</code></a> (fold) and <a href="enum.LiteralVector.html" title="enum naga::proc::constant_evaluator::LiteralVector"><code>LiteralVector</code></a> (map) are supported.</p>
+<p>Example usage:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="macro">match_literal_vector!</span>(<span class="kw">match </span>v =&gt; Literal {
+    F16 =&gt; |v| {v.sum()},
+    Integer =&gt; |v| {v.sum()},
+    U32 =&gt; |v| -&gt; I32 {v.sum()}, <span class="comment">// optionally override return type
+</span>})</code></pre></div>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="macro">match_literal_vector!</span>(<span class="kw">match </span>(e1, e2) =&gt; LiteralVector {
+    F16 =&gt; |e1, e2| {e1+e2},
+    Integer =&gt; |e1, e2| {e1+e2},
+    U32 =&gt; |e1, e2| -&gt; I32 {e1+e2}, <span class="comment">// optionally override return type
+</span>})</code></pre></div>
+</div></details></section></div></main></body></html>
