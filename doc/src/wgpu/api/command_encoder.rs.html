@@ -310,124 +310,132 @@
 <a href=#310 id=310 data-nosnippet>310</a>
 <a href=#311 id=311 data-nosnippet>311</a><span class="doccomment">/// [`Features::EXPERIMENTAL_RAY_QUERY`] must be enabled on the device in order to call these functions.
 <a href=#312 id=312 data-nosnippet>312</a></span><span class="kw">impl </span>CommandEncoder {
-<a href=#313 id=313 data-nosnippet>313</a>    <span class="doccomment">/// Mark acceleration structures as being built. ***Should only*** be used with wgpu-hal
-<a href=#314 id=314 data-nosnippet>314</a>    /// functions, all wgpu functions already mark acceleration structures as built.
-<a href=#315 id=315 data-nosnippet>315</a>    ///
-<a href=#316 id=316 data-nosnippet>316</a>    /// # Safety
-<a href=#317 id=317 data-nosnippet>317</a>    ///
-<a href=#318 id=318 data-nosnippet>318</a>    /// - All acceleration structures must have been build in this command encoder.
-<a href=#319 id=319 data-nosnippet>319</a>    /// - All BLASes inputted must have been built before all TLASes that were inputted here and
-<a href=#320 id=320 data-nosnippet>320</a>    ///   which use them.
-<a href=#321 id=321 data-nosnippet>321</a>    </span><span class="kw">pub unsafe fn </span>mark_acceleration_structures_built&lt;<span class="lifetime">'a</span>&gt;(
-<a href=#322 id=322 data-nosnippet>322</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#323 id=323 data-nosnippet>323</a>        blas: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Blas&gt;,
-<a href=#324 id=324 data-nosnippet>324</a>        tlas: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Tlas&gt;,
-<a href=#325 id=325 data-nosnippet>325</a>    ) {
-<a href=#326 id=326 data-nosnippet>326</a>        <span class="self">self</span>.inner
-<a href=#327 id=327 data-nosnippet>327</a>            .mark_acceleration_structures_built(<span class="kw-2">&amp;mut </span>blas.into_iter(), <span class="kw-2">&amp;mut </span>tlas.into_iter())
-<a href=#328 id=328 data-nosnippet>328</a>    }
-<a href=#329 id=329 data-nosnippet>329</a>    <span class="doccomment">/// Build bottom and top level acceleration structures.
-<a href=#330 id=330 data-nosnippet>330</a>    ///
-<a href=#331 id=331 data-nosnippet>331</a>    /// Builds the BLASes then the TLASes, but does ***not*** build the BLASes into the TLASes,
-<a href=#332 id=332 data-nosnippet>332</a>    /// that must be done by setting a TLAS instance in the TLAS package to one that contains the BLAS (and with an appropriate transform)
-<a href=#333 id=333 data-nosnippet>333</a>    ///
-<a href=#334 id=334 data-nosnippet>334</a>    /// # Validation
-<a href=#335 id=335 data-nosnippet>335</a>    ///
-<a href=#336 id=336 data-nosnippet>336</a>    /// - blas: Iterator of bottom level acceleration structure entries to build.
-<a href=#337 id=337 data-nosnippet>337</a>    ///   For each entry, the provided size descriptor must be strictly smaller or equal to the descriptor given at BLAS creation, this means:
-<a href=#338 id=338 data-nosnippet>338</a>    ///   - Less or equal number of geometries
-<a href=#339 id=339 data-nosnippet>339</a>    ///   - Same kind of geometry (with index buffer or without) (same vertex/index format)
-<a href=#340 id=340 data-nosnippet>340</a>    ///   - Same flags
-<a href=#341 id=341 data-nosnippet>341</a>    ///   - Less or equal number of vertices
-<a href=#342 id=342 data-nosnippet>342</a>    ///   - Less or equal number of indices (if applicable)
-<a href=#343 id=343 data-nosnippet>343</a>    /// - tlas: iterator of top level acceleration structure packages to build
-<a href=#344 id=344 data-nosnippet>344</a>    ///   For each entry:
-<a href=#345 id=345 data-nosnippet>345</a>    ///   - Each BLAS in each TLAS instance must have been being built in the current call or in a previous call to `build_acceleration_structures` or `build_acceleration_structures_unsafe_tlas`
-<a href=#346 id=346 data-nosnippet>346</a>    ///   - The number of TLAS instances must be less than or equal to the max number of tlas instances when creating (if creating a package with `TlasPackage::new()` this is already satisfied)
-<a href=#347 id=347 data-nosnippet>347</a>    ///
-<a href=#348 id=348 data-nosnippet>348</a>    /// If the device the command encoder is created from does not have [Features::EXPERIMENTAL_RAY_QUERY] enabled then a validation error is generated
-<a href=#349 id=349 data-nosnippet>349</a>    ///
-<a href=#350 id=350 data-nosnippet>350</a>    /// A bottom level acceleration structure may be build and used as a reference in a top level acceleration structure in the same invocation of this function.
-<a href=#351 id=351 data-nosnippet>351</a>    ///
-<a href=#352 id=352 data-nosnippet>352</a>    /// # Bind group usage
-<a href=#353 id=353 data-nosnippet>353</a>    ///
-<a href=#354 id=354 data-nosnippet>354</a>    /// When a top level acceleration structure is used in a bind group, some validation takes place:
-<a href=#355 id=355 data-nosnippet>355</a>    ///    - The top level acceleration structure is valid and has been built.
-<a href=#356 id=356 data-nosnippet>356</a>    ///    - All the bottom level acceleration structures referenced by the top level acceleration structure are valid and have been built prior,
-<a href=#357 id=357 data-nosnippet>357</a>    ///      or at same time as the containing top level acceleration structure.
-<a href=#358 id=358 data-nosnippet>358</a>    ///
-<a href=#359 id=359 data-nosnippet>359</a>    /// [Features::EXPERIMENTAL_RAY_QUERY]: wgt::Features::EXPERIMENTAL_RAY_QUERY
-<a href=#360 id=360 data-nosnippet>360</a>    </span><span class="kw">pub fn </span>build_acceleration_structures&lt;<span class="lifetime">'a</span>&gt;(
-<a href=#361 id=361 data-nosnippet>361</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#362 id=362 data-nosnippet>362</a>        blas: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BlasBuildEntry&lt;<span class="lifetime">'a</span>&gt;&gt;,
-<a href=#363 id=363 data-nosnippet>363</a>        tlas: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Tlas&gt;,
-<a href=#364 id=364 data-nosnippet>364</a>    ) {
-<a href=#365 id=365 data-nosnippet>365</a>        <span class="self">self</span>.inner
-<a href=#366 id=366 data-nosnippet>366</a>            .build_acceleration_structures(<span class="kw-2">&amp;mut </span>blas.into_iter(), <span class="kw-2">&amp;mut </span>tlas.into_iter());
-<a href=#367 id=367 data-nosnippet>367</a>    }
-<a href=#368 id=368 data-nosnippet>368</a>
-<a href=#369 id=369 data-nosnippet>369</a>    <span class="doccomment">/// Transition resources to an underlying hal resource state.
-<a href=#370 id=370 data-nosnippet>370</a>    ///
-<a href=#371 id=371 data-nosnippet>371</a>    /// This is an advanced, native-only API (no-op on web) that has two main use cases:
-<a href=#372 id=372 data-nosnippet>372</a>    ///
-<a href=#373 id=373 data-nosnippet>373</a>    /// # Batching Barriers
-<a href=#374 id=374 data-nosnippet>374</a>    ///
-<a href=#375 id=375 data-nosnippet>375</a>    /// Wgpu does not have a global view of the frame when recording command buffers. When you submit multiple command buffers in a single queue submission, wgpu may need to record and
-<a href=#376 id=376 data-nosnippet>376</a>    /// insert new command buffers (holding 1 or more barrier commands) in between the user-supplied command buffers in order to ensure that resources are transitioned to the correct state
-<a href=#377 id=377 data-nosnippet>377</a>    /// for the start of the next user-supplied command buffer.
+<a href=#313 id=313 data-nosnippet>313</a>    <span class="doccomment">/// When encoding the acceleration structure build with the raw Hal encoder
+<a href=#314 id=314 data-nosnippet>314</a>    /// (obtained from [`CommandEncoder::as_hal_mut`]), this function marks the
+<a href=#315 id=315 data-nosnippet>315</a>    /// acceleration structures as having been built.
+<a href=#316 id=316 data-nosnippet>316</a>    ///
+<a href=#317 id=317 data-nosnippet>317</a>    /// This function must only be used with the raw encoder API. When using the
+<a href=#318 id=318 data-nosnippet>318</a>    /// wgpu encoding API, acceleration structure build is tracked automatically.
+<a href=#319 id=319 data-nosnippet>319</a>    ///
+<a href=#320 id=320 data-nosnippet>320</a>    /// # Panics
+<a href=#321 id=321 data-nosnippet>321</a>    ///
+<a href=#322 id=322 data-nosnippet>322</a>    /// - If the encoder is being used with the wgpu encoding API.
+<a href=#323 id=323 data-nosnippet>323</a>    ///
+<a href=#324 id=324 data-nosnippet>324</a>    /// # Safety
+<a href=#325 id=325 data-nosnippet>325</a>    ///
+<a href=#326 id=326 data-nosnippet>326</a>    /// - All acceleration structures must have been build in this command encoder.
+<a href=#327 id=327 data-nosnippet>327</a>    /// - All BLASes inputted must have been built before all TLASes that were inputted here and
+<a href=#328 id=328 data-nosnippet>328</a>    ///   which use them.
+<a href=#329 id=329 data-nosnippet>329</a>    </span><span class="kw">pub unsafe fn </span>mark_acceleration_structures_built&lt;<span class="lifetime">'a</span>&gt;(
+<a href=#330 id=330 data-nosnippet>330</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#331 id=331 data-nosnippet>331</a>        blas: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Blas&gt;,
+<a href=#332 id=332 data-nosnippet>332</a>        tlas: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Tlas&gt;,
+<a href=#333 id=333 data-nosnippet>333</a>    ) {
+<a href=#334 id=334 data-nosnippet>334</a>        <span class="self">self</span>.inner
+<a href=#335 id=335 data-nosnippet>335</a>            .mark_acceleration_structures_built(<span class="kw-2">&amp;mut </span>blas.into_iter(), <span class="kw-2">&amp;mut </span>tlas.into_iter())
+<a href=#336 id=336 data-nosnippet>336</a>    }
+<a href=#337 id=337 data-nosnippet>337</a>    <span class="doccomment">/// Build bottom and top level acceleration structures.
+<a href=#338 id=338 data-nosnippet>338</a>    ///
+<a href=#339 id=339 data-nosnippet>339</a>    /// Builds the BLASes then the TLASes, but does ***not*** build the BLASes into the TLASes,
+<a href=#340 id=340 data-nosnippet>340</a>    /// that must be done by setting a TLAS instance in the TLAS package to one that contains the BLAS (and with an appropriate transform)
+<a href=#341 id=341 data-nosnippet>341</a>    ///
+<a href=#342 id=342 data-nosnippet>342</a>    /// # Validation
+<a href=#343 id=343 data-nosnippet>343</a>    ///
+<a href=#344 id=344 data-nosnippet>344</a>    /// - blas: Iterator of bottom level acceleration structure entries to build.
+<a href=#345 id=345 data-nosnippet>345</a>    ///   For each entry, the provided size descriptor must be strictly smaller or equal to the descriptor given at BLAS creation, this means:
+<a href=#346 id=346 data-nosnippet>346</a>    ///   - Less or equal number of geometries
+<a href=#347 id=347 data-nosnippet>347</a>    ///   - Same kind of geometry (with index buffer or without) (same vertex/index format)
+<a href=#348 id=348 data-nosnippet>348</a>    ///   - Same flags
+<a href=#349 id=349 data-nosnippet>349</a>    ///   - Less or equal number of vertices
+<a href=#350 id=350 data-nosnippet>350</a>    ///   - Less or equal number of indices (if applicable)
+<a href=#351 id=351 data-nosnippet>351</a>    /// - tlas: iterator of top level acceleration structure packages to build
+<a href=#352 id=352 data-nosnippet>352</a>    ///   For each entry:
+<a href=#353 id=353 data-nosnippet>353</a>    ///   - Each BLAS in each TLAS instance must have been being built in the current call or in a previous call to `build_acceleration_structures` or `build_acceleration_structures_unsafe_tlas`
+<a href=#354 id=354 data-nosnippet>354</a>    ///   - The number of TLAS instances must be less than or equal to the max number of tlas instances when creating (if creating a package with `TlasPackage::new()` this is already satisfied)
+<a href=#355 id=355 data-nosnippet>355</a>    ///
+<a href=#356 id=356 data-nosnippet>356</a>    /// If the device the command encoder is created from does not have [Features::EXPERIMENTAL_RAY_QUERY] enabled then a validation error is generated
+<a href=#357 id=357 data-nosnippet>357</a>    ///
+<a href=#358 id=358 data-nosnippet>358</a>    /// A bottom level acceleration structure may be build and used as a reference in a top level acceleration structure in the same invocation of this function.
+<a href=#359 id=359 data-nosnippet>359</a>    ///
+<a href=#360 id=360 data-nosnippet>360</a>    /// # Bind group usage
+<a href=#361 id=361 data-nosnippet>361</a>    ///
+<a href=#362 id=362 data-nosnippet>362</a>    /// When a top level acceleration structure is used in a bind group, some validation takes place:
+<a href=#363 id=363 data-nosnippet>363</a>    ///    - The top level acceleration structure is valid and has been built.
+<a href=#364 id=364 data-nosnippet>364</a>    ///    - All the bottom level acceleration structures referenced by the top level acceleration structure are valid and have been built prior,
+<a href=#365 id=365 data-nosnippet>365</a>    ///      or at same time as the containing top level acceleration structure.
+<a href=#366 id=366 data-nosnippet>366</a>    ///
+<a href=#367 id=367 data-nosnippet>367</a>    /// [Features::EXPERIMENTAL_RAY_QUERY]: wgt::Features::EXPERIMENTAL_RAY_QUERY
+<a href=#368 id=368 data-nosnippet>368</a>    </span><span class="kw">pub fn </span>build_acceleration_structures&lt;<span class="lifetime">'a</span>&gt;(
+<a href=#369 id=369 data-nosnippet>369</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#370 id=370 data-nosnippet>370</a>        blas: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BlasBuildEntry&lt;<span class="lifetime">'a</span>&gt;&gt;,
+<a href=#371 id=371 data-nosnippet>371</a>        tlas: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Tlas&gt;,
+<a href=#372 id=372 data-nosnippet>372</a>    ) {
+<a href=#373 id=373 data-nosnippet>373</a>        <span class="self">self</span>.inner
+<a href=#374 id=374 data-nosnippet>374</a>            .build_acceleration_structures(<span class="kw-2">&amp;mut </span>blas.into_iter(), <span class="kw-2">&amp;mut </span>tlas.into_iter());
+<a href=#375 id=375 data-nosnippet>375</a>    }
+<a href=#376 id=376 data-nosnippet>376</a>
+<a href=#377 id=377 data-nosnippet>377</a>    <span class="doccomment">/// Transition resources to an underlying hal resource state.
 <a href=#378 id=378 data-nosnippet>378</a>    ///
-<a href=#379 id=379 data-nosnippet>379</a>    /// Wgpu does not currently attempt to batch multiple of these generated command buffers/barriers together, which may lead to suboptimal barrier placement.
+<a href=#379 id=379 data-nosnippet>379</a>    /// This is an advanced, native-only API (no-op on web) that has two main use cases:
 <a href=#380 id=380 data-nosnippet>380</a>    ///
-<a href=#381 id=381 data-nosnippet>381</a>    /// Consider the following scenario, where the user does `queue.submit(&amp;[a, b, c])`:
-<a href=#382 id=382 data-nosnippet>382</a>    /// * CommandBuffer A: Use resource X as a render pass attachment
-<a href=#383 id=383 data-nosnippet>383</a>    /// * CommandBuffer B: Use resource Y as a render pass attachment
-<a href=#384 id=384 data-nosnippet>384</a>    /// * CommandBuffer C: Use resources X and Y in a bind group
-<a href=#385 id=385 data-nosnippet>385</a>    ///
-<a href=#386 id=386 data-nosnippet>386</a>    /// At submission time, wgpu will record and insert some new command buffers, resulting in a submission that looks like `queue.submit(&amp;[0, a, 1, b, 2, c])`:
-<a href=#387 id=387 data-nosnippet>387</a>    /// * CommandBuffer 0: Barrier to transition resource X from TextureUses::RESOURCE (from last frame) to TextureUses::COLOR_TARGET
-<a href=#388 id=388 data-nosnippet>388</a>    /// * CommandBuffer A: Use resource X as a render pass attachment
-<a href=#389 id=389 data-nosnippet>389</a>    /// * CommandBuffer 1: Barrier to transition resource Y from TextureUses::RESOURCE (from last frame) to TextureUses::COLOR_TARGET
-<a href=#390 id=390 data-nosnippet>390</a>    /// * CommandBuffer B: Use resource Y as a render pass attachment
-<a href=#391 id=391 data-nosnippet>391</a>    /// * CommandBuffer 2: Barrier to transition resources X and Y from TextureUses::COLOR_TARGET to TextureUses::RESOURCE
+<a href=#381 id=381 data-nosnippet>381</a>    /// # Batching Barriers
+<a href=#382 id=382 data-nosnippet>382</a>    ///
+<a href=#383 id=383 data-nosnippet>383</a>    /// Wgpu does not have a global view of the frame when recording command buffers. When you submit multiple command buffers in a single queue submission, wgpu may need to record and
+<a href=#384 id=384 data-nosnippet>384</a>    /// insert new command buffers (holding 1 or more barrier commands) in between the user-supplied command buffers in order to ensure that resources are transitioned to the correct state
+<a href=#385 id=385 data-nosnippet>385</a>    /// for the start of the next user-supplied command buffer.
+<a href=#386 id=386 data-nosnippet>386</a>    ///
+<a href=#387 id=387 data-nosnippet>387</a>    /// Wgpu does not currently attempt to batch multiple of these generated command buffers/barriers together, which may lead to suboptimal barrier placement.
+<a href=#388 id=388 data-nosnippet>388</a>    ///
+<a href=#389 id=389 data-nosnippet>389</a>    /// Consider the following scenario, where the user does `queue.submit(&amp;[a, b, c])`:
+<a href=#390 id=390 data-nosnippet>390</a>    /// * CommandBuffer A: Use resource X as a render pass attachment
+<a href=#391 id=391 data-nosnippet>391</a>    /// * CommandBuffer B: Use resource Y as a render pass attachment
 <a href=#392 id=392 data-nosnippet>392</a>    /// * CommandBuffer C: Use resources X and Y in a bind group
 <a href=#393 id=393 data-nosnippet>393</a>    ///
-<a href=#394 id=394 data-nosnippet>394</a>    /// To prevent this, after profiling their app, an advanced user might choose to instead do `queue.submit(&amp;[a, b, c])`:
-<a href=#395 id=395 data-nosnippet>395</a>    /// * CommandBuffer A:
-<a href=#396 id=396 data-nosnippet>396</a>    ///     * Use [`CommandEncoder::transition_resources`] to transition resources X and Y from TextureUses::RESOURCE (from last frame) to TextureUses::COLOR_TARGET
-<a href=#397 id=397 data-nosnippet>397</a>    ///     * Use resource X as a render pass attachment
+<a href=#394 id=394 data-nosnippet>394</a>    /// At submission time, wgpu will record and insert some new command buffers, resulting in a submission that looks like `queue.submit(&amp;[0, a, 1, b, 2, c])`:
+<a href=#395 id=395 data-nosnippet>395</a>    /// * CommandBuffer 0: Barrier to transition resource X from TextureUses::RESOURCE (from last frame) to TextureUses::COLOR_TARGET
+<a href=#396 id=396 data-nosnippet>396</a>    /// * CommandBuffer A: Use resource X as a render pass attachment
+<a href=#397 id=397 data-nosnippet>397</a>    /// * CommandBuffer 1: Barrier to transition resource Y from TextureUses::RESOURCE (from last frame) to TextureUses::COLOR_TARGET
 <a href=#398 id=398 data-nosnippet>398</a>    /// * CommandBuffer B: Use resource Y as a render pass attachment
-<a href=#399 id=399 data-nosnippet>399</a>    /// * CommandBuffer C:
-<a href=#400 id=400 data-nosnippet>400</a>    ///     * Use [`CommandEncoder::transition_resources`] to transition resources X and Y from TextureUses::COLOR_TARGET to TextureUses::RESOURCE
-<a href=#401 id=401 data-nosnippet>401</a>    ///     * Use resources X and Y in a bind group
-<a href=#402 id=402 data-nosnippet>402</a>    ///
-<a href=#403 id=403 data-nosnippet>403</a>    /// At submission time, wgpu will record and insert some new command buffers, resulting in a submission that looks like `queue.submit(&amp;[0, a, b, 1, c])`:
-<a href=#404 id=404 data-nosnippet>404</a>    /// * CommandBuffer 0: Barrier to transition resources X and Y from TextureUses::RESOURCE (from last frame) to TextureUses::COLOR_TARGET
-<a href=#405 id=405 data-nosnippet>405</a>    /// * CommandBuffer A: Use resource X as a render pass attachment
+<a href=#399 id=399 data-nosnippet>399</a>    /// * CommandBuffer 2: Barrier to transition resources X and Y from TextureUses::COLOR_TARGET to TextureUses::RESOURCE
+<a href=#400 id=400 data-nosnippet>400</a>    /// * CommandBuffer C: Use resources X and Y in a bind group
+<a href=#401 id=401 data-nosnippet>401</a>    ///
+<a href=#402 id=402 data-nosnippet>402</a>    /// To prevent this, after profiling their app, an advanced user might choose to instead do `queue.submit(&amp;[a, b, c])`:
+<a href=#403 id=403 data-nosnippet>403</a>    /// * CommandBuffer A:
+<a href=#404 id=404 data-nosnippet>404</a>    ///     * Use [`CommandEncoder::transition_resources`] to transition resources X and Y from TextureUses::RESOURCE (from last frame) to TextureUses::COLOR_TARGET
+<a href=#405 id=405 data-nosnippet>405</a>    ///     * Use resource X as a render pass attachment
 <a href=#406 id=406 data-nosnippet>406</a>    /// * CommandBuffer B: Use resource Y as a render pass attachment
-<a href=#407 id=407 data-nosnippet>407</a>    /// * CommandBuffer 1: Barrier to transition resources X and Y from TextureUses::COLOR_TARGET to TextureUses::RESOURCE
-<a href=#408 id=408 data-nosnippet>408</a>    /// * CommandBuffer C: Use resources X and Y in a bind group
-<a href=#409 id=409 data-nosnippet>409</a>    ///
-<a href=#410 id=410 data-nosnippet>410</a>    /// Which eliminates the extra command buffer and barrier between command buffers A and B.
-<a href=#411 id=411 data-nosnippet>411</a>    ///
-<a href=#412 id=412 data-nosnippet>412</a>    /// # Native Interoperability
-<a href=#413 id=413 data-nosnippet>413</a>    ///
-<a href=#414 id=414 data-nosnippet>414</a>    /// A user wanting to interoperate with the underlying native graphics APIs (Vulkan, DirectX12, Metal, etc) can use this API to generate barriers between wgpu commands and
-<a href=#415 id=415 data-nosnippet>415</a>    /// the native API commands, for synchronization and resource state transition purposes.
-<a href=#416 id=416 data-nosnippet>416</a>    </span><span class="kw">pub fn </span>transition_resources&lt;<span class="lifetime">'a</span>&gt;(
-<a href=#417 id=417 data-nosnippet>417</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#418 id=418 data-nosnippet>418</a>        buffer_transitions: <span class="kw">impl </span>Iterator&lt;Item = wgt::BufferTransition&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer&gt;&gt;,
-<a href=#419 id=419 data-nosnippet>419</a>        texture_transitions: <span class="kw">impl </span>Iterator&lt;Item = wgt::TextureTransition&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Texture&gt;&gt;,
-<a href=#420 id=420 data-nosnippet>420</a>    ) {
-<a href=#421 id=421 data-nosnippet>421</a>        <span class="self">self</span>.inner.transition_resources(
-<a href=#422 id=422 data-nosnippet>422</a>            <span class="kw-2">&amp;mut </span>buffer_transitions.map(|t| wgt::BufferTransition {
-<a href=#423 id=423 data-nosnippet>423</a>                buffer: <span class="kw-2">&amp;</span>t.buffer.inner,
-<a href=#424 id=424 data-nosnippet>424</a>                state: t.state,
-<a href=#425 id=425 data-nosnippet>425</a>            }),
-<a href=#426 id=426 data-nosnippet>426</a>            <span class="kw-2">&amp;mut </span>texture_transitions.map(|t| wgt::TextureTransition {
-<a href=#427 id=427 data-nosnippet>427</a>                texture: <span class="kw-2">&amp;</span>t.texture.inner,
-<a href=#428 id=428 data-nosnippet>428</a>                selector: t.selector,
-<a href=#429 id=429 data-nosnippet>429</a>                state: t.state,
-<a href=#430 id=430 data-nosnippet>430</a>            }),
-<a href=#431 id=431 data-nosnippet>431</a>        );
-<a href=#432 id=432 data-nosnippet>432</a>    }
-<a href=#433 id=433 data-nosnippet>433</a>}</code></pre></div></section></main></body></html>
+<a href=#407 id=407 data-nosnippet>407</a>    /// * CommandBuffer C:
+<a href=#408 id=408 data-nosnippet>408</a>    ///     * Use [`CommandEncoder::transition_resources`] to transition resources X and Y from TextureUses::COLOR_TARGET to TextureUses::RESOURCE
+<a href=#409 id=409 data-nosnippet>409</a>    ///     * Use resources X and Y in a bind group
+<a href=#410 id=410 data-nosnippet>410</a>    ///
+<a href=#411 id=411 data-nosnippet>411</a>    /// At submission time, wgpu will record and insert some new command buffers, resulting in a submission that looks like `queue.submit(&amp;[0, a, b, 1, c])`:
+<a href=#412 id=412 data-nosnippet>412</a>    /// * CommandBuffer 0: Barrier to transition resources X and Y from TextureUses::RESOURCE (from last frame) to TextureUses::COLOR_TARGET
+<a href=#413 id=413 data-nosnippet>413</a>    /// * CommandBuffer A: Use resource X as a render pass attachment
+<a href=#414 id=414 data-nosnippet>414</a>    /// * CommandBuffer B: Use resource Y as a render pass attachment
+<a href=#415 id=415 data-nosnippet>415</a>    /// * CommandBuffer 1: Barrier to transition resources X and Y from TextureUses::COLOR_TARGET to TextureUses::RESOURCE
+<a href=#416 id=416 data-nosnippet>416</a>    /// * CommandBuffer C: Use resources X and Y in a bind group
+<a href=#417 id=417 data-nosnippet>417</a>    ///
+<a href=#418 id=418 data-nosnippet>418</a>    /// Which eliminates the extra command buffer and barrier between command buffers A and B.
+<a href=#419 id=419 data-nosnippet>419</a>    ///
+<a href=#420 id=420 data-nosnippet>420</a>    /// # Native Interoperability
+<a href=#421 id=421 data-nosnippet>421</a>    ///
+<a href=#422 id=422 data-nosnippet>422</a>    /// A user wanting to interoperate with the underlying native graphics APIs (Vulkan, DirectX12, Metal, etc) can use this API to generate barriers between wgpu commands and
+<a href=#423 id=423 data-nosnippet>423</a>    /// the native API commands, for synchronization and resource state transition purposes.
+<a href=#424 id=424 data-nosnippet>424</a>    </span><span class="kw">pub fn </span>transition_resources&lt;<span class="lifetime">'a</span>&gt;(
+<a href=#425 id=425 data-nosnippet>425</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#426 id=426 data-nosnippet>426</a>        buffer_transitions: <span class="kw">impl </span>Iterator&lt;Item = wgt::BufferTransition&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer&gt;&gt;,
+<a href=#427 id=427 data-nosnippet>427</a>        texture_transitions: <span class="kw">impl </span>Iterator&lt;Item = wgt::TextureTransition&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Texture&gt;&gt;,
+<a href=#428 id=428 data-nosnippet>428</a>    ) {
+<a href=#429 id=429 data-nosnippet>429</a>        <span class="self">self</span>.inner.transition_resources(
+<a href=#430 id=430 data-nosnippet>430</a>            <span class="kw-2">&amp;mut </span>buffer_transitions.map(|t| wgt::BufferTransition {
+<a href=#431 id=431 data-nosnippet>431</a>                buffer: <span class="kw-2">&amp;</span>t.buffer.inner,
+<a href=#432 id=432 data-nosnippet>432</a>                state: t.state,
+<a href=#433 id=433 data-nosnippet>433</a>            }),
+<a href=#434 id=434 data-nosnippet>434</a>            <span class="kw-2">&amp;mut </span>texture_transitions.map(|t| wgt::TextureTransition {
+<a href=#435 id=435 data-nosnippet>435</a>                texture: <span class="kw-2">&amp;</span>t.texture.inner,
+<a href=#436 id=436 data-nosnippet>436</a>                selector: t.selector,
+<a href=#437 id=437 data-nosnippet>437</a>                state: t.state,
+<a href=#438 id=438 data-nosnippet>438</a>            }),
+<a href=#439 id=439 data-nosnippet>439</a>        );
+<a href=#440 id=440 data-nosnippet>440</a>    }
+<a href=#441 id=441 data-nosnippet>441</a>}</code></pre></div></section></main></body></html>

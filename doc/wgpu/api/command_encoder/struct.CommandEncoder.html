@@ -190,20 +190,27 @@ for a string of operations to complete.</p>
 there is no strict guarantee that timestamps are taken after all commands
 recorded so far and all before all commands recorded after.
 This may depend both on the backend and the driver.</p>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-CommandEncoder-2" class="impl"><a class="src rightside" href="../../../src/wgpu/api/command_encoder.rs.html#312-433">Source</a><a href="#impl-CommandEncoder-2" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="../../struct.CommandEncoder.html" title="struct wgpu::CommandEncoder">CommandEncoder</a></h3><div class="docblock"><p><a href="../../struct.Features.html#associatedconstant.EXPERIMENTAL_RAY_QUERY" title="associated constant wgpu::Features::EXPERIMENTAL_RAY_QUERY"><code>Features::EXPERIMENTAL_RAY_QUERY</code></a> must be enabled on the device in order to call these functions.</p>
-</div></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.mark_acceleration_structures_built" class="method"><a class="src rightside" href="../../../src/wgpu/api/command_encoder.rs.html#321-328">Source</a><h4 class="code-header">pub unsafe fn <a href="#method.mark_acceleration_structures_built" class="fn">mark_acceleration_structures_built</a>&lt;'a&gt;(
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-CommandEncoder-2" class="impl"><a class="src rightside" href="../../../src/wgpu/api/command_encoder.rs.html#312-441">Source</a><a href="#impl-CommandEncoder-2" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="../../struct.CommandEncoder.html" title="struct wgpu::CommandEncoder">CommandEncoder</a></h3><div class="docblock"><p><a href="../../struct.Features.html#associatedconstant.EXPERIMENTAL_RAY_QUERY" title="associated constant wgpu::Features::EXPERIMENTAL_RAY_QUERY"><code>Features::EXPERIMENTAL_RAY_QUERY</code></a> must be enabled on the device in order to call these functions.</p>
+</div></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.mark_acceleration_structures_built" class="method"><a class="src rightside" href="../../../src/wgpu/api/command_encoder.rs.html#329-336">Source</a><h4 class="code-header">pub unsafe fn <a href="#method.mark_acceleration_structures_built" class="fn">mark_acceleration_structures_built</a>&lt;'a&gt;(
     &amp;self,
     blas: impl <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIterator</a>&lt;Item = &amp;'a <a class="struct" href="../../struct.Blas.html" title="struct wgpu::Blas">Blas</a>&gt;,
     tlas: impl <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIterator</a>&lt;Item = &amp;'a <a class="struct" href="../../struct.Tlas.html" title="struct wgpu::Tlas">Tlas</a>&gt;,
-)</h4></section></summary><div class="docblock"><p>Mark acceleration structures as being built. <em><strong>Should only</strong></em> be used with wgpu-hal
-functions, all wgpu functions already mark acceleration structures as built.</p>
+)</h4></section></summary><div class="docblock"><p>When encoding the acceleration structure build with the raw Hal encoder
+(obtained from <a href="../../struct.CommandEncoder.html#method.as_hal_mut" title="method wgpu::CommandEncoder::as_hal_mut"><code>CommandEncoder::as_hal_mut</code></a>), this function marks the
+acceleration structures as having been built.</p>
+<p>This function must only be used with the raw encoder API. When using the
+wgpu encoding API, acceleration structure build is tracked automatically.</p>
+<h5 id="panics-5"><a class="doc-anchor" href="#panics-5">§</a>Panics</h5>
+<ul>
+<li>If the encoder is being used with the wgpu encoding API.</li>
+</ul>
 <h5 id="safety-1"><a class="doc-anchor" href="#safety-1">§</a>Safety</h5>
 <ul>
 <li>All acceleration structures must have been build in this command encoder.</li>
 <li>All BLASes inputted must have been built before all TLASes that were inputted here and
 which use them.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.build_acceleration_structures" class="method"><a class="src rightside" href="../../../src/wgpu/api/command_encoder.rs.html#360-367">Source</a><h4 class="code-header">pub fn <a href="#method.build_acceleration_structures" class="fn">build_acceleration_structures</a>&lt;'a&gt;(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.build_acceleration_structures" class="method"><a class="src rightside" href="../../../src/wgpu/api/command_encoder.rs.html#368-375">Source</a><h4 class="code-header">pub fn <a href="#method.build_acceleration_structures" class="fn">build_acceleration_structures</a>&lt;'a&gt;(
     &amp;mut self,
     blas: impl <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIterator</a>&lt;Item = &amp;'a <a class="struct" href="../../struct.BlasBuildEntry.html" title="struct wgpu::BlasBuildEntry">BlasBuildEntry</a>&lt;'a&gt;&gt;,
     tlas: impl <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIterator</a>&lt;Item = &amp;'a <a class="struct" href="../../struct.Tlas.html" title="struct wgpu::Tlas">Tlas</a>&gt;,
@@ -239,7 +246,7 @@ For each entry:
 <li>All the bottom level acceleration structures referenced by the top level acceleration structure are valid and have been built prior,
 or at same time as the containing top level acceleration structure.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.transition_resources" class="method"><a class="src rightside" href="../../../src/wgpu/api/command_encoder.rs.html#416-432">Source</a><h4 class="code-header">pub fn <a href="#method.transition_resources" class="fn">transition_resources</a>&lt;'a&gt;(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.transition_resources" class="method"><a class="src rightside" href="../../../src/wgpu/api/command_encoder.rs.html#424-440">Source</a><h4 class="code-header">pub fn <a href="#method.transition_resources" class="fn">transition_resources</a>&lt;'a&gt;(
     &amp;mut self,
     buffer_transitions: impl <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator">Iterator</a>&lt;Item = <a class="struct" href="../../struct.BufferTransition.html" title="struct wgpu::BufferTransition">BufferTransition</a>&lt;&amp;'a <a class="struct" href="../../struct.Buffer.html" title="struct wgpu::Buffer">Buffer</a>&gt;&gt;,
     texture_transitions: impl <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/iter/traits/iterator/trait.Iterator.html" title="trait core::iter::traits::iterator::Iterator">Iterator</a>&lt;Item = <a class="struct" href="../../struct.TextureTransition.html" title="struct wgpu::TextureTransition">TextureTransition</a>&lt;&amp;'a <a class="struct" href="../../struct.Texture.html" title="struct wgpu::Texture">Texture</a>&gt;&gt;,
