@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["native"],"trait":["Surface","SurfaceTextureMetadata","Swapchain","SwapchainSubmissionSemaphoreGuard"]};

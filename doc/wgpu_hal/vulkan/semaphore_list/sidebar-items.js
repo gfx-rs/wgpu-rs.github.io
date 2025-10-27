@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["SemaphoreList"]};
+window.SIDEBAR_ITEMS = {"enum":["SemaphoreListMode","SemaphoreType"],"struct":["SemaphoreList"]};
