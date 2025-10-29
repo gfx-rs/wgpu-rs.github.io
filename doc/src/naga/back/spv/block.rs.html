@@ -3655,54 +3655,55 @@
 <a href=#3655 id=3655 data-nosnippet>3655</a>                } =&gt; {
 <a href=#3656 id=3656 data-nosnippet>3656</a>                    <span class="self">self</span>.write_subgroup_gather(mode, argument, result, <span class="kw-2">&amp;mut </span>block)<span class="question-mark">?</span>;
 <a href=#3657 id=3657 data-nosnippet>3657</a>                }
-<a href=#3658 id=3658 data-nosnippet>3658</a>            }
-<a href=#3659 id=3659 data-nosnippet>3659</a>        }
-<a href=#3660 id=3660 data-nosnippet>3660</a>
-<a href=#3661 id=3661 data-nosnippet>3661</a>        <span class="kw">let </span>termination = <span class="kw">match </span>exit {
-<a href=#3662 id=3662 data-nosnippet>3662</a>            <span class="comment">// We're generating code for the top-level Block of the function, so we
-<a href=#3663 id=3663 data-nosnippet>3663</a>            // need to end it with some kind of return instruction.
-<a href=#3664 id=3664 data-nosnippet>3664</a>            </span>BlockExit::Return =&gt; <span class="kw">match </span><span class="self">self</span>.ir_function.result {
-<a href=#3665 id=3665 data-nosnippet>3665</a>                <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>result) <span class="kw">if </span><span class="self">self</span>.function.entry_point_context.is_none() =&gt; {
-<a href=#3666 id=3666 data-nosnippet>3666</a>                    <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(result.ty);
-<a href=#3667 id=3667 data-nosnippet>3667</a>                    <span class="kw">let </span>null_id = <span class="self">self</span>.writer.get_constant_null(type_id);
-<a href=#3668 id=3668 data-nosnippet>3668</a>                    Instruction::return_value(null_id)
-<a href=#3669 id=3669 data-nosnippet>3669</a>                }
-<a href=#3670 id=3670 data-nosnippet>3670</a>                <span class="kw">_ </span>=&gt; Instruction::return_void(),
-<a href=#3671 id=3671 data-nosnippet>3671</a>            },
-<a href=#3672 id=3672 data-nosnippet>3672</a>            BlockExit::Branch { target } =&gt; Instruction::branch(target),
-<a href=#3673 id=3673 data-nosnippet>3673</a>            BlockExit::BreakIf {
-<a href=#3674 id=3674 data-nosnippet>3674</a>                condition,
-<a href=#3675 id=3675 data-nosnippet>3675</a>                preamble_id,
-<a href=#3676 id=3676 data-nosnippet>3676</a>            } =&gt; {
-<a href=#3677 id=3677 data-nosnippet>3677</a>                <span class="kw">let </span>condition_id = <span class="self">self</span>.cached[condition];
-<a href=#3678 id=3678 data-nosnippet>3678</a>
-<a href=#3679 id=3679 data-nosnippet>3679</a>                Instruction::branch_conditional(
-<a href=#3680 id=3680 data-nosnippet>3680</a>                    condition_id,
-<a href=#3681 id=3681 data-nosnippet>3681</a>                    loop_context.break_id.unwrap(),
-<a href=#3682 id=3682 data-nosnippet>3682</a>                    preamble_id,
-<a href=#3683 id=3683 data-nosnippet>3683</a>                )
-<a href=#3684 id=3684 data-nosnippet>3684</a>            }
-<a href=#3685 id=3685 data-nosnippet>3685</a>        };
-<a href=#3686 id=3686 data-nosnippet>3686</a>
-<a href=#3687 id=3687 data-nosnippet>3687</a>        <span class="self">self</span>.function.consume(block, termination);
-<a href=#3688 id=3688 data-nosnippet>3688</a>        <span class="prelude-val">Ok</span>(BlockExitDisposition::Used)
-<a href=#3689 id=3689 data-nosnippet>3689</a>    }
-<a href=#3690 id=3690 data-nosnippet>3690</a>
-<a href=#3691 id=3691 data-nosnippet>3691</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_function_body(
-<a href=#3692 id=3692 data-nosnippet>3692</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#3693 id=3693 data-nosnippet>3693</a>        entry_id: Word,
-<a href=#3694 id=3694 data-nosnippet>3694</a>        debug_info: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>DebugInfoInner&gt;,
-<a href=#3695 id=3695 data-nosnippet>3695</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-<a href=#3696 id=3696 data-nosnippet>3696</a>        <span class="comment">// We can ignore the `BlockExitDisposition` returned here because
-<a href=#3697 id=3697 data-nosnippet>3697</a>        // `BlockExit::Return` doesn't refer to a block.
-<a href=#3698 id=3698 data-nosnippet>3698</a>        </span><span class="kw">let _ </span>= <span class="self">self</span>.write_block(
-<a href=#3699 id=3699 data-nosnippet>3699</a>            entry_id,
-<a href=#3700 id=3700 data-nosnippet>3700</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.ir_function.body,
-<a href=#3701 id=3701 data-nosnippet>3701</a>            BlockExit::Return,
-<a href=#3702 id=3702 data-nosnippet>3702</a>            LoopContext::default(),
-<a href=#3703 id=3703 data-nosnippet>3703</a>            debug_info,
-<a href=#3704 id=3704 data-nosnippet>3704</a>        )<span class="question-mark">?</span>;
-<a href=#3705 id=3705 data-nosnippet>3705</a>
-<a href=#3706 id=3706 data-nosnippet>3706</a>        <span class="prelude-val">Ok</span>(())
-<a href=#3707 id=3707 data-nosnippet>3707</a>    }
-<a href=#3708 id=3708 data-nosnippet>3708</a>}</code></pre></div></section></main></body></html>
+<a href=#3658 id=3658 data-nosnippet>3658</a>                Statement::MeshFunction(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
+<a href=#3659 id=3659 data-nosnippet>3659</a>            }
+<a href=#3660 id=3660 data-nosnippet>3660</a>        }
+<a href=#3661 id=3661 data-nosnippet>3661</a>
+<a href=#3662 id=3662 data-nosnippet>3662</a>        <span class="kw">let </span>termination = <span class="kw">match </span>exit {
+<a href=#3663 id=3663 data-nosnippet>3663</a>            <span class="comment">// We're generating code for the top-level Block of the function, so we
+<a href=#3664 id=3664 data-nosnippet>3664</a>            // need to end it with some kind of return instruction.
+<a href=#3665 id=3665 data-nosnippet>3665</a>            </span>BlockExit::Return =&gt; <span class="kw">match </span><span class="self">self</span>.ir_function.result {
+<a href=#3666 id=3666 data-nosnippet>3666</a>                <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>result) <span class="kw">if </span><span class="self">self</span>.function.entry_point_context.is_none() =&gt; {
+<a href=#3667 id=3667 data-nosnippet>3667</a>                    <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(result.ty);
+<a href=#3668 id=3668 data-nosnippet>3668</a>                    <span class="kw">let </span>null_id = <span class="self">self</span>.writer.get_constant_null(type_id);
+<a href=#3669 id=3669 data-nosnippet>3669</a>                    Instruction::return_value(null_id)
+<a href=#3670 id=3670 data-nosnippet>3670</a>                }
+<a href=#3671 id=3671 data-nosnippet>3671</a>                <span class="kw">_ </span>=&gt; Instruction::return_void(),
+<a href=#3672 id=3672 data-nosnippet>3672</a>            },
+<a href=#3673 id=3673 data-nosnippet>3673</a>            BlockExit::Branch { target } =&gt; Instruction::branch(target),
+<a href=#3674 id=3674 data-nosnippet>3674</a>            BlockExit::BreakIf {
+<a href=#3675 id=3675 data-nosnippet>3675</a>                condition,
+<a href=#3676 id=3676 data-nosnippet>3676</a>                preamble_id,
+<a href=#3677 id=3677 data-nosnippet>3677</a>            } =&gt; {
+<a href=#3678 id=3678 data-nosnippet>3678</a>                <span class="kw">let </span>condition_id = <span class="self">self</span>.cached[condition];
+<a href=#3679 id=3679 data-nosnippet>3679</a>
+<a href=#3680 id=3680 data-nosnippet>3680</a>                Instruction::branch_conditional(
+<a href=#3681 id=3681 data-nosnippet>3681</a>                    condition_id,
+<a href=#3682 id=3682 data-nosnippet>3682</a>                    loop_context.break_id.unwrap(),
+<a href=#3683 id=3683 data-nosnippet>3683</a>                    preamble_id,
+<a href=#3684 id=3684 data-nosnippet>3684</a>                )
+<a href=#3685 id=3685 data-nosnippet>3685</a>            }
+<a href=#3686 id=3686 data-nosnippet>3686</a>        };
+<a href=#3687 id=3687 data-nosnippet>3687</a>
+<a href=#3688 id=3688 data-nosnippet>3688</a>        <span class="self">self</span>.function.consume(block, termination);
+<a href=#3689 id=3689 data-nosnippet>3689</a>        <span class="prelude-val">Ok</span>(BlockExitDisposition::Used)
+<a href=#3690 id=3690 data-nosnippet>3690</a>    }
+<a href=#3691 id=3691 data-nosnippet>3691</a>
+<a href=#3692 id=3692 data-nosnippet>3692</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_function_body(
+<a href=#3693 id=3693 data-nosnippet>3693</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#3694 id=3694 data-nosnippet>3694</a>        entry_id: Word,
+<a href=#3695 id=3695 data-nosnippet>3695</a>        debug_info: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>DebugInfoInner&gt;,
+<a href=#3696 id=3696 data-nosnippet>3696</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+<a href=#3697 id=3697 data-nosnippet>3697</a>        <span class="comment">// We can ignore the `BlockExitDisposition` returned here because
+<a href=#3698 id=3698 data-nosnippet>3698</a>        // `BlockExit::Return` doesn't refer to a block.
+<a href=#3699 id=3699 data-nosnippet>3699</a>        </span><span class="kw">let _ </span>= <span class="self">self</span>.write_block(
+<a href=#3700 id=3700 data-nosnippet>3700</a>            entry_id,
+<a href=#3701 id=3701 data-nosnippet>3701</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.ir_function.body,
+<a href=#3702 id=3702 data-nosnippet>3702</a>            BlockExit::Return,
+<a href=#3703 id=3703 data-nosnippet>3703</a>            LoopContext::default(),
+<a href=#3704 id=3704 data-nosnippet>3704</a>            debug_info,
+<a href=#3705 id=3705 data-nosnippet>3705</a>        )<span class="question-mark">?</span>;
+<a href=#3706 id=3706 data-nosnippet>3706</a>
+<a href=#3707 id=3707 data-nosnippet>3707</a>        <span class="prelude-val">Ok</span>(())
+<a href=#3708 id=3708 data-nosnippet>3708</a>    }
+<a href=#3709 id=3709 data-nosnippet>3709</a>}</code></pre></div></section></main></body></html>

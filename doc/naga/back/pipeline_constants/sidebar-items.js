@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["PipelineConstantError"],"fn":["adjust_block","adjust_expr","adjust_stmt","filter_emits_in_block","map_value_to_literal","process_function","process_override","process_overrides","process_workgroup_size_override","revalidate"]};
+window.SIDEBAR_ITEMS = {"enum":["PipelineConstantError"],"fn":["adjust_block","adjust_expr","adjust_stmt","filter_emits_in_block","map_value_to_literal","process_function","process_mesh_shader_overrides","process_override","process_overrides","process_workgroup_size_override","revalidate"]};

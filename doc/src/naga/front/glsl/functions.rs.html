@@ -1377,244 +1377,248 @@
 <a href=#1377 id=1377 data-nosnippet>1377</a>                result: ty.map(|ty| FunctionResult { ty, binding: <span class="prelude-val">None </span>}),
 <a href=#1378 id=1378 data-nosnippet>1378</a>                ..Default::default()
 <a href=#1379 id=1379 data-nosnippet>1379</a>            },
-<a href=#1380 id=1380 data-nosnippet>1380</a>        });
-<a href=#1381 id=1381 data-nosnippet>1381</a>
-<a href=#1382 id=1382 data-nosnippet>1382</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1383 id=1383 data-nosnippet>1383</a>    }
-<a href=#1384 id=1384 data-nosnippet>1384</a>}
-<a href=#1385 id=1385 data-nosnippet>1385</a>
-<a href=#1386 id=1386 data-nosnippet>1386</a><span class="kw">impl </span>Context&lt;<span class="lifetime">'_</span>&gt; {
-<a href=#1387 id=1387 data-nosnippet>1387</a>    <span class="doccomment">/// Helper function for building the input/output interface of the entry point
-<a href=#1388 id=1388 data-nosnippet>1388</a>    ///
-<a href=#1389 id=1389 data-nosnippet>1389</a>    /// Calls `f` with the data of the entry point argument, flattening composite types
-<a href=#1390 id=1390 data-nosnippet>1390</a>    /// recursively
-<a href=#1391 id=1391 data-nosnippet>1391</a>    ///
-<a href=#1392 id=1392 data-nosnippet>1392</a>    /// The passed arguments to the callback are:
-<a href=#1393 id=1393 data-nosnippet>1393</a>    /// - The ctx
-<a href=#1394 id=1394 data-nosnippet>1394</a>    /// - The name
-<a href=#1395 id=1395 data-nosnippet>1395</a>    /// - The pointer expression to the global storage
-<a href=#1396 id=1396 data-nosnippet>1396</a>    /// - The handle to the type of the entry point argument
-<a href=#1397 id=1397 data-nosnippet>1397</a>    /// - The binding of the entry point argument
-<a href=#1398 id=1398 data-nosnippet>1398</a>    </span><span class="kw">fn </span>arg_type_walker(
-<a href=#1399 id=1399 data-nosnippet>1399</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#1400 id=1400 data-nosnippet>1400</a>        name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1401 id=1401 data-nosnippet>1401</a>        binding: <span class="kw">crate</span>::Binding,
-<a href=#1402 id=1402 data-nosnippet>1402</a>        pointer: Handle&lt;Expression&gt;,
-<a href=#1403 id=1403 data-nosnippet>1403</a>        ty: Handle&lt;Type&gt;,
-<a href=#1404 id=1404 data-nosnippet>1404</a>        f: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>FnMut(
-<a href=#1405 id=1405 data-nosnippet>1405</a>            <span class="kw-2">&amp;mut </span>Context,
-<a href=#1406 id=1406 data-nosnippet>1406</a>            <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1407 id=1407 data-nosnippet>1407</a>            Handle&lt;Expression&gt;,
-<a href=#1408 id=1408 data-nosnippet>1408</a>            Handle&lt;Type&gt;,
-<a href=#1409 id=1409 data-nosnippet>1409</a>            <span class="kw">crate</span>::Binding,
-<a href=#1410 id=1410 data-nosnippet>1410</a>        ),
-<a href=#1411 id=1411 data-nosnippet>1411</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-<a href=#1412 id=1412 data-nosnippet>1412</a>        <span class="kw">match </span><span class="self">self</span>.module.types[ty].inner {
-<a href=#1413 id=1413 data-nosnippet>1413</a>            <span class="comment">// TODO: Better error reporting
-<a href=#1414 id=1414 data-nosnippet>1414</a>            // right now we just don't walk the array if the size isn't known at
-<a href=#1415 id=1415 data-nosnippet>1415</a>            // compile time and let validation catch it
-<a href=#1416 id=1416 data-nosnippet>1416</a>            </span>TypeInner::Array {
-<a href=#1417 id=1417 data-nosnippet>1417</a>                base,
-<a href=#1418 id=1418 data-nosnippet>1418</a>                size: <span class="kw">crate</span>::ArraySize::Constant(size),
-<a href=#1419 id=1419 data-nosnippet>1419</a>                ..
-<a href=#1420 id=1420 data-nosnippet>1420</a>            } =&gt; {
-<a href=#1421 id=1421 data-nosnippet>1421</a>                <span class="kw">let </span><span class="kw-2">mut </span>location = <span class="kw">match </span>binding {
-<a href=#1422 id=1422 data-nosnippet>1422</a>                    <span class="kw">crate</span>::Binding::Location { location, .. } =&gt; location,
-<a href=#1423 id=1423 data-nosnippet>1423</a>                    <span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
-<a href=#1424 id=1424 data-nosnippet>1424</a>                };
-<a href=#1425 id=1425 data-nosnippet>1425</a>
-<a href=#1426 id=1426 data-nosnippet>1426</a>                <span class="kw">let </span>interpolation =
-<a href=#1427 id=1427 data-nosnippet>1427</a>                    <span class="self">self</span>.module.types[base]
-<a href=#1428 id=1428 data-nosnippet>1428</a>                        .inner
-<a href=#1429 id=1429 data-nosnippet>1429</a>                        .scalar_kind()
-<a href=#1430 id=1430 data-nosnippet>1430</a>                        .map(|kind| <span class="kw">match </span>kind {
-<a href=#1431 id=1431 data-nosnippet>1431</a>                            ScalarKind::Float =&gt; <span class="kw">crate</span>::Interpolation::Perspective,
-<a href=#1432 id=1432 data-nosnippet>1432</a>                            <span class="kw">_ </span>=&gt; <span class="kw">crate</span>::Interpolation::Flat,
-<a href=#1433 id=1433 data-nosnippet>1433</a>                        });
-<a href=#1434 id=1434 data-nosnippet>1434</a>
-<a href=#1435 id=1435 data-nosnippet>1435</a>                <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..size.get() {
-<a href=#1436 id=1436 data-nosnippet>1436</a>                    <span class="kw">let </span>member_pointer = <span class="self">self</span>.add_expression(
-<a href=#1437 id=1437 data-nosnippet>1437</a>                        Expression::AccessIndex {
-<a href=#1438 id=1438 data-nosnippet>1438</a>                            base: pointer,
-<a href=#1439 id=1439 data-nosnippet>1439</a>                            index,
-<a href=#1440 id=1440 data-nosnippet>1440</a>                        },
-<a href=#1441 id=1441 data-nosnippet>1441</a>                        Span::default(),
-<a href=#1442 id=1442 data-nosnippet>1442</a>                    )<span class="question-mark">?</span>;
-<a href=#1443 id=1443 data-nosnippet>1443</a>
-<a href=#1444 id=1444 data-nosnippet>1444</a>                    <span class="kw">let </span>binding = <span class="kw">crate</span>::Binding::Location {
-<a href=#1445 id=1445 data-nosnippet>1445</a>                        location,
-<a href=#1446 id=1446 data-nosnippet>1446</a>                        interpolation,
-<a href=#1447 id=1447 data-nosnippet>1447</a>                        sampling: <span class="prelude-val">None</span>,
-<a href=#1448 id=1448 data-nosnippet>1448</a>                        blend_src: <span class="prelude-val">None</span>,
-<a href=#1449 id=1449 data-nosnippet>1449</a>                    };
-<a href=#1450 id=1450 data-nosnippet>1450</a>                    location += <span class="number">1</span>;
-<a href=#1451 id=1451 data-nosnippet>1451</a>
-<a href=#1452 id=1452 data-nosnippet>1452</a>                    <span class="self">self</span>.arg_type_walker(name.clone(), binding, member_pointer, base, f)<span class="question-mark">?
-<a href=#1453 id=1453 data-nosnippet>1453</a>                </span>}
-<a href=#1454 id=1454 data-nosnippet>1454</a>            }
-<a href=#1455 id=1455 data-nosnippet>1455</a>            TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
-<a href=#1456 id=1456 data-nosnippet>1456</a>                <span class="kw">let </span><span class="kw-2">mut </span>location = <span class="kw">match </span>binding {
-<a href=#1457 id=1457 data-nosnippet>1457</a>                    <span class="kw">crate</span>::Binding::Location { location, .. } =&gt; location,
-<a href=#1458 id=1458 data-nosnippet>1458</a>                    <span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
-<a href=#1459 id=1459 data-nosnippet>1459</a>                };
-<a href=#1460 id=1460 data-nosnippet>1460</a>
-<a href=#1461 id=1461 data-nosnippet>1461</a>                <span class="kw">for </span>(i, member) <span class="kw">in </span>members.clone().into_iter().enumerate() {
-<a href=#1462 id=1462 data-nosnippet>1462</a>                    <span class="kw">let </span>member_pointer = <span class="self">self</span>.add_expression(
-<a href=#1463 id=1463 data-nosnippet>1463</a>                        Expression::AccessIndex {
-<a href=#1464 id=1464 data-nosnippet>1464</a>                            base: pointer,
-<a href=#1465 id=1465 data-nosnippet>1465</a>                            index: i <span class="kw">as </span>u32,
-<a href=#1466 id=1466 data-nosnippet>1466</a>                        },
-<a href=#1467 id=1467 data-nosnippet>1467</a>                        Span::default(),
-<a href=#1468 id=1468 data-nosnippet>1468</a>                    )<span class="question-mark">?</span>;
-<a href=#1469 id=1469 data-nosnippet>1469</a>
-<a href=#1470 id=1470 data-nosnippet>1470</a>                    <span class="kw">let </span>binding = <span class="kw">match </span>member.binding {
-<a href=#1471 id=1471 data-nosnippet>1471</a>                        <span class="prelude-val">Some</span>(binding) =&gt; binding,
-<a href=#1472 id=1472 data-nosnippet>1472</a>                        <span class="prelude-val">None </span>=&gt; {
-<a href=#1473 id=1473 data-nosnippet>1473</a>                            <span class="kw">let </span>interpolation = <span class="self">self</span>.module.types[member.ty]
-<a href=#1474 id=1474 data-nosnippet>1474</a>                                .inner
-<a href=#1475 id=1475 data-nosnippet>1475</a>                                .scalar_kind()
-<a href=#1476 id=1476 data-nosnippet>1476</a>                                .map(|kind| <span class="kw">match </span>kind {
-<a href=#1477 id=1477 data-nosnippet>1477</a>                                    ScalarKind::Float =&gt; <span class="kw">crate</span>::Interpolation::Perspective,
-<a href=#1478 id=1478 data-nosnippet>1478</a>                                    <span class="kw">_ </span>=&gt; <span class="kw">crate</span>::Interpolation::Flat,
-<a href=#1479 id=1479 data-nosnippet>1479</a>                                });
-<a href=#1480 id=1480 data-nosnippet>1480</a>                            <span class="kw">let </span>binding = <span class="kw">crate</span>::Binding::Location {
-<a href=#1481 id=1481 data-nosnippet>1481</a>                                location,
-<a href=#1482 id=1482 data-nosnippet>1482</a>                                interpolation,
-<a href=#1483 id=1483 data-nosnippet>1483</a>                                sampling: <span class="prelude-val">None</span>,
-<a href=#1484 id=1484 data-nosnippet>1484</a>                                blend_src: <span class="prelude-val">None</span>,
-<a href=#1485 id=1485 data-nosnippet>1485</a>                            };
-<a href=#1486 id=1486 data-nosnippet>1486</a>                            location += <span class="number">1</span>;
-<a href=#1487 id=1487 data-nosnippet>1487</a>                            binding
-<a href=#1488 id=1488 data-nosnippet>1488</a>                        }
-<a href=#1489 id=1489 data-nosnippet>1489</a>                    };
-<a href=#1490 id=1490 data-nosnippet>1490</a>
-<a href=#1491 id=1491 data-nosnippet>1491</a>                    <span class="self">self</span>.arg_type_walker(member.name, binding, member_pointer, member.ty, f)<span class="question-mark">?
-<a href=#1492 id=1492 data-nosnippet>1492</a>                </span>}
-<a href=#1493 id=1493 data-nosnippet>1493</a>            }
-<a href=#1494 id=1494 data-nosnippet>1494</a>            <span class="kw">_ </span>=&gt; f(<span class="self">self</span>, name, pointer, ty, binding),
-<a href=#1495 id=1495 data-nosnippet>1495</a>        }
-<a href=#1496 id=1496 data-nosnippet>1496</a>
-<a href=#1497 id=1497 data-nosnippet>1497</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1498 id=1498 data-nosnippet>1498</a>    }
-<a href=#1499 id=1499 data-nosnippet>1499</a>}
+<a href=#1380 id=1380 data-nosnippet>1380</a>            mesh_info: <span class="prelude-val">None</span>,
+<a href=#1381 id=1381 data-nosnippet>1381</a>            task_payload: <span class="prelude-val">None</span>,
+<a href=#1382 id=1382 data-nosnippet>1382</a>        });
+<a href=#1383 id=1383 data-nosnippet>1383</a>
+<a href=#1384 id=1384 data-nosnippet>1384</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1385 id=1385 data-nosnippet>1385</a>    }
+<a href=#1386 id=1386 data-nosnippet>1386</a>}
+<a href=#1387 id=1387 data-nosnippet>1387</a>
+<a href=#1388 id=1388 data-nosnippet>1388</a><span class="kw">impl </span>Context&lt;<span class="lifetime">'_</span>&gt; {
+<a href=#1389 id=1389 data-nosnippet>1389</a>    <span class="doccomment">/// Helper function for building the input/output interface of the entry point
+<a href=#1390 id=1390 data-nosnippet>1390</a>    ///
+<a href=#1391 id=1391 data-nosnippet>1391</a>    /// Calls `f` with the data of the entry point argument, flattening composite types
+<a href=#1392 id=1392 data-nosnippet>1392</a>    /// recursively
+<a href=#1393 id=1393 data-nosnippet>1393</a>    ///
+<a href=#1394 id=1394 data-nosnippet>1394</a>    /// The passed arguments to the callback are:
+<a href=#1395 id=1395 data-nosnippet>1395</a>    /// - The ctx
+<a href=#1396 id=1396 data-nosnippet>1396</a>    /// - The name
+<a href=#1397 id=1397 data-nosnippet>1397</a>    /// - The pointer expression to the global storage
+<a href=#1398 id=1398 data-nosnippet>1398</a>    /// - The handle to the type of the entry point argument
+<a href=#1399 id=1399 data-nosnippet>1399</a>    /// - The binding of the entry point argument
+<a href=#1400 id=1400 data-nosnippet>1400</a>    </span><span class="kw">fn </span>arg_type_walker(
+<a href=#1401 id=1401 data-nosnippet>1401</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#1402 id=1402 data-nosnippet>1402</a>        name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1403 id=1403 data-nosnippet>1403</a>        binding: <span class="kw">crate</span>::Binding,
+<a href=#1404 id=1404 data-nosnippet>1404</a>        pointer: Handle&lt;Expression&gt;,
+<a href=#1405 id=1405 data-nosnippet>1405</a>        ty: Handle&lt;Type&gt;,
+<a href=#1406 id=1406 data-nosnippet>1406</a>        f: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>FnMut(
+<a href=#1407 id=1407 data-nosnippet>1407</a>            <span class="kw-2">&amp;mut </span>Context,
+<a href=#1408 id=1408 data-nosnippet>1408</a>            <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1409 id=1409 data-nosnippet>1409</a>            Handle&lt;Expression&gt;,
+<a href=#1410 id=1410 data-nosnippet>1410</a>            Handle&lt;Type&gt;,
+<a href=#1411 id=1411 data-nosnippet>1411</a>            <span class="kw">crate</span>::Binding,
+<a href=#1412 id=1412 data-nosnippet>1412</a>        ),
+<a href=#1413 id=1413 data-nosnippet>1413</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+<a href=#1414 id=1414 data-nosnippet>1414</a>        <span class="kw">match </span><span class="self">self</span>.module.types[ty].inner {
+<a href=#1415 id=1415 data-nosnippet>1415</a>            <span class="comment">// TODO: Better error reporting
+<a href=#1416 id=1416 data-nosnippet>1416</a>            // right now we just don't walk the array if the size isn't known at
+<a href=#1417 id=1417 data-nosnippet>1417</a>            // compile time and let validation catch it
+<a href=#1418 id=1418 data-nosnippet>1418</a>            </span>TypeInner::Array {
+<a href=#1419 id=1419 data-nosnippet>1419</a>                base,
+<a href=#1420 id=1420 data-nosnippet>1420</a>                size: <span class="kw">crate</span>::ArraySize::Constant(size),
+<a href=#1421 id=1421 data-nosnippet>1421</a>                ..
+<a href=#1422 id=1422 data-nosnippet>1422</a>            } =&gt; {
+<a href=#1423 id=1423 data-nosnippet>1423</a>                <span class="kw">let </span><span class="kw-2">mut </span>location = <span class="kw">match </span>binding {
+<a href=#1424 id=1424 data-nosnippet>1424</a>                    <span class="kw">crate</span>::Binding::Location { location, .. } =&gt; location,
+<a href=#1425 id=1425 data-nosnippet>1425</a>                    <span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
+<a href=#1426 id=1426 data-nosnippet>1426</a>                };
+<a href=#1427 id=1427 data-nosnippet>1427</a>
+<a href=#1428 id=1428 data-nosnippet>1428</a>                <span class="kw">let </span>interpolation =
+<a href=#1429 id=1429 data-nosnippet>1429</a>                    <span class="self">self</span>.module.types[base]
+<a href=#1430 id=1430 data-nosnippet>1430</a>                        .inner
+<a href=#1431 id=1431 data-nosnippet>1431</a>                        .scalar_kind()
+<a href=#1432 id=1432 data-nosnippet>1432</a>                        .map(|kind| <span class="kw">match </span>kind {
+<a href=#1433 id=1433 data-nosnippet>1433</a>                            ScalarKind::Float =&gt; <span class="kw">crate</span>::Interpolation::Perspective,
+<a href=#1434 id=1434 data-nosnippet>1434</a>                            <span class="kw">_ </span>=&gt; <span class="kw">crate</span>::Interpolation::Flat,
+<a href=#1435 id=1435 data-nosnippet>1435</a>                        });
+<a href=#1436 id=1436 data-nosnippet>1436</a>
+<a href=#1437 id=1437 data-nosnippet>1437</a>                <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..size.get() {
+<a href=#1438 id=1438 data-nosnippet>1438</a>                    <span class="kw">let </span>member_pointer = <span class="self">self</span>.add_expression(
+<a href=#1439 id=1439 data-nosnippet>1439</a>                        Expression::AccessIndex {
+<a href=#1440 id=1440 data-nosnippet>1440</a>                            base: pointer,
+<a href=#1441 id=1441 data-nosnippet>1441</a>                            index,
+<a href=#1442 id=1442 data-nosnippet>1442</a>                        },
+<a href=#1443 id=1443 data-nosnippet>1443</a>                        Span::default(),
+<a href=#1444 id=1444 data-nosnippet>1444</a>                    )<span class="question-mark">?</span>;
+<a href=#1445 id=1445 data-nosnippet>1445</a>
+<a href=#1446 id=1446 data-nosnippet>1446</a>                    <span class="kw">let </span>binding = <span class="kw">crate</span>::Binding::Location {
+<a href=#1447 id=1447 data-nosnippet>1447</a>                        location,
+<a href=#1448 id=1448 data-nosnippet>1448</a>                        interpolation,
+<a href=#1449 id=1449 data-nosnippet>1449</a>                        sampling: <span class="prelude-val">None</span>,
+<a href=#1450 id=1450 data-nosnippet>1450</a>                        blend_src: <span class="prelude-val">None</span>,
+<a href=#1451 id=1451 data-nosnippet>1451</a>                        per_primitive: <span class="bool-val">false</span>,
+<a href=#1452 id=1452 data-nosnippet>1452</a>                    };
+<a href=#1453 id=1453 data-nosnippet>1453</a>                    location += <span class="number">1</span>;
+<a href=#1454 id=1454 data-nosnippet>1454</a>
+<a href=#1455 id=1455 data-nosnippet>1455</a>                    <span class="self">self</span>.arg_type_walker(name.clone(), binding, member_pointer, base, f)<span class="question-mark">?
+<a href=#1456 id=1456 data-nosnippet>1456</a>                </span>}
+<a href=#1457 id=1457 data-nosnippet>1457</a>            }
+<a href=#1458 id=1458 data-nosnippet>1458</a>            TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
+<a href=#1459 id=1459 data-nosnippet>1459</a>                <span class="kw">let </span><span class="kw-2">mut </span>location = <span class="kw">match </span>binding {
+<a href=#1460 id=1460 data-nosnippet>1460</a>                    <span class="kw">crate</span>::Binding::Location { location, .. } =&gt; location,
+<a href=#1461 id=1461 data-nosnippet>1461</a>                    <span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
+<a href=#1462 id=1462 data-nosnippet>1462</a>                };
+<a href=#1463 id=1463 data-nosnippet>1463</a>
+<a href=#1464 id=1464 data-nosnippet>1464</a>                <span class="kw">for </span>(i, member) <span class="kw">in </span>members.clone().into_iter().enumerate() {
+<a href=#1465 id=1465 data-nosnippet>1465</a>                    <span class="kw">let </span>member_pointer = <span class="self">self</span>.add_expression(
+<a href=#1466 id=1466 data-nosnippet>1466</a>                        Expression::AccessIndex {
+<a href=#1467 id=1467 data-nosnippet>1467</a>                            base: pointer,
+<a href=#1468 id=1468 data-nosnippet>1468</a>                            index: i <span class="kw">as </span>u32,
+<a href=#1469 id=1469 data-nosnippet>1469</a>                        },
+<a href=#1470 id=1470 data-nosnippet>1470</a>                        Span::default(),
+<a href=#1471 id=1471 data-nosnippet>1471</a>                    )<span class="question-mark">?</span>;
+<a href=#1472 id=1472 data-nosnippet>1472</a>
+<a href=#1473 id=1473 data-nosnippet>1473</a>                    <span class="kw">let </span>binding = <span class="kw">match </span>member.binding {
+<a href=#1474 id=1474 data-nosnippet>1474</a>                        <span class="prelude-val">Some</span>(binding) =&gt; binding,
+<a href=#1475 id=1475 data-nosnippet>1475</a>                        <span class="prelude-val">None </span>=&gt; {
+<a href=#1476 id=1476 data-nosnippet>1476</a>                            <span class="kw">let </span>interpolation = <span class="self">self</span>.module.types[member.ty]
+<a href=#1477 id=1477 data-nosnippet>1477</a>                                .inner
+<a href=#1478 id=1478 data-nosnippet>1478</a>                                .scalar_kind()
+<a href=#1479 id=1479 data-nosnippet>1479</a>                                .map(|kind| <span class="kw">match </span>kind {
+<a href=#1480 id=1480 data-nosnippet>1480</a>                                    ScalarKind::Float =&gt; <span class="kw">crate</span>::Interpolation::Perspective,
+<a href=#1481 id=1481 data-nosnippet>1481</a>                                    <span class="kw">_ </span>=&gt; <span class="kw">crate</span>::Interpolation::Flat,
+<a href=#1482 id=1482 data-nosnippet>1482</a>                                });
+<a href=#1483 id=1483 data-nosnippet>1483</a>                            <span class="kw">let </span>binding = <span class="kw">crate</span>::Binding::Location {
+<a href=#1484 id=1484 data-nosnippet>1484</a>                                location,
+<a href=#1485 id=1485 data-nosnippet>1485</a>                                interpolation,
+<a href=#1486 id=1486 data-nosnippet>1486</a>                                sampling: <span class="prelude-val">None</span>,
+<a href=#1487 id=1487 data-nosnippet>1487</a>                                blend_src: <span class="prelude-val">None</span>,
+<a href=#1488 id=1488 data-nosnippet>1488</a>                                per_primitive: <span class="bool-val">false</span>,
+<a href=#1489 id=1489 data-nosnippet>1489</a>                            };
+<a href=#1490 id=1490 data-nosnippet>1490</a>                            location += <span class="number">1</span>;
+<a href=#1491 id=1491 data-nosnippet>1491</a>                            binding
+<a href=#1492 id=1492 data-nosnippet>1492</a>                        }
+<a href=#1493 id=1493 data-nosnippet>1493</a>                    };
+<a href=#1494 id=1494 data-nosnippet>1494</a>
+<a href=#1495 id=1495 data-nosnippet>1495</a>                    <span class="self">self</span>.arg_type_walker(member.name, binding, member_pointer, member.ty, f)<span class="question-mark">?
+<a href=#1496 id=1496 data-nosnippet>1496</a>                </span>}
+<a href=#1497 id=1497 data-nosnippet>1497</a>            }
+<a href=#1498 id=1498 data-nosnippet>1498</a>            <span class="kw">_ </span>=&gt; f(<span class="self">self</span>, name, pointer, ty, binding),
+<a href=#1499 id=1499 data-nosnippet>1499</a>        }
 <a href=#1500 id=1500 data-nosnippet>1500</a>
-<a href=#1501 id=1501 data-nosnippet>1501</a><span class="doccomment">/// Helper enum containing the type of conversion need for a call
-<a href=#1502 id=1502 data-nosnippet>1502</a></span><span class="attr">#[derive(PartialEq, Eq, Clone, Copy, Debug)]
-<a href=#1503 id=1503 data-nosnippet>1503</a></span><span class="kw">enum </span>Conversion {
-<a href=#1504 id=1504 data-nosnippet>1504</a>    <span class="doccomment">/// No conversion needed
-<a href=#1505 id=1505 data-nosnippet>1505</a>    </span>Exact,
-<a href=#1506 id=1506 data-nosnippet>1506</a>    <span class="doccomment">/// Float to double conversion needed
-<a href=#1507 id=1507 data-nosnippet>1507</a>    </span>FloatToDouble,
-<a href=#1508 id=1508 data-nosnippet>1508</a>    <span class="doccomment">/// Int or uint to float conversion needed
-<a href=#1509 id=1509 data-nosnippet>1509</a>    </span>IntToFloat,
-<a href=#1510 id=1510 data-nosnippet>1510</a>    <span class="doccomment">/// Int or uint to double conversion needed
-<a href=#1511 id=1511 data-nosnippet>1511</a>    </span>IntToDouble,
-<a href=#1512 id=1512 data-nosnippet>1512</a>    <span class="doccomment">/// Other type of conversion needed
-<a href=#1513 id=1513 data-nosnippet>1513</a>    </span>Other,
-<a href=#1514 id=1514 data-nosnippet>1514</a>    <span class="doccomment">/// No conversion was yet registered
-<a href=#1515 id=1515 data-nosnippet>1515</a>    </span><span class="prelude-val">None</span>,
-<a href=#1516 id=1516 data-nosnippet>1516</a>}
-<a href=#1517 id=1517 data-nosnippet>1517</a>
-<a href=#1518 id=1518 data-nosnippet>1518</a><span class="doccomment">/// Helper function, returns the type of conversion from `source` to `target`, if a
-<a href=#1519 id=1519 data-nosnippet>1519</a>/// conversion is not possible returns None.
-<a href=#1520 id=1520 data-nosnippet>1520</a></span><span class="kw">fn </span>conversion(target: <span class="kw-2">&amp;</span>TypeInner, source: <span class="kw-2">&amp;</span>TypeInner) -&gt; <span class="prelude-ty">Option</span>&lt;Conversion&gt; {
-<a href=#1521 id=1521 data-nosnippet>1521</a>    <span class="kw">use </span>ScalarKind::<span class="kw-2">*</span>;
-<a href=#1522 id=1522 data-nosnippet>1522</a>
-<a href=#1523 id=1523 data-nosnippet>1523</a>    <span class="comment">// Gather the `ScalarKind` and scalar width from both the target and the source
-<a href=#1524 id=1524 data-nosnippet>1524</a>    </span><span class="kw">let </span>(target_scalar, source_scalar) = <span class="kw">match </span>(target, source) {
-<a href=#1525 id=1525 data-nosnippet>1525</a>        <span class="comment">// Conversions between scalars are allowed
-<a href=#1526 id=1526 data-nosnippet>1526</a>        </span>(<span class="kw-2">&amp;</span>TypeInner::Scalar(tgt_scalar), <span class="kw-2">&amp;</span>TypeInner::Scalar(src_scalar)) =&gt; {
-<a href=#1527 id=1527 data-nosnippet>1527</a>            (tgt_scalar, src_scalar)
-<a href=#1528 id=1528 data-nosnippet>1528</a>        }
-<a href=#1529 id=1529 data-nosnippet>1529</a>        <span class="comment">// Conversions between vectors of the same size are allowed
-<a href=#1530 id=1530 data-nosnippet>1530</a>        </span>(
-<a href=#1531 id=1531 data-nosnippet>1531</a>            <span class="kw-2">&amp;</span>TypeInner::Vector {
-<a href=#1532 id=1532 data-nosnippet>1532</a>                size: tgt_size,
-<a href=#1533 id=1533 data-nosnippet>1533</a>                scalar: tgt_scalar,
-<a href=#1534 id=1534 data-nosnippet>1534</a>            },
+<a href=#1501 id=1501 data-nosnippet>1501</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1502 id=1502 data-nosnippet>1502</a>    }
+<a href=#1503 id=1503 data-nosnippet>1503</a>}
+<a href=#1504 id=1504 data-nosnippet>1504</a>
+<a href=#1505 id=1505 data-nosnippet>1505</a><span class="doccomment">/// Helper enum containing the type of conversion need for a call
+<a href=#1506 id=1506 data-nosnippet>1506</a></span><span class="attr">#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+<a href=#1507 id=1507 data-nosnippet>1507</a></span><span class="kw">enum </span>Conversion {
+<a href=#1508 id=1508 data-nosnippet>1508</a>    <span class="doccomment">/// No conversion needed
+<a href=#1509 id=1509 data-nosnippet>1509</a>    </span>Exact,
+<a href=#1510 id=1510 data-nosnippet>1510</a>    <span class="doccomment">/// Float to double conversion needed
+<a href=#1511 id=1511 data-nosnippet>1511</a>    </span>FloatToDouble,
+<a href=#1512 id=1512 data-nosnippet>1512</a>    <span class="doccomment">/// Int or uint to float conversion needed
+<a href=#1513 id=1513 data-nosnippet>1513</a>    </span>IntToFloat,
+<a href=#1514 id=1514 data-nosnippet>1514</a>    <span class="doccomment">/// Int or uint to double conversion needed
+<a href=#1515 id=1515 data-nosnippet>1515</a>    </span>IntToDouble,
+<a href=#1516 id=1516 data-nosnippet>1516</a>    <span class="doccomment">/// Other type of conversion needed
+<a href=#1517 id=1517 data-nosnippet>1517</a>    </span>Other,
+<a href=#1518 id=1518 data-nosnippet>1518</a>    <span class="doccomment">/// No conversion was yet registered
+<a href=#1519 id=1519 data-nosnippet>1519</a>    </span><span class="prelude-val">None</span>,
+<a href=#1520 id=1520 data-nosnippet>1520</a>}
+<a href=#1521 id=1521 data-nosnippet>1521</a>
+<a href=#1522 id=1522 data-nosnippet>1522</a><span class="doccomment">/// Helper function, returns the type of conversion from `source` to `target`, if a
+<a href=#1523 id=1523 data-nosnippet>1523</a>/// conversion is not possible returns None.
+<a href=#1524 id=1524 data-nosnippet>1524</a></span><span class="kw">fn </span>conversion(target: <span class="kw-2">&amp;</span>TypeInner, source: <span class="kw-2">&amp;</span>TypeInner) -&gt; <span class="prelude-ty">Option</span>&lt;Conversion&gt; {
+<a href=#1525 id=1525 data-nosnippet>1525</a>    <span class="kw">use </span>ScalarKind::<span class="kw-2">*</span>;
+<a href=#1526 id=1526 data-nosnippet>1526</a>
+<a href=#1527 id=1527 data-nosnippet>1527</a>    <span class="comment">// Gather the `ScalarKind` and scalar width from both the target and the source
+<a href=#1528 id=1528 data-nosnippet>1528</a>    </span><span class="kw">let </span>(target_scalar, source_scalar) = <span class="kw">match </span>(target, source) {
+<a href=#1529 id=1529 data-nosnippet>1529</a>        <span class="comment">// Conversions between scalars are allowed
+<a href=#1530 id=1530 data-nosnippet>1530</a>        </span>(<span class="kw-2">&amp;</span>TypeInner::Scalar(tgt_scalar), <span class="kw-2">&amp;</span>TypeInner::Scalar(src_scalar)) =&gt; {
+<a href=#1531 id=1531 data-nosnippet>1531</a>            (tgt_scalar, src_scalar)
+<a href=#1532 id=1532 data-nosnippet>1532</a>        }
+<a href=#1533 id=1533 data-nosnippet>1533</a>        <span class="comment">// Conversions between vectors of the same size are allowed
+<a href=#1534 id=1534 data-nosnippet>1534</a>        </span>(
 <a href=#1535 id=1535 data-nosnippet>1535</a>            <span class="kw-2">&amp;</span>TypeInner::Vector {
-<a href=#1536 id=1536 data-nosnippet>1536</a>                size: src_size,
-<a href=#1537 id=1537 data-nosnippet>1537</a>                scalar: src_scalar,
+<a href=#1536 id=1536 data-nosnippet>1536</a>                size: tgt_size,
+<a href=#1537 id=1537 data-nosnippet>1537</a>                scalar: tgt_scalar,
 <a href=#1538 id=1538 data-nosnippet>1538</a>            },
-<a href=#1539 id=1539 data-nosnippet>1539</a>        ) <span class="kw">if </span>tgt_size == src_size =&gt; (tgt_scalar, src_scalar),
-<a href=#1540 id=1540 data-nosnippet>1540</a>        <span class="comment">// Conversions between matrices of the same size are allowed
-<a href=#1541 id=1541 data-nosnippet>1541</a>        </span>(
-<a href=#1542 id=1542 data-nosnippet>1542</a>            <span class="kw-2">&amp;</span>TypeInner::Matrix {
-<a href=#1543 id=1543 data-nosnippet>1543</a>                rows: tgt_rows,
-<a href=#1544 id=1544 data-nosnippet>1544</a>                columns: tgt_cols,
-<a href=#1545 id=1545 data-nosnippet>1545</a>                scalar: tgt_scalar,
-<a href=#1546 id=1546 data-nosnippet>1546</a>            },
-<a href=#1547 id=1547 data-nosnippet>1547</a>            <span class="kw-2">&amp;</span>TypeInner::Matrix {
-<a href=#1548 id=1548 data-nosnippet>1548</a>                rows: src_rows,
-<a href=#1549 id=1549 data-nosnippet>1549</a>                columns: src_cols,
-<a href=#1550 id=1550 data-nosnippet>1550</a>                scalar: src_scalar,
-<a href=#1551 id=1551 data-nosnippet>1551</a>            },
-<a href=#1552 id=1552 data-nosnippet>1552</a>        ) <span class="kw">if </span>tgt_cols == src_cols &amp;&amp; tgt_rows == src_rows =&gt; (tgt_scalar, src_scalar),
-<a href=#1553 id=1553 data-nosnippet>1553</a>        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-<a href=#1554 id=1554 data-nosnippet>1554</a>    };
-<a href=#1555 id=1555 data-nosnippet>1555</a>
-<a href=#1556 id=1556 data-nosnippet>1556</a>    <span class="comment">// Check if source can be converted into target, if this is the case then the type
-<a href=#1557 id=1557 data-nosnippet>1557</a>    // power of target must be higher than that of source
-<a href=#1558 id=1558 data-nosnippet>1558</a>    </span><span class="kw">let </span>target_power = type_power(target_scalar);
-<a href=#1559 id=1559 data-nosnippet>1559</a>    <span class="kw">let </span>source_power = type_power(source_scalar);
-<a href=#1560 id=1560 data-nosnippet>1560</a>    <span class="kw">if </span>target_power &lt; source_power {
-<a href=#1561 id=1561 data-nosnippet>1561</a>        <span class="kw">return </span><span class="prelude-val">None</span>;
-<a href=#1562 id=1562 data-nosnippet>1562</a>    }
-<a href=#1563 id=1563 data-nosnippet>1563</a>
-<a href=#1564 id=1564 data-nosnippet>1564</a>    <span class="prelude-val">Some</span>(<span class="kw">match </span>(target_scalar, source_scalar) {
-<a href=#1565 id=1565 data-nosnippet>1565</a>        <span class="comment">// A conversion from a float to a double is special
-<a href=#1566 id=1566 data-nosnippet>1566</a>        </span>(Scalar::F64, Scalar::F32) =&gt; Conversion::FloatToDouble,
-<a href=#1567 id=1567 data-nosnippet>1567</a>        <span class="comment">// A conversion from an integer to a float is special
-<a href=#1568 id=1568 data-nosnippet>1568</a>        </span>(
-<a href=#1569 id=1569 data-nosnippet>1569</a>            Scalar::F32,
-<a href=#1570 id=1570 data-nosnippet>1570</a>            Scalar {
-<a href=#1571 id=1571 data-nosnippet>1571</a>                kind: Sint | Uint,
-<a href=#1572 id=1572 data-nosnippet>1572</a>                width: <span class="kw">_</span>,
-<a href=#1573 id=1573 data-nosnippet>1573</a>            },
-<a href=#1574 id=1574 data-nosnippet>1574</a>        ) =&gt; Conversion::IntToFloat,
-<a href=#1575 id=1575 data-nosnippet>1575</a>        <span class="comment">// A conversion from an integer to a double is special
-<a href=#1576 id=1576 data-nosnippet>1576</a>        </span>(
-<a href=#1577 id=1577 data-nosnippet>1577</a>            Scalar::F64,
-<a href=#1578 id=1578 data-nosnippet>1578</a>            Scalar {
-<a href=#1579 id=1579 data-nosnippet>1579</a>                kind: Sint | Uint,
-<a href=#1580 id=1580 data-nosnippet>1580</a>                width: <span class="kw">_</span>,
-<a href=#1581 id=1581 data-nosnippet>1581</a>            },
-<a href=#1582 id=1582 data-nosnippet>1582</a>        ) =&gt; Conversion::IntToDouble,
-<a href=#1583 id=1583 data-nosnippet>1583</a>        <span class="kw">_ </span>=&gt; Conversion::Other,
-<a href=#1584 id=1584 data-nosnippet>1584</a>    })
-<a href=#1585 id=1585 data-nosnippet>1585</a>}
-<a href=#1586 id=1586 data-nosnippet>1586</a>
-<a href=#1587 id=1587 data-nosnippet>1587</a><span class="doccomment">/// Helper method returning all the non standard builtin variations needed
-<a href=#1588 id=1588 data-nosnippet>1588</a>/// to process the function call with the passed arguments
-<a href=#1589 id=1589 data-nosnippet>1589</a></span><span class="kw">fn </span>builtin_required_variations&lt;<span class="lifetime">'a</span>&gt;(args: <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>TypeInner&gt;) -&gt; BuiltinVariations {
-<a href=#1590 id=1590 data-nosnippet>1590</a>    <span class="kw">let </span><span class="kw-2">mut </span>variations = BuiltinVariations::empty();
-<a href=#1591 id=1591 data-nosnippet>1591</a>
-<a href=#1592 id=1592 data-nosnippet>1592</a>    <span class="kw">for </span>ty <span class="kw">in </span>args {
-<a href=#1593 id=1593 data-nosnippet>1593</a>        <span class="kw">match </span><span class="kw-2">*</span>ty {
-<a href=#1594 id=1594 data-nosnippet>1594</a>            TypeInner::ValuePointer { scalar, .. }
-<a href=#1595 id=1595 data-nosnippet>1595</a>            | TypeInner::Scalar(scalar)
-<a href=#1596 id=1596 data-nosnippet>1596</a>            | TypeInner::Vector { scalar, .. }
-<a href=#1597 id=1597 data-nosnippet>1597</a>            | TypeInner::Matrix { scalar, .. } =&gt; {
-<a href=#1598 id=1598 data-nosnippet>1598</a>                <span class="kw">if </span>scalar == Scalar::F64 {
-<a href=#1599 id=1599 data-nosnippet>1599</a>                    variations |= BuiltinVariations::DOUBLE
-<a href=#1600 id=1600 data-nosnippet>1600</a>                }
-<a href=#1601 id=1601 data-nosnippet>1601</a>            }
-<a href=#1602 id=1602 data-nosnippet>1602</a>            TypeInner::Image {
-<a href=#1603 id=1603 data-nosnippet>1603</a>                dim,
-<a href=#1604 id=1604 data-nosnippet>1604</a>                arrayed,
-<a href=#1605 id=1605 data-nosnippet>1605</a>                class,
-<a href=#1606 id=1606 data-nosnippet>1606</a>            } =&gt; {
-<a href=#1607 id=1607 data-nosnippet>1607</a>                <span class="kw">if </span>dim == <span class="kw">crate</span>::ImageDimension::Cube &amp;&amp; arrayed {
-<a href=#1608 id=1608 data-nosnippet>1608</a>                    variations |= BuiltinVariations::CUBE_TEXTURES_ARRAY
-<a href=#1609 id=1609 data-nosnippet>1609</a>                }
-<a href=#1610 id=1610 data-nosnippet>1610</a>
-<a href=#1611 id=1611 data-nosnippet>1611</a>                <span class="kw">if </span>dim == <span class="kw">crate</span>::ImageDimension::D2 &amp;&amp; arrayed &amp;&amp; class.is_multisampled() {
-<a href=#1612 id=1612 data-nosnippet>1612</a>                    variations |= BuiltinVariations::D2_MULTI_TEXTURES_ARRAY
+<a href=#1539 id=1539 data-nosnippet>1539</a>            <span class="kw-2">&amp;</span>TypeInner::Vector {
+<a href=#1540 id=1540 data-nosnippet>1540</a>                size: src_size,
+<a href=#1541 id=1541 data-nosnippet>1541</a>                scalar: src_scalar,
+<a href=#1542 id=1542 data-nosnippet>1542</a>            },
+<a href=#1543 id=1543 data-nosnippet>1543</a>        ) <span class="kw">if </span>tgt_size == src_size =&gt; (tgt_scalar, src_scalar),
+<a href=#1544 id=1544 data-nosnippet>1544</a>        <span class="comment">// Conversions between matrices of the same size are allowed
+<a href=#1545 id=1545 data-nosnippet>1545</a>        </span>(
+<a href=#1546 id=1546 data-nosnippet>1546</a>            <span class="kw-2">&amp;</span>TypeInner::Matrix {
+<a href=#1547 id=1547 data-nosnippet>1547</a>                rows: tgt_rows,
+<a href=#1548 id=1548 data-nosnippet>1548</a>                columns: tgt_cols,
+<a href=#1549 id=1549 data-nosnippet>1549</a>                scalar: tgt_scalar,
+<a href=#1550 id=1550 data-nosnippet>1550</a>            },
+<a href=#1551 id=1551 data-nosnippet>1551</a>            <span class="kw-2">&amp;</span>TypeInner::Matrix {
+<a href=#1552 id=1552 data-nosnippet>1552</a>                rows: src_rows,
+<a href=#1553 id=1553 data-nosnippet>1553</a>                columns: src_cols,
+<a href=#1554 id=1554 data-nosnippet>1554</a>                scalar: src_scalar,
+<a href=#1555 id=1555 data-nosnippet>1555</a>            },
+<a href=#1556 id=1556 data-nosnippet>1556</a>        ) <span class="kw">if </span>tgt_cols == src_cols &amp;&amp; tgt_rows == src_rows =&gt; (tgt_scalar, src_scalar),
+<a href=#1557 id=1557 data-nosnippet>1557</a>        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+<a href=#1558 id=1558 data-nosnippet>1558</a>    };
+<a href=#1559 id=1559 data-nosnippet>1559</a>
+<a href=#1560 id=1560 data-nosnippet>1560</a>    <span class="comment">// Check if source can be converted into target, if this is the case then the type
+<a href=#1561 id=1561 data-nosnippet>1561</a>    // power of target must be higher than that of source
+<a href=#1562 id=1562 data-nosnippet>1562</a>    </span><span class="kw">let </span>target_power = type_power(target_scalar);
+<a href=#1563 id=1563 data-nosnippet>1563</a>    <span class="kw">let </span>source_power = type_power(source_scalar);
+<a href=#1564 id=1564 data-nosnippet>1564</a>    <span class="kw">if </span>target_power &lt; source_power {
+<a href=#1565 id=1565 data-nosnippet>1565</a>        <span class="kw">return </span><span class="prelude-val">None</span>;
+<a href=#1566 id=1566 data-nosnippet>1566</a>    }
+<a href=#1567 id=1567 data-nosnippet>1567</a>
+<a href=#1568 id=1568 data-nosnippet>1568</a>    <span class="prelude-val">Some</span>(<span class="kw">match </span>(target_scalar, source_scalar) {
+<a href=#1569 id=1569 data-nosnippet>1569</a>        <span class="comment">// A conversion from a float to a double is special
+<a href=#1570 id=1570 data-nosnippet>1570</a>        </span>(Scalar::F64, Scalar::F32) =&gt; Conversion::FloatToDouble,
+<a href=#1571 id=1571 data-nosnippet>1571</a>        <span class="comment">// A conversion from an integer to a float is special
+<a href=#1572 id=1572 data-nosnippet>1572</a>        </span>(
+<a href=#1573 id=1573 data-nosnippet>1573</a>            Scalar::F32,
+<a href=#1574 id=1574 data-nosnippet>1574</a>            Scalar {
+<a href=#1575 id=1575 data-nosnippet>1575</a>                kind: Sint | Uint,
+<a href=#1576 id=1576 data-nosnippet>1576</a>                width: <span class="kw">_</span>,
+<a href=#1577 id=1577 data-nosnippet>1577</a>            },
+<a href=#1578 id=1578 data-nosnippet>1578</a>        ) =&gt; Conversion::IntToFloat,
+<a href=#1579 id=1579 data-nosnippet>1579</a>        <span class="comment">// A conversion from an integer to a double is special
+<a href=#1580 id=1580 data-nosnippet>1580</a>        </span>(
+<a href=#1581 id=1581 data-nosnippet>1581</a>            Scalar::F64,
+<a href=#1582 id=1582 data-nosnippet>1582</a>            Scalar {
+<a href=#1583 id=1583 data-nosnippet>1583</a>                kind: Sint | Uint,
+<a href=#1584 id=1584 data-nosnippet>1584</a>                width: <span class="kw">_</span>,
+<a href=#1585 id=1585 data-nosnippet>1585</a>            },
+<a href=#1586 id=1586 data-nosnippet>1586</a>        ) =&gt; Conversion::IntToDouble,
+<a href=#1587 id=1587 data-nosnippet>1587</a>        <span class="kw">_ </span>=&gt; Conversion::Other,
+<a href=#1588 id=1588 data-nosnippet>1588</a>    })
+<a href=#1589 id=1589 data-nosnippet>1589</a>}
+<a href=#1590 id=1590 data-nosnippet>1590</a>
+<a href=#1591 id=1591 data-nosnippet>1591</a><span class="doccomment">/// Helper method returning all the non standard builtin variations needed
+<a href=#1592 id=1592 data-nosnippet>1592</a>/// to process the function call with the passed arguments
+<a href=#1593 id=1593 data-nosnippet>1593</a></span><span class="kw">fn </span>builtin_required_variations&lt;<span class="lifetime">'a</span>&gt;(args: <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>TypeInner&gt;) -&gt; BuiltinVariations {
+<a href=#1594 id=1594 data-nosnippet>1594</a>    <span class="kw">let </span><span class="kw-2">mut </span>variations = BuiltinVariations::empty();
+<a href=#1595 id=1595 data-nosnippet>1595</a>
+<a href=#1596 id=1596 data-nosnippet>1596</a>    <span class="kw">for </span>ty <span class="kw">in </span>args {
+<a href=#1597 id=1597 data-nosnippet>1597</a>        <span class="kw">match </span><span class="kw-2">*</span>ty {
+<a href=#1598 id=1598 data-nosnippet>1598</a>            TypeInner::ValuePointer { scalar, .. }
+<a href=#1599 id=1599 data-nosnippet>1599</a>            | TypeInner::Scalar(scalar)
+<a href=#1600 id=1600 data-nosnippet>1600</a>            | TypeInner::Vector { scalar, .. }
+<a href=#1601 id=1601 data-nosnippet>1601</a>            | TypeInner::Matrix { scalar, .. } =&gt; {
+<a href=#1602 id=1602 data-nosnippet>1602</a>                <span class="kw">if </span>scalar == Scalar::F64 {
+<a href=#1603 id=1603 data-nosnippet>1603</a>                    variations |= BuiltinVariations::DOUBLE
+<a href=#1604 id=1604 data-nosnippet>1604</a>                }
+<a href=#1605 id=1605 data-nosnippet>1605</a>            }
+<a href=#1606 id=1606 data-nosnippet>1606</a>            TypeInner::Image {
+<a href=#1607 id=1607 data-nosnippet>1607</a>                dim,
+<a href=#1608 id=1608 data-nosnippet>1608</a>                arrayed,
+<a href=#1609 id=1609 data-nosnippet>1609</a>                class,
+<a href=#1610 id=1610 data-nosnippet>1610</a>            } =&gt; {
+<a href=#1611 id=1611 data-nosnippet>1611</a>                <span class="kw">if </span>dim == <span class="kw">crate</span>::ImageDimension::Cube &amp;&amp; arrayed {
+<a href=#1612 id=1612 data-nosnippet>1612</a>                    variations |= BuiltinVariations::CUBE_TEXTURES_ARRAY
 <a href=#1613 id=1613 data-nosnippet>1613</a>                }
-<a href=#1614 id=1614 data-nosnippet>1614</a>            }
-<a href=#1615 id=1615 data-nosnippet>1615</a>            <span class="kw">_ </span>=&gt; {}
-<a href=#1616 id=1616 data-nosnippet>1616</a>        }
-<a href=#1617 id=1617 data-nosnippet>1617</a>    }
-<a href=#1618 id=1618 data-nosnippet>1618</a>
-<a href=#1619 id=1619 data-nosnippet>1619</a>    variations
-<a href=#1620 id=1620 data-nosnippet>1620</a>}</code></pre></div></section></main></body></html>
+<a href=#1614 id=1614 data-nosnippet>1614</a>
+<a href=#1615 id=1615 data-nosnippet>1615</a>                <span class="kw">if </span>dim == <span class="kw">crate</span>::ImageDimension::D2 &amp;&amp; arrayed &amp;&amp; class.is_multisampled() {
+<a href=#1616 id=1616 data-nosnippet>1616</a>                    variations |= BuiltinVariations::D2_MULTI_TEXTURES_ARRAY
+<a href=#1617 id=1617 data-nosnippet>1617</a>                }
+<a href=#1618 id=1618 data-nosnippet>1618</a>            }
+<a href=#1619 id=1619 data-nosnippet>1619</a>            <span class="kw">_ </span>=&gt; {}
+<a href=#1620 id=1620 data-nosnippet>1620</a>        }
+<a href=#1621 id=1621 data-nosnippet>1621</a>    }
+<a href=#1622 id=1622 data-nosnippet>1622</a>
+<a href=#1623 id=1623 data-nosnippet>1623</a>    variations
+<a href=#1624 id=1624 data-nosnippet>1624</a>}</code></pre></div></section></main></body></html>
