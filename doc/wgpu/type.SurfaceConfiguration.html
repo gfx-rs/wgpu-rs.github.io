@@ -27,23 +27,36 @@ scales the surface, other platforms may do something else).</p>
 <code>FifoRelaxed</code>, <code>Immediate</code>, and <code>Mailbox</code> will crash if unsupported, while <code>AutoVsync</code> and
 <code>AutoNoVsync</code> will gracefully do a designed sets of fallbacks if their primary modes are
 unsupported.</p>
-</div><span id="structfield.desired_maximum_frame_latency" class="structfield section-header"><a href="#structfield.desired_maximum_frame_latency" class="anchor field">§</a><code>desired_maximum_frame_latency: <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u32.html">u32</a></code></span><div class="docblock"><p>Desired maximum number of frames that the presentation engine should queue in advance.</p>
-<p>This is a hint to the backend implementation and will always be clamped to the supported range.
-As a consequence, either the maximum frame latency is set directly on the swap chain,
-or waits on present are scheduled to avoid exceeding the maximum frame latency if supported,
-or the swap chain size is set to (max-latency + 1).</p>
-<p>Defaults to 2 when created via <code>Surface::get_default_config</code>.</p>
-<p>Typical values range from 3 to 1, but higher values are possible:</p>
+</div><span id="structfield.desired_maximum_frame_latency" class="structfield section-header"><a href="#structfield.desired_maximum_frame_latency" class="anchor field">§</a><code>desired_maximum_frame_latency: <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u32.html">u32</a></code></span><div class="docblock"><p>Desired maximum number of monitor refreshes between a <a href="../wgpu/struct.Surface.html#method.get_current_texture"><code>Surface::get_current_texture</code></a> call and the
+texture being presented to the screen. This is sometimes called “Frames in Flight”.</p>
+<p>Defaults to <code>2</code> when created via <a href="../wgpu/struct.Surface.html#method.get_default_config"><code>Surface::get_default_config</code></a> as this is a reasonable default.</p>
+<p>This is ultimately a hint to the backend implementation and will always be clamped
+to the supported range.</p>
+<p>Typical values are <code>1</code> to <code>3</code>, but higher values are valid, though likely to be clamped.</p>
 <ul>
-<li>Choose 2 or higher for potentially smoother frame display, as it allows to be at least one frame
-to be queued up. This typically avoids starving the GPU’s work queue.
-Higher values are useful for achieving a constant flow of frames to the display under varying load.</li>
-<li>Choose 1 for low latency from frame recording to frame display.
-⚠️ If the backend does not support waiting on present, this will cause the CPU to wait for the GPU
-to finish all work related to the previous frame when calling <code>Surface::get_current_texture</code>,
-causing CPU-GPU serialization (i.e. when <code>Surface::get_current_texture</code> returns, the GPU might be idle).
-It is currently not possible to query this. See <a href="https://github.com/gfx-rs/wgpu/issues/2869">https://github.com/gfx-rs/wgpu/issues/2869</a>.</li>
-<li>A value of 0 is generally not supported and always clamped to a higher value.</li>
+<li>Choose <code>1</code> to minimize latency above all else. This only gives a single monitor refresh for all of
+the CPU and GPU work to complete. ⚠️ As a result of these short swapchains, the CPU and GPU
+cannot run in parallel, prioritizing latency over throughput. For applications like GUIs doing
+a small amount of GPU work each frame that need low latency, this is a reasonable choice.</li>
+<li>Choose <code>2</code> for a balance between latency and throughput. The CPU and GPU both can each use
+a full monitor refresh to do their computations. This is a reasonable default for most applications.</li>
+<li>Choose <code>3</code> or higher to maximize throughput, sacrificing latency when the the CPU and GPU
+are using less than a full monitor refresh each. For applications that use CPU-side pipelining
+of frames this may be a reasonable choice. ⚠️ On 60hz displays the latency can be very noticeable.</li>
+</ul>
+<p>This maps to the backend in the following ways:</p>
+<ul>
+<li>Vulkan: Number of frames in the swapchain is <code>desired_maximum_frame_latency + 1</code>,
+clamped to the supported range.</li>
+<li>DX12: Calls <a href="https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency"><code>IDXGISwapChain2::SetMaximumFrameLatency(desired_maximum_frame_latency)</code></a>.</li>
+<li>Metal: Sets the <code>maximumDrawableCount</code> of the underlying <code>CAMetalLayer</code> to
+<code>desired_maximum_frame_latency + 1</code>, clamped to the supported range.</li>
+<li>OpenGL: Ignored</li>
+</ul>
+<p>It also has various subtle interactions with various present modes and APIs.</p>
+<ul>
+<li>DX12 + Mailbox: Limits framerate to <code>desired_maximum_frame_latency * Monitor Hz</code> fps.</li>
+<li>Vulkan/Metal + Mailbox: If this is set to <code>2</code>, limits framerate to <code>2 * Monitor Hz</code> fps. <code>3</code> or higher is unlimited.</li>
 </ul>
 </div><span id="structfield.alpha_mode" class="structfield section-header"><a href="#structfield.alpha_mode" class="anchor field">§</a><code>alpha_mode: <a class="enum" href="enum.CompositeAlphaMode.html" title="enum wgpu::CompositeAlphaMode">CompositeAlphaMode</a></code></span><div class="docblock"><p>Specifies how the alpha channel of the textures should be handled during compositing.</p>
 </div><span id="structfield.view_formats" class="structfield section-header"><a href="#structfield.view_formats" class="anchor field">§</a><code>view_formats: <a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="enum" href="enum.TextureFormat.html" title="enum wgpu::TextureFormat">TextureFormat</a>&gt;</code></span><div class="docblock"><p>Specifies what view formats will be allowed when calling <code>Texture::create_view</code> on the texture returned by <code>Surface::get_current_texture</code>.</p>
