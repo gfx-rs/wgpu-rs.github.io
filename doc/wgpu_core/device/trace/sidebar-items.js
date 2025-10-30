@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["FILE_NAME"],"enum":["Action"],"type":["FileName"]};
+window.SIDEBAR_ITEMS = {"constant":["FILE_NAME"],"enum":["Action"],"type":["FileName","TraceBindGroupDescriptor"]};

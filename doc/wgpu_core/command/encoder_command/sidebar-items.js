@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ArcCommand","Command"]};
+window.SIDEBAR_ITEMS = {"enum":["Command"],"macro":["__emit__","serde_object_reference_struct"],"struct":["ArcReferences","IdReferences"],"trait":["ReferenceType"],"type":["ArcCommand"]};

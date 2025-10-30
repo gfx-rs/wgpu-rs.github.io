@@ -13,7 +13,7 @@
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use </span>core::mem::ManuallyDrop;
 <a href=#14 id=14 data-nosnippet>14</a>
 <a href=#15 id=15 data-nosnippet>15</a><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-<a href=#16 id=16 data-nosnippet>16</a></span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
+<a href=#16 id=16 data-nosnippet>16</a></span><span class="kw">use </span><span class="kw">crate</span>::device::trace::{Action, IntoTrace};
 <a href=#17 id=17 data-nosnippet>17</a><span class="kw">use crate</span>::{
 <a href=#18 id=18 data-nosnippet>18</a>    conv,
 <a href=#19 id=19 data-nosnippet>19</a>    device::{Device, DeviceError, MissingDownlevelFlags, WaitIdleError},
@@ -363,49 +363,51 @@
 <a href=#363 id=363 data-nosnippet>363</a>        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 <a href=#364 id=364 data-nosnippet>364</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().as_ref() {
 <a href=#365 id=365 data-nosnippet>365</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>present.device.trace.lock() {
-<a href=#366 id=366 data-nosnippet>366</a>                trace.add(Action::GetSurfaceTexture {
-<a href=#367 id=367 data-nosnippet>367</a>                    id: fid.id(),
-<a href=#368 id=368 data-nosnippet>368</a>                    parent_id: surface_id,
-<a href=#369 id=369 data-nosnippet>369</a>                });
-<a href=#370 id=370 data-nosnippet>370</a>            }
-<a href=#371 id=371 data-nosnippet>371</a>        }
-<a href=#372 id=372 data-nosnippet>372</a>
-<a href=#373 id=373 data-nosnippet>373</a>        <span class="kw">let </span>output = surface.get_current_texture()<span class="question-mark">?</span>;
+<a href=#366 id=366 data-nosnippet>366</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(texture) = present.acquired_texture.as_ref() {
+<a href=#367 id=367 data-nosnippet>367</a>                    trace.add(Action::GetSurfaceTexture {
+<a href=#368 id=368 data-nosnippet>368</a>                        id: texture.to_trace(),
+<a href=#369 id=369 data-nosnippet>369</a>                        parent: surface.to_trace(),
+<a href=#370 id=370 data-nosnippet>370</a>                    });
+<a href=#371 id=371 data-nosnippet>371</a>                }
+<a href=#372 id=372 data-nosnippet>372</a>            }
+<a href=#373 id=373 data-nosnippet>373</a>        }
 <a href=#374 id=374 data-nosnippet>374</a>
-<a href=#375 id=375 data-nosnippet>375</a>        <span class="kw">let </span>status = output.status;
-<a href=#376 id=376 data-nosnippet>376</a>        <span class="kw">let </span>texture_id = output
-<a href=#377 id=377 data-nosnippet>377</a>            .texture
-<a href=#378 id=378 data-nosnippet>378</a>            .map(|texture| fid.assign(resource::Fallible::Valid(texture)));
-<a href=#379 id=379 data-nosnippet>379</a>
-<a href=#380 id=380 data-nosnippet>380</a>        <span class="prelude-val">Ok</span>(SurfaceOutput {
-<a href=#381 id=381 data-nosnippet>381</a>            status,
-<a href=#382 id=382 data-nosnippet>382</a>            texture: texture_id,
-<a href=#383 id=383 data-nosnippet>383</a>        })
-<a href=#384 id=384 data-nosnippet>384</a>    }
-<a href=#385 id=385 data-nosnippet>385</a>
-<a href=#386 id=386 data-nosnippet>386</a>    <span class="kw">pub fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_id: id::SurfaceId) -&gt; <span class="prelude-ty">Result</span>&lt;Status, SurfaceError&gt; {
-<a href=#387 id=387 data-nosnippet>387</a>        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
-<a href=#388 id=388 data-nosnippet>388</a>
-<a href=#389 id=389 data-nosnippet>389</a>        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-<a href=#390 id=390 data-nosnippet>390</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().as_ref() {
-<a href=#391 id=391 data-nosnippet>391</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>present.device.trace.lock() {
-<a href=#392 id=392 data-nosnippet>392</a>                trace.add(Action::Present(surface_id));
-<a href=#393 id=393 data-nosnippet>393</a>            }
-<a href=#394 id=394 data-nosnippet>394</a>        }
-<a href=#395 id=395 data-nosnippet>395</a>
-<a href=#396 id=396 data-nosnippet>396</a>        surface.present()
-<a href=#397 id=397 data-nosnippet>397</a>    }
-<a href=#398 id=398 data-nosnippet>398</a>
-<a href=#399 id=399 data-nosnippet>399</a>    <span class="kw">pub fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_id: id::SurfaceId) -&gt; <span class="prelude-ty">Result</span>&lt;(), SurfaceError&gt; {
-<a href=#400 id=400 data-nosnippet>400</a>        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
-<a href=#401 id=401 data-nosnippet>401</a>
-<a href=#402 id=402 data-nosnippet>402</a>        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-<a href=#403 id=403 data-nosnippet>403</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().as_ref() {
-<a href=#404 id=404 data-nosnippet>404</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>present.device.trace.lock() {
-<a href=#405 id=405 data-nosnippet>405</a>                trace.add(Action::DiscardSurfaceTexture(surface_id));
-<a href=#406 id=406 data-nosnippet>406</a>            }
-<a href=#407 id=407 data-nosnippet>407</a>        }
-<a href=#408 id=408 data-nosnippet>408</a>
-<a href=#409 id=409 data-nosnippet>409</a>        surface.discard()
-<a href=#410 id=410 data-nosnippet>410</a>    }
-<a href=#411 id=411 data-nosnippet>411</a>}</code></pre></div></section></main></body></html>
+<a href=#375 id=375 data-nosnippet>375</a>        <span class="kw">let </span>output = surface.get_current_texture()<span class="question-mark">?</span>;
+<a href=#376 id=376 data-nosnippet>376</a>
+<a href=#377 id=377 data-nosnippet>377</a>        <span class="kw">let </span>status = output.status;
+<a href=#378 id=378 data-nosnippet>378</a>        <span class="kw">let </span>texture_id = output
+<a href=#379 id=379 data-nosnippet>379</a>            .texture
+<a href=#380 id=380 data-nosnippet>380</a>            .map(|texture| fid.assign(resource::Fallible::Valid(texture)));
+<a href=#381 id=381 data-nosnippet>381</a>
+<a href=#382 id=382 data-nosnippet>382</a>        <span class="prelude-val">Ok</span>(SurfaceOutput {
+<a href=#383 id=383 data-nosnippet>383</a>            status,
+<a href=#384 id=384 data-nosnippet>384</a>            texture: texture_id,
+<a href=#385 id=385 data-nosnippet>385</a>        })
+<a href=#386 id=386 data-nosnippet>386</a>    }
+<a href=#387 id=387 data-nosnippet>387</a>
+<a href=#388 id=388 data-nosnippet>388</a>    <span class="kw">pub fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_id: id::SurfaceId) -&gt; <span class="prelude-ty">Result</span>&lt;Status, SurfaceError&gt; {
+<a href=#389 id=389 data-nosnippet>389</a>        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
+<a href=#390 id=390 data-nosnippet>390</a>
+<a href=#391 id=391 data-nosnippet>391</a>        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href=#392 id=392 data-nosnippet>392</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().as_ref() {
+<a href=#393 id=393 data-nosnippet>393</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>present.device.trace.lock() {
+<a href=#394 id=394 data-nosnippet>394</a>                trace.add(Action::Present(surface.to_trace()));
+<a href=#395 id=395 data-nosnippet>395</a>            }
+<a href=#396 id=396 data-nosnippet>396</a>        }
+<a href=#397 id=397 data-nosnippet>397</a>
+<a href=#398 id=398 data-nosnippet>398</a>        surface.present()
+<a href=#399 id=399 data-nosnippet>399</a>    }
+<a href=#400 id=400 data-nosnippet>400</a>
+<a href=#401 id=401 data-nosnippet>401</a>    <span class="kw">pub fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_id: id::SurfaceId) -&gt; <span class="prelude-ty">Result</span>&lt;(), SurfaceError&gt; {
+<a href=#402 id=402 data-nosnippet>402</a>        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
+<a href=#403 id=403 data-nosnippet>403</a>
+<a href=#404 id=404 data-nosnippet>404</a>        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href=#405 id=405 data-nosnippet>405</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().as_ref() {
+<a href=#406 id=406 data-nosnippet>406</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>present.device.trace.lock() {
+<a href=#407 id=407 data-nosnippet>407</a>                trace.add(Action::DiscardSurfaceTexture(surface.to_trace()));
+<a href=#408 id=408 data-nosnippet>408</a>            }
+<a href=#409 id=409 data-nosnippet>409</a>        }
+<a href=#410 id=410 data-nosnippet>410</a>
+<a href=#411 id=411 data-nosnippet>411</a>        surface.discard()
+<a href=#412 id=412 data-nosnippet>412</a>    }
+<a href=#413 id=413 data-nosnippet>413</a>}</code></pre></div></section></main></body></html>

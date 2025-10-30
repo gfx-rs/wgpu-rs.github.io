@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["GlobalPlay"]};
+window.SIDEBAR_ITEMS = {"struct":["Player"]};

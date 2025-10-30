@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"type":["CopyExternalImageDestInfo","TexelCopyBufferInfo","TexelCopyTextureInfo"]};
+window.SIDEBAR_ITEMS = {"type":["Command","CopyExternalImageDestInfo","TexelCopyBufferInfo","TexelCopyTextureInfo"]};

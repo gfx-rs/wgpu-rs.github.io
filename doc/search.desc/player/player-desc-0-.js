@@ -1,1 +1,1 @@
-searchState.loadedDescShard("player", 0, "This is a player library for WebGPU traces.")
+searchState.loadedDescShard("player", 0, "This is a player library for WebGPU traces.\nReturns the argument unchanged.\nCalls <code>U::from(self)</code>.")

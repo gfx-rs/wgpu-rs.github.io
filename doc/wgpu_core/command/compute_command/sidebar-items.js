@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ArcComputeCommand","ComputeCommand"]};
+window.SIDEBAR_ITEMS = {"enum":["ComputeCommand"],"type":["ArcComputeCommand"]};
