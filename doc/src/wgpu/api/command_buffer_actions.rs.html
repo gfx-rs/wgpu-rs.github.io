@@ -91,57 +91,59 @@
 <a href=#91 id=91 data-nosnippet>91</a>        ///
 <a href=#92 id=92 data-nosnippet>92</a>        /// - If the buffer is already mapped.
 <a href=#93 id=93 data-nosnippet>93</a>        /// - If the buffer’s [`BufferUsages`] do not allow the requested [`MapMode`].
-<a href=#94 id=94 data-nosnippet>94</a>        /// - If the endpoints of this slice are not aligned to [`MAP_ALIGNMENT`] within the buffer.
-<a href=#95 id=95 data-nosnippet>95</a>        ///
-<a href=#96 id=96 data-nosnippet>96</a>        /// [q::s]: Queue::submit
-<a href=#97 id=97 data-nosnippet>97</a>        /// [i::p_a]: Instance::poll_all
-<a href=#98 id=98 data-nosnippet>98</a>        /// [d::p]: Device::poll
-<a href=#99 id=99 data-nosnippet>99</a>        /// [CEmbos]: CommandEncoder::map_buffer_on_submit
-<a href=#100 id=100 data-nosnippet>100</a>        /// [CBmbos]: CommandBuffer::map_buffer_on_submit
-<a href=#101 id=101 data-nosnippet>101</a>        /// [RPmbos]: RenderPass::map_buffer_on_submit
-<a href=#102 id=102 data-nosnippet>102</a>        /// [CPmbos]: ComputePass::map_buffer_on_submit
-<a href=#103 id=103 data-nosnippet>103</a>        </span><span class="kw">pub fn </span>map_buffer_on_submit&lt;S: core::ops::RangeBounds&lt;BufferAddress&gt;&gt;(
-<a href=#104 id=104 data-nosnippet>104</a>            <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#105 id=105 data-nosnippet>105</a>            buffer: <span class="kw-2">&amp;</span>api::Buffer,
-<a href=#106 id=106 data-nosnippet>106</a>            mode: MapMode,
-<a href=#107 id=107 data-nosnippet>107</a>            bounds: S,
-<a href=#108 id=108 data-nosnippet>108</a>            callback: <span class="kw">impl </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), BufferAsyncError&gt;) + WasmNotSend + <span class="lifetime">'static</span>,
-<a href=#109 id=109 data-nosnippet>109</a>        ) {
-<a href=#110 id=110 data-nosnippet>110</a>            <span class="kw">let </span>(offset, size) = range_to_offset_size(bounds, buffer.size);
-<a href=#111 id=111 data-nosnippet>111</a>            <span class="self">self</span>.actions.lock().buffer_mappings.push(
-<a href=#112 id=112 data-nosnippet>112</a>                <span class="kw">crate</span>::api::command_buffer_actions::DeferredBufferMapping {
-<a href=#113 id=113 data-nosnippet>113</a>                    buffer: buffer.clone(),
-<a href=#114 id=114 data-nosnippet>114</a>                    mode,
-<a href=#115 id=115 data-nosnippet>115</a>                    offset,
-<a href=#116 id=116 data-nosnippet>116</a>                    size,
-<a href=#117 id=117 data-nosnippet>117</a>                    callback: alloc::boxed::Box::new(callback),
-<a href=#118 id=118 data-nosnippet>118</a>                },
-<a href=#119 id=119 data-nosnippet>119</a>            );
-<a href=#120 id=120 data-nosnippet>120</a>        }
-<a href=#121 id=121 data-nosnippet>121</a>
-<a href=#122 id=122 data-nosnippet>122</a>        <span class="doccomment">/// Registers a callback that is invoked when this command buffer’s work finishes
-<a href=#123 id=123 data-nosnippet>123</a>        /// executing on the GPU. When this callback runs, all mapped-buffer callbacks
-<a href=#124 id=124 data-nosnippet>124</a>        /// registered for the same submission are guaranteed to have been called.
-<a href=#125 id=125 data-nosnippet>125</a>        ///
-<a href=#126 id=126 data-nosnippet>126</a>        /// For the callback to run, either [`queue.submit(..)`][q::s], [`instance.poll_all(..)`][i::p_a],
-<a href=#127 id=127 data-nosnippet>127</a>        /// or [`device.poll(..)`][d::p] must be called elsewhere in the runtime, possibly integrated
-<a href=#128 id=128 data-nosnippet>128</a>        /// into an event loop or run on a separate thread.
-<a href=#129 id=129 data-nosnippet>129</a>        ///
-<a href=#130 id=130 data-nosnippet>130</a>        /// The callback runs on the thread that first calls one of the above functions
-<a href=#131 id=131 data-nosnippet>131</a>        /// after the GPU work completes. There are no restrictions on the code you can run
-<a href=#132 id=132 data-nosnippet>132</a>        /// in the callback; however, on native the polling call will not return until the
-<a href=#133 id=133 data-nosnippet>133</a>        /// callback finishes, so keep callbacks short (set flags, send messages, etc.).
-<a href=#134 id=134 data-nosnippet>134</a>        ///
-<a href=#135 id=135 data-nosnippet>135</a>        /// [q::s]: Queue::submit
-<a href=#136 id=136 data-nosnippet>136</a>        /// [i::p_a]: Instance::poll_all
-<a href=#137 id=137 data-nosnippet>137</a>        /// [d::p]: Device::poll
-<a href=#138 id=138 data-nosnippet>138</a>        </span><span class="kw">pub fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: <span class="kw">impl </span>FnOnce() + Send + <span class="lifetime">'static</span>) {
-<a href=#139 id=139 data-nosnippet>139</a>            <span class="self">self</span>.actions
-<a href=#140 id=140 data-nosnippet>140</a>                .lock()
-<a href=#141 id=141 data-nosnippet>141</a>                .on_submitted_work_done_callbacks
-<a href=#142 id=142 data-nosnippet>142</a>                .push(alloc::boxed::Box::new(callback));
-<a href=#143 id=143 data-nosnippet>143</a>        }
-<a href=#144 id=144 data-nosnippet>144</a>    };
-<a href=#145 id=145 data-nosnippet>145</a>}
-<a href=#146 id=146 data-nosnippet>146</a>
-<a href=#147 id=147 data-nosnippet>147</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>impl_deferred_command_buffer_actions;</code></pre></div></section></main></body></html>
+<a href=#94 id=94 data-nosnippet>94</a>        /// - If `bounds` is outside of the bounds of `buffer`.
+<a href=#95 id=95 data-nosnippet>95</a>        /// - If `bounds` does not start at a multiple of [`MAP_ALIGNMENT`].
+<a href=#96 id=96 data-nosnippet>96</a>        /// - If `bounds` has a length that is not a multiple of 4 greater than 0.
+<a href=#97 id=97 data-nosnippet>97</a>        ///
+<a href=#98 id=98 data-nosnippet>98</a>        /// [q::s]: Queue::submit
+<a href=#99 id=99 data-nosnippet>99</a>        /// [i::p_a]: Instance::poll_all
+<a href=#100 id=100 data-nosnippet>100</a>        /// [d::p]: Device::poll
+<a href=#101 id=101 data-nosnippet>101</a>        /// [CEmbos]: CommandEncoder::map_buffer_on_submit
+<a href=#102 id=102 data-nosnippet>102</a>        /// [CBmbos]: CommandBuffer::map_buffer_on_submit
+<a href=#103 id=103 data-nosnippet>103</a>        /// [RPmbos]: RenderPass::map_buffer_on_submit
+<a href=#104 id=104 data-nosnippet>104</a>        /// [CPmbos]: ComputePass::map_buffer_on_submit
+<a href=#105 id=105 data-nosnippet>105</a>        </span><span class="kw">pub fn </span>map_buffer_on_submit&lt;S: core::ops::RangeBounds&lt;BufferAddress&gt;&gt;(
+<a href=#106 id=106 data-nosnippet>106</a>            <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#107 id=107 data-nosnippet>107</a>            buffer: <span class="kw-2">&amp;</span>api::Buffer,
+<a href=#108 id=108 data-nosnippet>108</a>            mode: MapMode,
+<a href=#109 id=109 data-nosnippet>109</a>            bounds: S,
+<a href=#110 id=110 data-nosnippet>110</a>            callback: <span class="kw">impl </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), BufferAsyncError&gt;) + WasmNotSend + <span class="lifetime">'static</span>,
+<a href=#111 id=111 data-nosnippet>111</a>        ) {
+<a href=#112 id=112 data-nosnippet>112</a>            <span class="kw">let </span>(offset, size) = range_to_offset_size(bounds, buffer.size);
+<a href=#113 id=113 data-nosnippet>113</a>            <span class="self">self</span>.actions.lock().buffer_mappings.push(
+<a href=#114 id=114 data-nosnippet>114</a>                <span class="kw">crate</span>::api::command_buffer_actions::DeferredBufferMapping {
+<a href=#115 id=115 data-nosnippet>115</a>                    buffer: buffer.clone(),
+<a href=#116 id=116 data-nosnippet>116</a>                    mode,
+<a href=#117 id=117 data-nosnippet>117</a>                    offset,
+<a href=#118 id=118 data-nosnippet>118</a>                    size,
+<a href=#119 id=119 data-nosnippet>119</a>                    callback: alloc::boxed::Box::new(callback),
+<a href=#120 id=120 data-nosnippet>120</a>                },
+<a href=#121 id=121 data-nosnippet>121</a>            );
+<a href=#122 id=122 data-nosnippet>122</a>        }
+<a href=#123 id=123 data-nosnippet>123</a>
+<a href=#124 id=124 data-nosnippet>124</a>        <span class="doccomment">/// Registers a callback that is invoked when this command buffer’s work finishes
+<a href=#125 id=125 data-nosnippet>125</a>        /// executing on the GPU. When this callback runs, all mapped-buffer callbacks
+<a href=#126 id=126 data-nosnippet>126</a>        /// registered for the same submission are guaranteed to have been called.
+<a href=#127 id=127 data-nosnippet>127</a>        ///
+<a href=#128 id=128 data-nosnippet>128</a>        /// For the callback to run, either [`queue.submit(..)`][q::s], [`instance.poll_all(..)`][i::p_a],
+<a href=#129 id=129 data-nosnippet>129</a>        /// or [`device.poll(..)`][d::p] must be called elsewhere in the runtime, possibly integrated
+<a href=#130 id=130 data-nosnippet>130</a>        /// into an event loop or run on a separate thread.
+<a href=#131 id=131 data-nosnippet>131</a>        ///
+<a href=#132 id=132 data-nosnippet>132</a>        /// The callback runs on the thread that first calls one of the above functions
+<a href=#133 id=133 data-nosnippet>133</a>        /// after the GPU work completes. There are no restrictions on the code you can run
+<a href=#134 id=134 data-nosnippet>134</a>        /// in the callback; however, on native the polling call will not return until the
+<a href=#135 id=135 data-nosnippet>135</a>        /// callback finishes, so keep callbacks short (set flags, send messages, etc.).
+<a href=#136 id=136 data-nosnippet>136</a>        ///
+<a href=#137 id=137 data-nosnippet>137</a>        /// [q::s]: Queue::submit
+<a href=#138 id=138 data-nosnippet>138</a>        /// [i::p_a]: Instance::poll_all
+<a href=#139 id=139 data-nosnippet>139</a>        /// [d::p]: Device::poll
+<a href=#140 id=140 data-nosnippet>140</a>        </span><span class="kw">pub fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: <span class="kw">impl </span>FnOnce() + Send + <span class="lifetime">'static</span>) {
+<a href=#141 id=141 data-nosnippet>141</a>            <span class="self">self</span>.actions
+<a href=#142 id=142 data-nosnippet>142</a>                .lock()
+<a href=#143 id=143 data-nosnippet>143</a>                .on_submitted_work_done_callbacks
+<a href=#144 id=144 data-nosnippet>144</a>                .push(alloc::boxed::Box::new(callback));
+<a href=#145 id=145 data-nosnippet>145</a>        }
+<a href=#146 id=146 data-nosnippet>146</a>    };
+<a href=#147 id=147 data-nosnippet>147</a>}
+<a href=#148 id=148 data-nosnippet>148</a>
+<a href=#149 id=149 data-nosnippet>149</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>impl_deferred_command_buffer_actions;</code></pre></div></section></main></body></html>
