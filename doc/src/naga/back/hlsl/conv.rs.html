@@ -173,60 +173,61 @@
 <a href=#173 id=173 data-nosnippet>173</a>            // to this field will get replaced with references to `SPECIAL_CBUF_VAR`
 <a href=#174 id=174 data-nosnippet>174</a>            // in `Writer::write_expr`.
 <a href=#175 id=175 data-nosnippet>175</a>            </span><span class="self">Self</span>::NumWorkGroups =&gt; <span class="string">"SV_GroupID"</span>,
-<a href=#176 id=176 data-nosnippet>176</a>            <span class="comment">// These builtins map to functions
-<a href=#177 id=177 data-nosnippet>177</a>            </span><span class="self">Self</span>::SubgroupSize
-<a href=#178 id=178 data-nosnippet>178</a>            | <span class="self">Self</span>::SubgroupInvocationId
-<a href=#179 id=179 data-nosnippet>179</a>            | <span class="self">Self</span>::NumSubgroups
-<a href=#180 id=180 data-nosnippet>180</a>            | <span class="self">Self</span>::SubgroupId =&gt; <span class="macro">unreachable!</span>(),
-<a href=#181 id=181 data-nosnippet>181</a>            <span class="self">Self</span>::BaseInstance | <span class="self">Self</span>::BaseVertex | <span class="self">Self</span>::WorkGroupSize =&gt; {
-<a href=#182 id=182 data-nosnippet>182</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(<span class="string">"builtin {self:?}"</span>)))
-<a href=#183 id=183 data-nosnippet>183</a>            }
-<a href=#184 id=184 data-nosnippet>184</a>            <span class="self">Self</span>::PointSize | <span class="self">Self</span>::ViewIndex | <span class="self">Self</span>::PointCoord | <span class="self">Self</span>::DrawID =&gt; {
-<a href=#185 id=185 data-nosnippet>185</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(<span class="macro">format!</span>(<span class="string">"Unsupported builtin {self:?}"</span>)))
-<a href=#186 id=186 data-nosnippet>186</a>            }
-<a href=#187 id=187 data-nosnippet>187</a>            <span class="self">Self</span>::CullPrimitive =&gt; <span class="string">"SV_CullPrimitive"</span>,
-<a href=#188 id=188 data-nosnippet>188</a>            <span class="self">Self</span>::PointIndex | <span class="self">Self</span>::LineIndices | <span class="self">Self</span>::TriangleIndices =&gt; <span class="macro">unimplemented!</span>(),
-<a href=#189 id=189 data-nosnippet>189</a>            <span class="self">Self</span>::MeshTaskSize =&gt; <span class="macro">unreachable!</span>(),
-<a href=#190 id=190 data-nosnippet>190</a>        })
-<a href=#191 id=191 data-nosnippet>191</a>    }
-<a href=#192 id=192 data-nosnippet>192</a>}
-<a href=#193 id=193 data-nosnippet>193</a>
-<a href=#194 id=194 data-nosnippet>194</a><span class="kw">impl </span><span class="kw">crate</span>::Interpolation {
-<a href=#195 id=195 data-nosnippet>195</a>    <span class="doccomment">/// Return the string corresponding to the HLSL interpolation qualifier.
-<a href=#196 id=196 data-nosnippet>196</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
-<a href=#197 id=197 data-nosnippet>197</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#198 id=198 data-nosnippet>198</a>            <span class="comment">// Would be "linear", but it's the default interpolation in SM4 and up
-<a href=#199 id=199 data-nosnippet>199</a>            // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-struct#interpolation-modifiers-introduced-in-shader-model-4
-<a href=#200 id=200 data-nosnippet>200</a>            </span><span class="self">Self</span>::Perspective =&gt; <span class="prelude-val">None</span>,
-<a href=#201 id=201 data-nosnippet>201</a>            <span class="self">Self</span>::Linear =&gt; <span class="prelude-val">Some</span>(<span class="string">"noperspective"</span>),
-<a href=#202 id=202 data-nosnippet>202</a>            <span class="self">Self</span>::Flat =&gt; <span class="prelude-val">Some</span>(<span class="string">"nointerpolation"</span>),
-<a href=#203 id=203 data-nosnippet>203</a>        }
-<a href=#204 id=204 data-nosnippet>204</a>    }
-<a href=#205 id=205 data-nosnippet>205</a>}
-<a href=#206 id=206 data-nosnippet>206</a>
-<a href=#207 id=207 data-nosnippet>207</a><span class="kw">impl </span><span class="kw">crate</span>::Sampling {
-<a href=#208 id=208 data-nosnippet>208</a>    <span class="doccomment">/// Return the HLSL auxiliary qualifier for the given sampling value.
-<a href=#209 id=209 data-nosnippet>209</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
-<a href=#210 id=210 data-nosnippet>210</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#211 id=211 data-nosnippet>211</a>            <span class="self">Self</span>::Center | <span class="self">Self</span>::First | <span class="self">Self</span>::Either =&gt; <span class="prelude-val">None</span>,
-<a href=#212 id=212 data-nosnippet>212</a>            <span class="self">Self</span>::Centroid =&gt; <span class="prelude-val">Some</span>(<span class="string">"centroid"</span>),
-<a href=#213 id=213 data-nosnippet>213</a>            <span class="self">Self</span>::Sample =&gt; <span class="prelude-val">Some</span>(<span class="string">"sample"</span>),
-<a href=#214 id=214 data-nosnippet>214</a>        }
-<a href=#215 id=215 data-nosnippet>215</a>    }
-<a href=#216 id=216 data-nosnippet>216</a>}
-<a href=#217 id=217 data-nosnippet>217</a>
-<a href=#218 id=218 data-nosnippet>218</a><span class="kw">impl </span><span class="kw">crate</span>::AtomicFunction {
-<a href=#219 id=219 data-nosnippet>219</a>    <span class="doccomment">/// Return the HLSL suffix for the `InterlockedXxx` method.
-<a href=#220 id=220 data-nosnippet>220</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_suffix(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
-<a href=#221 id=221 data-nosnippet>221</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#222 id=222 data-nosnippet>222</a>            <span class="self">Self</span>::Add | <span class="self">Self</span>::Subtract =&gt; <span class="string">"Add"</span>,
-<a href=#223 id=223 data-nosnippet>223</a>            <span class="self">Self</span>::And =&gt; <span class="string">"And"</span>,
-<a href=#224 id=224 data-nosnippet>224</a>            <span class="self">Self</span>::InclusiveOr =&gt; <span class="string">"Or"</span>,
-<a href=#225 id=225 data-nosnippet>225</a>            <span class="self">Self</span>::ExclusiveOr =&gt; <span class="string">"Xor"</span>,
-<a href=#226 id=226 data-nosnippet>226</a>            <span class="self">Self</span>::Min =&gt; <span class="string">"Min"</span>,
-<a href=#227 id=227 data-nosnippet>227</a>            <span class="self">Self</span>::Max =&gt; <span class="string">"Max"</span>,
-<a href=#228 id=228 data-nosnippet>228</a>            <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">None </span>} =&gt; <span class="string">"Exchange"</span>,
-<a href=#229 id=229 data-nosnippet>229</a>            <span class="self">Self</span>::Exchange { .. } =&gt; <span class="string">"CompareExchange"</span>,
-<a href=#230 id=230 data-nosnippet>230</a>        }
-<a href=#231 id=231 data-nosnippet>231</a>    }
-<a href=#232 id=232 data-nosnippet>232</a>}</code></pre></div></section></main></body></html>
+<a href=#176 id=176 data-nosnippet>176</a>            <span class="self">Self</span>::ViewIndex =&gt; <span class="string">"SV_ViewID"</span>,
+<a href=#177 id=177 data-nosnippet>177</a>            <span class="comment">// These builtins map to functions
+<a href=#178 id=178 data-nosnippet>178</a>            </span><span class="self">Self</span>::SubgroupSize
+<a href=#179 id=179 data-nosnippet>179</a>            | <span class="self">Self</span>::SubgroupInvocationId
+<a href=#180 id=180 data-nosnippet>180</a>            | <span class="self">Self</span>::NumSubgroups
+<a href=#181 id=181 data-nosnippet>181</a>            | <span class="self">Self</span>::SubgroupId =&gt; <span class="macro">unreachable!</span>(),
+<a href=#182 id=182 data-nosnippet>182</a>            <span class="self">Self</span>::BaseInstance | <span class="self">Self</span>::BaseVertex | <span class="self">Self</span>::WorkGroupSize =&gt; {
+<a href=#183 id=183 data-nosnippet>183</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(<span class="string">"builtin {self:?}"</span>)))
+<a href=#184 id=184 data-nosnippet>184</a>            }
+<a href=#185 id=185 data-nosnippet>185</a>            <span class="self">Self</span>::PointSize | <span class="self">Self</span>::PointCoord | <span class="self">Self</span>::DrawID =&gt; {
+<a href=#186 id=186 data-nosnippet>186</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(<span class="macro">format!</span>(<span class="string">"Unsupported builtin {self:?}"</span>)))
+<a href=#187 id=187 data-nosnippet>187</a>            }
+<a href=#188 id=188 data-nosnippet>188</a>            <span class="self">Self</span>::CullPrimitive =&gt; <span class="string">"SV_CullPrimitive"</span>,
+<a href=#189 id=189 data-nosnippet>189</a>            <span class="self">Self</span>::PointIndex | <span class="self">Self</span>::LineIndices | <span class="self">Self</span>::TriangleIndices =&gt; <span class="macro">unimplemented!</span>(),
+<a href=#190 id=190 data-nosnippet>190</a>            <span class="self">Self</span>::MeshTaskSize =&gt; <span class="macro">unreachable!</span>(),
+<a href=#191 id=191 data-nosnippet>191</a>        })
+<a href=#192 id=192 data-nosnippet>192</a>    }
+<a href=#193 id=193 data-nosnippet>193</a>}
+<a href=#194 id=194 data-nosnippet>194</a>
+<a href=#195 id=195 data-nosnippet>195</a><span class="kw">impl </span><span class="kw">crate</span>::Interpolation {
+<a href=#196 id=196 data-nosnippet>196</a>    <span class="doccomment">/// Return the string corresponding to the HLSL interpolation qualifier.
+<a href=#197 id=197 data-nosnippet>197</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
+<a href=#198 id=198 data-nosnippet>198</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#199 id=199 data-nosnippet>199</a>            <span class="comment">// Would be "linear", but it's the default interpolation in SM4 and up
+<a href=#200 id=200 data-nosnippet>200</a>            // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-struct#interpolation-modifiers-introduced-in-shader-model-4
+<a href=#201 id=201 data-nosnippet>201</a>            </span><span class="self">Self</span>::Perspective =&gt; <span class="prelude-val">None</span>,
+<a href=#202 id=202 data-nosnippet>202</a>            <span class="self">Self</span>::Linear =&gt; <span class="prelude-val">Some</span>(<span class="string">"noperspective"</span>),
+<a href=#203 id=203 data-nosnippet>203</a>            <span class="self">Self</span>::Flat =&gt; <span class="prelude-val">Some</span>(<span class="string">"nointerpolation"</span>),
+<a href=#204 id=204 data-nosnippet>204</a>        }
+<a href=#205 id=205 data-nosnippet>205</a>    }
+<a href=#206 id=206 data-nosnippet>206</a>}
+<a href=#207 id=207 data-nosnippet>207</a>
+<a href=#208 id=208 data-nosnippet>208</a><span class="kw">impl </span><span class="kw">crate</span>::Sampling {
+<a href=#209 id=209 data-nosnippet>209</a>    <span class="doccomment">/// Return the HLSL auxiliary qualifier for the given sampling value.
+<a href=#210 id=210 data-nosnippet>210</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
+<a href=#211 id=211 data-nosnippet>211</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#212 id=212 data-nosnippet>212</a>            <span class="self">Self</span>::Center | <span class="self">Self</span>::First | <span class="self">Self</span>::Either =&gt; <span class="prelude-val">None</span>,
+<a href=#213 id=213 data-nosnippet>213</a>            <span class="self">Self</span>::Centroid =&gt; <span class="prelude-val">Some</span>(<span class="string">"centroid"</span>),
+<a href=#214 id=214 data-nosnippet>214</a>            <span class="self">Self</span>::Sample =&gt; <span class="prelude-val">Some</span>(<span class="string">"sample"</span>),
+<a href=#215 id=215 data-nosnippet>215</a>        }
+<a href=#216 id=216 data-nosnippet>216</a>    }
+<a href=#217 id=217 data-nosnippet>217</a>}
+<a href=#218 id=218 data-nosnippet>218</a>
+<a href=#219 id=219 data-nosnippet>219</a><span class="kw">impl </span><span class="kw">crate</span>::AtomicFunction {
+<a href=#220 id=220 data-nosnippet>220</a>    <span class="doccomment">/// Return the HLSL suffix for the `InterlockedXxx` method.
+<a href=#221 id=221 data-nosnippet>221</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_suffix(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+<a href=#222 id=222 data-nosnippet>222</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#223 id=223 data-nosnippet>223</a>            <span class="self">Self</span>::Add | <span class="self">Self</span>::Subtract =&gt; <span class="string">"Add"</span>,
+<a href=#224 id=224 data-nosnippet>224</a>            <span class="self">Self</span>::And =&gt; <span class="string">"And"</span>,
+<a href=#225 id=225 data-nosnippet>225</a>            <span class="self">Self</span>::InclusiveOr =&gt; <span class="string">"Or"</span>,
+<a href=#226 id=226 data-nosnippet>226</a>            <span class="self">Self</span>::ExclusiveOr =&gt; <span class="string">"Xor"</span>,
+<a href=#227 id=227 data-nosnippet>227</a>            <span class="self">Self</span>::Min =&gt; <span class="string">"Min"</span>,
+<a href=#228 id=228 data-nosnippet>228</a>            <span class="self">Self</span>::Max =&gt; <span class="string">"Max"</span>,
+<a href=#229 id=229 data-nosnippet>229</a>            <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">None </span>} =&gt; <span class="string">"Exchange"</span>,
+<a href=#230 id=230 data-nosnippet>230</a>            <span class="self">Self</span>::Exchange { .. } =&gt; <span class="string">"CompareExchange"</span>,
+<a href=#231 id=231 data-nosnippet>231</a>        }
+<a href=#232 id=232 data-nosnippet>232</a>    }
+<a href=#233 id=233 data-nosnippet>233</a>}</code></pre></div></section></main></body></html>

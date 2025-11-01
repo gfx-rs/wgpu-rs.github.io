@@ -68,7 +68,7 @@
 <a href=#68 id=68 data-nosnippet>68</a>        primitive: wgpu::PrimitiveState::default(),
 <a href=#69 id=69 data-nosnippet>69</a>        depth_stencil: <span class="prelude-val">None</span>,
 <a href=#70 id=70 data-nosnippet>70</a>        multisample: wgpu::MultisampleState::default(),
-<a href=#71 id=71 data-nosnippet>71</a>        multiview: <span class="prelude-val">None</span>,
+<a href=#71 id=71 data-nosnippet>71</a>        multiview_mask: <span class="prelude-val">None</span>,
 <a href=#72 id=72 data-nosnippet>72</a>        cache: <span class="prelude-val">None</span>,
 <a href=#73 id=73 data-nosnippet>73</a>    });
 <a href=#74 id=74 data-nosnippet>74</a>
@@ -95,77 +95,78 @@
 <a href=#95 id=95 data-nosnippet>95</a>            depth_stencil_attachment: <span class="prelude-val">None</span>,
 <a href=#96 id=96 data-nosnippet>96</a>            occlusion_query_set: <span class="prelude-val">None</span>,
 <a href=#97 id=97 data-nosnippet>97</a>            timestamp_writes: <span class="prelude-val">None</span>,
-<a href=#98 id=98 data-nosnippet>98</a>        });
-<a href=#99 id=99 data-nosnippet>99</a>        render_pass.set_pipeline(<span class="kw-2">&amp;</span>pipeline);
-<a href=#100 id=100 data-nosnippet>100</a>        render_pass.draw(<span class="number">0</span>..<span class="number">3</span>, <span class="number">0</span>..<span class="number">1</span>);
-<a href=#101 id=101 data-nosnippet>101</a>    }
-<a href=#102 id=102 data-nosnippet>102</a>    <span class="comment">// The texture now contains our rendered image
-<a href=#103 id=103 data-nosnippet>103</a>    </span>command_encoder.copy_texture_to_buffer(
-<a href=#104 id=104 data-nosnippet>104</a>        wgpu::TexelCopyTextureInfo {
-<a href=#105 id=105 data-nosnippet>105</a>            texture: <span class="kw-2">&amp;</span>render_target,
-<a href=#106 id=106 data-nosnippet>106</a>            mip_level: <span class="number">0</span>,
-<a href=#107 id=107 data-nosnippet>107</a>            origin: wgpu::Origin3d::ZERO,
-<a href=#108 id=108 data-nosnippet>108</a>            aspect: wgpu::TextureAspect::All,
-<a href=#109 id=109 data-nosnippet>109</a>        },
-<a href=#110 id=110 data-nosnippet>110</a>        wgpu::TexelCopyBufferInfo {
-<a href=#111 id=111 data-nosnippet>111</a>            buffer: <span class="kw-2">&amp;</span>output_staging_buffer,
-<a href=#112 id=112 data-nosnippet>112</a>            layout: wgpu::TexelCopyBufferLayout {
-<a href=#113 id=113 data-nosnippet>113</a>                offset: <span class="number">0</span>,
-<a href=#114 id=114 data-nosnippet>114</a>                <span class="comment">// This needs to be a multiple of 256. Normally we would need to pad
-<a href=#115 id=115 data-nosnippet>115</a>                // it but we here know it will work out anyways.
-<a href=#116 id=116 data-nosnippet>116</a>                </span>bytes_per_row: <span class="prelude-val">Some</span>((TEXTURE_DIMS.<span class="number">0 </span>* <span class="number">4</span>) <span class="kw">as </span>u32),
-<a href=#117 id=117 data-nosnippet>117</a>                rows_per_image: <span class="prelude-val">Some</span>(TEXTURE_DIMS.<span class="number">1 </span><span class="kw">as </span>u32),
-<a href=#118 id=118 data-nosnippet>118</a>            },
-<a href=#119 id=119 data-nosnippet>119</a>        },
-<a href=#120 id=120 data-nosnippet>120</a>        wgpu::Extent3d {
-<a href=#121 id=121 data-nosnippet>121</a>            width: TEXTURE_DIMS.<span class="number">0 </span><span class="kw">as </span>u32,
-<a href=#122 id=122 data-nosnippet>122</a>            height: TEXTURE_DIMS.<span class="number">1 </span><span class="kw">as </span>u32,
-<a href=#123 id=123 data-nosnippet>123</a>            depth_or_array_layers: <span class="number">1</span>,
-<a href=#124 id=124 data-nosnippet>124</a>        },
-<a href=#125 id=125 data-nosnippet>125</a>    );
-<a href=#126 id=126 data-nosnippet>126</a>    queue.submit(<span class="prelude-val">Some</span>(command_encoder.finish()));
-<a href=#127 id=127 data-nosnippet>127</a>    <span class="macro">log::info!</span>(<span class="string">"Commands submitted."</span>);
-<a href=#128 id=128 data-nosnippet>128</a>
-<a href=#129 id=129 data-nosnippet>129</a>    <span class="comment">//-----------------------------------------------
-<a href=#130 id=130 data-nosnippet>130</a>
-<a href=#131 id=131 data-nosnippet>131</a>    // Time to get our image.
-<a href=#132 id=132 data-nosnippet>132</a>    </span><span class="kw">let </span>buffer_slice = output_staging_buffer.slice(..);
-<a href=#133 id=133 data-nosnippet>133</a>    <span class="kw">let </span>(sender, receiver) = flume::bounded(<span class="number">1</span>);
-<a href=#134 id=134 data-nosnippet>134</a>    buffer_slice.map_async(wgpu::MapMode::Read, <span class="kw">move </span>|r| sender.send(r).unwrap());
-<a href=#135 id=135 data-nosnippet>135</a>    device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
-<a href=#136 id=136 data-nosnippet>136</a>    receiver.recv_async().<span class="kw">await</span>.unwrap().unwrap();
-<a href=#137 id=137 data-nosnippet>137</a>    <span class="macro">log::info!</span>(<span class="string">"Output buffer mapped."</span>);
-<a href=#138 id=138 data-nosnippet>138</a>    {
-<a href=#139 id=139 data-nosnippet>139</a>        <span class="kw">let </span>view = buffer_slice.get_mapped_range();
-<a href=#140 id=140 data-nosnippet>140</a>        texture_data.extend_from_slice(<span class="kw-2">&amp;</span>view[..]);
-<a href=#141 id=141 data-nosnippet>141</a>    }
-<a href=#142 id=142 data-nosnippet>142</a>    <span class="macro">log::info!</span>(<span class="string">"Image data copied to local."</span>);
-<a href=#143 id=143 data-nosnippet>143</a>    output_staging_buffer.unmap();
-<a href=#144 id=144 data-nosnippet>144</a>
-<a href=#145 id=145 data-nosnippet>145</a>    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
-<a href=#146 id=146 data-nosnippet>146</a>    </span>output_image_native(texture_data.to_vec(), TEXTURE_DIMS, _path.unwrap());
-<a href=#147 id=147 data-nosnippet>147</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
-<a href=#148 id=148 data-nosnippet>148</a>    </span>output_image_wasm(texture_data.to_vec(), TEXTURE_DIMS);
-<a href=#149 id=149 data-nosnippet>149</a>    <span class="macro">log::info!</span>(<span class="string">"Done."</span>);
-<a href=#150 id=150 data-nosnippet>150</a>}
-<a href=#151 id=151 data-nosnippet>151</a>
-<a href=#152 id=152 data-nosnippet>152</a><span class="kw">pub fn </span>main() {
-<a href=#153 id=153 data-nosnippet>153</a>    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
-<a href=#154 id=154 data-nosnippet>154</a>    </span>{
-<a href=#155 id=155 data-nosnippet>155</a>        env_logger::builder()
-<a href=#156 id=156 data-nosnippet>156</a>            .filter_level(log::LevelFilter::Info)
-<a href=#157 id=157 data-nosnippet>157</a>            .format_timestamp_nanos()
-<a href=#158 id=158 data-nosnippet>158</a>            .init();
-<a href=#159 id=159 data-nosnippet>159</a>
-<a href=#160 id=160 data-nosnippet>160</a>        <span class="kw">let </span>path = std::env::args()
-<a href=#161 id=161 data-nosnippet>161</a>            .nth(<span class="number">2</span>)
-<a href=#162 id=162 data-nosnippet>162</a>            .unwrap_or_else(|| <span class="string">"please_don't_git_push_me.png"</span>.to_string());
-<a href=#163 id=163 data-nosnippet>163</a>        pollster::block_on(run(<span class="prelude-val">Some</span>(path)));
-<a href=#164 id=164 data-nosnippet>164</a>    }
-<a href=#165 id=165 data-nosnippet>165</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
-<a href=#166 id=166 data-nosnippet>166</a>    </span>{
-<a href=#167 id=167 data-nosnippet>167</a>        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-<a href=#168 id=168 data-nosnippet>168</a>        console_log::init_with_level(log::Level::Info).expect(<span class="string">"could not initialize logger"</span>);
-<a href=#169 id=169 data-nosnippet>169</a>        wasm_bindgen_futures::spawn_local(run(<span class="prelude-val">None</span>));
-<a href=#170 id=170 data-nosnippet>170</a>    }
-<a href=#171 id=171 data-nosnippet>171</a>}</code></pre></div></section></main></body></html>
+<a href=#98 id=98 data-nosnippet>98</a>            multiview_mask: <span class="prelude-val">None</span>,
+<a href=#99 id=99 data-nosnippet>99</a>        });
+<a href=#100 id=100 data-nosnippet>100</a>        render_pass.set_pipeline(<span class="kw-2">&amp;</span>pipeline);
+<a href=#101 id=101 data-nosnippet>101</a>        render_pass.draw(<span class="number">0</span>..<span class="number">3</span>, <span class="number">0</span>..<span class="number">1</span>);
+<a href=#102 id=102 data-nosnippet>102</a>    }
+<a href=#103 id=103 data-nosnippet>103</a>    <span class="comment">// The texture now contains our rendered image
+<a href=#104 id=104 data-nosnippet>104</a>    </span>command_encoder.copy_texture_to_buffer(
+<a href=#105 id=105 data-nosnippet>105</a>        wgpu::TexelCopyTextureInfo {
+<a href=#106 id=106 data-nosnippet>106</a>            texture: <span class="kw-2">&amp;</span>render_target,
+<a href=#107 id=107 data-nosnippet>107</a>            mip_level: <span class="number">0</span>,
+<a href=#108 id=108 data-nosnippet>108</a>            origin: wgpu::Origin3d::ZERO,
+<a href=#109 id=109 data-nosnippet>109</a>            aspect: wgpu::TextureAspect::All,
+<a href=#110 id=110 data-nosnippet>110</a>        },
+<a href=#111 id=111 data-nosnippet>111</a>        wgpu::TexelCopyBufferInfo {
+<a href=#112 id=112 data-nosnippet>112</a>            buffer: <span class="kw-2">&amp;</span>output_staging_buffer,
+<a href=#113 id=113 data-nosnippet>113</a>            layout: wgpu::TexelCopyBufferLayout {
+<a href=#114 id=114 data-nosnippet>114</a>                offset: <span class="number">0</span>,
+<a href=#115 id=115 data-nosnippet>115</a>                <span class="comment">// This needs to be a multiple of 256. Normally we would need to pad
+<a href=#116 id=116 data-nosnippet>116</a>                // it but we here know it will work out anyways.
+<a href=#117 id=117 data-nosnippet>117</a>                </span>bytes_per_row: <span class="prelude-val">Some</span>((TEXTURE_DIMS.<span class="number">0 </span>* <span class="number">4</span>) <span class="kw">as </span>u32),
+<a href=#118 id=118 data-nosnippet>118</a>                rows_per_image: <span class="prelude-val">Some</span>(TEXTURE_DIMS.<span class="number">1 </span><span class="kw">as </span>u32),
+<a href=#119 id=119 data-nosnippet>119</a>            },
+<a href=#120 id=120 data-nosnippet>120</a>        },
+<a href=#121 id=121 data-nosnippet>121</a>        wgpu::Extent3d {
+<a href=#122 id=122 data-nosnippet>122</a>            width: TEXTURE_DIMS.<span class="number">0 </span><span class="kw">as </span>u32,
+<a href=#123 id=123 data-nosnippet>123</a>            height: TEXTURE_DIMS.<span class="number">1 </span><span class="kw">as </span>u32,
+<a href=#124 id=124 data-nosnippet>124</a>            depth_or_array_layers: <span class="number">1</span>,
+<a href=#125 id=125 data-nosnippet>125</a>        },
+<a href=#126 id=126 data-nosnippet>126</a>    );
+<a href=#127 id=127 data-nosnippet>127</a>    queue.submit(<span class="prelude-val">Some</span>(command_encoder.finish()));
+<a href=#128 id=128 data-nosnippet>128</a>    <span class="macro">log::info!</span>(<span class="string">"Commands submitted."</span>);
+<a href=#129 id=129 data-nosnippet>129</a>
+<a href=#130 id=130 data-nosnippet>130</a>    <span class="comment">//-----------------------------------------------
+<a href=#131 id=131 data-nosnippet>131</a>
+<a href=#132 id=132 data-nosnippet>132</a>    // Time to get our image.
+<a href=#133 id=133 data-nosnippet>133</a>    </span><span class="kw">let </span>buffer_slice = output_staging_buffer.slice(..);
+<a href=#134 id=134 data-nosnippet>134</a>    <span class="kw">let </span>(sender, receiver) = flume::bounded(<span class="number">1</span>);
+<a href=#135 id=135 data-nosnippet>135</a>    buffer_slice.map_async(wgpu::MapMode::Read, <span class="kw">move </span>|r| sender.send(r).unwrap());
+<a href=#136 id=136 data-nosnippet>136</a>    device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
+<a href=#137 id=137 data-nosnippet>137</a>    receiver.recv_async().<span class="kw">await</span>.unwrap().unwrap();
+<a href=#138 id=138 data-nosnippet>138</a>    <span class="macro">log::info!</span>(<span class="string">"Output buffer mapped."</span>);
+<a href=#139 id=139 data-nosnippet>139</a>    {
+<a href=#140 id=140 data-nosnippet>140</a>        <span class="kw">let </span>view = buffer_slice.get_mapped_range();
+<a href=#141 id=141 data-nosnippet>141</a>        texture_data.extend_from_slice(<span class="kw-2">&amp;</span>view[..]);
+<a href=#142 id=142 data-nosnippet>142</a>    }
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="macro">log::info!</span>(<span class="string">"Image data copied to local."</span>);
+<a href=#144 id=144 data-nosnippet>144</a>    output_staging_buffer.unmap();
+<a href=#145 id=145 data-nosnippet>145</a>
+<a href=#146 id=146 data-nosnippet>146</a>    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
+<a href=#147 id=147 data-nosnippet>147</a>    </span>output_image_native(texture_data.to_vec(), TEXTURE_DIMS, _path.unwrap());
+<a href=#148 id=148 data-nosnippet>148</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
+<a href=#149 id=149 data-nosnippet>149</a>    </span>output_image_wasm(texture_data.to_vec(), TEXTURE_DIMS);
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="macro">log::info!</span>(<span class="string">"Done."</span>);
+<a href=#151 id=151 data-nosnippet>151</a>}
+<a href=#152 id=152 data-nosnippet>152</a>
+<a href=#153 id=153 data-nosnippet>153</a><span class="kw">pub fn </span>main() {
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
+<a href=#155 id=155 data-nosnippet>155</a>    </span>{
+<a href=#156 id=156 data-nosnippet>156</a>        env_logger::builder()
+<a href=#157 id=157 data-nosnippet>157</a>            .filter_level(log::LevelFilter::Info)
+<a href=#158 id=158 data-nosnippet>158</a>            .format_timestamp_nanos()
+<a href=#159 id=159 data-nosnippet>159</a>            .init();
+<a href=#160 id=160 data-nosnippet>160</a>
+<a href=#161 id=161 data-nosnippet>161</a>        <span class="kw">let </span>path = std::env::args()
+<a href=#162 id=162 data-nosnippet>162</a>            .nth(<span class="number">2</span>)
+<a href=#163 id=163 data-nosnippet>163</a>            .unwrap_or_else(|| <span class="string">"please_don't_git_push_me.png"</span>.to_string());
+<a href=#164 id=164 data-nosnippet>164</a>        pollster::block_on(run(<span class="prelude-val">Some</span>(path)));
+<a href=#165 id=165 data-nosnippet>165</a>    }
+<a href=#166 id=166 data-nosnippet>166</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
+<a href=#167 id=167 data-nosnippet>167</a>    </span>{
+<a href=#168 id=168 data-nosnippet>168</a>        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+<a href=#169 id=169 data-nosnippet>169</a>        console_log::init_with_level(log::Level::Info).expect(<span class="string">"could not initialize logger"</span>);
+<a href=#170 id=170 data-nosnippet>170</a>        wasm_bindgen_futures::spawn_local(run(<span class="prelude-val">None</span>));
+<a href=#171 id=171 data-nosnippet>171</a>    }
+<a href=#172 id=172 data-nosnippet>172</a>}</code></pre></div></section></main></body></html>

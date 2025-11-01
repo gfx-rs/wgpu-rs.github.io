@@ -4442,645 +4442,648 @@
 <a href=#4442 id=4442 data-nosnippet>4442</a>        };
 <a href=#4443 id=4443 data-nosnippet>4443</a>
 <a href=#4444 id=4444 data-nosnippet>4444</a>        <span class="comment">// Multiview is only supported if the feature is enabled
-<a href=#4445 id=4445 data-nosnippet>4445</a>        </span><span class="kw">if </span>desc.multiview.is_some() {
+<a href=#4445 id=4445 data-nosnippet>4445</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(mv_mask) = desc.multiview_mask {
 <a href=#4446 id=4446 data-nosnippet>4446</a>            <span class="self">self</span>.require_features(wgt::Features::MULTIVIEW)<span class="question-mark">?</span>;
-<a href=#4447 id=4447 data-nosnippet>4447</a>        }
-<a href=#4448 id=4448 data-nosnippet>4448</a>
-<a href=#4449 id=4449 data-nosnippet>4449</a>        <span class="kw">if </span>!<span class="self">self
-<a href=#4450 id=4450 data-nosnippet>4450</a>            </span>.downlevel
-<a href=#4451 id=4451 data-nosnippet>4451</a>            .flags
-<a href=#4452 id=4452 data-nosnippet>4452</a>            .contains(wgt::DownlevelFlags::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED)
-<a href=#4453 id=4453 data-nosnippet>4453</a>        {
-<a href=#4454 id=4454 data-nosnippet>4454</a>            <span class="kw">for </span>(binding, size) <span class="kw">in </span>shader_binding_sizes.iter() {
-<a href=#4455 id=4455 data-nosnippet>4455</a>                <span class="kw">if </span>size.get() % <span class="number">16 </span>!= <span class="number">0 </span>{
-<a href=#4456 id=4456 data-nosnippet>4456</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(pipeline::CreateRenderPipelineError::UnalignedShader {
-<a href=#4457 id=4457 data-nosnippet>4457</a>                        binding: binding.binding,
-<a href=#4458 id=4458 data-nosnippet>4458</a>                        group: binding.group,
-<a href=#4459 id=4459 data-nosnippet>4459</a>                        size: size.get(),
-<a href=#4460 id=4460 data-nosnippet>4460</a>                    });
-<a href=#4461 id=4461 data-nosnippet>4461</a>                }
-<a href=#4462 id=4462 data-nosnippet>4462</a>            }
-<a href=#4463 id=4463 data-nosnippet>4463</a>        }
-<a href=#4464 id=4464 data-nosnippet>4464</a>
-<a href=#4465 id=4465 data-nosnippet>4465</a>        <span class="kw">let </span>late_sized_buffer_groups =
-<a href=#4466 id=4466 data-nosnippet>4466</a>            Device::make_late_sized_buffer_groups(<span class="kw-2">&amp;</span>shader_binding_sizes, <span class="kw-2">&amp;</span>pipeline_layout);
+<a href=#4447 id=4447 data-nosnippet>4447</a>            <span class="kw">if </span>!(mv_mask.get() + <span class="number">1</span>).is_power_of_two() {
+<a href=#4448 id=4448 data-nosnippet>4448</a>                <span class="self">self</span>.require_features(wgt::Features::SELECTIVE_MULTIVIEW)<span class="question-mark">?</span>;
+<a href=#4449 id=4449 data-nosnippet>4449</a>            }
+<a href=#4450 id=4450 data-nosnippet>4450</a>        }
+<a href=#4451 id=4451 data-nosnippet>4451</a>
+<a href=#4452 id=4452 data-nosnippet>4452</a>        <span class="kw">if </span>!<span class="self">self
+<a href=#4453 id=4453 data-nosnippet>4453</a>            </span>.downlevel
+<a href=#4454 id=4454 data-nosnippet>4454</a>            .flags
+<a href=#4455 id=4455 data-nosnippet>4455</a>            .contains(wgt::DownlevelFlags::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED)
+<a href=#4456 id=4456 data-nosnippet>4456</a>        {
+<a href=#4457 id=4457 data-nosnippet>4457</a>            <span class="kw">for </span>(binding, size) <span class="kw">in </span>shader_binding_sizes.iter() {
+<a href=#4458 id=4458 data-nosnippet>4458</a>                <span class="kw">if </span>size.get() % <span class="number">16 </span>!= <span class="number">0 </span>{
+<a href=#4459 id=4459 data-nosnippet>4459</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(pipeline::CreateRenderPipelineError::UnalignedShader {
+<a href=#4460 id=4460 data-nosnippet>4460</a>                        binding: binding.binding,
+<a href=#4461 id=4461 data-nosnippet>4461</a>                        group: binding.group,
+<a href=#4462 id=4462 data-nosnippet>4462</a>                        size: size.get(),
+<a href=#4463 id=4463 data-nosnippet>4463</a>                    });
+<a href=#4464 id=4464 data-nosnippet>4464</a>                }
+<a href=#4465 id=4465 data-nosnippet>4465</a>            }
+<a href=#4466 id=4466 data-nosnippet>4466</a>        }
 <a href=#4467 id=4467 data-nosnippet>4467</a>
-<a href=#4468 id=4468 data-nosnippet>4468</a>        <span class="kw">let </span>cache = <span class="kw">match </span>desc.cache {
-<a href=#4469 id=4469 data-nosnippet>4469</a>            <span class="prelude-val">Some</span>(cache) =&gt; {
-<a href=#4470 id=4470 data-nosnippet>4470</a>                cache.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
-<a href=#4471 id=4471 data-nosnippet>4471</a>                <span class="prelude-val">Some</span>(cache)
-<a href=#4472 id=4472 data-nosnippet>4472</a>            }
-<a href=#4473 id=4473 data-nosnippet>4473</a>            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#4474 id=4474 data-nosnippet>4474</a>        };
-<a href=#4475 id=4475 data-nosnippet>4475</a>
-<a href=#4476 id=4476 data-nosnippet>4476</a>        <span class="kw">let </span>is_mesh = mesh_stage.is_some();
-<a href=#4477 id=4477 data-nosnippet>4477</a>        <span class="kw">let </span>raw = {
-<a href=#4478 id=4478 data-nosnippet>4478</a>            <span class="kw">let </span>pipeline_desc = hal::RenderPipelineDescriptor {
-<a href=#4479 id=4479 data-nosnippet>4479</a>                label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
-<a href=#4480 id=4480 data-nosnippet>4480</a>                layout: pipeline_layout.raw(),
-<a href=#4481 id=4481 data-nosnippet>4481</a>                vertex_processor: <span class="kw">match </span>vertex_stage {
-<a href=#4482 id=4482 data-nosnippet>4482</a>                    <span class="prelude-val">Some</span>(vertex_stage) =&gt; hal::VertexProcessor::Standard {
-<a href=#4483 id=4483 data-nosnippet>4483</a>                        vertex_buffers: <span class="kw-2">&amp;</span>vertex_buffers,
-<a href=#4484 id=4484 data-nosnippet>4484</a>                        vertex_stage,
-<a href=#4485 id=4485 data-nosnippet>4485</a>                    },
-<a href=#4486 id=4486 data-nosnippet>4486</a>                    <span class="prelude-val">None </span>=&gt; hal::VertexProcessor::Mesh {
-<a href=#4487 id=4487 data-nosnippet>4487</a>                        task_stage,
-<a href=#4488 id=4488 data-nosnippet>4488</a>                        mesh_stage: mesh_stage.unwrap(),
-<a href=#4489 id=4489 data-nosnippet>4489</a>                    },
-<a href=#4490 id=4490 data-nosnippet>4490</a>                },
-<a href=#4491 id=4491 data-nosnippet>4491</a>                primitive: desc.primitive,
-<a href=#4492 id=4492 data-nosnippet>4492</a>                depth_stencil: desc.depth_stencil.clone(),
-<a href=#4493 id=4493 data-nosnippet>4493</a>                multisample: desc.multisample,
-<a href=#4494 id=4494 data-nosnippet>4494</a>                fragment_stage,
-<a href=#4495 id=4495 data-nosnippet>4495</a>                color_targets,
-<a href=#4496 id=4496 data-nosnippet>4496</a>                multiview: desc.multiview,
-<a href=#4497 id=4497 data-nosnippet>4497</a>                cache: cache.as_ref().map(|it| it.raw()),
-<a href=#4498 id=4498 data-nosnippet>4498</a>            };
-<a href=#4499 id=4499 data-nosnippet>4499</a>            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_render_pipeline(<span class="kw-2">&amp;</span>pipeline_desc) }.map_err(
-<a href=#4500 id=4500 data-nosnippet>4500</a>                |err| <span class="kw">match </span>err {
-<a href=#4501 id=4501 data-nosnippet>4501</a>                    hal::PipelineError::Device(error) =&gt; {
-<a href=#4502 id=4502 data-nosnippet>4502</a>                        pipeline::CreateRenderPipelineError::Device(<span class="self">self</span>.handle_hal_error(error))
-<a href=#4503 id=4503 data-nosnippet>4503</a>                    }
-<a href=#4504 id=4504 data-nosnippet>4504</a>                    hal::PipelineError::Linkage(stage, msg) =&gt; {
-<a href=#4505 id=4505 data-nosnippet>4505</a>                        pipeline::CreateRenderPipelineError::Internal { stage, error: msg }
+<a href=#4468 id=4468 data-nosnippet>4468</a>        <span class="kw">let </span>late_sized_buffer_groups =
+<a href=#4469 id=4469 data-nosnippet>4469</a>            Device::make_late_sized_buffer_groups(<span class="kw-2">&amp;</span>shader_binding_sizes, <span class="kw-2">&amp;</span>pipeline_layout);
+<a href=#4470 id=4470 data-nosnippet>4470</a>
+<a href=#4471 id=4471 data-nosnippet>4471</a>        <span class="kw">let </span>cache = <span class="kw">match </span>desc.cache {
+<a href=#4472 id=4472 data-nosnippet>4472</a>            <span class="prelude-val">Some</span>(cache) =&gt; {
+<a href=#4473 id=4473 data-nosnippet>4473</a>                cache.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
+<a href=#4474 id=4474 data-nosnippet>4474</a>                <span class="prelude-val">Some</span>(cache)
+<a href=#4475 id=4475 data-nosnippet>4475</a>            }
+<a href=#4476 id=4476 data-nosnippet>4476</a>            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#4477 id=4477 data-nosnippet>4477</a>        };
+<a href=#4478 id=4478 data-nosnippet>4478</a>
+<a href=#4479 id=4479 data-nosnippet>4479</a>        <span class="kw">let </span>is_mesh = mesh_stage.is_some();
+<a href=#4480 id=4480 data-nosnippet>4480</a>        <span class="kw">let </span>raw = {
+<a href=#4481 id=4481 data-nosnippet>4481</a>            <span class="kw">let </span>pipeline_desc = hal::RenderPipelineDescriptor {
+<a href=#4482 id=4482 data-nosnippet>4482</a>                label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
+<a href=#4483 id=4483 data-nosnippet>4483</a>                layout: pipeline_layout.raw(),
+<a href=#4484 id=4484 data-nosnippet>4484</a>                vertex_processor: <span class="kw">match </span>vertex_stage {
+<a href=#4485 id=4485 data-nosnippet>4485</a>                    <span class="prelude-val">Some</span>(vertex_stage) =&gt; hal::VertexProcessor::Standard {
+<a href=#4486 id=4486 data-nosnippet>4486</a>                        vertex_buffers: <span class="kw-2">&amp;</span>vertex_buffers,
+<a href=#4487 id=4487 data-nosnippet>4487</a>                        vertex_stage,
+<a href=#4488 id=4488 data-nosnippet>4488</a>                    },
+<a href=#4489 id=4489 data-nosnippet>4489</a>                    <span class="prelude-val">None </span>=&gt; hal::VertexProcessor::Mesh {
+<a href=#4490 id=4490 data-nosnippet>4490</a>                        task_stage,
+<a href=#4491 id=4491 data-nosnippet>4491</a>                        mesh_stage: mesh_stage.unwrap(),
+<a href=#4492 id=4492 data-nosnippet>4492</a>                    },
+<a href=#4493 id=4493 data-nosnippet>4493</a>                },
+<a href=#4494 id=4494 data-nosnippet>4494</a>                primitive: desc.primitive,
+<a href=#4495 id=4495 data-nosnippet>4495</a>                depth_stencil: desc.depth_stencil.clone(),
+<a href=#4496 id=4496 data-nosnippet>4496</a>                multisample: desc.multisample,
+<a href=#4497 id=4497 data-nosnippet>4497</a>                fragment_stage,
+<a href=#4498 id=4498 data-nosnippet>4498</a>                color_targets,
+<a href=#4499 id=4499 data-nosnippet>4499</a>                multiview_mask: desc.multiview_mask,
+<a href=#4500 id=4500 data-nosnippet>4500</a>                cache: cache.as_ref().map(|it| it.raw()),
+<a href=#4501 id=4501 data-nosnippet>4501</a>            };
+<a href=#4502 id=4502 data-nosnippet>4502</a>            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_render_pipeline(<span class="kw-2">&amp;</span>pipeline_desc) }.map_err(
+<a href=#4503 id=4503 data-nosnippet>4503</a>                |err| <span class="kw">match </span>err {
+<a href=#4504 id=4504 data-nosnippet>4504</a>                    hal::PipelineError::Device(error) =&gt; {
+<a href=#4505 id=4505 data-nosnippet>4505</a>                        pipeline::CreateRenderPipelineError::Device(<span class="self">self</span>.handle_hal_error(error))
 <a href=#4506 id=4506 data-nosnippet>4506</a>                    }
-<a href=#4507 id=4507 data-nosnippet>4507</a>                    hal::PipelineError::EntryPoint(stage) =&gt; {
-<a href=#4508 id=4508 data-nosnippet>4508</a>                        pipeline::CreateRenderPipelineError::Internal {
-<a href=#4509 id=4509 data-nosnippet>4509</a>                            stage: hal::auxil::map_naga_stage(stage),
-<a href=#4510 id=4510 data-nosnippet>4510</a>                            error: ENTRYPOINT_FAILURE_ERROR.to_string(),
-<a href=#4511 id=4511 data-nosnippet>4511</a>                        }
-<a href=#4512 id=4512 data-nosnippet>4512</a>                    }
-<a href=#4513 id=4513 data-nosnippet>4513</a>                    hal::PipelineError::PipelineConstants(stage, error) =&gt; {
-<a href=#4514 id=4514 data-nosnippet>4514</a>                        pipeline::CreateRenderPipelineError::PipelineConstants { stage, error }
+<a href=#4507 id=4507 data-nosnippet>4507</a>                    hal::PipelineError::Linkage(stage, msg) =&gt; {
+<a href=#4508 id=4508 data-nosnippet>4508</a>                        pipeline::CreateRenderPipelineError::Internal { stage, error: msg }
+<a href=#4509 id=4509 data-nosnippet>4509</a>                    }
+<a href=#4510 id=4510 data-nosnippet>4510</a>                    hal::PipelineError::EntryPoint(stage) =&gt; {
+<a href=#4511 id=4511 data-nosnippet>4511</a>                        pipeline::CreateRenderPipelineError::Internal {
+<a href=#4512 id=4512 data-nosnippet>4512</a>                            stage: hal::auxil::map_naga_stage(stage),
+<a href=#4513 id=4513 data-nosnippet>4513</a>                            error: ENTRYPOINT_FAILURE_ERROR.to_string(),
+<a href=#4514 id=4514 data-nosnippet>4514</a>                        }
 <a href=#4515 id=4515 data-nosnippet>4515</a>                    }
-<a href=#4516 id=4516 data-nosnippet>4516</a>                },
-<a href=#4517 id=4517 data-nosnippet>4517</a>            )<span class="question-mark">?
-<a href=#4518 id=4518 data-nosnippet>4518</a>        </span>};
-<a href=#4519 id=4519 data-nosnippet>4519</a>
-<a href=#4520 id=4520 data-nosnippet>4520</a>        <span class="kw">let </span>pass_context = RenderPassContext {
-<a href=#4521 id=4521 data-nosnippet>4521</a>            attachments: AttachmentData {
-<a href=#4522 id=4522 data-nosnippet>4522</a>                colors: color_targets
-<a href=#4523 id=4523 data-nosnippet>4523</a>                    .iter()
-<a href=#4524 id=4524 data-nosnippet>4524</a>                    .map(|state| state.as_ref().map(|s| s.format))
-<a href=#4525 id=4525 data-nosnippet>4525</a>                    .collect(),
-<a href=#4526 id=4526 data-nosnippet>4526</a>                resolves: ArrayVec::new(),
-<a href=#4527 id=4527 data-nosnippet>4527</a>                depth_stencil: depth_stencil_state.as_ref().map(|state| state.format),
-<a href=#4528 id=4528 data-nosnippet>4528</a>            },
-<a href=#4529 id=4529 data-nosnippet>4529</a>            sample_count: samples,
-<a href=#4530 id=4530 data-nosnippet>4530</a>            multiview: desc.multiview,
-<a href=#4531 id=4531 data-nosnippet>4531</a>        };
-<a href=#4532 id=4532 data-nosnippet>4532</a>
-<a href=#4533 id=4533 data-nosnippet>4533</a>        <span class="kw">let </span><span class="kw-2">mut </span>flags = pipeline::PipelineFlags::empty();
-<a href=#4534 id=4534 data-nosnippet>4534</a>        <span class="kw">for </span>state <span class="kw">in </span>color_targets.iter().filter_map(|s| s.as_ref()) {
-<a href=#4535 id=4535 data-nosnippet>4535</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>bs) = state.blend {
-<a href=#4536 id=4536 data-nosnippet>4536</a>                <span class="kw">if </span>bs.color.uses_constant() | bs.alpha.uses_constant() {
-<a href=#4537 id=4537 data-nosnippet>4537</a>                    flags |= pipeline::PipelineFlags::BLEND_CONSTANT;
-<a href=#4538 id=4538 data-nosnippet>4538</a>                }
-<a href=#4539 id=4539 data-nosnippet>4539</a>            }
-<a href=#4540 id=4540 data-nosnippet>4540</a>        }
-<a href=#4541 id=4541 data-nosnippet>4541</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(ds) = depth_stencil_state.as_ref() {
-<a href=#4542 id=4542 data-nosnippet>4542</a>            <span class="kw">if </span>ds.stencil.is_enabled() &amp;&amp; ds.stencil.needs_ref_value() {
-<a href=#4543 id=4543 data-nosnippet>4543</a>                flags |= pipeline::PipelineFlags::STENCIL_REFERENCE;
-<a href=#4544 id=4544 data-nosnippet>4544</a>            }
-<a href=#4545 id=4545 data-nosnippet>4545</a>            <span class="kw">if </span>!ds.is_depth_read_only() {
-<a href=#4546 id=4546 data-nosnippet>4546</a>                flags |= pipeline::PipelineFlags::WRITES_DEPTH;
+<a href=#4516 id=4516 data-nosnippet>4516</a>                    hal::PipelineError::PipelineConstants(stage, error) =&gt; {
+<a href=#4517 id=4517 data-nosnippet>4517</a>                        pipeline::CreateRenderPipelineError::PipelineConstants { stage, error }
+<a href=#4518 id=4518 data-nosnippet>4518</a>                    }
+<a href=#4519 id=4519 data-nosnippet>4519</a>                },
+<a href=#4520 id=4520 data-nosnippet>4520</a>            )<span class="question-mark">?
+<a href=#4521 id=4521 data-nosnippet>4521</a>        </span>};
+<a href=#4522 id=4522 data-nosnippet>4522</a>
+<a href=#4523 id=4523 data-nosnippet>4523</a>        <span class="kw">let </span>pass_context = RenderPassContext {
+<a href=#4524 id=4524 data-nosnippet>4524</a>            attachments: AttachmentData {
+<a href=#4525 id=4525 data-nosnippet>4525</a>                colors: color_targets
+<a href=#4526 id=4526 data-nosnippet>4526</a>                    .iter()
+<a href=#4527 id=4527 data-nosnippet>4527</a>                    .map(|state| state.as_ref().map(|s| s.format))
+<a href=#4528 id=4528 data-nosnippet>4528</a>                    .collect(),
+<a href=#4529 id=4529 data-nosnippet>4529</a>                resolves: ArrayVec::new(),
+<a href=#4530 id=4530 data-nosnippet>4530</a>                depth_stencil: depth_stencil_state.as_ref().map(|state| state.format),
+<a href=#4531 id=4531 data-nosnippet>4531</a>            },
+<a href=#4532 id=4532 data-nosnippet>4532</a>            sample_count: samples,
+<a href=#4533 id=4533 data-nosnippet>4533</a>            multiview_mask: desc.multiview_mask,
+<a href=#4534 id=4534 data-nosnippet>4534</a>        };
+<a href=#4535 id=4535 data-nosnippet>4535</a>
+<a href=#4536 id=4536 data-nosnippet>4536</a>        <span class="kw">let </span><span class="kw-2">mut </span>flags = pipeline::PipelineFlags::empty();
+<a href=#4537 id=4537 data-nosnippet>4537</a>        <span class="kw">for </span>state <span class="kw">in </span>color_targets.iter().filter_map(|s| s.as_ref()) {
+<a href=#4538 id=4538 data-nosnippet>4538</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>bs) = state.blend {
+<a href=#4539 id=4539 data-nosnippet>4539</a>                <span class="kw">if </span>bs.color.uses_constant() | bs.alpha.uses_constant() {
+<a href=#4540 id=4540 data-nosnippet>4540</a>                    flags |= pipeline::PipelineFlags::BLEND_CONSTANT;
+<a href=#4541 id=4541 data-nosnippet>4541</a>                }
+<a href=#4542 id=4542 data-nosnippet>4542</a>            }
+<a href=#4543 id=4543 data-nosnippet>4543</a>        }
+<a href=#4544 id=4544 data-nosnippet>4544</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(ds) = depth_stencil_state.as_ref() {
+<a href=#4545 id=4545 data-nosnippet>4545</a>            <span class="kw">if </span>ds.stencil.is_enabled() &amp;&amp; ds.stencil.needs_ref_value() {
+<a href=#4546 id=4546 data-nosnippet>4546</a>                flags |= pipeline::PipelineFlags::STENCIL_REFERENCE;
 <a href=#4547 id=4547 data-nosnippet>4547</a>            }
-<a href=#4548 id=4548 data-nosnippet>4548</a>            <span class="kw">if </span>!ds.is_stencil_read_only(desc.primitive.cull_mode) {
-<a href=#4549 id=4549 data-nosnippet>4549</a>                flags |= pipeline::PipelineFlags::WRITES_STENCIL;
+<a href=#4548 id=4548 data-nosnippet>4548</a>            <span class="kw">if </span>!ds.is_depth_read_only() {
+<a href=#4549 id=4549 data-nosnippet>4549</a>                flags |= pipeline::PipelineFlags::WRITES_DEPTH;
 <a href=#4550 id=4550 data-nosnippet>4550</a>            }
-<a href=#4551 id=4551 data-nosnippet>4551</a>        }
-<a href=#4552 id=4552 data-nosnippet>4552</a>        <span class="kw">let </span>shader_modules = {
-<a href=#4553 id=4553 data-nosnippet>4553</a>            <span class="kw">let </span><span class="kw-2">mut </span>shader_modules = ArrayVec::new();
-<a href=#4554 id=4554 data-nosnippet>4554</a>            <span class="kw">match </span>desc.vertex {
-<a href=#4555 id=4555 data-nosnippet>4555</a>                pipeline::RenderPipelineVertexProcessor::Vertex(vertex) =&gt; {
-<a href=#4556 id=4556 data-nosnippet>4556</a>                    shader_modules.push(vertex.stage.module)
-<a href=#4557 id=4557 data-nosnippet>4557</a>                }
-<a href=#4558 id=4558 data-nosnippet>4558</a>                pipeline::RenderPipelineVertexProcessor::Mesh(task, mesh) =&gt; {
-<a href=#4559 id=4559 data-nosnippet>4559</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(task) = task {
-<a href=#4560 id=4560 data-nosnippet>4560</a>                        shader_modules.push(task.stage.module);
-<a href=#4561 id=4561 data-nosnippet>4561</a>                    }
-<a href=#4562 id=4562 data-nosnippet>4562</a>                    shader_modules.push(mesh.stage.module);
-<a href=#4563 id=4563 data-nosnippet>4563</a>                }
-<a href=#4564 id=4564 data-nosnippet>4564</a>            }
-<a href=#4565 id=4565 data-nosnippet>4565</a>            shader_modules.extend(desc.fragment.map(|f| f.stage.module));
-<a href=#4566 id=4566 data-nosnippet>4566</a>            shader_modules
-<a href=#4567 id=4567 data-nosnippet>4567</a>        };
-<a href=#4568 id=4568 data-nosnippet>4568</a>
-<a href=#4569 id=4569 data-nosnippet>4569</a>        <span class="kw">let </span>pipeline = pipeline::RenderPipeline {
-<a href=#4570 id=4570 data-nosnippet>4570</a>            raw: ManuallyDrop::new(raw),
-<a href=#4571 id=4571 data-nosnippet>4571</a>            layout: pipeline_layout,
-<a href=#4572 id=4572 data-nosnippet>4572</a>            device: <span class="self">self</span>.clone(),
-<a href=#4573 id=4573 data-nosnippet>4573</a>            pass_context,
-<a href=#4574 id=4574 data-nosnippet>4574</a>            _shader_modules: shader_modules,
-<a href=#4575 id=4575 data-nosnippet>4575</a>            flags,
-<a href=#4576 id=4576 data-nosnippet>4576</a>            strip_index_format: desc.primitive.strip_index_format,
-<a href=#4577 id=4577 data-nosnippet>4577</a>            vertex_steps,
-<a href=#4578 id=4578 data-nosnippet>4578</a>            late_sized_buffer_groups,
-<a href=#4579 id=4579 data-nosnippet>4579</a>            label: desc.label.to_string(),
-<a href=#4580 id=4580 data-nosnippet>4580</a>            tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.render_pipelines.clone()),
-<a href=#4581 id=4581 data-nosnippet>4581</a>            is_mesh,
-<a href=#4582 id=4582 data-nosnippet>4582</a>        };
-<a href=#4583 id=4583 data-nosnippet>4583</a>
-<a href=#4584 id=4584 data-nosnippet>4584</a>        <span class="kw">let </span>pipeline = Arc::new(pipeline);
-<a href=#4585 id=4585 data-nosnippet>4585</a>
-<a href=#4586 id=4586 data-nosnippet>4586</a>        <span class="kw">if </span>is_auto_layout {
-<a href=#4587 id=4587 data-nosnippet>4587</a>            <span class="kw">for </span>bgl <span class="kw">in </span>pipeline.layout.bind_group_layouts.iter() {
-<a href=#4588 id=4588 data-nosnippet>4588</a>                <span class="comment">// `bind_group_layouts` might contain duplicate entries, so we need to ignore the result.
-<a href=#4589 id=4589 data-nosnippet>4589</a>                </span><span class="kw">let _ </span>= bgl
-<a href=#4590 id=4590 data-nosnippet>4590</a>                    .exclusive_pipeline
-<a href=#4591 id=4591 data-nosnippet>4591</a>                    .set(binding_model::ExclusivePipeline::Render(Arc::downgrade(
-<a href=#4592 id=4592 data-nosnippet>4592</a>                        <span class="kw-2">&amp;</span>pipeline,
-<a href=#4593 id=4593 data-nosnippet>4593</a>                    )));
-<a href=#4594 id=4594 data-nosnippet>4594</a>            }
-<a href=#4595 id=4595 data-nosnippet>4595</a>        }
-<a href=#4596 id=4596 data-nosnippet>4596</a>
-<a href=#4597 id=4597 data-nosnippet>4597</a>        <span class="prelude-val">Ok</span>(pipeline)
-<a href=#4598 id=4598 data-nosnippet>4598</a>    }
+<a href=#4551 id=4551 data-nosnippet>4551</a>            <span class="kw">if </span>!ds.is_stencil_read_only(desc.primitive.cull_mode) {
+<a href=#4552 id=4552 data-nosnippet>4552</a>                flags |= pipeline::PipelineFlags::WRITES_STENCIL;
+<a href=#4553 id=4553 data-nosnippet>4553</a>            }
+<a href=#4554 id=4554 data-nosnippet>4554</a>        }
+<a href=#4555 id=4555 data-nosnippet>4555</a>        <span class="kw">let </span>shader_modules = {
+<a href=#4556 id=4556 data-nosnippet>4556</a>            <span class="kw">let </span><span class="kw-2">mut </span>shader_modules = ArrayVec::new();
+<a href=#4557 id=4557 data-nosnippet>4557</a>            <span class="kw">match </span>desc.vertex {
+<a href=#4558 id=4558 data-nosnippet>4558</a>                pipeline::RenderPipelineVertexProcessor::Vertex(vertex) =&gt; {
+<a href=#4559 id=4559 data-nosnippet>4559</a>                    shader_modules.push(vertex.stage.module)
+<a href=#4560 id=4560 data-nosnippet>4560</a>                }
+<a href=#4561 id=4561 data-nosnippet>4561</a>                pipeline::RenderPipelineVertexProcessor::Mesh(task, mesh) =&gt; {
+<a href=#4562 id=4562 data-nosnippet>4562</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(task) = task {
+<a href=#4563 id=4563 data-nosnippet>4563</a>                        shader_modules.push(task.stage.module);
+<a href=#4564 id=4564 data-nosnippet>4564</a>                    }
+<a href=#4565 id=4565 data-nosnippet>4565</a>                    shader_modules.push(mesh.stage.module);
+<a href=#4566 id=4566 data-nosnippet>4566</a>                }
+<a href=#4567 id=4567 data-nosnippet>4567</a>            }
+<a href=#4568 id=4568 data-nosnippet>4568</a>            shader_modules.extend(desc.fragment.map(|f| f.stage.module));
+<a href=#4569 id=4569 data-nosnippet>4569</a>            shader_modules
+<a href=#4570 id=4570 data-nosnippet>4570</a>        };
+<a href=#4571 id=4571 data-nosnippet>4571</a>
+<a href=#4572 id=4572 data-nosnippet>4572</a>        <span class="kw">let </span>pipeline = pipeline::RenderPipeline {
+<a href=#4573 id=4573 data-nosnippet>4573</a>            raw: ManuallyDrop::new(raw),
+<a href=#4574 id=4574 data-nosnippet>4574</a>            layout: pipeline_layout,
+<a href=#4575 id=4575 data-nosnippet>4575</a>            device: <span class="self">self</span>.clone(),
+<a href=#4576 id=4576 data-nosnippet>4576</a>            pass_context,
+<a href=#4577 id=4577 data-nosnippet>4577</a>            _shader_modules: shader_modules,
+<a href=#4578 id=4578 data-nosnippet>4578</a>            flags,
+<a href=#4579 id=4579 data-nosnippet>4579</a>            strip_index_format: desc.primitive.strip_index_format,
+<a href=#4580 id=4580 data-nosnippet>4580</a>            vertex_steps,
+<a href=#4581 id=4581 data-nosnippet>4581</a>            late_sized_buffer_groups,
+<a href=#4582 id=4582 data-nosnippet>4582</a>            label: desc.label.to_string(),
+<a href=#4583 id=4583 data-nosnippet>4583</a>            tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.render_pipelines.clone()),
+<a href=#4584 id=4584 data-nosnippet>4584</a>            is_mesh,
+<a href=#4585 id=4585 data-nosnippet>4585</a>        };
+<a href=#4586 id=4586 data-nosnippet>4586</a>
+<a href=#4587 id=4587 data-nosnippet>4587</a>        <span class="kw">let </span>pipeline = Arc::new(pipeline);
+<a href=#4588 id=4588 data-nosnippet>4588</a>
+<a href=#4589 id=4589 data-nosnippet>4589</a>        <span class="kw">if </span>is_auto_layout {
+<a href=#4590 id=4590 data-nosnippet>4590</a>            <span class="kw">for </span>bgl <span class="kw">in </span>pipeline.layout.bind_group_layouts.iter() {
+<a href=#4591 id=4591 data-nosnippet>4591</a>                <span class="comment">// `bind_group_layouts` might contain duplicate entries, so we need to ignore the result.
+<a href=#4592 id=4592 data-nosnippet>4592</a>                </span><span class="kw">let _ </span>= bgl
+<a href=#4593 id=4593 data-nosnippet>4593</a>                    .exclusive_pipeline
+<a href=#4594 id=4594 data-nosnippet>4594</a>                    .set(binding_model::ExclusivePipeline::Render(Arc::downgrade(
+<a href=#4595 id=4595 data-nosnippet>4595</a>                        <span class="kw-2">&amp;</span>pipeline,
+<a href=#4596 id=4596 data-nosnippet>4596</a>                    )));
+<a href=#4597 id=4597 data-nosnippet>4597</a>            }
+<a href=#4598 id=4598 data-nosnippet>4598</a>        }
 <a href=#4599 id=4599 data-nosnippet>4599</a>
-<a href=#4600 id=4600 data-nosnippet>4600</a>    <span class="doccomment">/// # Safety
-<a href=#4601 id=4601 data-nosnippet>4601</a>    /// The `data` field on `desc` must have previously been returned from [`crate::global::Global::pipeline_cache_get_data`]
-<a href=#4602 id=4602 data-nosnippet>4602</a>    </span><span class="kw">pub unsafe fn </span>create_pipeline_cache(
-<a href=#4603 id=4603 data-nosnippet>4603</a>        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-<a href=#4604 id=4604 data-nosnippet>4604</a>        desc: <span class="kw-2">&amp;</span>pipeline::PipelineCacheDescriptor,
-<a href=#4605 id=4605 data-nosnippet>4605</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;pipeline::PipelineCache&gt;, pipeline::CreatePipelineCacheError&gt; {
-<a href=#4606 id=4606 data-nosnippet>4606</a>        <span class="kw">use </span><span class="kw">crate</span>::pipeline_cache;
-<a href=#4607 id=4607 data-nosnippet>4607</a>
-<a href=#4608 id=4608 data-nosnippet>4608</a>        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
-<a href=#4609 id=4609 data-nosnippet>4609</a>
-<a href=#4610 id=4610 data-nosnippet>4610</a>        <span class="self">self</span>.require_features(wgt::Features::PIPELINE_CACHE)<span class="question-mark">?</span>;
-<a href=#4611 id=4611 data-nosnippet>4611</a>        <span class="kw">let </span>data = <span class="kw">if let </span><span class="prelude-val">Some</span>((data, validation_key)) = desc
-<a href=#4612 id=4612 data-nosnippet>4612</a>            .data
-<a href=#4613 id=4613 data-nosnippet>4613</a>            .as_ref()
-<a href=#4614 id=4614 data-nosnippet>4614</a>            .zip(<span class="self">self</span>.raw().pipeline_cache_validation_key())
-<a href=#4615 id=4615 data-nosnippet>4615</a>        {
-<a href=#4616 id=4616 data-nosnippet>4616</a>            <span class="kw">let </span>data = pipeline_cache::validate_pipeline_cache(
-<a href=#4617 id=4617 data-nosnippet>4617</a>                data,
-<a href=#4618 id=4618 data-nosnippet>4618</a>                <span class="kw-2">&amp;</span><span class="self">self</span>.adapter.raw.info,
-<a href=#4619 id=4619 data-nosnippet>4619</a>                validation_key,
-<a href=#4620 id=4620 data-nosnippet>4620</a>            );
-<a href=#4621 id=4621 data-nosnippet>4621</a>            <span class="kw">match </span>data {
-<a href=#4622 id=4622 data-nosnippet>4622</a>                <span class="prelude-val">Ok</span>(data) =&gt; <span class="prelude-val">Some</span>(data),
-<a href=#4623 id=4623 data-nosnippet>4623</a>                <span class="prelude-val">Err</span>(e) <span class="kw">if </span>e.was_avoidable() || !desc.fallback =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e.into()),
-<a href=#4624 id=4624 data-nosnippet>4624</a>                <span class="comment">// If the error was unavoidable and we are asked to fallback, do so
-<a href=#4625 id=4625 data-nosnippet>4625</a>                </span><span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-<a href=#4626 id=4626 data-nosnippet>4626</a>            }
-<a href=#4627 id=4627 data-nosnippet>4627</a>        } <span class="kw">else </span>{
-<a href=#4628 id=4628 data-nosnippet>4628</a>            <span class="prelude-val">None
-<a href=#4629 id=4629 data-nosnippet>4629</a>        </span>};
-<a href=#4630 id=4630 data-nosnippet>4630</a>        <span class="kw">let </span>cache_desc = hal::PipelineCacheDescriptor {
-<a href=#4631 id=4631 data-nosnippet>4631</a>            data,
-<a href=#4632 id=4632 data-nosnippet>4632</a>            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
-<a href=#4633 id=4633 data-nosnippet>4633</a>        };
-<a href=#4634 id=4634 data-nosnippet>4634</a>        <span class="kw">let </span>raw = <span class="kw">match unsafe </span>{ <span class="self">self</span>.raw().create_pipeline_cache(<span class="kw-2">&amp;</span>cache_desc) } {
-<a href=#4635 id=4635 data-nosnippet>4635</a>            <span class="prelude-val">Ok</span>(raw) =&gt; raw,
-<a href=#4636 id=4636 data-nosnippet>4636</a>            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">match </span>e {
-<a href=#4637 id=4637 data-nosnippet>4637</a>                hal::PipelineCacheError::Device(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">self</span>.handle_hal_error(e).into()),
-<a href=#4638 id=4638 data-nosnippet>4638</a>            },
-<a href=#4639 id=4639 data-nosnippet>4639</a>        };
-<a href=#4640 id=4640 data-nosnippet>4640</a>        <span class="kw">let </span>cache = pipeline::PipelineCache {
-<a href=#4641 id=4641 data-nosnippet>4641</a>            device: <span class="self">self</span>.clone(),
-<a href=#4642 id=4642 data-nosnippet>4642</a>            label: desc.label.to_string(),
-<a href=#4643 id=4643 data-nosnippet>4643</a>            <span class="comment">// This would be none in the error condition, which we don't implement yet
-<a href=#4644 id=4644 data-nosnippet>4644</a>            </span>raw: ManuallyDrop::new(raw),
-<a href=#4645 id=4645 data-nosnippet>4645</a>        };
-<a href=#4646 id=4646 data-nosnippet>4646</a>
-<a href=#4647 id=4647 data-nosnippet>4647</a>        <span class="kw">let </span>cache = Arc::new(cache);
-<a href=#4648 id=4648 data-nosnippet>4648</a>
-<a href=#4649 id=4649 data-nosnippet>4649</a>        <span class="prelude-val">Ok</span>(cache)
-<a href=#4650 id=4650 data-nosnippet>4650</a>    }
+<a href=#4600 id=4600 data-nosnippet>4600</a>        <span class="prelude-val">Ok</span>(pipeline)
+<a href=#4601 id=4601 data-nosnippet>4601</a>    }
+<a href=#4602 id=4602 data-nosnippet>4602</a>
+<a href=#4603 id=4603 data-nosnippet>4603</a>    <span class="doccomment">/// # Safety
+<a href=#4604 id=4604 data-nosnippet>4604</a>    /// The `data` field on `desc` must have previously been returned from [`crate::global::Global::pipeline_cache_get_data`]
+<a href=#4605 id=4605 data-nosnippet>4605</a>    </span><span class="kw">pub unsafe fn </span>create_pipeline_cache(
+<a href=#4606 id=4606 data-nosnippet>4606</a>        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+<a href=#4607 id=4607 data-nosnippet>4607</a>        desc: <span class="kw-2">&amp;</span>pipeline::PipelineCacheDescriptor,
+<a href=#4608 id=4608 data-nosnippet>4608</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;pipeline::PipelineCache&gt;, pipeline::CreatePipelineCacheError&gt; {
+<a href=#4609 id=4609 data-nosnippet>4609</a>        <span class="kw">use </span><span class="kw">crate</span>::pipeline_cache;
+<a href=#4610 id=4610 data-nosnippet>4610</a>
+<a href=#4611 id=4611 data-nosnippet>4611</a>        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+<a href=#4612 id=4612 data-nosnippet>4612</a>
+<a href=#4613 id=4613 data-nosnippet>4613</a>        <span class="self">self</span>.require_features(wgt::Features::PIPELINE_CACHE)<span class="question-mark">?</span>;
+<a href=#4614 id=4614 data-nosnippet>4614</a>        <span class="kw">let </span>data = <span class="kw">if let </span><span class="prelude-val">Some</span>((data, validation_key)) = desc
+<a href=#4615 id=4615 data-nosnippet>4615</a>            .data
+<a href=#4616 id=4616 data-nosnippet>4616</a>            .as_ref()
+<a href=#4617 id=4617 data-nosnippet>4617</a>            .zip(<span class="self">self</span>.raw().pipeline_cache_validation_key())
+<a href=#4618 id=4618 data-nosnippet>4618</a>        {
+<a href=#4619 id=4619 data-nosnippet>4619</a>            <span class="kw">let </span>data = pipeline_cache::validate_pipeline_cache(
+<a href=#4620 id=4620 data-nosnippet>4620</a>                data,
+<a href=#4621 id=4621 data-nosnippet>4621</a>                <span class="kw-2">&amp;</span><span class="self">self</span>.adapter.raw.info,
+<a href=#4622 id=4622 data-nosnippet>4622</a>                validation_key,
+<a href=#4623 id=4623 data-nosnippet>4623</a>            );
+<a href=#4624 id=4624 data-nosnippet>4624</a>            <span class="kw">match </span>data {
+<a href=#4625 id=4625 data-nosnippet>4625</a>                <span class="prelude-val">Ok</span>(data) =&gt; <span class="prelude-val">Some</span>(data),
+<a href=#4626 id=4626 data-nosnippet>4626</a>                <span class="prelude-val">Err</span>(e) <span class="kw">if </span>e.was_avoidable() || !desc.fallback =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e.into()),
+<a href=#4627 id=4627 data-nosnippet>4627</a>                <span class="comment">// If the error was unavoidable and we are asked to fallback, do so
+<a href=#4628 id=4628 data-nosnippet>4628</a>                </span><span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+<a href=#4629 id=4629 data-nosnippet>4629</a>            }
+<a href=#4630 id=4630 data-nosnippet>4630</a>        } <span class="kw">else </span>{
+<a href=#4631 id=4631 data-nosnippet>4631</a>            <span class="prelude-val">None
+<a href=#4632 id=4632 data-nosnippet>4632</a>        </span>};
+<a href=#4633 id=4633 data-nosnippet>4633</a>        <span class="kw">let </span>cache_desc = hal::PipelineCacheDescriptor {
+<a href=#4634 id=4634 data-nosnippet>4634</a>            data,
+<a href=#4635 id=4635 data-nosnippet>4635</a>            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
+<a href=#4636 id=4636 data-nosnippet>4636</a>        };
+<a href=#4637 id=4637 data-nosnippet>4637</a>        <span class="kw">let </span>raw = <span class="kw">match unsafe </span>{ <span class="self">self</span>.raw().create_pipeline_cache(<span class="kw-2">&amp;</span>cache_desc) } {
+<a href=#4638 id=4638 data-nosnippet>4638</a>            <span class="prelude-val">Ok</span>(raw) =&gt; raw,
+<a href=#4639 id=4639 data-nosnippet>4639</a>            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">match </span>e {
+<a href=#4640 id=4640 data-nosnippet>4640</a>                hal::PipelineCacheError::Device(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">self</span>.handle_hal_error(e).into()),
+<a href=#4641 id=4641 data-nosnippet>4641</a>            },
+<a href=#4642 id=4642 data-nosnippet>4642</a>        };
+<a href=#4643 id=4643 data-nosnippet>4643</a>        <span class="kw">let </span>cache = pipeline::PipelineCache {
+<a href=#4644 id=4644 data-nosnippet>4644</a>            device: <span class="self">self</span>.clone(),
+<a href=#4645 id=4645 data-nosnippet>4645</a>            label: desc.label.to_string(),
+<a href=#4646 id=4646 data-nosnippet>4646</a>            <span class="comment">// This would be none in the error condition, which we don't implement yet
+<a href=#4647 id=4647 data-nosnippet>4647</a>            </span>raw: ManuallyDrop::new(raw),
+<a href=#4648 id=4648 data-nosnippet>4648</a>        };
+<a href=#4649 id=4649 data-nosnippet>4649</a>
+<a href=#4650 id=4650 data-nosnippet>4650</a>        <span class="kw">let </span>cache = Arc::new(cache);
 <a href=#4651 id=4651 data-nosnippet>4651</a>
-<a href=#4652 id=4652 data-nosnippet>4652</a>    <span class="kw">fn </span>get_texture_format_features(<span class="kw-2">&amp;</span><span class="self">self</span>, format: TextureFormat) -&gt; wgt::TextureFormatFeatures {
-<a href=#4653 id=4653 data-nosnippet>4653</a>        <span class="comment">// Variant of adapter.get_texture_format_features that takes device features into account
-<a href=#4654 id=4654 data-nosnippet>4654</a>        </span><span class="kw">use </span>wgt::TextureFormatFeatureFlags <span class="kw">as </span>tfsc;
-<a href=#4655 id=4655 data-nosnippet>4655</a>        <span class="kw">let </span><span class="kw-2">mut </span>format_features = <span class="self">self</span>.adapter.get_texture_format_features(format);
-<a href=#4656 id=4656 data-nosnippet>4656</a>        <span class="kw">if </span>(format == TextureFormat::R32Float
-<a href=#4657 id=4657 data-nosnippet>4657</a>            || format == TextureFormat::Rg32Float
-<a href=#4658 id=4658 data-nosnippet>4658</a>            || format == TextureFormat::Rgba32Float)
-<a href=#4659 id=4659 data-nosnippet>4659</a>            &amp;&amp; !<span class="self">self</span>.features.contains(wgt::Features::FLOAT32_FILTERABLE)
-<a href=#4660 id=4660 data-nosnippet>4660</a>        {
-<a href=#4661 id=4661 data-nosnippet>4661</a>            format_features.flags.set(tfsc::FILTERABLE, <span class="bool-val">false</span>);
-<a href=#4662 id=4662 data-nosnippet>4662</a>        }
-<a href=#4663 id=4663 data-nosnippet>4663</a>        format_features
-<a href=#4664 id=4664 data-nosnippet>4664</a>    }
-<a href=#4665 id=4665 data-nosnippet>4665</a>
-<a href=#4666 id=4666 data-nosnippet>4666</a>    <span class="kw">fn </span>describe_format_features(
-<a href=#4667 id=4667 data-nosnippet>4667</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#4668 id=4668 data-nosnippet>4668</a>        format: TextureFormat,
-<a href=#4669 id=4669 data-nosnippet>4669</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::TextureFormatFeatures, MissingFeatures&gt; {
-<a href=#4670 id=4670 data-nosnippet>4670</a>        <span class="self">self</span>.require_features(format.required_features())<span class="question-mark">?</span>;
-<a href=#4671 id=4671 data-nosnippet>4671</a>
-<a href=#4672 id=4672 data-nosnippet>4672</a>        <span class="kw">let </span>using_device_features = <span class="self">self
-<a href=#4673 id=4673 data-nosnippet>4673</a>            </span>.features
-<a href=#4674 id=4674 data-nosnippet>4674</a>            .contains(wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES);
-<a href=#4675 id=4675 data-nosnippet>4675</a>        <span class="comment">// If we're running downlevel, we need to manually ask the backend what
-<a href=#4676 id=4676 data-nosnippet>4676</a>        // we can use as we can't trust WebGPU.
-<a href=#4677 id=4677 data-nosnippet>4677</a>        </span><span class="kw">let </span>downlevel = !<span class="self">self
-<a href=#4678 id=4678 data-nosnippet>4678</a>            </span>.downlevel
-<a href=#4679 id=4679 data-nosnippet>4679</a>            .flags
-<a href=#4680 id=4680 data-nosnippet>4680</a>            .contains(wgt::DownlevelFlags::WEBGPU_TEXTURE_FORMAT_SUPPORT);
-<a href=#4681 id=4681 data-nosnippet>4681</a>
-<a href=#4682 id=4682 data-nosnippet>4682</a>        <span class="kw">if </span>using_device_features || downlevel {
-<a href=#4683 id=4683 data-nosnippet>4683</a>            <span class="prelude-val">Ok</span>(<span class="self">self</span>.get_texture_format_features(format))
-<a href=#4684 id=4684 data-nosnippet>4684</a>        } <span class="kw">else </span>{
-<a href=#4685 id=4685 data-nosnippet>4685</a>            <span class="prelude-val">Ok</span>(format.guaranteed_format_features(<span class="self">self</span>.features))
-<a href=#4686 id=4686 data-nosnippet>4686</a>        }
-<a href=#4687 id=4687 data-nosnippet>4687</a>    }
-<a href=#4688 id=4688 data-nosnippet>4688</a>
-<a href=#4689 id=4689 data-nosnippet>4689</a>    <span class="attr">#[cfg(feature = <span class="string">"replay"</span>)]
-<a href=#4690 id=4690 data-nosnippet>4690</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>wait_for_submit(
-<a href=#4691 id=4691 data-nosnippet>4691</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#4692 id=4692 data-nosnippet>4692</a>        submission_index: <span class="kw">crate</span>::SubmissionIndex,
-<a href=#4693 id=4693 data-nosnippet>4693</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
-<a href=#4694 id=4694 data-nosnippet>4694</a>        <span class="kw">let </span>fence = <span class="self">self</span>.fence.read();
-<a href=#4695 id=4695 data-nosnippet>4695</a>        <span class="kw">let </span>last_done_index = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().get_fence_value(fence.as_ref()) }
-<a href=#4696 id=4696 data-nosnippet>4696</a>            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
-<a href=#4697 id=4697 data-nosnippet>4697</a>        <span class="kw">if </span>last_done_index &lt; submission_index {
-<a href=#4698 id=4698 data-nosnippet>4698</a>            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().wait(fence.as_ref(), submission_index, <span class="prelude-val">None</span>) }
-<a href=#4699 id=4699 data-nosnippet>4699</a>                .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
-<a href=#4700 id=4700 data-nosnippet>4700</a>            drop(fence);
-<a href=#4701 id=4701 data-nosnippet>4701</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = <span class="self">self</span>.get_queue() {
-<a href=#4702 id=4702 data-nosnippet>4702</a>                <span class="kw">let </span>closures = queue.lock_life().triage_submissions(submission_index);
-<a href=#4703 id=4703 data-nosnippet>4703</a>                <span class="macro">assert!</span>(
-<a href=#4704 id=4704 data-nosnippet>4704</a>                    closures.is_empty(),
-<a href=#4705 id=4705 data-nosnippet>4705</a>                    <span class="string">"wait_for_submit is not expected to work with closures"
-<a href=#4706 id=4706 data-nosnippet>4706</a>                </span>);
-<a href=#4707 id=4707 data-nosnippet>4707</a>            }
-<a href=#4708 id=4708 data-nosnippet>4708</a>        }
-<a href=#4709 id=4709 data-nosnippet>4709</a>        <span class="prelude-val">Ok</span>(())
-<a href=#4710 id=4710 data-nosnippet>4710</a>    }
-<a href=#4711 id=4711 data-nosnippet>4711</a>
-<a href=#4712 id=4712 data-nosnippet>4712</a>    <span class="kw">pub fn </span>create_query_set(
-<a href=#4713 id=4713 data-nosnippet>4713</a>        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-<a href=#4714 id=4714 data-nosnippet>4714</a>        desc: <span class="kw-2">&amp;</span>resource::QuerySetDescriptor,
-<a href=#4715 id=4715 data-nosnippet>4715</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;QuerySet&gt;, resource::CreateQuerySetError&gt; {
-<a href=#4716 id=4716 data-nosnippet>4716</a>        <span class="kw">use </span>resource::CreateQuerySetError <span class="kw">as </span>Error;
-<a href=#4717 id=4717 data-nosnippet>4717</a>
-<a href=#4718 id=4718 data-nosnippet>4718</a>        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
-<a href=#4719 id=4719 data-nosnippet>4719</a>
-<a href=#4720 id=4720 data-nosnippet>4720</a>        <span class="kw">match </span>desc.ty {
-<a href=#4721 id=4721 data-nosnippet>4721</a>            wgt::QueryType::Occlusion =&gt; {}
-<a href=#4722 id=4722 data-nosnippet>4722</a>            wgt::QueryType::Timestamp =&gt; {
-<a href=#4723 id=4723 data-nosnippet>4723</a>                <span class="self">self</span>.require_features(wgt::Features::TIMESTAMP_QUERY)<span class="question-mark">?</span>;
-<a href=#4724 id=4724 data-nosnippet>4724</a>            }
-<a href=#4725 id=4725 data-nosnippet>4725</a>            wgt::QueryType::PipelineStatistics(..) =&gt; {
-<a href=#4726 id=4726 data-nosnippet>4726</a>                <span class="self">self</span>.require_features(wgt::Features::PIPELINE_STATISTICS_QUERY)<span class="question-mark">?</span>;
+<a href=#4652 id=4652 data-nosnippet>4652</a>        <span class="prelude-val">Ok</span>(cache)
+<a href=#4653 id=4653 data-nosnippet>4653</a>    }
+<a href=#4654 id=4654 data-nosnippet>4654</a>
+<a href=#4655 id=4655 data-nosnippet>4655</a>    <span class="kw">fn </span>get_texture_format_features(<span class="kw-2">&amp;</span><span class="self">self</span>, format: TextureFormat) -&gt; wgt::TextureFormatFeatures {
+<a href=#4656 id=4656 data-nosnippet>4656</a>        <span class="comment">// Variant of adapter.get_texture_format_features that takes device features into account
+<a href=#4657 id=4657 data-nosnippet>4657</a>        </span><span class="kw">use </span>wgt::TextureFormatFeatureFlags <span class="kw">as </span>tfsc;
+<a href=#4658 id=4658 data-nosnippet>4658</a>        <span class="kw">let </span><span class="kw-2">mut </span>format_features = <span class="self">self</span>.adapter.get_texture_format_features(format);
+<a href=#4659 id=4659 data-nosnippet>4659</a>        <span class="kw">if </span>(format == TextureFormat::R32Float
+<a href=#4660 id=4660 data-nosnippet>4660</a>            || format == TextureFormat::Rg32Float
+<a href=#4661 id=4661 data-nosnippet>4661</a>            || format == TextureFormat::Rgba32Float)
+<a href=#4662 id=4662 data-nosnippet>4662</a>            &amp;&amp; !<span class="self">self</span>.features.contains(wgt::Features::FLOAT32_FILTERABLE)
+<a href=#4663 id=4663 data-nosnippet>4663</a>        {
+<a href=#4664 id=4664 data-nosnippet>4664</a>            format_features.flags.set(tfsc::FILTERABLE, <span class="bool-val">false</span>);
+<a href=#4665 id=4665 data-nosnippet>4665</a>        }
+<a href=#4666 id=4666 data-nosnippet>4666</a>        format_features
+<a href=#4667 id=4667 data-nosnippet>4667</a>    }
+<a href=#4668 id=4668 data-nosnippet>4668</a>
+<a href=#4669 id=4669 data-nosnippet>4669</a>    <span class="kw">fn </span>describe_format_features(
+<a href=#4670 id=4670 data-nosnippet>4670</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#4671 id=4671 data-nosnippet>4671</a>        format: TextureFormat,
+<a href=#4672 id=4672 data-nosnippet>4672</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::TextureFormatFeatures, MissingFeatures&gt; {
+<a href=#4673 id=4673 data-nosnippet>4673</a>        <span class="self">self</span>.require_features(format.required_features())<span class="question-mark">?</span>;
+<a href=#4674 id=4674 data-nosnippet>4674</a>
+<a href=#4675 id=4675 data-nosnippet>4675</a>        <span class="kw">let </span>using_device_features = <span class="self">self
+<a href=#4676 id=4676 data-nosnippet>4676</a>            </span>.features
+<a href=#4677 id=4677 data-nosnippet>4677</a>            .contains(wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES);
+<a href=#4678 id=4678 data-nosnippet>4678</a>        <span class="comment">// If we're running downlevel, we need to manually ask the backend what
+<a href=#4679 id=4679 data-nosnippet>4679</a>        // we can use as we can't trust WebGPU.
+<a href=#4680 id=4680 data-nosnippet>4680</a>        </span><span class="kw">let </span>downlevel = !<span class="self">self
+<a href=#4681 id=4681 data-nosnippet>4681</a>            </span>.downlevel
+<a href=#4682 id=4682 data-nosnippet>4682</a>            .flags
+<a href=#4683 id=4683 data-nosnippet>4683</a>            .contains(wgt::DownlevelFlags::WEBGPU_TEXTURE_FORMAT_SUPPORT);
+<a href=#4684 id=4684 data-nosnippet>4684</a>
+<a href=#4685 id=4685 data-nosnippet>4685</a>        <span class="kw">if </span>using_device_features || downlevel {
+<a href=#4686 id=4686 data-nosnippet>4686</a>            <span class="prelude-val">Ok</span>(<span class="self">self</span>.get_texture_format_features(format))
+<a href=#4687 id=4687 data-nosnippet>4687</a>        } <span class="kw">else </span>{
+<a href=#4688 id=4688 data-nosnippet>4688</a>            <span class="prelude-val">Ok</span>(format.guaranteed_format_features(<span class="self">self</span>.features))
+<a href=#4689 id=4689 data-nosnippet>4689</a>        }
+<a href=#4690 id=4690 data-nosnippet>4690</a>    }
+<a href=#4691 id=4691 data-nosnippet>4691</a>
+<a href=#4692 id=4692 data-nosnippet>4692</a>    <span class="attr">#[cfg(feature = <span class="string">"replay"</span>)]
+<a href=#4693 id=4693 data-nosnippet>4693</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>wait_for_submit(
+<a href=#4694 id=4694 data-nosnippet>4694</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#4695 id=4695 data-nosnippet>4695</a>        submission_index: <span class="kw">crate</span>::SubmissionIndex,
+<a href=#4696 id=4696 data-nosnippet>4696</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
+<a href=#4697 id=4697 data-nosnippet>4697</a>        <span class="kw">let </span>fence = <span class="self">self</span>.fence.read();
+<a href=#4698 id=4698 data-nosnippet>4698</a>        <span class="kw">let </span>last_done_index = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().get_fence_value(fence.as_ref()) }
+<a href=#4699 id=4699 data-nosnippet>4699</a>            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
+<a href=#4700 id=4700 data-nosnippet>4700</a>        <span class="kw">if </span>last_done_index &lt; submission_index {
+<a href=#4701 id=4701 data-nosnippet>4701</a>            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().wait(fence.as_ref(), submission_index, <span class="prelude-val">None</span>) }
+<a href=#4702 id=4702 data-nosnippet>4702</a>                .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
+<a href=#4703 id=4703 data-nosnippet>4703</a>            drop(fence);
+<a href=#4704 id=4704 data-nosnippet>4704</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = <span class="self">self</span>.get_queue() {
+<a href=#4705 id=4705 data-nosnippet>4705</a>                <span class="kw">let </span>closures = queue.lock_life().triage_submissions(submission_index);
+<a href=#4706 id=4706 data-nosnippet>4706</a>                <span class="macro">assert!</span>(
+<a href=#4707 id=4707 data-nosnippet>4707</a>                    closures.is_empty(),
+<a href=#4708 id=4708 data-nosnippet>4708</a>                    <span class="string">"wait_for_submit is not expected to work with closures"
+<a href=#4709 id=4709 data-nosnippet>4709</a>                </span>);
+<a href=#4710 id=4710 data-nosnippet>4710</a>            }
+<a href=#4711 id=4711 data-nosnippet>4711</a>        }
+<a href=#4712 id=4712 data-nosnippet>4712</a>        <span class="prelude-val">Ok</span>(())
+<a href=#4713 id=4713 data-nosnippet>4713</a>    }
+<a href=#4714 id=4714 data-nosnippet>4714</a>
+<a href=#4715 id=4715 data-nosnippet>4715</a>    <span class="kw">pub fn </span>create_query_set(
+<a href=#4716 id=4716 data-nosnippet>4716</a>        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+<a href=#4717 id=4717 data-nosnippet>4717</a>        desc: <span class="kw-2">&amp;</span>resource::QuerySetDescriptor,
+<a href=#4718 id=4718 data-nosnippet>4718</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;QuerySet&gt;, resource::CreateQuerySetError&gt; {
+<a href=#4719 id=4719 data-nosnippet>4719</a>        <span class="kw">use </span>resource::CreateQuerySetError <span class="kw">as </span>Error;
+<a href=#4720 id=4720 data-nosnippet>4720</a>
+<a href=#4721 id=4721 data-nosnippet>4721</a>        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+<a href=#4722 id=4722 data-nosnippet>4722</a>
+<a href=#4723 id=4723 data-nosnippet>4723</a>        <span class="kw">match </span>desc.ty {
+<a href=#4724 id=4724 data-nosnippet>4724</a>            wgt::QueryType::Occlusion =&gt; {}
+<a href=#4725 id=4725 data-nosnippet>4725</a>            wgt::QueryType::Timestamp =&gt; {
+<a href=#4726 id=4726 data-nosnippet>4726</a>                <span class="self">self</span>.require_features(wgt::Features::TIMESTAMP_QUERY)<span class="question-mark">?</span>;
 <a href=#4727 id=4727 data-nosnippet>4727</a>            }
-<a href=#4728 id=4728 data-nosnippet>4728</a>        }
-<a href=#4729 id=4729 data-nosnippet>4729</a>
-<a href=#4730 id=4730 data-nosnippet>4730</a>        <span class="kw">if </span>desc.count == <span class="number">0 </span>{
-<a href=#4731 id=4731 data-nosnippet>4731</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::ZeroCount);
-<a href=#4732 id=4732 data-nosnippet>4732</a>        }
-<a href=#4733 id=4733 data-nosnippet>4733</a>
-<a href=#4734 id=4734 data-nosnippet>4734</a>        <span class="kw">if </span>desc.count &gt; wgt::QUERY_SET_MAX_QUERIES {
-<a href=#4735 id=4735 data-nosnippet>4735</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::TooManyQueries {
-<a href=#4736 id=4736 data-nosnippet>4736</a>                count: desc.count,
-<a href=#4737 id=4737 data-nosnippet>4737</a>                maximum: wgt::QUERY_SET_MAX_QUERIES,
-<a href=#4738 id=4738 data-nosnippet>4738</a>            });
-<a href=#4739 id=4739 data-nosnippet>4739</a>        }
-<a href=#4740 id=4740 data-nosnippet>4740</a>
-<a href=#4741 id=4741 data-nosnippet>4741</a>        <span class="kw">let </span>hal_desc = desc.map_label(|label| label.to_hal(<span class="self">self</span>.instance_flags));
-<a href=#4742 id=4742 data-nosnippet>4742</a>
-<a href=#4743 id=4743 data-nosnippet>4743</a>        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_query_set(<span class="kw-2">&amp;</span>hal_desc) }
-<a href=#4744 id=4744 data-nosnippet>4744</a>            .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
+<a href=#4728 id=4728 data-nosnippet>4728</a>            wgt::QueryType::PipelineStatistics(..) =&gt; {
+<a href=#4729 id=4729 data-nosnippet>4729</a>                <span class="self">self</span>.require_features(wgt::Features::PIPELINE_STATISTICS_QUERY)<span class="question-mark">?</span>;
+<a href=#4730 id=4730 data-nosnippet>4730</a>            }
+<a href=#4731 id=4731 data-nosnippet>4731</a>        }
+<a href=#4732 id=4732 data-nosnippet>4732</a>
+<a href=#4733 id=4733 data-nosnippet>4733</a>        <span class="kw">if </span>desc.count == <span class="number">0 </span>{
+<a href=#4734 id=4734 data-nosnippet>4734</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::ZeroCount);
+<a href=#4735 id=4735 data-nosnippet>4735</a>        }
+<a href=#4736 id=4736 data-nosnippet>4736</a>
+<a href=#4737 id=4737 data-nosnippet>4737</a>        <span class="kw">if </span>desc.count &gt; wgt::QUERY_SET_MAX_QUERIES {
+<a href=#4738 id=4738 data-nosnippet>4738</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::TooManyQueries {
+<a href=#4739 id=4739 data-nosnippet>4739</a>                count: desc.count,
+<a href=#4740 id=4740 data-nosnippet>4740</a>                maximum: wgt::QUERY_SET_MAX_QUERIES,
+<a href=#4741 id=4741 data-nosnippet>4741</a>            });
+<a href=#4742 id=4742 data-nosnippet>4742</a>        }
+<a href=#4743 id=4743 data-nosnippet>4743</a>
+<a href=#4744 id=4744 data-nosnippet>4744</a>        <span class="kw">let </span>hal_desc = desc.map_label(|label| label.to_hal(<span class="self">self</span>.instance_flags));
 <a href=#4745 id=4745 data-nosnippet>4745</a>
-<a href=#4746 id=4746 data-nosnippet>4746</a>        <span class="kw">let </span>query_set = QuerySet {
-<a href=#4747 id=4747 data-nosnippet>4747</a>            raw: ManuallyDrop::new(raw),
-<a href=#4748 id=4748 data-nosnippet>4748</a>            device: <span class="self">self</span>.clone(),
-<a href=#4749 id=4749 data-nosnippet>4749</a>            label: desc.label.to_string(),
-<a href=#4750 id=4750 data-nosnippet>4750</a>            tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.query_sets.clone()),
-<a href=#4751 id=4751 data-nosnippet>4751</a>            desc: desc.map_label(|<span class="kw">_</span>| ()),
-<a href=#4752 id=4752 data-nosnippet>4752</a>        };
-<a href=#4753 id=4753 data-nosnippet>4753</a>
-<a href=#4754 id=4754 data-nosnippet>4754</a>        <span class="kw">let </span>query_set = Arc::new(query_set);
-<a href=#4755 id=4755 data-nosnippet>4755</a>
-<a href=#4756 id=4756 data-nosnippet>4756</a>        <span class="prelude-val">Ok</span>(query_set)
-<a href=#4757 id=4757 data-nosnippet>4757</a>    }
+<a href=#4746 id=4746 data-nosnippet>4746</a>        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_query_set(<span class="kw-2">&amp;</span>hal_desc) }
+<a href=#4747 id=4747 data-nosnippet>4747</a>            .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
+<a href=#4748 id=4748 data-nosnippet>4748</a>
+<a href=#4749 id=4749 data-nosnippet>4749</a>        <span class="kw">let </span>query_set = QuerySet {
+<a href=#4750 id=4750 data-nosnippet>4750</a>            raw: ManuallyDrop::new(raw),
+<a href=#4751 id=4751 data-nosnippet>4751</a>            device: <span class="self">self</span>.clone(),
+<a href=#4752 id=4752 data-nosnippet>4752</a>            label: desc.label.to_string(),
+<a href=#4753 id=4753 data-nosnippet>4753</a>            tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.query_sets.clone()),
+<a href=#4754 id=4754 data-nosnippet>4754</a>            desc: desc.map_label(|<span class="kw">_</span>| ()),
+<a href=#4755 id=4755 data-nosnippet>4755</a>        };
+<a href=#4756 id=4756 data-nosnippet>4756</a>
+<a href=#4757 id=4757 data-nosnippet>4757</a>        <span class="kw">let </span>query_set = Arc::new(query_set);
 <a href=#4758 id=4758 data-nosnippet>4758</a>
-<a href=#4759 id=4759 data-nosnippet>4759</a>    <span class="kw">pub fn </span>configure_surface(
-<a href=#4760 id=4760 data-nosnippet>4760</a>        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-<a href=#4761 id=4761 data-nosnippet>4761</a>        surface: <span class="kw-2">&amp;</span><span class="kw">crate</span>::instance::Surface,
-<a href=#4762 id=4762 data-nosnippet>4762</a>        config: <span class="kw-2">&amp;</span>wgt::SurfaceConfiguration&lt;Vec&lt;TextureFormat&gt;&gt;,
-<a href=#4763 id=4763 data-nosnippet>4763</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;present::ConfigureSurfaceError&gt; {
-<a href=#4764 id=4764 data-nosnippet>4764</a>        <span class="kw">use </span>present::ConfigureSurfaceError <span class="kw">as </span>E;
-<a href=#4765 id=4765 data-nosnippet>4765</a>        <span class="macro">profiling::scope!</span>(<span class="string">"surface_configure"</span>);
-<a href=#4766 id=4766 data-nosnippet>4766</a>
-<a href=#4767 id=4767 data-nosnippet>4767</a>        <span class="kw">fn </span>validate_surface_configuration(
-<a href=#4768 id=4768 data-nosnippet>4768</a>            config: <span class="kw-2">&amp;mut </span>hal::SurfaceConfiguration,
-<a href=#4769 id=4769 data-nosnippet>4769</a>            caps: <span class="kw-2">&amp;</span>hal::SurfaceCapabilities,
-<a href=#4770 id=4770 data-nosnippet>4770</a>            max_texture_dimension_2d: u32,
-<a href=#4771 id=4771 data-nosnippet>4771</a>        ) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt; {
-<a href=#4772 id=4772 data-nosnippet>4772</a>            <span class="kw">let </span>width = config.extent.width;
-<a href=#4773 id=4773 data-nosnippet>4773</a>            <span class="kw">let </span>height = config.extent.height;
-<a href=#4774 id=4774 data-nosnippet>4774</a>
-<a href=#4775 id=4775 data-nosnippet>4775</a>            <span class="kw">if </span>width &gt; max_texture_dimension_2d || height &gt; max_texture_dimension_2d {
-<a href=#4776 id=4776 data-nosnippet>4776</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(E::TooLarge {
-<a href=#4777 id=4777 data-nosnippet>4777</a>                    width,
-<a href=#4778 id=4778 data-nosnippet>4778</a>                    height,
-<a href=#4779 id=4779 data-nosnippet>4779</a>                    max_texture_dimension_2d,
-<a href=#4780 id=4780 data-nosnippet>4780</a>                });
-<a href=#4781 id=4781 data-nosnippet>4781</a>            }
-<a href=#4782 id=4782 data-nosnippet>4782</a>
-<a href=#4783 id=4783 data-nosnippet>4783</a>            <span class="kw">if </span>!caps.present_modes.contains(<span class="kw-2">&amp;</span>config.present_mode) {
-<a href=#4784 id=4784 data-nosnippet>4784</a>                <span class="comment">// Automatic present mode checks.
-<a href=#4785 id=4785 data-nosnippet>4785</a>                //
-<a href=#4786 id=4786 data-nosnippet>4786</a>                // The "Automatic" modes are never supported by the backends.
-<a href=#4787 id=4787 data-nosnippet>4787</a>                </span><span class="kw">let </span>fallbacks = <span class="kw">match </span>config.present_mode {
-<a href=#4788 id=4788 data-nosnippet>4788</a>                    wgt::PresentMode::AutoVsync =&gt; {
-<a href=#4789 id=4789 data-nosnippet>4789</a>                        <span class="kw-2">&amp;</span>[wgt::PresentMode::FifoRelaxed, wgt::PresentMode::Fifo][..]
-<a href=#4790 id=4790 data-nosnippet>4790</a>                    }
-<a href=#4791 id=4791 data-nosnippet>4791</a>                    <span class="comment">// Always end in FIFO to make sure it's always supported
-<a href=#4792 id=4792 data-nosnippet>4792</a>                    </span>wgt::PresentMode::AutoNoVsync =&gt; <span class="kw-2">&amp;</span>[
-<a href=#4793 id=4793 data-nosnippet>4793</a>                        wgt::PresentMode::Immediate,
-<a href=#4794 id=4794 data-nosnippet>4794</a>                        wgt::PresentMode::Mailbox,
-<a href=#4795 id=4795 data-nosnippet>4795</a>                        wgt::PresentMode::Fifo,
-<a href=#4796 id=4796 data-nosnippet>4796</a>                    ][..],
-<a href=#4797 id=4797 data-nosnippet>4797</a>                    <span class="kw">_ </span>=&gt; {
-<a href=#4798 id=4798 data-nosnippet>4798</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(E::UnsupportedPresentMode {
-<a href=#4799 id=4799 data-nosnippet>4799</a>                            requested: config.present_mode,
-<a href=#4800 id=4800 data-nosnippet>4800</a>                            available: caps.present_modes.clone(),
-<a href=#4801 id=4801 data-nosnippet>4801</a>                        });
-<a href=#4802 id=4802 data-nosnippet>4802</a>                    }
-<a href=#4803 id=4803 data-nosnippet>4803</a>                };
-<a href=#4804 id=4804 data-nosnippet>4804</a>
-<a href=#4805 id=4805 data-nosnippet>4805</a>                <span class="kw">let </span>new_mode = fallbacks
-<a href=#4806 id=4806 data-nosnippet>4806</a>                    .iter()
-<a href=#4807 id=4807 data-nosnippet>4807</a>                    .copied()
-<a href=#4808 id=4808 data-nosnippet>4808</a>                    .find(|fallback| caps.present_modes.contains(fallback))
-<a href=#4809 id=4809 data-nosnippet>4809</a>                    .unwrap_or_else(|| {
-<a href=#4810 id=4810 data-nosnippet>4810</a>                        <span class="macro">unreachable!</span>(
-<a href=#4811 id=4811 data-nosnippet>4811</a>                            <span class="string">"Fallback system failed to choose present mode. \
-<a href=#4812 id=4812 data-nosnippet>4812</a>                            This is a bug. Mode: {:?}, Options: {:?}"</span>,
-<a href=#4813 id=4813 data-nosnippet>4813</a>                            config.present_mode, <span class="kw-2">&amp;</span>caps.present_modes
-<a href=#4814 id=4814 data-nosnippet>4814</a>                        );
-<a href=#4815 id=4815 data-nosnippet>4815</a>                    });
-<a href=#4816 id=4816 data-nosnippet>4816</a>
-<a href=#4817 id=4817 data-nosnippet>4817</a>                <span class="macro">api_log!</span>(
-<a href=#4818 id=4818 data-nosnippet>4818</a>                    <span class="string">"Automatically choosing presentation mode by rule {:?}. Chose {new_mode:?}"</span>,
-<a href=#4819 id=4819 data-nosnippet>4819</a>                    config.present_mode
-<a href=#4820 id=4820 data-nosnippet>4820</a>                );
-<a href=#4821 id=4821 data-nosnippet>4821</a>                config.present_mode = new_mode;
-<a href=#4822 id=4822 data-nosnippet>4822</a>            }
-<a href=#4823 id=4823 data-nosnippet>4823</a>            <span class="kw">if </span>!caps.formats.contains(<span class="kw-2">&amp;</span>config.format) {
-<a href=#4824 id=4824 data-nosnippet>4824</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(E::UnsupportedFormat {
-<a href=#4825 id=4825 data-nosnippet>4825</a>                    requested: config.format,
-<a href=#4826 id=4826 data-nosnippet>4826</a>                    available: caps.formats.clone(),
-<a href=#4827 id=4827 data-nosnippet>4827</a>                });
-<a href=#4828 id=4828 data-nosnippet>4828</a>            }
-<a href=#4829 id=4829 data-nosnippet>4829</a>            <span class="kw">if </span>!caps
-<a href=#4830 id=4830 data-nosnippet>4830</a>                .composite_alpha_modes
-<a href=#4831 id=4831 data-nosnippet>4831</a>                .contains(<span class="kw-2">&amp;</span>config.composite_alpha_mode)
-<a href=#4832 id=4832 data-nosnippet>4832</a>            {
-<a href=#4833 id=4833 data-nosnippet>4833</a>                <span class="kw">let </span>new_alpha_mode = <span class="lifetime">'alpha</span>: {
-<a href=#4834 id=4834 data-nosnippet>4834</a>                    <span class="comment">// Automatic alpha mode checks.
-<a href=#4835 id=4835 data-nosnippet>4835</a>                    </span><span class="kw">let </span>fallbacks = <span class="kw">match </span>config.composite_alpha_mode {
-<a href=#4836 id=4836 data-nosnippet>4836</a>                        wgt::CompositeAlphaMode::Auto =&gt; <span class="kw-2">&amp;</span>[
-<a href=#4837 id=4837 data-nosnippet>4837</a>                            wgt::CompositeAlphaMode::Opaque,
-<a href=#4838 id=4838 data-nosnippet>4838</a>                            wgt::CompositeAlphaMode::Inherit,
-<a href=#4839 id=4839 data-nosnippet>4839</a>                        ][..],
-<a href=#4840 id=4840 data-nosnippet>4840</a>                        <span class="kw">_ </span>=&gt; {
-<a href=#4841 id=4841 data-nosnippet>4841</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(E::UnsupportedAlphaMode {
-<a href=#4842 id=4842 data-nosnippet>4842</a>                                requested: config.composite_alpha_mode,
-<a href=#4843 id=4843 data-nosnippet>4843</a>                                available: caps.composite_alpha_modes.clone(),
-<a href=#4844 id=4844 data-nosnippet>4844</a>                            });
-<a href=#4845 id=4845 data-nosnippet>4845</a>                        }
-<a href=#4846 id=4846 data-nosnippet>4846</a>                    };
-<a href=#4847 id=4847 data-nosnippet>4847</a>
-<a href=#4848 id=4848 data-nosnippet>4848</a>                    <span class="kw">for </span><span class="kw-2">&amp;</span>fallback <span class="kw">in </span>fallbacks {
-<a href=#4849 id=4849 data-nosnippet>4849</a>                        <span class="kw">if </span>caps.composite_alpha_modes.contains(<span class="kw-2">&amp;</span>fallback) {
-<a href=#4850 id=4850 data-nosnippet>4850</a>                            <span class="kw">break </span><span class="lifetime">'alpha </span>fallback;
-<a href=#4851 id=4851 data-nosnippet>4851</a>                        }
-<a href=#4852 id=4852 data-nosnippet>4852</a>                    }
-<a href=#4853 id=4853 data-nosnippet>4853</a>
-<a href=#4854 id=4854 data-nosnippet>4854</a>                    <span class="macro">unreachable!</span>(
-<a href=#4855 id=4855 data-nosnippet>4855</a>                        <span class="string">"Fallback system failed to choose alpha mode. This is a bug. \
-<a href=#4856 id=4856 data-nosnippet>4856</a>                                  AlphaMode: {:?}, Options: {:?}"</span>,
-<a href=#4857 id=4857 data-nosnippet>4857</a>                        config.composite_alpha_mode, <span class="kw-2">&amp;</span>caps.composite_alpha_modes
-<a href=#4858 id=4858 data-nosnippet>4858</a>                    );
-<a href=#4859 id=4859 data-nosnippet>4859</a>                };
-<a href=#4860 id=4860 data-nosnippet>4860</a>
-<a href=#4861 id=4861 data-nosnippet>4861</a>                <span class="macro">api_log!</span>(
-<a href=#4862 id=4862 data-nosnippet>4862</a>                    <span class="string">"Automatically choosing alpha mode by rule {:?}. Chose {new_alpha_mode:?}"</span>,
-<a href=#4863 id=4863 data-nosnippet>4863</a>                    config.composite_alpha_mode
-<a href=#4864 id=4864 data-nosnippet>4864</a>                );
-<a href=#4865 id=4865 data-nosnippet>4865</a>                config.composite_alpha_mode = new_alpha_mode;
-<a href=#4866 id=4866 data-nosnippet>4866</a>            }
-<a href=#4867 id=4867 data-nosnippet>4867</a>            <span class="kw">if </span>!caps.usage.contains(config.usage) {
-<a href=#4868 id=4868 data-nosnippet>4868</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(E::UnsupportedUsage {
-<a href=#4869 id=4869 data-nosnippet>4869</a>                    requested: config.usage,
-<a href=#4870 id=4870 data-nosnippet>4870</a>                    available: caps.usage,
-<a href=#4871 id=4871 data-nosnippet>4871</a>                });
-<a href=#4872 id=4872 data-nosnippet>4872</a>            }
-<a href=#4873 id=4873 data-nosnippet>4873</a>            <span class="kw">if </span>width == <span class="number">0 </span>|| height == <span class="number">0 </span>{
-<a href=#4874 id=4874 data-nosnippet>4874</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(E::ZeroArea);
+<a href=#4759 id=4759 data-nosnippet>4759</a>        <span class="prelude-val">Ok</span>(query_set)
+<a href=#4760 id=4760 data-nosnippet>4760</a>    }
+<a href=#4761 id=4761 data-nosnippet>4761</a>
+<a href=#4762 id=4762 data-nosnippet>4762</a>    <span class="kw">pub fn </span>configure_surface(
+<a href=#4763 id=4763 data-nosnippet>4763</a>        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+<a href=#4764 id=4764 data-nosnippet>4764</a>        surface: <span class="kw-2">&amp;</span><span class="kw">crate</span>::instance::Surface,
+<a href=#4765 id=4765 data-nosnippet>4765</a>        config: <span class="kw-2">&amp;</span>wgt::SurfaceConfiguration&lt;Vec&lt;TextureFormat&gt;&gt;,
+<a href=#4766 id=4766 data-nosnippet>4766</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;present::ConfigureSurfaceError&gt; {
+<a href=#4767 id=4767 data-nosnippet>4767</a>        <span class="kw">use </span>present::ConfigureSurfaceError <span class="kw">as </span>E;
+<a href=#4768 id=4768 data-nosnippet>4768</a>        <span class="macro">profiling::scope!</span>(<span class="string">"surface_configure"</span>);
+<a href=#4769 id=4769 data-nosnippet>4769</a>
+<a href=#4770 id=4770 data-nosnippet>4770</a>        <span class="kw">fn </span>validate_surface_configuration(
+<a href=#4771 id=4771 data-nosnippet>4771</a>            config: <span class="kw-2">&amp;mut </span>hal::SurfaceConfiguration,
+<a href=#4772 id=4772 data-nosnippet>4772</a>            caps: <span class="kw-2">&amp;</span>hal::SurfaceCapabilities,
+<a href=#4773 id=4773 data-nosnippet>4773</a>            max_texture_dimension_2d: u32,
+<a href=#4774 id=4774 data-nosnippet>4774</a>        ) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt; {
+<a href=#4775 id=4775 data-nosnippet>4775</a>            <span class="kw">let </span>width = config.extent.width;
+<a href=#4776 id=4776 data-nosnippet>4776</a>            <span class="kw">let </span>height = config.extent.height;
+<a href=#4777 id=4777 data-nosnippet>4777</a>
+<a href=#4778 id=4778 data-nosnippet>4778</a>            <span class="kw">if </span>width &gt; max_texture_dimension_2d || height &gt; max_texture_dimension_2d {
+<a href=#4779 id=4779 data-nosnippet>4779</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(E::TooLarge {
+<a href=#4780 id=4780 data-nosnippet>4780</a>                    width,
+<a href=#4781 id=4781 data-nosnippet>4781</a>                    height,
+<a href=#4782 id=4782 data-nosnippet>4782</a>                    max_texture_dimension_2d,
+<a href=#4783 id=4783 data-nosnippet>4783</a>                });
+<a href=#4784 id=4784 data-nosnippet>4784</a>            }
+<a href=#4785 id=4785 data-nosnippet>4785</a>
+<a href=#4786 id=4786 data-nosnippet>4786</a>            <span class="kw">if </span>!caps.present_modes.contains(<span class="kw-2">&amp;</span>config.present_mode) {
+<a href=#4787 id=4787 data-nosnippet>4787</a>                <span class="comment">// Automatic present mode checks.
+<a href=#4788 id=4788 data-nosnippet>4788</a>                //
+<a href=#4789 id=4789 data-nosnippet>4789</a>                // The "Automatic" modes are never supported by the backends.
+<a href=#4790 id=4790 data-nosnippet>4790</a>                </span><span class="kw">let </span>fallbacks = <span class="kw">match </span>config.present_mode {
+<a href=#4791 id=4791 data-nosnippet>4791</a>                    wgt::PresentMode::AutoVsync =&gt; {
+<a href=#4792 id=4792 data-nosnippet>4792</a>                        <span class="kw-2">&amp;</span>[wgt::PresentMode::FifoRelaxed, wgt::PresentMode::Fifo][..]
+<a href=#4793 id=4793 data-nosnippet>4793</a>                    }
+<a href=#4794 id=4794 data-nosnippet>4794</a>                    <span class="comment">// Always end in FIFO to make sure it's always supported
+<a href=#4795 id=4795 data-nosnippet>4795</a>                    </span>wgt::PresentMode::AutoNoVsync =&gt; <span class="kw-2">&amp;</span>[
+<a href=#4796 id=4796 data-nosnippet>4796</a>                        wgt::PresentMode::Immediate,
+<a href=#4797 id=4797 data-nosnippet>4797</a>                        wgt::PresentMode::Mailbox,
+<a href=#4798 id=4798 data-nosnippet>4798</a>                        wgt::PresentMode::Fifo,
+<a href=#4799 id=4799 data-nosnippet>4799</a>                    ][..],
+<a href=#4800 id=4800 data-nosnippet>4800</a>                    <span class="kw">_ </span>=&gt; {
+<a href=#4801 id=4801 data-nosnippet>4801</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(E::UnsupportedPresentMode {
+<a href=#4802 id=4802 data-nosnippet>4802</a>                            requested: config.present_mode,
+<a href=#4803 id=4803 data-nosnippet>4803</a>                            available: caps.present_modes.clone(),
+<a href=#4804 id=4804 data-nosnippet>4804</a>                        });
+<a href=#4805 id=4805 data-nosnippet>4805</a>                    }
+<a href=#4806 id=4806 data-nosnippet>4806</a>                };
+<a href=#4807 id=4807 data-nosnippet>4807</a>
+<a href=#4808 id=4808 data-nosnippet>4808</a>                <span class="kw">let </span>new_mode = fallbacks
+<a href=#4809 id=4809 data-nosnippet>4809</a>                    .iter()
+<a href=#4810 id=4810 data-nosnippet>4810</a>                    .copied()
+<a href=#4811 id=4811 data-nosnippet>4811</a>                    .find(|fallback| caps.present_modes.contains(fallback))
+<a href=#4812 id=4812 data-nosnippet>4812</a>                    .unwrap_or_else(|| {
+<a href=#4813 id=4813 data-nosnippet>4813</a>                        <span class="macro">unreachable!</span>(
+<a href=#4814 id=4814 data-nosnippet>4814</a>                            <span class="string">"Fallback system failed to choose present mode. \
+<a href=#4815 id=4815 data-nosnippet>4815</a>                            This is a bug. Mode: {:?}, Options: {:?}"</span>,
+<a href=#4816 id=4816 data-nosnippet>4816</a>                            config.present_mode, <span class="kw-2">&amp;</span>caps.present_modes
+<a href=#4817 id=4817 data-nosnippet>4817</a>                        );
+<a href=#4818 id=4818 data-nosnippet>4818</a>                    });
+<a href=#4819 id=4819 data-nosnippet>4819</a>
+<a href=#4820 id=4820 data-nosnippet>4820</a>                <span class="macro">api_log!</span>(
+<a href=#4821 id=4821 data-nosnippet>4821</a>                    <span class="string">"Automatically choosing presentation mode by rule {:?}. Chose {new_mode:?}"</span>,
+<a href=#4822 id=4822 data-nosnippet>4822</a>                    config.present_mode
+<a href=#4823 id=4823 data-nosnippet>4823</a>                );
+<a href=#4824 id=4824 data-nosnippet>4824</a>                config.present_mode = new_mode;
+<a href=#4825 id=4825 data-nosnippet>4825</a>            }
+<a href=#4826 id=4826 data-nosnippet>4826</a>            <span class="kw">if </span>!caps.formats.contains(<span class="kw-2">&amp;</span>config.format) {
+<a href=#4827 id=4827 data-nosnippet>4827</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(E::UnsupportedFormat {
+<a href=#4828 id=4828 data-nosnippet>4828</a>                    requested: config.format,
+<a href=#4829 id=4829 data-nosnippet>4829</a>                    available: caps.formats.clone(),
+<a href=#4830 id=4830 data-nosnippet>4830</a>                });
+<a href=#4831 id=4831 data-nosnippet>4831</a>            }
+<a href=#4832 id=4832 data-nosnippet>4832</a>            <span class="kw">if </span>!caps
+<a href=#4833 id=4833 data-nosnippet>4833</a>                .composite_alpha_modes
+<a href=#4834 id=4834 data-nosnippet>4834</a>                .contains(<span class="kw-2">&amp;</span>config.composite_alpha_mode)
+<a href=#4835 id=4835 data-nosnippet>4835</a>            {
+<a href=#4836 id=4836 data-nosnippet>4836</a>                <span class="kw">let </span>new_alpha_mode = <span class="lifetime">'alpha</span>: {
+<a href=#4837 id=4837 data-nosnippet>4837</a>                    <span class="comment">// Automatic alpha mode checks.
+<a href=#4838 id=4838 data-nosnippet>4838</a>                    </span><span class="kw">let </span>fallbacks = <span class="kw">match </span>config.composite_alpha_mode {
+<a href=#4839 id=4839 data-nosnippet>4839</a>                        wgt::CompositeAlphaMode::Auto =&gt; <span class="kw-2">&amp;</span>[
+<a href=#4840 id=4840 data-nosnippet>4840</a>                            wgt::CompositeAlphaMode::Opaque,
+<a href=#4841 id=4841 data-nosnippet>4841</a>                            wgt::CompositeAlphaMode::Inherit,
+<a href=#4842 id=4842 data-nosnippet>4842</a>                        ][..],
+<a href=#4843 id=4843 data-nosnippet>4843</a>                        <span class="kw">_ </span>=&gt; {
+<a href=#4844 id=4844 data-nosnippet>4844</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(E::UnsupportedAlphaMode {
+<a href=#4845 id=4845 data-nosnippet>4845</a>                                requested: config.composite_alpha_mode,
+<a href=#4846 id=4846 data-nosnippet>4846</a>                                available: caps.composite_alpha_modes.clone(),
+<a href=#4847 id=4847 data-nosnippet>4847</a>                            });
+<a href=#4848 id=4848 data-nosnippet>4848</a>                        }
+<a href=#4849 id=4849 data-nosnippet>4849</a>                    };
+<a href=#4850 id=4850 data-nosnippet>4850</a>
+<a href=#4851 id=4851 data-nosnippet>4851</a>                    <span class="kw">for </span><span class="kw-2">&amp;</span>fallback <span class="kw">in </span>fallbacks {
+<a href=#4852 id=4852 data-nosnippet>4852</a>                        <span class="kw">if </span>caps.composite_alpha_modes.contains(<span class="kw-2">&amp;</span>fallback) {
+<a href=#4853 id=4853 data-nosnippet>4853</a>                            <span class="kw">break </span><span class="lifetime">'alpha </span>fallback;
+<a href=#4854 id=4854 data-nosnippet>4854</a>                        }
+<a href=#4855 id=4855 data-nosnippet>4855</a>                    }
+<a href=#4856 id=4856 data-nosnippet>4856</a>
+<a href=#4857 id=4857 data-nosnippet>4857</a>                    <span class="macro">unreachable!</span>(
+<a href=#4858 id=4858 data-nosnippet>4858</a>                        <span class="string">"Fallback system failed to choose alpha mode. This is a bug. \
+<a href=#4859 id=4859 data-nosnippet>4859</a>                                  AlphaMode: {:?}, Options: {:?}"</span>,
+<a href=#4860 id=4860 data-nosnippet>4860</a>                        config.composite_alpha_mode, <span class="kw-2">&amp;</span>caps.composite_alpha_modes
+<a href=#4861 id=4861 data-nosnippet>4861</a>                    );
+<a href=#4862 id=4862 data-nosnippet>4862</a>                };
+<a href=#4863 id=4863 data-nosnippet>4863</a>
+<a href=#4864 id=4864 data-nosnippet>4864</a>                <span class="macro">api_log!</span>(
+<a href=#4865 id=4865 data-nosnippet>4865</a>                    <span class="string">"Automatically choosing alpha mode by rule {:?}. Chose {new_alpha_mode:?}"</span>,
+<a href=#4866 id=4866 data-nosnippet>4866</a>                    config.composite_alpha_mode
+<a href=#4867 id=4867 data-nosnippet>4867</a>                );
+<a href=#4868 id=4868 data-nosnippet>4868</a>                config.composite_alpha_mode = new_alpha_mode;
+<a href=#4869 id=4869 data-nosnippet>4869</a>            }
+<a href=#4870 id=4870 data-nosnippet>4870</a>            <span class="kw">if </span>!caps.usage.contains(config.usage) {
+<a href=#4871 id=4871 data-nosnippet>4871</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(E::UnsupportedUsage {
+<a href=#4872 id=4872 data-nosnippet>4872</a>                    requested: config.usage,
+<a href=#4873 id=4873 data-nosnippet>4873</a>                    available: caps.usage,
+<a href=#4874 id=4874 data-nosnippet>4874</a>                });
 <a href=#4875 id=4875 data-nosnippet>4875</a>            }
-<a href=#4876 id=4876 data-nosnippet>4876</a>            <span class="prelude-val">Ok</span>(())
-<a href=#4877 id=4877 data-nosnippet>4877</a>        }
-<a href=#4878 id=4878 data-nosnippet>4878</a>
-<a href=#4879 id=4879 data-nosnippet>4879</a>        <span class="macro">log::debug!</span>(<span class="string">"configuring surface with {config:?}"</span>);
-<a href=#4880 id=4880 data-nosnippet>4880</a>
-<a href=#4881 id=4881 data-nosnippet>4881</a>        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
-<a href=#4882 id=4882 data-nosnippet>4882</a>            <span class="comment">// User callbacks must not be called while we are holding locks.
-<a href=#4883 id=4883 data-nosnippet>4883</a>            </span><span class="kw">let </span>user_callbacks;
-<a href=#4884 id=4884 data-nosnippet>4884</a>            {
-<a href=#4885 id=4885 data-nosnippet>4885</a>                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.check_is_valid() {
-<a href=#4886 id=4886 data-nosnippet>4886</a>                    <span class="kw">break </span><span class="lifetime">'error </span>e.into();
-<a href=#4887 id=4887 data-nosnippet>4887</a>                }
-<a href=#4888 id=4888 data-nosnippet>4888</a>
-<a href=#4889 id=4889 data-nosnippet>4889</a>                <span class="kw">let </span>caps = <span class="kw">match </span>surface.get_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>.adapter) {
-<a href=#4890 id=4890 data-nosnippet>4890</a>                    <span class="prelude-val">Ok</span>(caps) =&gt; caps,
-<a href=#4891 id=4891 data-nosnippet>4891</a>                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>E::UnsupportedQueueFamily,
-<a href=#4892 id=4892 data-nosnippet>4892</a>                };
-<a href=#4893 id=4893 data-nosnippet>4893</a>
-<a href=#4894 id=4894 data-nosnippet>4894</a>                <span class="kw">let </span><span class="kw-2">mut </span>hal_view_formats = Vec::new();
-<a href=#4895 id=4895 data-nosnippet>4895</a>                <span class="kw">for </span>format <span class="kw">in </span>config.view_formats.iter() {
-<a href=#4896 id=4896 data-nosnippet>4896</a>                    <span class="kw">if </span><span class="kw-2">*</span>format == config.format {
-<a href=#4897 id=4897 data-nosnippet>4897</a>                        <span class="kw">continue</span>;
-<a href=#4898 id=4898 data-nosnippet>4898</a>                    }
-<a href=#4899 id=4899 data-nosnippet>4899</a>                    <span class="kw">if </span>!caps.formats.contains(<span class="kw-2">&amp;</span>config.format) {
-<a href=#4900 id=4900 data-nosnippet>4900</a>                        <span class="kw">break </span><span class="lifetime">'error </span>E::UnsupportedFormat {
-<a href=#4901 id=4901 data-nosnippet>4901</a>                            requested: config.format,
-<a href=#4902 id=4902 data-nosnippet>4902</a>                            available: caps.formats,
-<a href=#4903 id=4903 data-nosnippet>4903</a>                        };
-<a href=#4904 id=4904 data-nosnippet>4904</a>                    }
-<a href=#4905 id=4905 data-nosnippet>4905</a>                    <span class="kw">if </span>config.format.remove_srgb_suffix() != format.remove_srgb_suffix() {
-<a href=#4906 id=4906 data-nosnippet>4906</a>                        <span class="kw">break </span><span class="lifetime">'error </span>E::InvalidViewFormat(<span class="kw-2">*</span>format, config.format);
+<a href=#4876 id=4876 data-nosnippet>4876</a>            <span class="kw">if </span>width == <span class="number">0 </span>|| height == <span class="number">0 </span>{
+<a href=#4877 id=4877 data-nosnippet>4877</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(E::ZeroArea);
+<a href=#4878 id=4878 data-nosnippet>4878</a>            }
+<a href=#4879 id=4879 data-nosnippet>4879</a>            <span class="prelude-val">Ok</span>(())
+<a href=#4880 id=4880 data-nosnippet>4880</a>        }
+<a href=#4881 id=4881 data-nosnippet>4881</a>
+<a href=#4882 id=4882 data-nosnippet>4882</a>        <span class="macro">log::debug!</span>(<span class="string">"configuring surface with {config:?}"</span>);
+<a href=#4883 id=4883 data-nosnippet>4883</a>
+<a href=#4884 id=4884 data-nosnippet>4884</a>        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
+<a href=#4885 id=4885 data-nosnippet>4885</a>            <span class="comment">// User callbacks must not be called while we are holding locks.
+<a href=#4886 id=4886 data-nosnippet>4886</a>            </span><span class="kw">let </span>user_callbacks;
+<a href=#4887 id=4887 data-nosnippet>4887</a>            {
+<a href=#4888 id=4888 data-nosnippet>4888</a>                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.check_is_valid() {
+<a href=#4889 id=4889 data-nosnippet>4889</a>                    <span class="kw">break </span><span class="lifetime">'error </span>e.into();
+<a href=#4890 id=4890 data-nosnippet>4890</a>                }
+<a href=#4891 id=4891 data-nosnippet>4891</a>
+<a href=#4892 id=4892 data-nosnippet>4892</a>                <span class="kw">let </span>caps = <span class="kw">match </span>surface.get_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>.adapter) {
+<a href=#4893 id=4893 data-nosnippet>4893</a>                    <span class="prelude-val">Ok</span>(caps) =&gt; caps,
+<a href=#4894 id=4894 data-nosnippet>4894</a>                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>E::UnsupportedQueueFamily,
+<a href=#4895 id=4895 data-nosnippet>4895</a>                };
+<a href=#4896 id=4896 data-nosnippet>4896</a>
+<a href=#4897 id=4897 data-nosnippet>4897</a>                <span class="kw">let </span><span class="kw-2">mut </span>hal_view_formats = Vec::new();
+<a href=#4898 id=4898 data-nosnippet>4898</a>                <span class="kw">for </span>format <span class="kw">in </span>config.view_formats.iter() {
+<a href=#4899 id=4899 data-nosnippet>4899</a>                    <span class="kw">if </span><span class="kw-2">*</span>format == config.format {
+<a href=#4900 id=4900 data-nosnippet>4900</a>                        <span class="kw">continue</span>;
+<a href=#4901 id=4901 data-nosnippet>4901</a>                    }
+<a href=#4902 id=4902 data-nosnippet>4902</a>                    <span class="kw">if </span>!caps.formats.contains(<span class="kw-2">&amp;</span>config.format) {
+<a href=#4903 id=4903 data-nosnippet>4903</a>                        <span class="kw">break </span><span class="lifetime">'error </span>E::UnsupportedFormat {
+<a href=#4904 id=4904 data-nosnippet>4904</a>                            requested: config.format,
+<a href=#4905 id=4905 data-nosnippet>4905</a>                            available: caps.formats,
+<a href=#4906 id=4906 data-nosnippet>4906</a>                        };
 <a href=#4907 id=4907 data-nosnippet>4907</a>                    }
-<a href=#4908 id=4908 data-nosnippet>4908</a>                    hal_view_formats.push(<span class="kw-2">*</span>format);
-<a href=#4909 id=4909 data-nosnippet>4909</a>                }
-<a href=#4910 id=4910 data-nosnippet>4910</a>
-<a href=#4911 id=4911 data-nosnippet>4911</a>                <span class="kw">if </span>!hal_view_formats.is_empty() {
-<a href=#4912 id=4912 data-nosnippet>4912</a>                    <span class="kw">if let </span><span class="prelude-val">Err</span>(missing_flag) =
-<a href=#4913 id=4913 data-nosnippet>4913</a>                        <span class="self">self</span>.require_downlevel_flags(wgt::DownlevelFlags::SURFACE_VIEW_FORMATS)
-<a href=#4914 id=4914 data-nosnippet>4914</a>                    {
-<a href=#4915 id=4915 data-nosnippet>4915</a>                        <span class="kw">break </span><span class="lifetime">'error </span>E::MissingDownlevelFlags(missing_flag);
-<a href=#4916 id=4916 data-nosnippet>4916</a>                    }
-<a href=#4917 id=4917 data-nosnippet>4917</a>                }
-<a href=#4918 id=4918 data-nosnippet>4918</a>
-<a href=#4919 id=4919 data-nosnippet>4919</a>                <span class="kw">let </span>maximum_frame_latency = config.desired_maximum_frame_latency.clamp(
-<a href=#4920 id=4920 data-nosnippet>4920</a>                    <span class="kw-2">*</span>caps.maximum_frame_latency.start(),
-<a href=#4921 id=4921 data-nosnippet>4921</a>                    <span class="kw-2">*</span>caps.maximum_frame_latency.end(),
-<a href=#4922 id=4922 data-nosnippet>4922</a>                );
-<a href=#4923 id=4923 data-nosnippet>4923</a>                <span class="kw">let </span><span class="kw-2">mut </span>hal_config = hal::SurfaceConfiguration {
-<a href=#4924 id=4924 data-nosnippet>4924</a>                    maximum_frame_latency,
-<a href=#4925 id=4925 data-nosnippet>4925</a>                    present_mode: config.present_mode,
-<a href=#4926 id=4926 data-nosnippet>4926</a>                    composite_alpha_mode: config.alpha_mode,
-<a href=#4927 id=4927 data-nosnippet>4927</a>                    format: config.format,
-<a href=#4928 id=4928 data-nosnippet>4928</a>                    extent: wgt::Extent3d {
-<a href=#4929 id=4929 data-nosnippet>4929</a>                        width: config.width,
-<a href=#4930 id=4930 data-nosnippet>4930</a>                        height: config.height,
-<a href=#4931 id=4931 data-nosnippet>4931</a>                        depth_or_array_layers: <span class="number">1</span>,
-<a href=#4932 id=4932 data-nosnippet>4932</a>                    },
-<a href=#4933 id=4933 data-nosnippet>4933</a>                    usage: conv::map_texture_usage(
-<a href=#4934 id=4934 data-nosnippet>4934</a>                        config.usage,
-<a href=#4935 id=4935 data-nosnippet>4935</a>                        hal::FormatAspects::COLOR,
-<a href=#4936 id=4936 data-nosnippet>4936</a>                        wgt::TextureFormatFeatureFlags::STORAGE_READ_ONLY
-<a href=#4937 id=4937 data-nosnippet>4937</a>                            | wgt::TextureFormatFeatureFlags::STORAGE_WRITE_ONLY
-<a href=#4938 id=4938 data-nosnippet>4938</a>                            | wgt::TextureFormatFeatureFlags::STORAGE_READ_WRITE,
-<a href=#4939 id=4939 data-nosnippet>4939</a>                    ),
-<a href=#4940 id=4940 data-nosnippet>4940</a>                    view_formats: hal_view_formats,
-<a href=#4941 id=4941 data-nosnippet>4941</a>                };
-<a href=#4942 id=4942 data-nosnippet>4942</a>
-<a href=#4943 id=4943 data-nosnippet>4943</a>                <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = validate_surface_configuration(
-<a href=#4944 id=4944 data-nosnippet>4944</a>                    <span class="kw-2">&amp;mut </span>hal_config,
-<a href=#4945 id=4945 data-nosnippet>4945</a>                    <span class="kw-2">&amp;</span>caps,
-<a href=#4946 id=4946 data-nosnippet>4946</a>                    <span class="self">self</span>.limits.max_texture_dimension_2d,
-<a href=#4947 id=4947 data-nosnippet>4947</a>                ) {
-<a href=#4948 id=4948 data-nosnippet>4948</a>                    <span class="kw">break </span><span class="lifetime">'error </span>error;
-<a href=#4949 id=4949 data-nosnippet>4949</a>                }
-<a href=#4950 id=4950 data-nosnippet>4950</a>
-<a href=#4951 id=4951 data-nosnippet>4951</a>                <span class="comment">// Wait for all work to finish before configuring the surface.
-<a href=#4952 id=4952 data-nosnippet>4952</a>                </span><span class="kw">let </span>snatch_guard = <span class="self">self</span>.snatchable_lock.read();
-<a href=#4953 id=4953 data-nosnippet>4953</a>                <span class="kw">let </span>fence = <span class="self">self</span>.fence.read();
-<a href=#4954 id=4954 data-nosnippet>4954</a>
-<a href=#4955 id=4955 data-nosnippet>4955</a>                <span class="kw">let </span>maintain_result;
-<a href=#4956 id=4956 data-nosnippet>4956</a>                (user_callbacks, maintain_result) =
-<a href=#4957 id=4957 data-nosnippet>4957</a>                    <span class="self">self</span>.maintain(fence, wgt::PollType::wait_indefinitely(), snatch_guard);
-<a href=#4958 id=4958 data-nosnippet>4958</a>
-<a href=#4959 id=4959 data-nosnippet>4959</a>                <span class="kw">match </span>maintain_result {
-<a href=#4960 id=4960 data-nosnippet>4960</a>                    <span class="comment">// We're happy
-<a href=#4961 id=4961 data-nosnippet>4961</a>                    </span><span class="prelude-val">Ok</span>(wgt::PollStatus::QueueEmpty) =&gt; {}
-<a href=#4962 id=4962 data-nosnippet>4962</a>                    <span class="prelude-val">Ok</span>(wgt::PollStatus::WaitSucceeded) =&gt; {
-<a href=#4963 id=4963 data-nosnippet>4963</a>                        <span class="comment">// After the wait, the queue should be empty. It can only be non-empty
-<a href=#4964 id=4964 data-nosnippet>4964</a>                        // if another thread is submitting at the same time.
-<a href=#4965 id=4965 data-nosnippet>4965</a>                        </span><span class="kw">break </span><span class="lifetime">'error </span>E::GpuWaitTimeout;
-<a href=#4966 id=4966 data-nosnippet>4966</a>                    }
-<a href=#4967 id=4967 data-nosnippet>4967</a>                    <span class="prelude-val">Ok</span>(wgt::PollStatus::Poll) =&gt; {
-<a href=#4968 id=4968 data-nosnippet>4968</a>                        <span class="macro">unreachable!</span>(<span class="string">"Cannot get a Poll result from a Wait action."</span>)
+<a href=#4908 id=4908 data-nosnippet>4908</a>                    <span class="kw">if </span>config.format.remove_srgb_suffix() != format.remove_srgb_suffix() {
+<a href=#4909 id=4909 data-nosnippet>4909</a>                        <span class="kw">break </span><span class="lifetime">'error </span>E::InvalidViewFormat(<span class="kw-2">*</span>format, config.format);
+<a href=#4910 id=4910 data-nosnippet>4910</a>                    }
+<a href=#4911 id=4911 data-nosnippet>4911</a>                    hal_view_formats.push(<span class="kw-2">*</span>format);
+<a href=#4912 id=4912 data-nosnippet>4912</a>                }
+<a href=#4913 id=4913 data-nosnippet>4913</a>
+<a href=#4914 id=4914 data-nosnippet>4914</a>                <span class="kw">if </span>!hal_view_formats.is_empty() {
+<a href=#4915 id=4915 data-nosnippet>4915</a>                    <span class="kw">if let </span><span class="prelude-val">Err</span>(missing_flag) =
+<a href=#4916 id=4916 data-nosnippet>4916</a>                        <span class="self">self</span>.require_downlevel_flags(wgt::DownlevelFlags::SURFACE_VIEW_FORMATS)
+<a href=#4917 id=4917 data-nosnippet>4917</a>                    {
+<a href=#4918 id=4918 data-nosnippet>4918</a>                        <span class="kw">break </span><span class="lifetime">'error </span>E::MissingDownlevelFlags(missing_flag);
+<a href=#4919 id=4919 data-nosnippet>4919</a>                    }
+<a href=#4920 id=4920 data-nosnippet>4920</a>                }
+<a href=#4921 id=4921 data-nosnippet>4921</a>
+<a href=#4922 id=4922 data-nosnippet>4922</a>                <span class="kw">let </span>maximum_frame_latency = config.desired_maximum_frame_latency.clamp(
+<a href=#4923 id=4923 data-nosnippet>4923</a>                    <span class="kw-2">*</span>caps.maximum_frame_latency.start(),
+<a href=#4924 id=4924 data-nosnippet>4924</a>                    <span class="kw-2">*</span>caps.maximum_frame_latency.end(),
+<a href=#4925 id=4925 data-nosnippet>4925</a>                );
+<a href=#4926 id=4926 data-nosnippet>4926</a>                <span class="kw">let </span><span class="kw-2">mut </span>hal_config = hal::SurfaceConfiguration {
+<a href=#4927 id=4927 data-nosnippet>4927</a>                    maximum_frame_latency,
+<a href=#4928 id=4928 data-nosnippet>4928</a>                    present_mode: config.present_mode,
+<a href=#4929 id=4929 data-nosnippet>4929</a>                    composite_alpha_mode: config.alpha_mode,
+<a href=#4930 id=4930 data-nosnippet>4930</a>                    format: config.format,
+<a href=#4931 id=4931 data-nosnippet>4931</a>                    extent: wgt::Extent3d {
+<a href=#4932 id=4932 data-nosnippet>4932</a>                        width: config.width,
+<a href=#4933 id=4933 data-nosnippet>4933</a>                        height: config.height,
+<a href=#4934 id=4934 data-nosnippet>4934</a>                        depth_or_array_layers: <span class="number">1</span>,
+<a href=#4935 id=4935 data-nosnippet>4935</a>                    },
+<a href=#4936 id=4936 data-nosnippet>4936</a>                    usage: conv::map_texture_usage(
+<a href=#4937 id=4937 data-nosnippet>4937</a>                        config.usage,
+<a href=#4938 id=4938 data-nosnippet>4938</a>                        hal::FormatAspects::COLOR,
+<a href=#4939 id=4939 data-nosnippet>4939</a>                        wgt::TextureFormatFeatureFlags::STORAGE_READ_ONLY
+<a href=#4940 id=4940 data-nosnippet>4940</a>                            | wgt::TextureFormatFeatureFlags::STORAGE_WRITE_ONLY
+<a href=#4941 id=4941 data-nosnippet>4941</a>                            | wgt::TextureFormatFeatureFlags::STORAGE_READ_WRITE,
+<a href=#4942 id=4942 data-nosnippet>4942</a>                    ),
+<a href=#4943 id=4943 data-nosnippet>4943</a>                    view_formats: hal_view_formats,
+<a href=#4944 id=4944 data-nosnippet>4944</a>                };
+<a href=#4945 id=4945 data-nosnippet>4945</a>
+<a href=#4946 id=4946 data-nosnippet>4946</a>                <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = validate_surface_configuration(
+<a href=#4947 id=4947 data-nosnippet>4947</a>                    <span class="kw-2">&amp;mut </span>hal_config,
+<a href=#4948 id=4948 data-nosnippet>4948</a>                    <span class="kw-2">&amp;</span>caps,
+<a href=#4949 id=4949 data-nosnippet>4949</a>                    <span class="self">self</span>.limits.max_texture_dimension_2d,
+<a href=#4950 id=4950 data-nosnippet>4950</a>                ) {
+<a href=#4951 id=4951 data-nosnippet>4951</a>                    <span class="kw">break </span><span class="lifetime">'error </span>error;
+<a href=#4952 id=4952 data-nosnippet>4952</a>                }
+<a href=#4953 id=4953 data-nosnippet>4953</a>
+<a href=#4954 id=4954 data-nosnippet>4954</a>                <span class="comment">// Wait for all work to finish before configuring the surface.
+<a href=#4955 id=4955 data-nosnippet>4955</a>                </span><span class="kw">let </span>snatch_guard = <span class="self">self</span>.snatchable_lock.read();
+<a href=#4956 id=4956 data-nosnippet>4956</a>                <span class="kw">let </span>fence = <span class="self">self</span>.fence.read();
+<a href=#4957 id=4957 data-nosnippet>4957</a>
+<a href=#4958 id=4958 data-nosnippet>4958</a>                <span class="kw">let </span>maintain_result;
+<a href=#4959 id=4959 data-nosnippet>4959</a>                (user_callbacks, maintain_result) =
+<a href=#4960 id=4960 data-nosnippet>4960</a>                    <span class="self">self</span>.maintain(fence, wgt::PollType::wait_indefinitely(), snatch_guard);
+<a href=#4961 id=4961 data-nosnippet>4961</a>
+<a href=#4962 id=4962 data-nosnippet>4962</a>                <span class="kw">match </span>maintain_result {
+<a href=#4963 id=4963 data-nosnippet>4963</a>                    <span class="comment">// We're happy
+<a href=#4964 id=4964 data-nosnippet>4964</a>                    </span><span class="prelude-val">Ok</span>(wgt::PollStatus::QueueEmpty) =&gt; {}
+<a href=#4965 id=4965 data-nosnippet>4965</a>                    <span class="prelude-val">Ok</span>(wgt::PollStatus::WaitSucceeded) =&gt; {
+<a href=#4966 id=4966 data-nosnippet>4966</a>                        <span class="comment">// After the wait, the queue should be empty. It can only be non-empty
+<a href=#4967 id=4967 data-nosnippet>4967</a>                        // if another thread is submitting at the same time.
+<a href=#4968 id=4968 data-nosnippet>4968</a>                        </span><span class="kw">break </span><span class="lifetime">'error </span>E::GpuWaitTimeout;
 <a href=#4969 id=4969 data-nosnippet>4969</a>                    }
-<a href=#4970 id=4970 data-nosnippet>4970</a>                    <span class="prelude-val">Err</span>(WaitIdleError::Timeout) <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>) =&gt; {
-<a href=#4971 id=4971 data-nosnippet>4971</a>                        <span class="comment">// On wasm, you cannot actually successfully wait for the surface.
-<a href=#4972 id=4972 data-nosnippet>4972</a>                        // However WebGL does not actually require you do this, so ignoring
-<a href=#4973 id=4973 data-nosnippet>4973</a>                        // the failure is totally fine. See https://github.com/gfx-rs/wgpu/issues/7363
-<a href=#4974 id=4974 data-nosnippet>4974</a>                    </span>}
-<a href=#4975 id=4975 data-nosnippet>4975</a>                    <span class="prelude-val">Err</span>(e) =&gt; {
-<a href=#4976 id=4976 data-nosnippet>4976</a>                        <span class="kw">break </span><span class="lifetime">'error </span>e.into();
-<a href=#4977 id=4977 data-nosnippet>4977</a>                    }
-<a href=#4978 id=4978 data-nosnippet>4978</a>                }
-<a href=#4979 id=4979 data-nosnippet>4979</a>
-<a href=#4980 id=4980 data-nosnippet>4980</a>                <span class="comment">// All textures must be destroyed before the surface can be re-configured.
-<a href=#4981 id=4981 data-nosnippet>4981</a>                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().take() {
-<a href=#4982 id=4982 data-nosnippet>4982</a>                    <span class="kw">if </span>present.acquired_texture.is_some() {
-<a href=#4983 id=4983 data-nosnippet>4983</a>                        <span class="kw">break </span><span class="lifetime">'error </span>E::PreviousOutputExists;
-<a href=#4984 id=4984 data-nosnippet>4984</a>                    }
-<a href=#4985 id=4985 data-nosnippet>4985</a>                }
-<a href=#4986 id=4986 data-nosnippet>4986</a>
-<a href=#4987 id=4987 data-nosnippet>4987</a>                <span class="comment">// TODO: Texture views may still be alive that point to the texture.
-<a href=#4988 id=4988 data-nosnippet>4988</a>                // this will allow the user to render to the surface texture, long after
-<a href=#4989 id=4989 data-nosnippet>4989</a>                // it has been removed.
-<a href=#4990 id=4990 data-nosnippet>4990</a>                //
-<a href=#4991 id=4991 data-nosnippet>4991</a>                // https://github.com/gfx-rs/wgpu/issues/4105
-<a href=#4992 id=4992 data-nosnippet>4992</a>
-<a href=#4993 id=4993 data-nosnippet>4993</a>                </span><span class="kw">let </span>surface_raw = surface.raw(<span class="self">self</span>.backend()).unwrap();
-<a href=#4994 id=4994 data-nosnippet>4994</a>                <span class="kw">match unsafe </span>{ surface_raw.configure(<span class="self">self</span>.raw(), <span class="kw-2">&amp;</span>hal_config) } {
-<a href=#4995 id=4995 data-nosnippet>4995</a>                    <span class="prelude-val">Ok</span>(()) =&gt; (),
-<a href=#4996 id=4996 data-nosnippet>4996</a>                    <span class="prelude-val">Err</span>(error) =&gt; {
-<a href=#4997 id=4997 data-nosnippet>4997</a>                        <span class="kw">break </span><span class="lifetime">'error </span><span class="kw">match </span>error {
-<a href=#4998 id=4998 data-nosnippet>4998</a>                            hal::SurfaceError::Outdated | hal::SurfaceError::Lost =&gt; {
-<a href=#4999 id=4999 data-nosnippet>4999</a>                                E::InvalidSurface
-<a href=#5000 id=5000 data-nosnippet>5000</a>                            }
-<a href=#5001 id=5001 data-nosnippet>5001</a>                            hal::SurfaceError::Device(error) =&gt; {
-<a href=#5002 id=5002 data-nosnippet>5002</a>                                E::Device(<span class="self">self</span>.handle_hal_error(error))
+<a href=#4970 id=4970 data-nosnippet>4970</a>                    <span class="prelude-val">Ok</span>(wgt::PollStatus::Poll) =&gt; {
+<a href=#4971 id=4971 data-nosnippet>4971</a>                        <span class="macro">unreachable!</span>(<span class="string">"Cannot get a Poll result from a Wait action."</span>)
+<a href=#4972 id=4972 data-nosnippet>4972</a>                    }
+<a href=#4973 id=4973 data-nosnippet>4973</a>                    <span class="prelude-val">Err</span>(WaitIdleError::Timeout) <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>) =&gt; {
+<a href=#4974 id=4974 data-nosnippet>4974</a>                        <span class="comment">// On wasm, you cannot actually successfully wait for the surface.
+<a href=#4975 id=4975 data-nosnippet>4975</a>                        // However WebGL does not actually require you do this, so ignoring
+<a href=#4976 id=4976 data-nosnippet>4976</a>                        // the failure is totally fine. See https://github.com/gfx-rs/wgpu/issues/7363
+<a href=#4977 id=4977 data-nosnippet>4977</a>                    </span>}
+<a href=#4978 id=4978 data-nosnippet>4978</a>                    <span class="prelude-val">Err</span>(e) =&gt; {
+<a href=#4979 id=4979 data-nosnippet>4979</a>                        <span class="kw">break </span><span class="lifetime">'error </span>e.into();
+<a href=#4980 id=4980 data-nosnippet>4980</a>                    }
+<a href=#4981 id=4981 data-nosnippet>4981</a>                }
+<a href=#4982 id=4982 data-nosnippet>4982</a>
+<a href=#4983 id=4983 data-nosnippet>4983</a>                <span class="comment">// All textures must be destroyed before the surface can be re-configured.
+<a href=#4984 id=4984 data-nosnippet>4984</a>                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().take() {
+<a href=#4985 id=4985 data-nosnippet>4985</a>                    <span class="kw">if </span>present.acquired_texture.is_some() {
+<a href=#4986 id=4986 data-nosnippet>4986</a>                        <span class="kw">break </span><span class="lifetime">'error </span>E::PreviousOutputExists;
+<a href=#4987 id=4987 data-nosnippet>4987</a>                    }
+<a href=#4988 id=4988 data-nosnippet>4988</a>                }
+<a href=#4989 id=4989 data-nosnippet>4989</a>
+<a href=#4990 id=4990 data-nosnippet>4990</a>                <span class="comment">// TODO: Texture views may still be alive that point to the texture.
+<a href=#4991 id=4991 data-nosnippet>4991</a>                // this will allow the user to render to the surface texture, long after
+<a href=#4992 id=4992 data-nosnippet>4992</a>                // it has been removed.
+<a href=#4993 id=4993 data-nosnippet>4993</a>                //
+<a href=#4994 id=4994 data-nosnippet>4994</a>                // https://github.com/gfx-rs/wgpu/issues/4105
+<a href=#4995 id=4995 data-nosnippet>4995</a>
+<a href=#4996 id=4996 data-nosnippet>4996</a>                </span><span class="kw">let </span>surface_raw = surface.raw(<span class="self">self</span>.backend()).unwrap();
+<a href=#4997 id=4997 data-nosnippet>4997</a>                <span class="kw">match unsafe </span>{ surface_raw.configure(<span class="self">self</span>.raw(), <span class="kw-2">&amp;</span>hal_config) } {
+<a href=#4998 id=4998 data-nosnippet>4998</a>                    <span class="prelude-val">Ok</span>(()) =&gt; (),
+<a href=#4999 id=4999 data-nosnippet>4999</a>                    <span class="prelude-val">Err</span>(error) =&gt; {
+<a href=#5000 id=5000 data-nosnippet>5000</a>                        <span class="kw">break </span><span class="lifetime">'error </span><span class="kw">match </span>error {
+<a href=#5001 id=5001 data-nosnippet>5001</a>                            hal::SurfaceError::Outdated | hal::SurfaceError::Lost =&gt; {
+<a href=#5002 id=5002 data-nosnippet>5002</a>                                E::InvalidSurface
 <a href=#5003 id=5003 data-nosnippet>5003</a>                            }
-<a href=#5004 id=5004 data-nosnippet>5004</a>                            hal::SurfaceError::Other(message) =&gt; {
-<a href=#5005 id=5005 data-nosnippet>5005</a>                                <span class="macro">log::error!</span>(<span class="string">"surface configuration failed: {message}"</span>);
-<a href=#5006 id=5006 data-nosnippet>5006</a>                                E::InvalidSurface
-<a href=#5007 id=5007 data-nosnippet>5007</a>                            }
-<a href=#5008 id=5008 data-nosnippet>5008</a>                        }
-<a href=#5009 id=5009 data-nosnippet>5009</a>                    }
-<a href=#5010 id=5010 data-nosnippet>5010</a>                }
-<a href=#5011 id=5011 data-nosnippet>5011</a>
-<a href=#5012 id=5012 data-nosnippet>5012</a>                <span class="kw">let </span><span class="kw-2">mut </span>presentation = surface.presentation.lock();
-<a href=#5013 id=5013 data-nosnippet>5013</a>                <span class="kw-2">*</span>presentation = <span class="prelude-val">Some</span>(present::Presentation {
-<a href=#5014 id=5014 data-nosnippet>5014</a>                    device: Arc::clone(<span class="self">self</span>),
-<a href=#5015 id=5015 data-nosnippet>5015</a>                    config: config.clone(),
-<a href=#5016 id=5016 data-nosnippet>5016</a>                    acquired_texture: <span class="prelude-val">None</span>,
-<a href=#5017 id=5017 data-nosnippet>5017</a>                });
-<a href=#5018 id=5018 data-nosnippet>5018</a>            }
-<a href=#5019 id=5019 data-nosnippet>5019</a>
-<a href=#5020 id=5020 data-nosnippet>5020</a>            user_callbacks.fire();
-<a href=#5021 id=5021 data-nosnippet>5021</a>            <span class="kw">return </span><span class="prelude-val">None</span>;
-<a href=#5022 id=5022 data-nosnippet>5022</a>        };
-<a href=#5023 id=5023 data-nosnippet>5023</a>
-<a href=#5024 id=5024 data-nosnippet>5024</a>        <span class="prelude-val">Some</span>(error)
-<a href=#5025 id=5025 data-nosnippet>5025</a>    }
+<a href=#5004 id=5004 data-nosnippet>5004</a>                            hal::SurfaceError::Device(error) =&gt; {
+<a href=#5005 id=5005 data-nosnippet>5005</a>                                E::Device(<span class="self">self</span>.handle_hal_error(error))
+<a href=#5006 id=5006 data-nosnippet>5006</a>                            }
+<a href=#5007 id=5007 data-nosnippet>5007</a>                            hal::SurfaceError::Other(message) =&gt; {
+<a href=#5008 id=5008 data-nosnippet>5008</a>                                <span class="macro">log::error!</span>(<span class="string">"surface configuration failed: {message}"</span>);
+<a href=#5009 id=5009 data-nosnippet>5009</a>                                E::InvalidSurface
+<a href=#5010 id=5010 data-nosnippet>5010</a>                            }
+<a href=#5011 id=5011 data-nosnippet>5011</a>                        }
+<a href=#5012 id=5012 data-nosnippet>5012</a>                    }
+<a href=#5013 id=5013 data-nosnippet>5013</a>                }
+<a href=#5014 id=5014 data-nosnippet>5014</a>
+<a href=#5015 id=5015 data-nosnippet>5015</a>                <span class="kw">let </span><span class="kw-2">mut </span>presentation = surface.presentation.lock();
+<a href=#5016 id=5016 data-nosnippet>5016</a>                <span class="kw-2">*</span>presentation = <span class="prelude-val">Some</span>(present::Presentation {
+<a href=#5017 id=5017 data-nosnippet>5017</a>                    device: Arc::clone(<span class="self">self</span>),
+<a href=#5018 id=5018 data-nosnippet>5018</a>                    config: config.clone(),
+<a href=#5019 id=5019 data-nosnippet>5019</a>                    acquired_texture: <span class="prelude-val">None</span>,
+<a href=#5020 id=5020 data-nosnippet>5020</a>                });
+<a href=#5021 id=5021 data-nosnippet>5021</a>            }
+<a href=#5022 id=5022 data-nosnippet>5022</a>
+<a href=#5023 id=5023 data-nosnippet>5023</a>            user_callbacks.fire();
+<a href=#5024 id=5024 data-nosnippet>5024</a>            <span class="kw">return </span><span class="prelude-val">None</span>;
+<a href=#5025 id=5025 data-nosnippet>5025</a>        };
 <a href=#5026 id=5026 data-nosnippet>5026</a>
-<a href=#5027 id=5027 data-nosnippet>5027</a>    <span class="kw">fn </span>lose(<span class="kw-2">&amp;</span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>str) {
-<a href=#5028 id=5028 data-nosnippet>5028</a>        <span class="comment">// Follow the steps at https://gpuweb.github.io/gpuweb/#lose-the-device.
+<a href=#5027 id=5027 data-nosnippet>5027</a>        <span class="prelude-val">Some</span>(error)
+<a href=#5028 id=5028 data-nosnippet>5028</a>    }
 <a href=#5029 id=5029 data-nosnippet>5029</a>
-<a href=#5030 id=5030 data-nosnippet>5030</a>        // Mark the device explicitly as invalid. This is checked in various
-<a href=#5031 id=5031 data-nosnippet>5031</a>        // places to prevent new work from being submitted.
-<a href=#5032 id=5032 data-nosnippet>5032</a>        </span><span class="self">self</span>.valid.store(<span class="bool-val">false</span>, Ordering::Release);
-<a href=#5033 id=5033 data-nosnippet>5033</a>
-<a href=#5034 id=5034 data-nosnippet>5034</a>        <span class="comment">// 1) Resolve the GPUDevice device.lost promise.
-<a href=#5035 id=5035 data-nosnippet>5035</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(device_lost_closure) = <span class="self">self</span>.device_lost_closure.lock().take() {
-<a href=#5036 id=5036 data-nosnippet>5036</a>            device_lost_closure(DeviceLostReason::Unknown, message.to_string());
-<a href=#5037 id=5037 data-nosnippet>5037</a>        }
-<a href=#5038 id=5038 data-nosnippet>5038</a>
-<a href=#5039 id=5039 data-nosnippet>5039</a>        <span class="comment">// 2) Complete any outstanding mapAsync() steps.
-<a href=#5040 id=5040 data-nosnippet>5040</a>        // 3) Complete any outstanding onSubmittedWorkDone() steps.
+<a href=#5030 id=5030 data-nosnippet>5030</a>    <span class="kw">fn </span>lose(<span class="kw-2">&amp;</span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>str) {
+<a href=#5031 id=5031 data-nosnippet>5031</a>        <span class="comment">// Follow the steps at https://gpuweb.github.io/gpuweb/#lose-the-device.
+<a href=#5032 id=5032 data-nosnippet>5032</a>
+<a href=#5033 id=5033 data-nosnippet>5033</a>        // Mark the device explicitly as invalid. This is checked in various
+<a href=#5034 id=5034 data-nosnippet>5034</a>        // places to prevent new work from being submitted.
+<a href=#5035 id=5035 data-nosnippet>5035</a>        </span><span class="self">self</span>.valid.store(<span class="bool-val">false</span>, Ordering::Release);
+<a href=#5036 id=5036 data-nosnippet>5036</a>
+<a href=#5037 id=5037 data-nosnippet>5037</a>        <span class="comment">// 1) Resolve the GPUDevice device.lost promise.
+<a href=#5038 id=5038 data-nosnippet>5038</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(device_lost_closure) = <span class="self">self</span>.device_lost_closure.lock().take() {
+<a href=#5039 id=5039 data-nosnippet>5039</a>            device_lost_closure(DeviceLostReason::Unknown, message.to_string());
+<a href=#5040 id=5040 data-nosnippet>5040</a>        }
 <a href=#5041 id=5041 data-nosnippet>5041</a>
-<a href=#5042 id=5042 data-nosnippet>5042</a>        // These parts are passively accomplished by setting valid to false,
-<a href=#5043 id=5043 data-nosnippet>5043</a>        // since that will prevent any new work from being added to the queues.
-<a href=#5044 id=5044 data-nosnippet>5044</a>        // Future calls to poll_devices will continue to check the work queues
-<a href=#5045 id=5045 data-nosnippet>5045</a>        // until they are cleared, and then drop the device.
-<a href=#5046 id=5046 data-nosnippet>5046</a>    </span>}
-<a href=#5047 id=5047 data-nosnippet>5047</a>
-<a href=#5048 id=5048 data-nosnippet>5048</a>    <span class="kw">fn </span>release_gpu_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-<a href=#5049 id=5049 data-nosnippet>5049</a>        <span class="comment">// This is called when the device is lost, which makes every associated
-<a href=#5050 id=5050 data-nosnippet>5050</a>        // resource invalid and unusable. This is an opportunity to release all of
-<a href=#5051 id=5051 data-nosnippet>5051</a>        // the underlying gpu resources, even though the objects remain visible to
-<a href=#5052 id=5052 data-nosnippet>5052</a>        // the user agent. We purge this memory naturally when resources have been
-<a href=#5053 id=5053 data-nosnippet>5053</a>        // moved into the appropriate buckets, so this function just needs to
-<a href=#5054 id=5054 data-nosnippet>5054</a>        // initiate movement into those buckets, and it can do that by calling
-<a href=#5055 id=5055 data-nosnippet>5055</a>        // "destroy" on all the resources we know about.
-<a href=#5056 id=5056 data-nosnippet>5056</a>
-<a href=#5057 id=5057 data-nosnippet>5057</a>        // During these iterations, we discard all errors. We don't care!
-<a href=#5058 id=5058 data-nosnippet>5058</a>        </span><span class="kw">let </span>trackers = <span class="self">self</span>.trackers.lock();
-<a href=#5059 id=5059 data-nosnippet>5059</a>        <span class="kw">for </span>buffer <span class="kw">in </span>trackers.buffers.used_resources() {
-<a href=#5060 id=5060 data-nosnippet>5060</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer) = Weak::upgrade(buffer) {
-<a href=#5061 id=5061 data-nosnippet>5061</a>                buffer.destroy();
-<a href=#5062 id=5062 data-nosnippet>5062</a>            }
-<a href=#5063 id=5063 data-nosnippet>5063</a>        }
-<a href=#5064 id=5064 data-nosnippet>5064</a>        <span class="kw">for </span>texture <span class="kw">in </span>trackers.textures.used_resources() {
-<a href=#5065 id=5065 data-nosnippet>5065</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(texture) = Weak::upgrade(texture) {
-<a href=#5066 id=5066 data-nosnippet>5066</a>                texture.destroy();
-<a href=#5067 id=5067 data-nosnippet>5067</a>            }
-<a href=#5068 id=5068 data-nosnippet>5068</a>        }
-<a href=#5069 id=5069 data-nosnippet>5069</a>    }
-<a href=#5070 id=5070 data-nosnippet>5070</a>
-<a href=#5071 id=5071 data-nosnippet>5071</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_usage_scope(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UsageScope&lt;<span class="lifetime">'_</span>&gt; {
-<a href=#5072 id=5072 data-nosnippet>5072</a>        UsageScope::new_pooled(<span class="kw-2">&amp;</span><span class="self">self</span>.usage_scopes, <span class="kw-2">&amp;</span><span class="self">self</span>.tracker_indices)
-<a href=#5073 id=5073 data-nosnippet>5073</a>    }
-<a href=#5074 id=5074 data-nosnippet>5074</a>
-<a href=#5075 id=5075 data-nosnippet>5075</a>    <span class="kw">pub fn </span>get_hal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
-<a href=#5076 id=5076 data-nosnippet>5076</a>        <span class="self">self</span>.raw().get_internal_counters()
-<a href=#5077 id=5077 data-nosnippet>5077</a>    }
-<a href=#5078 id=5078 data-nosnippet>5078</a>
-<a href=#5079 id=5079 data-nosnippet>5079</a>    <span class="kw">pub fn </span>generate_allocator_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::AllocatorReport&gt; {
-<a href=#5080 id=5080 data-nosnippet>5080</a>        <span class="self">self</span>.raw().generate_allocator_report()
-<a href=#5081 id=5081 data-nosnippet>5081</a>    }
-<a href=#5082 id=5082 data-nosnippet>5082</a>}
-<a href=#5083 id=5083 data-nosnippet>5083</a>
-<a href=#5084 id=5084 data-nosnippet>5084</a><span class="macro">crate::impl_resource_type!</span>(Device);
-<a href=#5085 id=5085 data-nosnippet>5085</a><span class="macro">crate::impl_labeled!</span>(Device);
-<a href=#5086 id=5086 data-nosnippet>5086</a><span class="macro">crate::impl_storage_item!</span>(Device);</code></pre></div></section></main></body></html>
+<a href=#5042 id=5042 data-nosnippet>5042</a>        <span class="comment">// 2) Complete any outstanding mapAsync() steps.
+<a href=#5043 id=5043 data-nosnippet>5043</a>        // 3) Complete any outstanding onSubmittedWorkDone() steps.
+<a href=#5044 id=5044 data-nosnippet>5044</a>
+<a href=#5045 id=5045 data-nosnippet>5045</a>        // These parts are passively accomplished by setting valid to false,
+<a href=#5046 id=5046 data-nosnippet>5046</a>        // since that will prevent any new work from being added to the queues.
+<a href=#5047 id=5047 data-nosnippet>5047</a>        // Future calls to poll_devices will continue to check the work queues
+<a href=#5048 id=5048 data-nosnippet>5048</a>        // until they are cleared, and then drop the device.
+<a href=#5049 id=5049 data-nosnippet>5049</a>    </span>}
+<a href=#5050 id=5050 data-nosnippet>5050</a>
+<a href=#5051 id=5051 data-nosnippet>5051</a>    <span class="kw">fn </span>release_gpu_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+<a href=#5052 id=5052 data-nosnippet>5052</a>        <span class="comment">// This is called when the device is lost, which makes every associated
+<a href=#5053 id=5053 data-nosnippet>5053</a>        // resource invalid and unusable. This is an opportunity to release all of
+<a href=#5054 id=5054 data-nosnippet>5054</a>        // the underlying gpu resources, even though the objects remain visible to
+<a href=#5055 id=5055 data-nosnippet>5055</a>        // the user agent. We purge this memory naturally when resources have been
+<a href=#5056 id=5056 data-nosnippet>5056</a>        // moved into the appropriate buckets, so this function just needs to
+<a href=#5057 id=5057 data-nosnippet>5057</a>        // initiate movement into those buckets, and it can do that by calling
+<a href=#5058 id=5058 data-nosnippet>5058</a>        // "destroy" on all the resources we know about.
+<a href=#5059 id=5059 data-nosnippet>5059</a>
+<a href=#5060 id=5060 data-nosnippet>5060</a>        // During these iterations, we discard all errors. We don't care!
+<a href=#5061 id=5061 data-nosnippet>5061</a>        </span><span class="kw">let </span>trackers = <span class="self">self</span>.trackers.lock();
+<a href=#5062 id=5062 data-nosnippet>5062</a>        <span class="kw">for </span>buffer <span class="kw">in </span>trackers.buffers.used_resources() {
+<a href=#5063 id=5063 data-nosnippet>5063</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer) = Weak::upgrade(buffer) {
+<a href=#5064 id=5064 data-nosnippet>5064</a>                buffer.destroy();
+<a href=#5065 id=5065 data-nosnippet>5065</a>            }
+<a href=#5066 id=5066 data-nosnippet>5066</a>        }
+<a href=#5067 id=5067 data-nosnippet>5067</a>        <span class="kw">for </span>texture <span class="kw">in </span>trackers.textures.used_resources() {
+<a href=#5068 id=5068 data-nosnippet>5068</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(texture) = Weak::upgrade(texture) {
+<a href=#5069 id=5069 data-nosnippet>5069</a>                texture.destroy();
+<a href=#5070 id=5070 data-nosnippet>5070</a>            }
+<a href=#5071 id=5071 data-nosnippet>5071</a>        }
+<a href=#5072 id=5072 data-nosnippet>5072</a>    }
+<a href=#5073 id=5073 data-nosnippet>5073</a>
+<a href=#5074 id=5074 data-nosnippet>5074</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_usage_scope(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UsageScope&lt;<span class="lifetime">'_</span>&gt; {
+<a href=#5075 id=5075 data-nosnippet>5075</a>        UsageScope::new_pooled(<span class="kw-2">&amp;</span><span class="self">self</span>.usage_scopes, <span class="kw-2">&amp;</span><span class="self">self</span>.tracker_indices)
+<a href=#5076 id=5076 data-nosnippet>5076</a>    }
+<a href=#5077 id=5077 data-nosnippet>5077</a>
+<a href=#5078 id=5078 data-nosnippet>5078</a>    <span class="kw">pub fn </span>get_hal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
+<a href=#5079 id=5079 data-nosnippet>5079</a>        <span class="self">self</span>.raw().get_internal_counters()
+<a href=#5080 id=5080 data-nosnippet>5080</a>    }
+<a href=#5081 id=5081 data-nosnippet>5081</a>
+<a href=#5082 id=5082 data-nosnippet>5082</a>    <span class="kw">pub fn </span>generate_allocator_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::AllocatorReport&gt; {
+<a href=#5083 id=5083 data-nosnippet>5083</a>        <span class="self">self</span>.raw().generate_allocator_report()
+<a href=#5084 id=5084 data-nosnippet>5084</a>    }
+<a href=#5085 id=5085 data-nosnippet>5085</a>}
+<a href=#5086 id=5086 data-nosnippet>5086</a>
+<a href=#5087 id=5087 data-nosnippet>5087</a><span class="macro">crate::impl_resource_type!</span>(Device);
+<a href=#5088 id=5088 data-nosnippet>5088</a><span class="macro">crate::impl_labeled!</span>(Device);
+<a href=#5089 id=5089 data-nosnippet>5089</a><span class="macro">crate::impl_storage_item!</span>(Device);</code></pre></div></section></main></body></html>

@@ -71,91 +71,98 @@
 <a href=#71 id=71 data-nosnippet>71</a>        limit: u32,
 <a href=#72 id=72 data-nosnippet>72</a>        max_total: u32,
 <a href=#73 id=73 data-nosnippet>73</a>    },
-<a href=#74 id=74 data-nosnippet>74</a>}
-<a href=#75 id=75 data-nosnippet>75</a>
-<a href=#76 id=76 data-nosnippet>76</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>DrawError {
-<a href=#77 id=77 data-nosnippet>77</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
-<a href=#78 id=78 data-nosnippet>78</a>        ErrorType::Validation
-<a href=#79 id=79 data-nosnippet>79</a>    }
-<a href=#80 id=80 data-nosnippet>80</a>}
-<a href=#81 id=81 data-nosnippet>81</a>
-<a href=#82 id=82 data-nosnippet>82</a><span class="doccomment">/// Error encountered when encoding a render command.
-<a href=#83 id=83 data-nosnippet>83</a>/// This is the shared error set between render bundles and passes.
-<a href=#84 id=84 data-nosnippet>84</a></span><span class="attr">#[derive(Clone, Debug, Error)]
-<a href=#85 id=85 data-nosnippet>85</a>#[non_exhaustive]
-<a href=#86 id=86 data-nosnippet>86</a></span><span class="kw">pub enum </span>RenderCommandError {
-<a href=#87 id=87 data-nosnippet>87</a>    <span class="attr">#[error(transparent)]
-<a href=#88 id=88 data-nosnippet>88</a>    </span>BindGroupIndexOutOfRange(<span class="attr">#[from] </span>pass::BindGroupIndexOutOfRange),
-<a href=#89 id=89 data-nosnippet>89</a>    <span class="attr">#[error(<span class="string">"Vertex buffer index {index} is greater than the device's requested `max_vertex_buffers` limit {max}"</span>)]
-<a href=#90 id=90 data-nosnippet>90</a>    </span>VertexBufferIndexOutOfRange { index: u32, max: u32 },
-<a href=#91 id=91 data-nosnippet>91</a>    <span class="attr">#[error(
-<a href=#92 id=92 data-nosnippet>92</a>        <span class="string">"Offset {offset} for vertex buffer in slot {slot} is not a multiple of `VERTEX_ALIGNMENT`"
-<a href=#93 id=93 data-nosnippet>93</a>    </span>)]
-<a href=#94 id=94 data-nosnippet>94</a>    </span>UnalignedVertexBuffer { slot: u32, offset: u64 },
-<a href=#95 id=95 data-nosnippet>95</a>    <span class="attr">#[error(<span class="string">"Offset {offset} for index buffer is not a multiple of {alignment}"</span>)]
-<a href=#96 id=96 data-nosnippet>96</a>    </span>UnalignedIndexBuffer { offset: u64, alignment: usize },
-<a href=#97 id=97 data-nosnippet>97</a>    <span class="attr">#[error(<span class="string">"Render pipeline targets are incompatible with render pass"</span>)]
-<a href=#98 id=98 data-nosnippet>98</a>    </span>IncompatiblePipelineTargets(<span class="attr">#[from] </span><span class="kw">crate</span>::device::RenderPassCompatibilityError),
-<a href=#99 id=99 data-nosnippet>99</a>    <span class="attr">#[error(<span class="string">"{0} writes to depth, while the pass has read-only depth access"</span>)]
-<a href=#100 id=100 data-nosnippet>100</a>    </span>IncompatibleDepthAccess(ResourceErrorIdent),
-<a href=#101 id=101 data-nosnippet>101</a>    <span class="attr">#[error(<span class="string">"{0} writes to stencil, while the pass has read-only stencil access"</span>)]
-<a href=#102 id=102 data-nosnippet>102</a>    </span>IncompatibleStencilAccess(ResourceErrorIdent),
-<a href=#103 id=103 data-nosnippet>103</a>    <span class="attr">#[error(transparent)]
-<a href=#104 id=104 data-nosnippet>104</a>    </span>ResourceUsageCompatibility(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
-<a href=#105 id=105 data-nosnippet>105</a>    <span class="attr">#[error(transparent)]
-<a href=#106 id=106 data-nosnippet>106</a>    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
-<a href=#107 id=107 data-nosnippet>107</a>    <span class="attr">#[error(transparent)]
-<a href=#108 id=108 data-nosnippet>108</a>    </span>MissingBufferUsage(<span class="attr">#[from] </span>MissingBufferUsageError),
-<a href=#109 id=109 data-nosnippet>109</a>    <span class="attr">#[error(transparent)]
-<a href=#110 id=110 data-nosnippet>110</a>    </span>MissingTextureUsage(<span class="attr">#[from] </span>MissingTextureUsageError),
-<a href=#111 id=111 data-nosnippet>111</a>    <span class="attr">#[error(transparent)]
-<a href=#112 id=112 data-nosnippet>112</a>    </span>PushConstants(<span class="attr">#[from] </span>PushConstantUploadError),
-<a href=#113 id=113 data-nosnippet>113</a>    <span class="attr">#[error(transparent)]
-<a href=#114 id=114 data-nosnippet>114</a>    </span>BindingError(<span class="attr">#[from] </span>BindingError),
-<a href=#115 id=115 data-nosnippet>115</a>    <span class="attr">#[error(<span class="string">"Viewport size {{ w: {w}, h: {h} }} greater than device's requested `max_texture_dimension_2d` limit {max}, or less than zero"</span>)]
-<a href=#116 id=116 data-nosnippet>116</a>    </span>InvalidViewportRectSize { w: f32, h: f32, max: u32 },
-<a href=#117 id=117 data-nosnippet>117</a>    <span class="attr">#[error(<span class="string">"Viewport has invalid rect {rect:?} for device's requested `max_texture_dimension_2d` limit; Origin less than -2 * `max_texture_dimension_2d` ({min}), or rect extends past 2 * `max_texture_dimension_2d` - 1 ({max})"</span>)]
-<a href=#118 id=118 data-nosnippet>118</a>    </span>InvalidViewportRectPosition { rect: Rect&lt;f32&gt;, min: f32, max: f32 },
-<a href=#119 id=119 data-nosnippet>119</a>    <span class="attr">#[error(<span class="string">"Viewport minDepth {0} and/or maxDepth {1} are not in [0, 1]"</span>)]
-<a href=#120 id=120 data-nosnippet>120</a>    </span>InvalidViewportDepth(f32, f32),
-<a href=#121 id=121 data-nosnippet>121</a>    <span class="attr">#[error(<span class="string">"Scissor {0:?} is not contained in the render target {1:?}"</span>)]
-<a href=#122 id=122 data-nosnippet>122</a>    </span>InvalidScissorRect(Rect&lt;u32&gt;, wgt::Extent3d),
-<a href=#123 id=123 data-nosnippet>123</a>    <span class="attr">#[error(<span class="string">"Support for {0} is not implemented yet"</span>)]
-<a href=#124 id=124 data-nosnippet>124</a>    </span>Unimplemented(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
-<a href=#125 id=125 data-nosnippet>125</a>}
-<a href=#126 id=126 data-nosnippet>126</a>
-<a href=#127 id=127 data-nosnippet>127</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>RenderCommandError {
-<a href=#128 id=128 data-nosnippet>128</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
-<a href=#129 id=129 data-nosnippet>129</a>        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
-<a href=#130 id=130 data-nosnippet>130</a>            <span class="self">Self</span>::IncompatiblePipelineTargets(e) =&gt; e,
-<a href=#131 id=131 data-nosnippet>131</a>            <span class="self">Self</span>::ResourceUsageCompatibility(e) =&gt; e,
-<a href=#132 id=132 data-nosnippet>132</a>            <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
-<a href=#133 id=133 data-nosnippet>133</a>            <span class="self">Self</span>::MissingBufferUsage(e) =&gt; e,
-<a href=#134 id=134 data-nosnippet>134</a>            <span class="self">Self</span>::MissingTextureUsage(e) =&gt; e,
-<a href=#135 id=135 data-nosnippet>135</a>            <span class="self">Self</span>::PushConstants(e) =&gt; e,
-<a href=#136 id=136 data-nosnippet>136</a>            <span class="self">Self</span>::BindingError(e) =&gt; e,
-<a href=#137 id=137 data-nosnippet>137</a>
-<a href=#138 id=138 data-nosnippet>138</a>            <span class="self">Self</span>::BindGroupIndexOutOfRange { .. }
-<a href=#139 id=139 data-nosnippet>139</a>            | <span class="self">Self</span>::VertexBufferIndexOutOfRange { .. }
-<a href=#140 id=140 data-nosnippet>140</a>            | <span class="self">Self</span>::UnalignedIndexBuffer { .. }
-<a href=#141 id=141 data-nosnippet>141</a>            | <span class="self">Self</span>::UnalignedVertexBuffer { .. }
-<a href=#142 id=142 data-nosnippet>142</a>            | <span class="self">Self</span>::IncompatibleDepthAccess(..)
-<a href=#143 id=143 data-nosnippet>143</a>            | <span class="self">Self</span>::IncompatibleStencilAccess(..)
-<a href=#144 id=144 data-nosnippet>144</a>            | <span class="self">Self</span>::InvalidViewportRectSize { .. }
-<a href=#145 id=145 data-nosnippet>145</a>            | <span class="self">Self</span>::InvalidViewportRectPosition { .. }
-<a href=#146 id=146 data-nosnippet>146</a>            | <span class="self">Self</span>::InvalidViewportDepth(..)
-<a href=#147 id=147 data-nosnippet>147</a>            | <span class="self">Self</span>::InvalidScissorRect(..)
-<a href=#148 id=148 data-nosnippet>148</a>            | <span class="self">Self</span>::Unimplemented(..) =&gt; <span class="kw">return </span>ErrorType::Validation,
-<a href=#149 id=149 data-nosnippet>149</a>        };
-<a href=#150 id=150 data-nosnippet>150</a>        e.webgpu_error_type()
-<a href=#151 id=151 data-nosnippet>151</a>    }
-<a href=#152 id=152 data-nosnippet>152</a>}
-<a href=#153 id=153 data-nosnippet>153</a>
-<a href=#154 id=154 data-nosnippet>154</a><span class="attr">#[derive(Clone, Copy, Debug, Default)]
-<a href=#155 id=155 data-nosnippet>155</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#156 id=156 data-nosnippet>156</a></span><span class="kw">pub struct </span>Rect&lt;T&gt; {
-<a href=#157 id=157 data-nosnippet>157</a>    <span class="kw">pub </span>x: T,
-<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">pub </span>y: T,
-<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">pub </span>w: T,
-<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">pub </span>h: T,
-<a href=#161 id=161 data-nosnippet>161</a>}</code></pre></div></section></main></body></html>
+<a href=#74 id=74 data-nosnippet>74</a>    <span class="attr">#[error(
+<a href=#75 id=75 data-nosnippet>75</a>        <span class="string">"Mesh shader calls in multiview render passes require enabling the `EXPERIMENTAL_MESH_SHADER_MULTIVIEW` feature, and the highest bit ({highest_view_index}) in the multiview mask must be &lt;= `Limits::max_multiview_view_count` ({max_multiviews})"
+<a href=#76 id=76 data-nosnippet>76</a>    </span>)]
+<a href=#77 id=77 data-nosnippet>77</a>    </span>MeshPipelineMultiviewLimitsViolated {
+<a href=#78 id=78 data-nosnippet>78</a>        highest_view_index: u32,
+<a href=#79 id=79 data-nosnippet>79</a>        max_multiviews: u32,
+<a href=#80 id=80 data-nosnippet>80</a>    },
+<a href=#81 id=81 data-nosnippet>81</a>}
+<a href=#82 id=82 data-nosnippet>82</a>
+<a href=#83 id=83 data-nosnippet>83</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>DrawError {
+<a href=#84 id=84 data-nosnippet>84</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+<a href=#85 id=85 data-nosnippet>85</a>        ErrorType::Validation
+<a href=#86 id=86 data-nosnippet>86</a>    }
+<a href=#87 id=87 data-nosnippet>87</a>}
+<a href=#88 id=88 data-nosnippet>88</a>
+<a href=#89 id=89 data-nosnippet>89</a><span class="doccomment">/// Error encountered when encoding a render command.
+<a href=#90 id=90 data-nosnippet>90</a>/// This is the shared error set between render bundles and passes.
+<a href=#91 id=91 data-nosnippet>91</a></span><span class="attr">#[derive(Clone, Debug, Error)]
+<a href=#92 id=92 data-nosnippet>92</a>#[non_exhaustive]
+<a href=#93 id=93 data-nosnippet>93</a></span><span class="kw">pub enum </span>RenderCommandError {
+<a href=#94 id=94 data-nosnippet>94</a>    <span class="attr">#[error(transparent)]
+<a href=#95 id=95 data-nosnippet>95</a>    </span>BindGroupIndexOutOfRange(<span class="attr">#[from] </span>pass::BindGroupIndexOutOfRange),
+<a href=#96 id=96 data-nosnippet>96</a>    <span class="attr">#[error(<span class="string">"Vertex buffer index {index} is greater than the device's requested `max_vertex_buffers` limit {max}"</span>)]
+<a href=#97 id=97 data-nosnippet>97</a>    </span>VertexBufferIndexOutOfRange { index: u32, max: u32 },
+<a href=#98 id=98 data-nosnippet>98</a>    <span class="attr">#[error(
+<a href=#99 id=99 data-nosnippet>99</a>        <span class="string">"Offset {offset} for vertex buffer in slot {slot} is not a multiple of `VERTEX_ALIGNMENT`"
+<a href=#100 id=100 data-nosnippet>100</a>    </span>)]
+<a href=#101 id=101 data-nosnippet>101</a>    </span>UnalignedVertexBuffer { slot: u32, offset: u64 },
+<a href=#102 id=102 data-nosnippet>102</a>    <span class="attr">#[error(<span class="string">"Offset {offset} for index buffer is not a multiple of {alignment}"</span>)]
+<a href=#103 id=103 data-nosnippet>103</a>    </span>UnalignedIndexBuffer { offset: u64, alignment: usize },
+<a href=#104 id=104 data-nosnippet>104</a>    <span class="attr">#[error(<span class="string">"Render pipeline targets are incompatible with render pass"</span>)]
+<a href=#105 id=105 data-nosnippet>105</a>    </span>IncompatiblePipelineTargets(<span class="attr">#[from] </span><span class="kw">crate</span>::device::RenderPassCompatibilityError),
+<a href=#106 id=106 data-nosnippet>106</a>    <span class="attr">#[error(<span class="string">"{0} writes to depth, while the pass has read-only depth access"</span>)]
+<a href=#107 id=107 data-nosnippet>107</a>    </span>IncompatibleDepthAccess(ResourceErrorIdent),
+<a href=#108 id=108 data-nosnippet>108</a>    <span class="attr">#[error(<span class="string">"{0} writes to stencil, while the pass has read-only stencil access"</span>)]
+<a href=#109 id=109 data-nosnippet>109</a>    </span>IncompatibleStencilAccess(ResourceErrorIdent),
+<a href=#110 id=110 data-nosnippet>110</a>    <span class="attr">#[error(transparent)]
+<a href=#111 id=111 data-nosnippet>111</a>    </span>ResourceUsageCompatibility(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
+<a href=#112 id=112 data-nosnippet>112</a>    <span class="attr">#[error(transparent)]
+<a href=#113 id=113 data-nosnippet>113</a>    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
+<a href=#114 id=114 data-nosnippet>114</a>    <span class="attr">#[error(transparent)]
+<a href=#115 id=115 data-nosnippet>115</a>    </span>MissingBufferUsage(<span class="attr">#[from] </span>MissingBufferUsageError),
+<a href=#116 id=116 data-nosnippet>116</a>    <span class="attr">#[error(transparent)]
+<a href=#117 id=117 data-nosnippet>117</a>    </span>MissingTextureUsage(<span class="attr">#[from] </span>MissingTextureUsageError),
+<a href=#118 id=118 data-nosnippet>118</a>    <span class="attr">#[error(transparent)]
+<a href=#119 id=119 data-nosnippet>119</a>    </span>PushConstants(<span class="attr">#[from] </span>PushConstantUploadError),
+<a href=#120 id=120 data-nosnippet>120</a>    <span class="attr">#[error(transparent)]
+<a href=#121 id=121 data-nosnippet>121</a>    </span>BindingError(<span class="attr">#[from] </span>BindingError),
+<a href=#122 id=122 data-nosnippet>122</a>    <span class="attr">#[error(<span class="string">"Viewport size {{ w: {w}, h: {h} }} greater than device's requested `max_texture_dimension_2d` limit {max}, or less than zero"</span>)]
+<a href=#123 id=123 data-nosnippet>123</a>    </span>InvalidViewportRectSize { w: f32, h: f32, max: u32 },
+<a href=#124 id=124 data-nosnippet>124</a>    <span class="attr">#[error(<span class="string">"Viewport has invalid rect {rect:?} for device's requested `max_texture_dimension_2d` limit; Origin less than -2 * `max_texture_dimension_2d` ({min}), or rect extends past 2 * `max_texture_dimension_2d` - 1 ({max})"</span>)]
+<a href=#125 id=125 data-nosnippet>125</a>    </span>InvalidViewportRectPosition { rect: Rect&lt;f32&gt;, min: f32, max: f32 },
+<a href=#126 id=126 data-nosnippet>126</a>    <span class="attr">#[error(<span class="string">"Viewport minDepth {0} and/or maxDepth {1} are not in [0, 1]"</span>)]
+<a href=#127 id=127 data-nosnippet>127</a>    </span>InvalidViewportDepth(f32, f32),
+<a href=#128 id=128 data-nosnippet>128</a>    <span class="attr">#[error(<span class="string">"Scissor {0:?} is not contained in the render target {1:?}"</span>)]
+<a href=#129 id=129 data-nosnippet>129</a>    </span>InvalidScissorRect(Rect&lt;u32&gt;, wgt::Extent3d),
+<a href=#130 id=130 data-nosnippet>130</a>    <span class="attr">#[error(<span class="string">"Support for {0} is not implemented yet"</span>)]
+<a href=#131 id=131 data-nosnippet>131</a>    </span>Unimplemented(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
+<a href=#132 id=132 data-nosnippet>132</a>}
+<a href=#133 id=133 data-nosnippet>133</a>
+<a href=#134 id=134 data-nosnippet>134</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>RenderCommandError {
+<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+<a href=#136 id=136 data-nosnippet>136</a>        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+<a href=#137 id=137 data-nosnippet>137</a>            <span class="self">Self</span>::IncompatiblePipelineTargets(e) =&gt; e,
+<a href=#138 id=138 data-nosnippet>138</a>            <span class="self">Self</span>::ResourceUsageCompatibility(e) =&gt; e,
+<a href=#139 id=139 data-nosnippet>139</a>            <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
+<a href=#140 id=140 data-nosnippet>140</a>            <span class="self">Self</span>::MissingBufferUsage(e) =&gt; e,
+<a href=#141 id=141 data-nosnippet>141</a>            <span class="self">Self</span>::MissingTextureUsage(e) =&gt; e,
+<a href=#142 id=142 data-nosnippet>142</a>            <span class="self">Self</span>::PushConstants(e) =&gt; e,
+<a href=#143 id=143 data-nosnippet>143</a>            <span class="self">Self</span>::BindingError(e) =&gt; e,
+<a href=#144 id=144 data-nosnippet>144</a>
+<a href=#145 id=145 data-nosnippet>145</a>            <span class="self">Self</span>::BindGroupIndexOutOfRange { .. }
+<a href=#146 id=146 data-nosnippet>146</a>            | <span class="self">Self</span>::VertexBufferIndexOutOfRange { .. }
+<a href=#147 id=147 data-nosnippet>147</a>            | <span class="self">Self</span>::UnalignedIndexBuffer { .. }
+<a href=#148 id=148 data-nosnippet>148</a>            | <span class="self">Self</span>::UnalignedVertexBuffer { .. }
+<a href=#149 id=149 data-nosnippet>149</a>            | <span class="self">Self</span>::IncompatibleDepthAccess(..)
+<a href=#150 id=150 data-nosnippet>150</a>            | <span class="self">Self</span>::IncompatibleStencilAccess(..)
+<a href=#151 id=151 data-nosnippet>151</a>            | <span class="self">Self</span>::InvalidViewportRectSize { .. }
+<a href=#152 id=152 data-nosnippet>152</a>            | <span class="self">Self</span>::InvalidViewportRectPosition { .. }
+<a href=#153 id=153 data-nosnippet>153</a>            | <span class="self">Self</span>::InvalidViewportDepth(..)
+<a href=#154 id=154 data-nosnippet>154</a>            | <span class="self">Self</span>::InvalidScissorRect(..)
+<a href=#155 id=155 data-nosnippet>155</a>            | <span class="self">Self</span>::Unimplemented(..) =&gt; <span class="kw">return </span>ErrorType::Validation,
+<a href=#156 id=156 data-nosnippet>156</a>        };
+<a href=#157 id=157 data-nosnippet>157</a>        e.webgpu_error_type()
+<a href=#158 id=158 data-nosnippet>158</a>    }
+<a href=#159 id=159 data-nosnippet>159</a>}
+<a href=#160 id=160 data-nosnippet>160</a>
+<a href=#161 id=161 data-nosnippet>161</a><span class="attr">#[derive(Clone, Copy, Debug, Default)]
+<a href=#162 id=162 data-nosnippet>162</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#163 id=163 data-nosnippet>163</a></span><span class="kw">pub struct </span>Rect&lt;T&gt; {
+<a href=#164 id=164 data-nosnippet>164</a>    <span class="kw">pub </span>x: T,
+<a href=#165 id=165 data-nosnippet>165</a>    <span class="kw">pub </span>y: T,
+<a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">pub </span>w: T,
+<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">pub </span>h: T,
+<a href=#168 id=168 data-nosnippet>168</a>}</code></pre></div></section></main></body></html>

@@ -71,7 +71,7 @@
 <a href=#71 id=71 data-nosnippet>71</a>        primitive: wgpu::PrimitiveState::default(),
 <a href=#72 id=72 data-nosnippet>72</a>        depth_stencil: <span class="prelude-val">None</span>,
 <a href=#73 id=73 data-nosnippet>73</a>        multisample: wgpu::MultisampleState::default(),
-<a href=#74 id=74 data-nosnippet>74</a>        multiview: <span class="prelude-val">None</span>,
+<a href=#74 id=74 data-nosnippet>74</a>        multiview_mask: <span class="prelude-val">None</span>,
 <a href=#75 id=75 data-nosnippet>75</a>        cache: <span class="prelude-val">None</span>,
 <a href=#76 id=76 data-nosnippet>76</a>    });
 <a href=#77 id=77 data-nosnippet>77</a>
@@ -129,55 +129,56 @@
 <a href=#129 id=129 data-nosnippet>129</a>                                    depth_stencil_attachment: <span class="prelude-val">None</span>,
 <a href=#130 id=130 data-nosnippet>130</a>                                    timestamp_writes: <span class="prelude-val">None</span>,
 <a href=#131 id=131 data-nosnippet>131</a>                                    occlusion_query_set: <span class="prelude-val">None</span>,
-<a href=#132 id=132 data-nosnippet>132</a>                                });
-<a href=#133 id=133 data-nosnippet>133</a>                            rpass.set_pipeline(<span class="kw-2">&amp;</span>render_pipeline);
-<a href=#134 id=134 data-nosnippet>134</a>                            rpass.draw(<span class="number">0</span>..<span class="number">3</span>, <span class="number">0</span>..<span class="number">1</span>);
-<a href=#135 id=135 data-nosnippet>135</a>                        }
-<a href=#136 id=136 data-nosnippet>136</a>
-<a href=#137 id=137 data-nosnippet>137</a>                        queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
-<a href=#138 id=138 data-nosnippet>138</a>                        window.pre_present_notify();
-<a href=#139 id=139 data-nosnippet>139</a>                        frame.present();
-<a href=#140 id=140 data-nosnippet>140</a>                    }
-<a href=#141 id=141 data-nosnippet>141</a>                    WindowEvent::CloseRequested =&gt; target.exit(),
-<a href=#142 id=142 data-nosnippet>142</a>                    <span class="kw">_ </span>=&gt; {}
-<a href=#143 id=143 data-nosnippet>143</a>                };
-<a href=#144 id=144 data-nosnippet>144</a>            }
-<a href=#145 id=145 data-nosnippet>145</a>        })
-<a href=#146 id=146 data-nosnippet>146</a>        .unwrap();
-<a href=#147 id=147 data-nosnippet>147</a>}
-<a href=#148 id=148 data-nosnippet>148</a>
-<a href=#149 id=149 data-nosnippet>149</a><span class="kw">pub fn </span>main() {
-<a href=#150 id=150 data-nosnippet>150</a>    <span class="kw">let </span>event_loop = EventLoop::new().unwrap();
-<a href=#151 id=151 data-nosnippet>151</a>    <span class="attr">#[cfg_attr(
-<a href=#152 id=152 data-nosnippet>152</a>        not(target_arch = <span class="string">"wasm32"</span>),
-<a href=#153 id=153 data-nosnippet>153</a>        expect(unused_mut, reason = <span class="string">"`wasm32` re-assigns to specify canvas"</span>)
-<a href=#154 id=154 data-nosnippet>154</a>    )]
-<a href=#155 id=155 data-nosnippet>155</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>builder = winit::window::WindowBuilder::new();
-<a href=#156 id=156 data-nosnippet>156</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
-<a href=#157 id=157 data-nosnippet>157</a>    </span>{
-<a href=#158 id=158 data-nosnippet>158</a>        <span class="kw">use </span>wasm_bindgen::JsCast;
-<a href=#159 id=159 data-nosnippet>159</a>        <span class="kw">use </span>winit::platform::web::WindowBuilderExtWebSys;
-<a href=#160 id=160 data-nosnippet>160</a>        <span class="kw">let </span>canvas = web_sys::window()
-<a href=#161 id=161 data-nosnippet>161</a>            .unwrap()
-<a href=#162 id=162 data-nosnippet>162</a>            .document()
-<a href=#163 id=163 data-nosnippet>163</a>            .unwrap()
-<a href=#164 id=164 data-nosnippet>164</a>            .get_element_by_id(<span class="string">"canvas"</span>)
-<a href=#165 id=165 data-nosnippet>165</a>            .unwrap()
-<a href=#166 id=166 data-nosnippet>166</a>            .dyn_into::&lt;web_sys::HtmlCanvasElement&gt;()
-<a href=#167 id=167 data-nosnippet>167</a>            .unwrap();
-<a href=#168 id=168 data-nosnippet>168</a>        builder = builder.with_canvas(<span class="prelude-val">Some</span>(canvas));
-<a href=#169 id=169 data-nosnippet>169</a>    }
-<a href=#170 id=170 data-nosnippet>170</a>    <span class="kw">let </span>window = builder.build(<span class="kw-2">&amp;</span>event_loop).unwrap();
-<a href=#171 id=171 data-nosnippet>171</a>
-<a href=#172 id=172 data-nosnippet>172</a>    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
-<a href=#173 id=173 data-nosnippet>173</a>    </span>{
-<a href=#174 id=174 data-nosnippet>174</a>        env_logger::init();
-<a href=#175 id=175 data-nosnippet>175</a>        pollster::block_on(run(event_loop, window));
-<a href=#176 id=176 data-nosnippet>176</a>    }
-<a href=#177 id=177 data-nosnippet>177</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
-<a href=#178 id=178 data-nosnippet>178</a>    </span>{
-<a href=#179 id=179 data-nosnippet>179</a>        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-<a href=#180 id=180 data-nosnippet>180</a>        console_log::init().expect(<span class="string">"could not initialize logger"</span>);
-<a href=#181 id=181 data-nosnippet>181</a>        wasm_bindgen_futures::spawn_local(run(event_loop, window));
-<a href=#182 id=182 data-nosnippet>182</a>    }
-<a href=#183 id=183 data-nosnippet>183</a>}</code></pre></div></section></main></body></html>
+<a href=#132 id=132 data-nosnippet>132</a>                                    multiview_mask: <span class="prelude-val">None</span>,
+<a href=#133 id=133 data-nosnippet>133</a>                                });
+<a href=#134 id=134 data-nosnippet>134</a>                            rpass.set_pipeline(<span class="kw-2">&amp;</span>render_pipeline);
+<a href=#135 id=135 data-nosnippet>135</a>                            rpass.draw(<span class="number">0</span>..<span class="number">3</span>, <span class="number">0</span>..<span class="number">1</span>);
+<a href=#136 id=136 data-nosnippet>136</a>                        }
+<a href=#137 id=137 data-nosnippet>137</a>
+<a href=#138 id=138 data-nosnippet>138</a>                        queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
+<a href=#139 id=139 data-nosnippet>139</a>                        window.pre_present_notify();
+<a href=#140 id=140 data-nosnippet>140</a>                        frame.present();
+<a href=#141 id=141 data-nosnippet>141</a>                    }
+<a href=#142 id=142 data-nosnippet>142</a>                    WindowEvent::CloseRequested =&gt; target.exit(),
+<a href=#143 id=143 data-nosnippet>143</a>                    <span class="kw">_ </span>=&gt; {}
+<a href=#144 id=144 data-nosnippet>144</a>                };
+<a href=#145 id=145 data-nosnippet>145</a>            }
+<a href=#146 id=146 data-nosnippet>146</a>        })
+<a href=#147 id=147 data-nosnippet>147</a>        .unwrap();
+<a href=#148 id=148 data-nosnippet>148</a>}
+<a href=#149 id=149 data-nosnippet>149</a>
+<a href=#150 id=150 data-nosnippet>150</a><span class="kw">pub fn </span>main() {
+<a href=#151 id=151 data-nosnippet>151</a>    <span class="kw">let </span>event_loop = EventLoop::new().unwrap();
+<a href=#152 id=152 data-nosnippet>152</a>    <span class="attr">#[cfg_attr(
+<a href=#153 id=153 data-nosnippet>153</a>        not(target_arch = <span class="string">"wasm32"</span>),
+<a href=#154 id=154 data-nosnippet>154</a>        expect(unused_mut, reason = <span class="string">"`wasm32` re-assigns to specify canvas"</span>)
+<a href=#155 id=155 data-nosnippet>155</a>    )]
+<a href=#156 id=156 data-nosnippet>156</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>builder = winit::window::WindowBuilder::new();
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
+<a href=#158 id=158 data-nosnippet>158</a>    </span>{
+<a href=#159 id=159 data-nosnippet>159</a>        <span class="kw">use </span>wasm_bindgen::JsCast;
+<a href=#160 id=160 data-nosnippet>160</a>        <span class="kw">use </span>winit::platform::web::WindowBuilderExtWebSys;
+<a href=#161 id=161 data-nosnippet>161</a>        <span class="kw">let </span>canvas = web_sys::window()
+<a href=#162 id=162 data-nosnippet>162</a>            .unwrap()
+<a href=#163 id=163 data-nosnippet>163</a>            .document()
+<a href=#164 id=164 data-nosnippet>164</a>            .unwrap()
+<a href=#165 id=165 data-nosnippet>165</a>            .get_element_by_id(<span class="string">"canvas"</span>)
+<a href=#166 id=166 data-nosnippet>166</a>            .unwrap()
+<a href=#167 id=167 data-nosnippet>167</a>            .dyn_into::&lt;web_sys::HtmlCanvasElement&gt;()
+<a href=#168 id=168 data-nosnippet>168</a>            .unwrap();
+<a href=#169 id=169 data-nosnippet>169</a>        builder = builder.with_canvas(<span class="prelude-val">Some</span>(canvas));
+<a href=#170 id=170 data-nosnippet>170</a>    }
+<a href=#171 id=171 data-nosnippet>171</a>    <span class="kw">let </span>window = builder.build(<span class="kw-2">&amp;</span>event_loop).unwrap();
+<a href=#172 id=172 data-nosnippet>172</a>
+<a href=#173 id=173 data-nosnippet>173</a>    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
+<a href=#174 id=174 data-nosnippet>174</a>    </span>{
+<a href=#175 id=175 data-nosnippet>175</a>        env_logger::init();
+<a href=#176 id=176 data-nosnippet>176</a>        pollster::block_on(run(event_loop, window));
+<a href=#177 id=177 data-nosnippet>177</a>    }
+<a href=#178 id=178 data-nosnippet>178</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
+<a href=#179 id=179 data-nosnippet>179</a>    </span>{
+<a href=#180 id=180 data-nosnippet>180</a>        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+<a href=#181 id=181 data-nosnippet>181</a>        console_log::init().expect(<span class="string">"could not initialize logger"</span>);
+<a href=#182 id=182 data-nosnippet>182</a>        wasm_bindgen_futures::spawn_local(run(event_loop, window));
+<a href=#183 id=183 data-nosnippet>183</a>    }
+<a href=#184 id=184 data-nosnippet>184</a>}</code></pre></div></section></main></body></html>

@@ -148,7 +148,7 @@
 <a href=#148 id=148 data-nosnippet>148</a>            primitive: wgpu::PrimitiveState::default(),
 <a href=#149 id=149 data-nosnippet>149</a>            depth_stencil: <span class="prelude-val">None</span>,
 <a href=#150 id=150 data-nosnippet>150</a>            multisample: wgpu::MultisampleState::default(),
-<a href=#151 id=151 data-nosnippet>151</a>            multiview: <span class="prelude-val">None</span>,
+<a href=#151 id=151 data-nosnippet>151</a>            multiview_mask: <span class="prelude-val">None</span>,
 <a href=#152 id=152 data-nosnippet>152</a>            cache: <span class="prelude-val">None</span>,
 <a href=#153 id=153 data-nosnippet>153</a>        });
 <a href=#154 id=154 data-nosnippet>154</a>
@@ -276,65 +276,66 @@
 <a href=#276 id=276 data-nosnippet>276</a>            depth_stencil_attachment: <span class="prelude-val">None</span>,
 <a href=#277 id=277 data-nosnippet>277</a>            timestamp_writes: <span class="prelude-val">None</span>,
 <a href=#278 id=278 data-nosnippet>278</a>            occlusion_query_set: <span class="prelude-val">None</span>,
-<a href=#279 id=279 data-nosnippet>279</a>        };
-<a href=#280 id=280 data-nosnippet>280</a>
-<a href=#281 id=281 data-nosnippet>281</a>        <span class="comment">// get command encoder
-<a href=#282 id=282 data-nosnippet>282</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>command_encoder =
-<a href=#283 id=283 data-nosnippet>283</a>            device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
-<a href=#284 id=284 data-nosnippet>284</a>
-<a href=#285 id=285 data-nosnippet>285</a>        command_encoder.push_debug_group(<span class="string">"compute boid movement"</span>);
-<a href=#286 id=286 data-nosnippet>286</a>        {
-<a href=#287 id=287 data-nosnippet>287</a>            <span class="comment">// compute pass
-<a href=#288 id=288 data-nosnippet>288</a>            </span><span class="kw">let </span><span class="kw-2">mut </span>cpass = command_encoder.begin_compute_pass(<span class="kw-2">&amp;</span>wgpu::ComputePassDescriptor {
-<a href=#289 id=289 data-nosnippet>289</a>                label: <span class="prelude-val">None</span>,
-<a href=#290 id=290 data-nosnippet>290</a>                timestamp_writes: <span class="prelude-val">None</span>,
-<a href=#291 id=291 data-nosnippet>291</a>            });
-<a href=#292 id=292 data-nosnippet>292</a>            cpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.compute_pipeline);
-<a href=#293 id=293 data-nosnippet>293</a>            cpass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.particle_bind_groups[<span class="self">self</span>.frame_num % <span class="number">2</span>], <span class="kw-2">&amp;</span>[]);
-<a href=#294 id=294 data-nosnippet>294</a>            cpass.dispatch_workgroups(<span class="self">self</span>.work_group_count, <span class="number">1</span>, <span class="number">1</span>);
-<a href=#295 id=295 data-nosnippet>295</a>        }
-<a href=#296 id=296 data-nosnippet>296</a>        command_encoder.pop_debug_group();
-<a href=#297 id=297 data-nosnippet>297</a>
-<a href=#298 id=298 data-nosnippet>298</a>        command_encoder.push_debug_group(<span class="string">"render boids"</span>);
-<a href=#299 id=299 data-nosnippet>299</a>        {
-<a href=#300 id=300 data-nosnippet>300</a>            <span class="comment">// render pass
-<a href=#301 id=301 data-nosnippet>301</a>            </span><span class="kw">let </span><span class="kw-2">mut </span>rpass = command_encoder.begin_render_pass(<span class="kw-2">&amp;</span>render_pass_descriptor);
-<a href=#302 id=302 data-nosnippet>302</a>            rpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.render_pipeline);
-<a href=#303 id=303 data-nosnippet>303</a>            <span class="comment">// render dst particles
-<a href=#304 id=304 data-nosnippet>304</a>            </span>rpass.set_vertex_buffer(<span class="number">0</span>, <span class="self">self</span>.particle_buffers[(<span class="self">self</span>.frame_num + <span class="number">1</span>) % <span class="number">2</span>].slice(..));
-<a href=#305 id=305 data-nosnippet>305</a>            <span class="comment">// the three instance-local vertices
-<a href=#306 id=306 data-nosnippet>306</a>            </span>rpass.set_vertex_buffer(<span class="number">1</span>, <span class="self">self</span>.vertices_buffer.slice(..));
-<a href=#307 id=307 data-nosnippet>307</a>            rpass.draw(<span class="number">0</span>..<span class="number">3</span>, <span class="number">0</span>..NUM_PARTICLES);
-<a href=#308 id=308 data-nosnippet>308</a>        }
-<a href=#309 id=309 data-nosnippet>309</a>        command_encoder.pop_debug_group();
-<a href=#310 id=310 data-nosnippet>310</a>
-<a href=#311 id=311 data-nosnippet>311</a>        <span class="comment">// update frame count
-<a href=#312 id=312 data-nosnippet>312</a>        </span><span class="self">self</span>.frame_num += <span class="number">1</span>;
-<a href=#313 id=313 data-nosnippet>313</a>
-<a href=#314 id=314 data-nosnippet>314</a>        <span class="comment">// done
-<a href=#315 id=315 data-nosnippet>315</a>        </span>queue.submit(<span class="prelude-val">Some</span>(command_encoder.finish()));
-<a href=#316 id=316 data-nosnippet>316</a>    }
-<a href=#317 id=317 data-nosnippet>317</a>}
-<a href=#318 id=318 data-nosnippet>318</a>
-<a href=#319 id=319 data-nosnippet>319</a><span class="doccomment">/// run example
-<a href=#320 id=320 data-nosnippet>320</a></span><span class="kw">pub fn </span>main() {
-<a href=#321 id=321 data-nosnippet>321</a>    <span class="kw">crate</span>::framework::run::&lt;Example&gt;(<span class="string">"boids"</span>);
-<a href=#322 id=322 data-nosnippet>322</a>}
-<a href=#323 id=323 data-nosnippet>323</a>
-<a href=#324 id=324 data-nosnippet>324</a><span class="attr">#[cfg(test)]
-<a href=#325 id=325 data-nosnippet>325</a>#[wgpu_test::gpu_test]
-<a href=#326 id=326 data-nosnippet>326</a></span><span class="kw">pub static </span>TEST: <span class="kw">crate</span>::framework::ExampleTestParams = <span class="kw">crate</span>::framework::ExampleTestParams {
-<a href=#327 id=327 data-nosnippet>327</a>    name: <span class="string">"boids"</span>,
-<a href=#328 id=328 data-nosnippet>328</a>    <span class="comment">// Generated on 1080ti on Vk/Windows
-<a href=#329 id=329 data-nosnippet>329</a>    </span>image_path: <span class="string">"/examples/features/src/boids/screenshot.png"</span>,
-<a href=#330 id=330 data-nosnippet>330</a>    width: <span class="number">1024</span>,
-<a href=#331 id=331 data-nosnippet>331</a>    height: <span class="number">768</span>,
-<a href=#332 id=332 data-nosnippet>332</a>    optional_features: wgpu::Features::default(),
-<a href=#333 id=333 data-nosnippet>333</a>    base_test_parameters: wgpu_test::TestParameters::default()
-<a href=#334 id=334 data-nosnippet>334</a>        .downlevel_flags(wgpu::DownlevelFlags::COMPUTE_SHADERS)
-<a href=#335 id=335 data-nosnippet>335</a>        .limits(wgpu::Limits::downlevel_defaults())
-<a href=#336 id=336 data-nosnippet>336</a>        <span class="comment">// Lots of validation errors, maybe related to https://github.com/gfx-rs/wgpu/issues/3160
-<a href=#337 id=337 data-nosnippet>337</a>        </span>.expect_fail(wgpu_test::FailureCase::molten_vk()),
-<a href=#338 id=338 data-nosnippet>338</a>    comparisons: <span class="kw-2">&amp;</span>[wgpu_test::ComparisonType::Mean(<span class="number">0.005</span>)],
-<a href=#339 id=339 data-nosnippet>339</a>    _phantom: std::marker::PhantomData::&lt;Example&gt;,
-<a href=#340 id=340 data-nosnippet>340</a>};</code></pre></div></section></main></body></html>
+<a href=#279 id=279 data-nosnippet>279</a>            multiview_mask: <span class="prelude-val">None</span>,
+<a href=#280 id=280 data-nosnippet>280</a>        };
+<a href=#281 id=281 data-nosnippet>281</a>
+<a href=#282 id=282 data-nosnippet>282</a>        <span class="comment">// get command encoder
+<a href=#283 id=283 data-nosnippet>283</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>command_encoder =
+<a href=#284 id=284 data-nosnippet>284</a>            device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
+<a href=#285 id=285 data-nosnippet>285</a>
+<a href=#286 id=286 data-nosnippet>286</a>        command_encoder.push_debug_group(<span class="string">"compute boid movement"</span>);
+<a href=#287 id=287 data-nosnippet>287</a>        {
+<a href=#288 id=288 data-nosnippet>288</a>            <span class="comment">// compute pass
+<a href=#289 id=289 data-nosnippet>289</a>            </span><span class="kw">let </span><span class="kw-2">mut </span>cpass = command_encoder.begin_compute_pass(<span class="kw-2">&amp;</span>wgpu::ComputePassDescriptor {
+<a href=#290 id=290 data-nosnippet>290</a>                label: <span class="prelude-val">None</span>,
+<a href=#291 id=291 data-nosnippet>291</a>                timestamp_writes: <span class="prelude-val">None</span>,
+<a href=#292 id=292 data-nosnippet>292</a>            });
+<a href=#293 id=293 data-nosnippet>293</a>            cpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.compute_pipeline);
+<a href=#294 id=294 data-nosnippet>294</a>            cpass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.particle_bind_groups[<span class="self">self</span>.frame_num % <span class="number">2</span>], <span class="kw-2">&amp;</span>[]);
+<a href=#295 id=295 data-nosnippet>295</a>            cpass.dispatch_workgroups(<span class="self">self</span>.work_group_count, <span class="number">1</span>, <span class="number">1</span>);
+<a href=#296 id=296 data-nosnippet>296</a>        }
+<a href=#297 id=297 data-nosnippet>297</a>        command_encoder.pop_debug_group();
+<a href=#298 id=298 data-nosnippet>298</a>
+<a href=#299 id=299 data-nosnippet>299</a>        command_encoder.push_debug_group(<span class="string">"render boids"</span>);
+<a href=#300 id=300 data-nosnippet>300</a>        {
+<a href=#301 id=301 data-nosnippet>301</a>            <span class="comment">// render pass
+<a href=#302 id=302 data-nosnippet>302</a>            </span><span class="kw">let </span><span class="kw-2">mut </span>rpass = command_encoder.begin_render_pass(<span class="kw-2">&amp;</span>render_pass_descriptor);
+<a href=#303 id=303 data-nosnippet>303</a>            rpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.render_pipeline);
+<a href=#304 id=304 data-nosnippet>304</a>            <span class="comment">// render dst particles
+<a href=#305 id=305 data-nosnippet>305</a>            </span>rpass.set_vertex_buffer(<span class="number">0</span>, <span class="self">self</span>.particle_buffers[(<span class="self">self</span>.frame_num + <span class="number">1</span>) % <span class="number">2</span>].slice(..));
+<a href=#306 id=306 data-nosnippet>306</a>            <span class="comment">// the three instance-local vertices
+<a href=#307 id=307 data-nosnippet>307</a>            </span>rpass.set_vertex_buffer(<span class="number">1</span>, <span class="self">self</span>.vertices_buffer.slice(..));
+<a href=#308 id=308 data-nosnippet>308</a>            rpass.draw(<span class="number">0</span>..<span class="number">3</span>, <span class="number">0</span>..NUM_PARTICLES);
+<a href=#309 id=309 data-nosnippet>309</a>        }
+<a href=#310 id=310 data-nosnippet>310</a>        command_encoder.pop_debug_group();
+<a href=#311 id=311 data-nosnippet>311</a>
+<a href=#312 id=312 data-nosnippet>312</a>        <span class="comment">// update frame count
+<a href=#313 id=313 data-nosnippet>313</a>        </span><span class="self">self</span>.frame_num += <span class="number">1</span>;
+<a href=#314 id=314 data-nosnippet>314</a>
+<a href=#315 id=315 data-nosnippet>315</a>        <span class="comment">// done
+<a href=#316 id=316 data-nosnippet>316</a>        </span>queue.submit(<span class="prelude-val">Some</span>(command_encoder.finish()));
+<a href=#317 id=317 data-nosnippet>317</a>    }
+<a href=#318 id=318 data-nosnippet>318</a>}
+<a href=#319 id=319 data-nosnippet>319</a>
+<a href=#320 id=320 data-nosnippet>320</a><span class="doccomment">/// run example
+<a href=#321 id=321 data-nosnippet>321</a></span><span class="kw">pub fn </span>main() {
+<a href=#322 id=322 data-nosnippet>322</a>    <span class="kw">crate</span>::framework::run::&lt;Example&gt;(<span class="string">"boids"</span>);
+<a href=#323 id=323 data-nosnippet>323</a>}
+<a href=#324 id=324 data-nosnippet>324</a>
+<a href=#325 id=325 data-nosnippet>325</a><span class="attr">#[cfg(test)]
+<a href=#326 id=326 data-nosnippet>326</a>#[wgpu_test::gpu_test]
+<a href=#327 id=327 data-nosnippet>327</a></span><span class="kw">pub static </span>TEST: <span class="kw">crate</span>::framework::ExampleTestParams = <span class="kw">crate</span>::framework::ExampleTestParams {
+<a href=#328 id=328 data-nosnippet>328</a>    name: <span class="string">"boids"</span>,
+<a href=#329 id=329 data-nosnippet>329</a>    <span class="comment">// Generated on 1080ti on Vk/Windows
+<a href=#330 id=330 data-nosnippet>330</a>    </span>image_path: <span class="string">"/examples/features/src/boids/screenshot.png"</span>,
+<a href=#331 id=331 data-nosnippet>331</a>    width: <span class="number">1024</span>,
+<a href=#332 id=332 data-nosnippet>332</a>    height: <span class="number">768</span>,
+<a href=#333 id=333 data-nosnippet>333</a>    optional_features: wgpu::Features::default(),
+<a href=#334 id=334 data-nosnippet>334</a>    base_test_parameters: wgpu_test::TestParameters::default()
+<a href=#335 id=335 data-nosnippet>335</a>        .downlevel_flags(wgpu::DownlevelFlags::COMPUTE_SHADERS)
+<a href=#336 id=336 data-nosnippet>336</a>        .limits(wgpu::Limits::downlevel_defaults())
+<a href=#337 id=337 data-nosnippet>337</a>        <span class="comment">// Lots of validation errors, maybe related to https://github.com/gfx-rs/wgpu/issues/3160
+<a href=#338 id=338 data-nosnippet>338</a>        </span>.expect_fail(wgpu_test::FailureCase::molten_vk()),
+<a href=#339 id=339 data-nosnippet>339</a>    comparisons: <span class="kw-2">&amp;</span>[wgpu_test::ComparisonType::Mean(<span class="number">0.005</span>)],
+<a href=#340 id=340 data-nosnippet>340</a>    _phantom: std::marker::PhantomData::&lt;Example&gt;,
+<a href=#341 id=341 data-nosnippet>341</a>};</code></pre></div></section></main></body></html>

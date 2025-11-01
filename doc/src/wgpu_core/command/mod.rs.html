@@ -1019,965 +1019,967 @@
 <a href=#1019 id=1019 data-nosnippet>1019</a>                            depth_stencil_attachment,
 <a href=#1020 id=1020 data-nosnippet>1020</a>                            timestamp_writes,
 <a href=#1021 id=1021 data-nosnippet>1021</a>                            occlusion_query_set,
-<a href=#1022 id=1022 data-nosnippet>1022</a>                        } =&gt; {
-<a href=#1023 id=1023 data-nosnippet>1023</a>                            <span class="macro">api_log!</span>(
-<a href=#1024 id=1024 data-nosnippet>1024</a>                                <span class="string">"Begin encoding render pass with '{}' label"</span>,
-<a href=#1025 id=1025 data-nosnippet>1025</a>                                pass.label.as_deref().unwrap_or(<span class="string">""</span>)
-<a href=#1026 id=1026 data-nosnippet>1026</a>                            );
-<a href=#1027 id=1027 data-nosnippet>1027</a>                            <span class="kw">let </span>res = encode_render_pass(
-<a href=#1028 id=1028 data-nosnippet>1028</a>                                <span class="kw-2">&amp;mut </span>state,
-<a href=#1029 id=1029 data-nosnippet>1029</a>                                pass,
-<a href=#1030 id=1030 data-nosnippet>1030</a>                                color_attachments,
-<a href=#1031 id=1031 data-nosnippet>1031</a>                                depth_stencil_attachment,
-<a href=#1032 id=1032 data-nosnippet>1032</a>                                timestamp_writes,
-<a href=#1033 id=1033 data-nosnippet>1033</a>                                occlusion_query_set,
-<a href=#1034 id=1034 data-nosnippet>1034</a>                            );
-<a href=#1035 id=1035 data-nosnippet>1035</a>                            <span class="kw">match </span>res.as_ref() {
-<a href=#1036 id=1036 data-nosnippet>1036</a>                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">api_log!</span>(<span class="string">"Finished encoding render pass ({err:?})"</span>),
-<a href=#1037 id=1037 data-nosnippet>1037</a>                                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="macro">api_log!</span>(<span class="string">"Finished encoding render pass (success)"</span>),
-<a href=#1038 id=1038 data-nosnippet>1038</a>                            }
-<a href=#1039 id=1039 data-nosnippet>1039</a>                            res<span class="question-mark">?</span>;
-<a href=#1040 id=1040 data-nosnippet>1040</a>                        }
-<a href=#1041 id=1041 data-nosnippet>1041</a>                        ArcCommand::RunComputePass {
-<a href=#1042 id=1042 data-nosnippet>1042</a>                            pass,
-<a href=#1043 id=1043 data-nosnippet>1043</a>                            timestamp_writes,
-<a href=#1044 id=1044 data-nosnippet>1044</a>                        } =&gt; {
-<a href=#1045 id=1045 data-nosnippet>1045</a>                            <span class="macro">api_log!</span>(
-<a href=#1046 id=1046 data-nosnippet>1046</a>                                <span class="string">"Begin encoding compute pass with '{}' label"</span>,
-<a href=#1047 id=1047 data-nosnippet>1047</a>                                pass.label.as_deref().unwrap_or(<span class="string">""</span>)
-<a href=#1048 id=1048 data-nosnippet>1048</a>                            );
-<a href=#1049 id=1049 data-nosnippet>1049</a>                            <span class="kw">let </span>res = encode_compute_pass(<span class="kw-2">&amp;mut </span>state, pass, timestamp_writes);
-<a href=#1050 id=1050 data-nosnippet>1050</a>                            <span class="kw">match </span>res.as_ref() {
-<a href=#1051 id=1051 data-nosnippet>1051</a>                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">api_log!</span>(<span class="string">"Finished encoding compute pass ({err:?})"</span>),
-<a href=#1052 id=1052 data-nosnippet>1052</a>                                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="macro">api_log!</span>(<span class="string">"Finished encoding compute pass (success)"</span>),
-<a href=#1053 id=1053 data-nosnippet>1053</a>                            }
-<a href=#1054 id=1054 data-nosnippet>1054</a>                            res<span class="question-mark">?</span>;
-<a href=#1055 id=1055 data-nosnippet>1055</a>                        }
-<a href=#1056 id=1056 data-nosnippet>1056</a>                        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-<a href=#1057 id=1057 data-nosnippet>1057</a>                    }
-<a href=#1058 id=1058 data-nosnippet>1058</a>                } <span class="kw">else </span>{
-<a href=#1059 id=1059 data-nosnippet>1059</a>                    <span class="comment">// All the other non-pass encoding routines assume the
-<a href=#1060 id=1060 data-nosnippet>1060</a>                    // encoder is open, so open it if necessary. This state
-<a href=#1061 id=1061 data-nosnippet>1061</a>                    // object holds an `&amp;mut dyn hal::DynCommandEncoder`. By
-<a href=#1062 id=1062 data-nosnippet>1062</a>                    // convention, a bare HAL encoder reference in
-<a href=#1063 id=1063 data-nosnippet>1063</a>                    // [`EncodingState`] must always be an open encoder.
-<a href=#1064 id=1064 data-nosnippet>1064</a>                    </span><span class="kw">let </span>raw_encoder = cmd_buf_data.encoder.open_if_closed()<span class="question-mark">?</span>;
-<a href=#1065 id=1065 data-nosnippet>1065</a>                    <span class="kw">let </span><span class="kw-2">mut </span>state = EncodingState {
-<a href=#1066 id=1066 data-nosnippet>1066</a>                        device: <span class="kw-2">&amp;</span><span class="self">self</span>.device,
-<a href=#1067 id=1067 data-nosnippet>1067</a>                        raw_encoder,
-<a href=#1068 id=1068 data-nosnippet>1068</a>                        tracker: <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers,
-<a href=#1069 id=1069 data-nosnippet>1069</a>                        buffer_memory_init_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.buffer_memory_init_actions,
-<a href=#1070 id=1070 data-nosnippet>1070</a>                        texture_memory_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.texture_memory_actions,
-<a href=#1071 id=1071 data-nosnippet>1071</a>                        as_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.as_actions,
-<a href=#1072 id=1072 data-nosnippet>1072</a>                        temp_resources: <span class="kw-2">&amp;mut </span>cmd_buf_data.temp_resources,
-<a href=#1073 id=1073 data-nosnippet>1073</a>                        indirect_draw_validation_resources: <span class="kw-2">&amp;mut </span>cmd_buf_data
-<a href=#1074 id=1074 data-nosnippet>1074</a>                            .indirect_draw_validation_resources,
-<a href=#1075 id=1075 data-nosnippet>1075</a>                        snatch_guard: <span class="kw-2">&amp;</span>snatch_guard,
-<a href=#1076 id=1076 data-nosnippet>1076</a>                        debug_scope_depth: <span class="kw-2">&amp;mut </span>debug_scope_depth,
-<a href=#1077 id=1077 data-nosnippet>1077</a>                    };
-<a href=#1078 id=1078 data-nosnippet>1078</a>                    <span class="kw">match </span>command {
-<a href=#1079 id=1079 data-nosnippet>1079</a>                        ArcCommand::CopyBufferToBuffer {
-<a href=#1080 id=1080 data-nosnippet>1080</a>                            src,
-<a href=#1081 id=1081 data-nosnippet>1081</a>                            src_offset,
-<a href=#1082 id=1082 data-nosnippet>1082</a>                            dst,
-<a href=#1083 id=1083 data-nosnippet>1083</a>                            dst_offset,
-<a href=#1084 id=1084 data-nosnippet>1084</a>                            size,
-<a href=#1085 id=1085 data-nosnippet>1085</a>                        } =&gt; {
-<a href=#1086 id=1086 data-nosnippet>1086</a>                            copy_buffer_to_buffer(
-<a href=#1087 id=1087 data-nosnippet>1087</a>                                <span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>src, src_offset, <span class="kw-2">&amp;</span>dst, dst_offset, size,
-<a href=#1088 id=1088 data-nosnippet>1088</a>                            )<span class="question-mark">?</span>;
-<a href=#1089 id=1089 data-nosnippet>1089</a>                        }
-<a href=#1090 id=1090 data-nosnippet>1090</a>                        ArcCommand::CopyBufferToTexture { src, dst, size } =&gt; {
-<a href=#1091 id=1091 data-nosnippet>1091</a>                            copy_buffer_to_texture(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)<span class="question-mark">?</span>;
-<a href=#1092 id=1092 data-nosnippet>1092</a>                        }
-<a href=#1093 id=1093 data-nosnippet>1093</a>                        ArcCommand::CopyTextureToBuffer { src, dst, size } =&gt; {
-<a href=#1094 id=1094 data-nosnippet>1094</a>                            copy_texture_to_buffer(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)<span class="question-mark">?</span>;
-<a href=#1095 id=1095 data-nosnippet>1095</a>                        }
-<a href=#1096 id=1096 data-nosnippet>1096</a>                        ArcCommand::CopyTextureToTexture { src, dst, size } =&gt; {
-<a href=#1097 id=1097 data-nosnippet>1097</a>                            copy_texture_to_texture(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)<span class="question-mark">?</span>;
-<a href=#1098 id=1098 data-nosnippet>1098</a>                        }
-<a href=#1099 id=1099 data-nosnippet>1099</a>                        ArcCommand::ClearBuffer { dst, offset, size } =&gt; {
-<a href=#1100 id=1100 data-nosnippet>1100</a>                            clear_buffer(<span class="kw-2">&amp;mut </span>state, dst, offset, size)<span class="question-mark">?</span>;
-<a href=#1101 id=1101 data-nosnippet>1101</a>                        }
-<a href=#1102 id=1102 data-nosnippet>1102</a>                        ArcCommand::ClearTexture {
-<a href=#1103 id=1103 data-nosnippet>1103</a>                            dst,
-<a href=#1104 id=1104 data-nosnippet>1104</a>                            subresource_range,
-<a href=#1105 id=1105 data-nosnippet>1105</a>                        } =&gt; {
-<a href=#1106 id=1106 data-nosnippet>1106</a>                            clear_texture_cmd(<span class="kw-2">&amp;mut </span>state, dst, <span class="kw-2">&amp;</span>subresource_range)<span class="question-mark">?</span>;
-<a href=#1107 id=1107 data-nosnippet>1107</a>                        }
-<a href=#1108 id=1108 data-nosnippet>1108</a>                        ArcCommand::WriteTimestamp {
-<a href=#1109 id=1109 data-nosnippet>1109</a>                            query_set,
-<a href=#1110 id=1110 data-nosnippet>1110</a>                            query_index,
-<a href=#1111 id=1111 data-nosnippet>1111</a>                        } =&gt; {
-<a href=#1112 id=1112 data-nosnippet>1112</a>                            write_timestamp(<span class="kw-2">&amp;mut </span>state, query_set, query_index)<span class="question-mark">?</span>;
-<a href=#1113 id=1113 data-nosnippet>1113</a>                        }
-<a href=#1114 id=1114 data-nosnippet>1114</a>                        ArcCommand::ResolveQuerySet {
-<a href=#1115 id=1115 data-nosnippet>1115</a>                            query_set,
-<a href=#1116 id=1116 data-nosnippet>1116</a>                            start_query,
-<a href=#1117 id=1117 data-nosnippet>1117</a>                            query_count,
-<a href=#1118 id=1118 data-nosnippet>1118</a>                            destination,
-<a href=#1119 id=1119 data-nosnippet>1119</a>                            destination_offset,
-<a href=#1120 id=1120 data-nosnippet>1120</a>                        } =&gt; {
-<a href=#1121 id=1121 data-nosnippet>1121</a>                            resolve_query_set(
-<a href=#1122 id=1122 data-nosnippet>1122</a>                                <span class="kw-2">&amp;mut </span>state,
-<a href=#1123 id=1123 data-nosnippet>1123</a>                                query_set,
-<a href=#1124 id=1124 data-nosnippet>1124</a>                                start_query,
-<a href=#1125 id=1125 data-nosnippet>1125</a>                                query_count,
-<a href=#1126 id=1126 data-nosnippet>1126</a>                                destination,
-<a href=#1127 id=1127 data-nosnippet>1127</a>                                destination_offset,
-<a href=#1128 id=1128 data-nosnippet>1128</a>                            )<span class="question-mark">?</span>;
-<a href=#1129 id=1129 data-nosnippet>1129</a>                        }
-<a href=#1130 id=1130 data-nosnippet>1130</a>                        ArcCommand::PushDebugGroup(label) =&gt; {
-<a href=#1131 id=1131 data-nosnippet>1131</a>                            push_debug_group(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>label)<span class="question-mark">?</span>;
-<a href=#1132 id=1132 data-nosnippet>1132</a>                        }
-<a href=#1133 id=1133 data-nosnippet>1133</a>                        ArcCommand::PopDebugGroup =&gt; {
-<a href=#1134 id=1134 data-nosnippet>1134</a>                            pop_debug_group(<span class="kw-2">&amp;mut </span>state)<span class="question-mark">?</span>;
-<a href=#1135 id=1135 data-nosnippet>1135</a>                        }
-<a href=#1136 id=1136 data-nosnippet>1136</a>                        ArcCommand::InsertDebugMarker(label) =&gt; {
-<a href=#1137 id=1137 data-nosnippet>1137</a>                            insert_debug_marker(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>label)<span class="question-mark">?</span>;
-<a href=#1138 id=1138 data-nosnippet>1138</a>                        }
-<a href=#1139 id=1139 data-nosnippet>1139</a>                        ArcCommand::BuildAccelerationStructures { blas, tlas } =&gt; {
-<a href=#1140 id=1140 data-nosnippet>1140</a>                            build_acceleration_structures(<span class="kw-2">&amp;mut </span>state, blas, tlas)<span class="question-mark">?</span>;
-<a href=#1141 id=1141 data-nosnippet>1141</a>                        }
-<a href=#1142 id=1142 data-nosnippet>1142</a>                        ArcCommand::TransitionResources {
-<a href=#1143 id=1143 data-nosnippet>1143</a>                            buffer_transitions,
-<a href=#1144 id=1144 data-nosnippet>1144</a>                            texture_transitions,
-<a href=#1145 id=1145 data-nosnippet>1145</a>                        } =&gt; {
-<a href=#1146 id=1146 data-nosnippet>1146</a>                            transition_resources(
-<a href=#1147 id=1147 data-nosnippet>1147</a>                                <span class="kw-2">&amp;mut </span>state,
-<a href=#1148 id=1148 data-nosnippet>1148</a>                                buffer_transitions,
-<a href=#1149 id=1149 data-nosnippet>1149</a>                                texture_transitions,
-<a href=#1150 id=1150 data-nosnippet>1150</a>                            )<span class="question-mark">?</span>;
-<a href=#1151 id=1151 data-nosnippet>1151</a>                        }
-<a href=#1152 id=1152 data-nosnippet>1152</a>                        ArcCommand::RunComputePass { .. } | ArcCommand::RunRenderPass { .. } =&gt; {
-<a href=#1153 id=1153 data-nosnippet>1153</a>                            <span class="macro">unreachable!</span>()
-<a href=#1154 id=1154 data-nosnippet>1154</a>                        }
-<a href=#1155 id=1155 data-nosnippet>1155</a>                    }
-<a href=#1156 id=1156 data-nosnippet>1156</a>                }
-<a href=#1157 id=1157 data-nosnippet>1157</a>            }
-<a href=#1158 id=1158 data-nosnippet>1158</a>
-<a href=#1159 id=1159 data-nosnippet>1159</a>            <span class="kw">if </span>debug_scope_depth &gt; <span class="number">0 </span>{
-<a href=#1160 id=1160 data-nosnippet>1160</a>                <span class="prelude-val">Err</span>(CommandEncoderError::DebugGroupError(
-<a href=#1161 id=1161 data-nosnippet>1161</a>                    DebugGroupError::MissingPop,
-<a href=#1162 id=1162 data-nosnippet>1162</a>                ))<span class="question-mark">?</span>;
-<a href=#1163 id=1163 data-nosnippet>1163</a>            }
-<a href=#1164 id=1164 data-nosnippet>1164</a>
-<a href=#1165 id=1165 data-nosnippet>1165</a>            <span class="comment">// Close the encoder, unless it was closed already by a render or compute pass.
-<a href=#1166 id=1166 data-nosnippet>1166</a>            </span>cmd_buf_data.encoder.close_if_open()<span class="question-mark">?</span>;
-<a href=#1167 id=1167 data-nosnippet>1167</a>
-<a href=#1168 id=1168 data-nosnippet>1168</a>            <span class="comment">// Note: if we want to stop tracking the swapchain texture view,
-<a href=#1169 id=1169 data-nosnippet>1169</a>            // this is the place to do it.
-<a href=#1170 id=1170 data-nosnippet>1170</a>
-<a href=#1171 id=1171 data-nosnippet>1171</a>            </span><span class="prelude-val">Ok</span>(cmd_buf_data)
-<a href=#1172 id=1172 data-nosnippet>1172</a>        });
-<a href=#1173 id=1173 data-nosnippet>1173</a>
-<a href=#1174 id=1174 data-nosnippet>1174</a>        <span class="kw">let </span>(data, error) = <span class="kw">match </span>res {
-<a href=#1175 id=1175 data-nosnippet>1175</a>            <span class="prelude-val">Err</span>(e) =&gt; {
-<a href=#1176 id=1176 data-nosnippet>1176</a>                <span class="kw">if </span>e.is_destroyed_error() {
-<a href=#1177 id=1177 data-nosnippet>1177</a>                    <span class="comment">// Errors related to destroyed resources are not reported until the
-<a href=#1178 id=1178 data-nosnippet>1178</a>                    // command buffer is submitted.
-<a href=#1179 id=1179 data-nosnippet>1179</a>                    </span>(CommandEncoderStatus::Error(e.clone()), <span class="prelude-val">None</span>)
-<a href=#1180 id=1180 data-nosnippet>1180</a>                } <span class="kw">else </span>{
-<a href=#1181 id=1181 data-nosnippet>1181</a>                    (CommandEncoderStatus::Error(e.clone()), <span class="prelude-val">Some</span>(e))
-<a href=#1182 id=1182 data-nosnippet>1182</a>                }
-<a href=#1183 id=1183 data-nosnippet>1183</a>            }
-<a href=#1184 id=1184 data-nosnippet>1184</a>
-<a href=#1185 id=1185 data-nosnippet>1185</a>            <span class="prelude-val">Ok</span>(data) =&gt; (CommandEncoderStatus::Finished(data), <span class="prelude-val">None</span>),
-<a href=#1186 id=1186 data-nosnippet>1186</a>        };
-<a href=#1187 id=1187 data-nosnippet>1187</a>
-<a href=#1188 id=1188 data-nosnippet>1188</a>        <span class="kw">let </span>cmd_buf = Arc::new(CommandBuffer {
-<a href=#1189 id=1189 data-nosnippet>1189</a>            device: <span class="self">self</span>.device.clone(),
-<a href=#1190 id=1190 data-nosnippet>1190</a>            label: desc.label.to_string(),
-<a href=#1191 id=1191 data-nosnippet>1191</a>            data: Mutex::new(rank::COMMAND_BUFFER_DATA, data),
-<a href=#1192 id=1192 data-nosnippet>1192</a>        });
-<a href=#1193 id=1193 data-nosnippet>1193</a>
-<a href=#1194 id=1194 data-nosnippet>1194</a>        (cmd_buf, error)
-<a href=#1195 id=1195 data-nosnippet>1195</a>    }
-<a href=#1196 id=1196 data-nosnippet>1196</a>}
-<a href=#1197 id=1197 data-nosnippet>1197</a>
-<a href=#1198 id=1198 data-nosnippet>1198</a><span class="kw">impl </span>CommandBuffer {
-<a href=#1199 id=1199 data-nosnippet>1199</a>    <span class="doccomment">/// Replay commands from a trace.
-<a href=#1200 id=1200 data-nosnippet>1200</a>    ///
-<a href=#1201 id=1201 data-nosnippet>1201</a>    /// This is exposed for the `player` crate only. It is not a public API.
-<a href=#1202 id=1202 data-nosnippet>1202</a>    /// It is not guaranteed to apply all of the validation that the original
-<a href=#1203 id=1203 data-nosnippet>1203</a>    /// entrypoints provide.
-<a href=#1204 id=1204 data-nosnippet>1204</a>    </span><span class="attr">#[doc(hidden)]
-<a href=#1205 id=1205 data-nosnippet>1205</a>    </span><span class="kw">pub fn </span>from_trace(device: <span class="kw-2">&amp;</span>Arc&lt;Device&gt;, commands: Vec&lt;Command&lt;ArcReferences&gt;&gt;) -&gt; Arc&lt;<span class="self">Self</span>&gt; {
-<a href=#1206 id=1206 data-nosnippet>1206</a>        <span class="kw">let </span>encoder = device.create_command_encoder(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>).unwrap();
-<a href=#1207 id=1207 data-nosnippet>1207</a>        <span class="kw">let </span><span class="kw-2">mut </span>cmd_enc_status = encoder.data.lock();
-<a href=#1208 id=1208 data-nosnippet>1208</a>        cmd_enc_status.replay(commands);
-<a href=#1209 id=1209 data-nosnippet>1209</a>        drop(cmd_enc_status);
-<a href=#1210 id=1210 data-nosnippet>1210</a>
-<a href=#1211 id=1211 data-nosnippet>1211</a>        <span class="kw">let </span>(cmd_buf, error) = encoder.finish(<span class="kw-2">&amp;</span>wgt::CommandBufferDescriptor { label: <span class="prelude-val">None </span>});
-<a href=#1212 id=1212 data-nosnippet>1212</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
-<a href=#1213 id=1213 data-nosnippet>1213</a>            <span class="macro">panic!</span>(<span class="string">"CommandEncoder::finish failed: {err}"</span>);
-<a href=#1214 id=1214 data-nosnippet>1214</a>        }
-<a href=#1215 id=1215 data-nosnippet>1215</a>
-<a href=#1216 id=1216 data-nosnippet>1216</a>        cmd_buf
-<a href=#1217 id=1217 data-nosnippet>1217</a>    }
-<a href=#1218 id=1218 data-nosnippet>1218</a>
-<a href=#1219 id=1219 data-nosnippet>1219</a>    <span class="kw">pub fn </span>take_finished(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;CommandBufferMutable, CommandEncoderError&gt; {
-<a href=#1220 id=1220 data-nosnippet>1220</a>        <span class="kw">use </span>CommandEncoderStatus <span class="kw">as </span>St;
-<a href=#1221 id=1221 data-nosnippet>1221</a>        <span class="kw">match </span>mem::replace(
-<a href=#1222 id=1222 data-nosnippet>1222</a>            <span class="kw-2">&amp;mut *</span><span class="self">self</span>.data.lock(),
-<a href=#1223 id=1223 data-nosnippet>1223</a>            CommandEncoderStatus::Error(EncoderStateError::Submitted.into()),
-<a href=#1224 id=1224 data-nosnippet>1224</a>        ) {
-<a href=#1225 id=1225 data-nosnippet>1225</a>            St::Finished(command_buffer_mutable) =&gt; <span class="prelude-val">Ok</span>(command_buffer_mutable),
-<a href=#1226 id=1226 data-nosnippet>1226</a>            St::Error(err) =&gt; <span class="prelude-val">Err</span>(err),
-<a href=#1227 id=1227 data-nosnippet>1227</a>            St::Recording(<span class="kw">_</span>) | St::Locked(<span class="kw">_</span>) | St::Consumed | St::Transitioning =&gt; <span class="macro">unreachable!</span>(),
-<a href=#1228 id=1228 data-nosnippet>1228</a>        }
-<a href=#1229 id=1229 data-nosnippet>1229</a>    }
-<a href=#1230 id=1230 data-nosnippet>1230</a>}
-<a href=#1231 id=1231 data-nosnippet>1231</a>
-<a href=#1232 id=1232 data-nosnippet>1232</a><span class="macro">crate::impl_resource_type!</span>(CommandBuffer);
-<a href=#1233 id=1233 data-nosnippet>1233</a><span class="macro">crate::impl_labeled!</span>(CommandBuffer);
-<a href=#1234 id=1234 data-nosnippet>1234</a><span class="macro">crate::impl_parent_device!</span>(CommandBuffer);
-<a href=#1235 id=1235 data-nosnippet>1235</a><span class="macro">crate::impl_storage_item!</span>(CommandBuffer);
-<a href=#1236 id=1236 data-nosnippet>1236</a>
-<a href=#1237 id=1237 data-nosnippet>1237</a><span class="doccomment">/// A stream of commands for a render pass or compute pass.
-<a href=#1238 id=1238 data-nosnippet>1238</a>///
-<a href=#1239 id=1239 data-nosnippet>1239</a>/// This also contains side tables referred to by certain commands,
-<a href=#1240 id=1240 data-nosnippet>1240</a>/// like dynamic offsets for [`SetBindGroup`] or string data for
-<a href=#1241 id=1241 data-nosnippet>1241</a>/// [`InsertDebugMarker`].
-<a href=#1242 id=1242 data-nosnippet>1242</a>///
-<a href=#1243 id=1243 data-nosnippet>1243</a>/// Render passes use `BasePass&lt;RenderCommand&gt;`, whereas compute
-<a href=#1244 id=1244 data-nosnippet>1244</a>/// passes use `BasePass&lt;ComputeCommand&gt;`.
-<a href=#1245 id=1245 data-nosnippet>1245</a>///
-<a href=#1246 id=1246 data-nosnippet>1246</a>/// [`SetBindGroup`]: RenderCommand::SetBindGroup
-<a href=#1247 id=1247 data-nosnippet>1247</a>/// [`InsertDebugMarker`]: RenderCommand::InsertDebugMarker
-<a href=#1248 id=1248 data-nosnippet>1248</a></span><span class="attr">#[doc(hidden)]
-<a href=#1249 id=1249 data-nosnippet>1249</a>#[derive(Debug, Clone)]
-<a href=#1250 id=1250 data-nosnippet>1250</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#1251 id=1251 data-nosnippet>1251</a></span><span class="kw">pub struct </span>BasePass&lt;C, E&gt; {
-<a href=#1252 id=1252 data-nosnippet>1252</a>    <span class="kw">pub </span>label: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1253 id=1253 data-nosnippet>1253</a>
-<a href=#1254 id=1254 data-nosnippet>1254</a>    <span class="doccomment">/// If the pass is invalid, contains the error that caused the invalidation.
-<a href=#1255 id=1255 data-nosnippet>1255</a>    ///
-<a href=#1256 id=1256 data-nosnippet>1256</a>    /// If the pass is valid, this is `None`.
+<a href=#1022 id=1022 data-nosnippet>1022</a>                            multiview_mask,
+<a href=#1023 id=1023 data-nosnippet>1023</a>                        } =&gt; {
+<a href=#1024 id=1024 data-nosnippet>1024</a>                            <span class="macro">api_log!</span>(
+<a href=#1025 id=1025 data-nosnippet>1025</a>                                <span class="string">"Begin encoding render pass with '{}' label"</span>,
+<a href=#1026 id=1026 data-nosnippet>1026</a>                                pass.label.as_deref().unwrap_or(<span class="string">""</span>)
+<a href=#1027 id=1027 data-nosnippet>1027</a>                            );
+<a href=#1028 id=1028 data-nosnippet>1028</a>                            <span class="kw">let </span>res = encode_render_pass(
+<a href=#1029 id=1029 data-nosnippet>1029</a>                                <span class="kw-2">&amp;mut </span>state,
+<a href=#1030 id=1030 data-nosnippet>1030</a>                                pass,
+<a href=#1031 id=1031 data-nosnippet>1031</a>                                color_attachments,
+<a href=#1032 id=1032 data-nosnippet>1032</a>                                depth_stencil_attachment,
+<a href=#1033 id=1033 data-nosnippet>1033</a>                                timestamp_writes,
+<a href=#1034 id=1034 data-nosnippet>1034</a>                                occlusion_query_set,
+<a href=#1035 id=1035 data-nosnippet>1035</a>                                multiview_mask,
+<a href=#1036 id=1036 data-nosnippet>1036</a>                            );
+<a href=#1037 id=1037 data-nosnippet>1037</a>                            <span class="kw">match </span>res.as_ref() {
+<a href=#1038 id=1038 data-nosnippet>1038</a>                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">api_log!</span>(<span class="string">"Finished encoding render pass ({err:?})"</span>),
+<a href=#1039 id=1039 data-nosnippet>1039</a>                                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="macro">api_log!</span>(<span class="string">"Finished encoding render pass (success)"</span>),
+<a href=#1040 id=1040 data-nosnippet>1040</a>                            }
+<a href=#1041 id=1041 data-nosnippet>1041</a>                            res<span class="question-mark">?</span>;
+<a href=#1042 id=1042 data-nosnippet>1042</a>                        }
+<a href=#1043 id=1043 data-nosnippet>1043</a>                        ArcCommand::RunComputePass {
+<a href=#1044 id=1044 data-nosnippet>1044</a>                            pass,
+<a href=#1045 id=1045 data-nosnippet>1045</a>                            timestamp_writes,
+<a href=#1046 id=1046 data-nosnippet>1046</a>                        } =&gt; {
+<a href=#1047 id=1047 data-nosnippet>1047</a>                            <span class="macro">api_log!</span>(
+<a href=#1048 id=1048 data-nosnippet>1048</a>                                <span class="string">"Begin encoding compute pass with '{}' label"</span>,
+<a href=#1049 id=1049 data-nosnippet>1049</a>                                pass.label.as_deref().unwrap_or(<span class="string">""</span>)
+<a href=#1050 id=1050 data-nosnippet>1050</a>                            );
+<a href=#1051 id=1051 data-nosnippet>1051</a>                            <span class="kw">let </span>res = encode_compute_pass(<span class="kw-2">&amp;mut </span>state, pass, timestamp_writes);
+<a href=#1052 id=1052 data-nosnippet>1052</a>                            <span class="kw">match </span>res.as_ref() {
+<a href=#1053 id=1053 data-nosnippet>1053</a>                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">api_log!</span>(<span class="string">"Finished encoding compute pass ({err:?})"</span>),
+<a href=#1054 id=1054 data-nosnippet>1054</a>                                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="macro">api_log!</span>(<span class="string">"Finished encoding compute pass (success)"</span>),
+<a href=#1055 id=1055 data-nosnippet>1055</a>                            }
+<a href=#1056 id=1056 data-nosnippet>1056</a>                            res<span class="question-mark">?</span>;
+<a href=#1057 id=1057 data-nosnippet>1057</a>                        }
+<a href=#1058 id=1058 data-nosnippet>1058</a>                        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+<a href=#1059 id=1059 data-nosnippet>1059</a>                    }
+<a href=#1060 id=1060 data-nosnippet>1060</a>                } <span class="kw">else </span>{
+<a href=#1061 id=1061 data-nosnippet>1061</a>                    <span class="comment">// All the other non-pass encoding routines assume the
+<a href=#1062 id=1062 data-nosnippet>1062</a>                    // encoder is open, so open it if necessary. This state
+<a href=#1063 id=1063 data-nosnippet>1063</a>                    // object holds an `&amp;mut dyn hal::DynCommandEncoder`. By
+<a href=#1064 id=1064 data-nosnippet>1064</a>                    // convention, a bare HAL encoder reference in
+<a href=#1065 id=1065 data-nosnippet>1065</a>                    // [`EncodingState`] must always be an open encoder.
+<a href=#1066 id=1066 data-nosnippet>1066</a>                    </span><span class="kw">let </span>raw_encoder = cmd_buf_data.encoder.open_if_closed()<span class="question-mark">?</span>;
+<a href=#1067 id=1067 data-nosnippet>1067</a>                    <span class="kw">let </span><span class="kw-2">mut </span>state = EncodingState {
+<a href=#1068 id=1068 data-nosnippet>1068</a>                        device: <span class="kw-2">&amp;</span><span class="self">self</span>.device,
+<a href=#1069 id=1069 data-nosnippet>1069</a>                        raw_encoder,
+<a href=#1070 id=1070 data-nosnippet>1070</a>                        tracker: <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers,
+<a href=#1071 id=1071 data-nosnippet>1071</a>                        buffer_memory_init_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.buffer_memory_init_actions,
+<a href=#1072 id=1072 data-nosnippet>1072</a>                        texture_memory_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.texture_memory_actions,
+<a href=#1073 id=1073 data-nosnippet>1073</a>                        as_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.as_actions,
+<a href=#1074 id=1074 data-nosnippet>1074</a>                        temp_resources: <span class="kw-2">&amp;mut </span>cmd_buf_data.temp_resources,
+<a href=#1075 id=1075 data-nosnippet>1075</a>                        indirect_draw_validation_resources: <span class="kw-2">&amp;mut </span>cmd_buf_data
+<a href=#1076 id=1076 data-nosnippet>1076</a>                            .indirect_draw_validation_resources,
+<a href=#1077 id=1077 data-nosnippet>1077</a>                        snatch_guard: <span class="kw-2">&amp;</span>snatch_guard,
+<a href=#1078 id=1078 data-nosnippet>1078</a>                        debug_scope_depth: <span class="kw-2">&amp;mut </span>debug_scope_depth,
+<a href=#1079 id=1079 data-nosnippet>1079</a>                    };
+<a href=#1080 id=1080 data-nosnippet>1080</a>                    <span class="kw">match </span>command {
+<a href=#1081 id=1081 data-nosnippet>1081</a>                        ArcCommand::CopyBufferToBuffer {
+<a href=#1082 id=1082 data-nosnippet>1082</a>                            src,
+<a href=#1083 id=1083 data-nosnippet>1083</a>                            src_offset,
+<a href=#1084 id=1084 data-nosnippet>1084</a>                            dst,
+<a href=#1085 id=1085 data-nosnippet>1085</a>                            dst_offset,
+<a href=#1086 id=1086 data-nosnippet>1086</a>                            size,
+<a href=#1087 id=1087 data-nosnippet>1087</a>                        } =&gt; {
+<a href=#1088 id=1088 data-nosnippet>1088</a>                            copy_buffer_to_buffer(
+<a href=#1089 id=1089 data-nosnippet>1089</a>                                <span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>src, src_offset, <span class="kw-2">&amp;</span>dst, dst_offset, size,
+<a href=#1090 id=1090 data-nosnippet>1090</a>                            )<span class="question-mark">?</span>;
+<a href=#1091 id=1091 data-nosnippet>1091</a>                        }
+<a href=#1092 id=1092 data-nosnippet>1092</a>                        ArcCommand::CopyBufferToTexture { src, dst, size } =&gt; {
+<a href=#1093 id=1093 data-nosnippet>1093</a>                            copy_buffer_to_texture(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)<span class="question-mark">?</span>;
+<a href=#1094 id=1094 data-nosnippet>1094</a>                        }
+<a href=#1095 id=1095 data-nosnippet>1095</a>                        ArcCommand::CopyTextureToBuffer { src, dst, size } =&gt; {
+<a href=#1096 id=1096 data-nosnippet>1096</a>                            copy_texture_to_buffer(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)<span class="question-mark">?</span>;
+<a href=#1097 id=1097 data-nosnippet>1097</a>                        }
+<a href=#1098 id=1098 data-nosnippet>1098</a>                        ArcCommand::CopyTextureToTexture { src, dst, size } =&gt; {
+<a href=#1099 id=1099 data-nosnippet>1099</a>                            copy_texture_to_texture(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)<span class="question-mark">?</span>;
+<a href=#1100 id=1100 data-nosnippet>1100</a>                        }
+<a href=#1101 id=1101 data-nosnippet>1101</a>                        ArcCommand::ClearBuffer { dst, offset, size } =&gt; {
+<a href=#1102 id=1102 data-nosnippet>1102</a>                            clear_buffer(<span class="kw-2">&amp;mut </span>state, dst, offset, size)<span class="question-mark">?</span>;
+<a href=#1103 id=1103 data-nosnippet>1103</a>                        }
+<a href=#1104 id=1104 data-nosnippet>1104</a>                        ArcCommand::ClearTexture {
+<a href=#1105 id=1105 data-nosnippet>1105</a>                            dst,
+<a href=#1106 id=1106 data-nosnippet>1106</a>                            subresource_range,
+<a href=#1107 id=1107 data-nosnippet>1107</a>                        } =&gt; {
+<a href=#1108 id=1108 data-nosnippet>1108</a>                            clear_texture_cmd(<span class="kw-2">&amp;mut </span>state, dst, <span class="kw-2">&amp;</span>subresource_range)<span class="question-mark">?</span>;
+<a href=#1109 id=1109 data-nosnippet>1109</a>                        }
+<a href=#1110 id=1110 data-nosnippet>1110</a>                        ArcCommand::WriteTimestamp {
+<a href=#1111 id=1111 data-nosnippet>1111</a>                            query_set,
+<a href=#1112 id=1112 data-nosnippet>1112</a>                            query_index,
+<a href=#1113 id=1113 data-nosnippet>1113</a>                        } =&gt; {
+<a href=#1114 id=1114 data-nosnippet>1114</a>                            write_timestamp(<span class="kw-2">&amp;mut </span>state, query_set, query_index)<span class="question-mark">?</span>;
+<a href=#1115 id=1115 data-nosnippet>1115</a>                        }
+<a href=#1116 id=1116 data-nosnippet>1116</a>                        ArcCommand::ResolveQuerySet {
+<a href=#1117 id=1117 data-nosnippet>1117</a>                            query_set,
+<a href=#1118 id=1118 data-nosnippet>1118</a>                            start_query,
+<a href=#1119 id=1119 data-nosnippet>1119</a>                            query_count,
+<a href=#1120 id=1120 data-nosnippet>1120</a>                            destination,
+<a href=#1121 id=1121 data-nosnippet>1121</a>                            destination_offset,
+<a href=#1122 id=1122 data-nosnippet>1122</a>                        } =&gt; {
+<a href=#1123 id=1123 data-nosnippet>1123</a>                            resolve_query_set(
+<a href=#1124 id=1124 data-nosnippet>1124</a>                                <span class="kw-2">&amp;mut </span>state,
+<a href=#1125 id=1125 data-nosnippet>1125</a>                                query_set,
+<a href=#1126 id=1126 data-nosnippet>1126</a>                                start_query,
+<a href=#1127 id=1127 data-nosnippet>1127</a>                                query_count,
+<a href=#1128 id=1128 data-nosnippet>1128</a>                                destination,
+<a href=#1129 id=1129 data-nosnippet>1129</a>                                destination_offset,
+<a href=#1130 id=1130 data-nosnippet>1130</a>                            )<span class="question-mark">?</span>;
+<a href=#1131 id=1131 data-nosnippet>1131</a>                        }
+<a href=#1132 id=1132 data-nosnippet>1132</a>                        ArcCommand::PushDebugGroup(label) =&gt; {
+<a href=#1133 id=1133 data-nosnippet>1133</a>                            push_debug_group(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>label)<span class="question-mark">?</span>;
+<a href=#1134 id=1134 data-nosnippet>1134</a>                        }
+<a href=#1135 id=1135 data-nosnippet>1135</a>                        ArcCommand::PopDebugGroup =&gt; {
+<a href=#1136 id=1136 data-nosnippet>1136</a>                            pop_debug_group(<span class="kw-2">&amp;mut </span>state)<span class="question-mark">?</span>;
+<a href=#1137 id=1137 data-nosnippet>1137</a>                        }
+<a href=#1138 id=1138 data-nosnippet>1138</a>                        ArcCommand::InsertDebugMarker(label) =&gt; {
+<a href=#1139 id=1139 data-nosnippet>1139</a>                            insert_debug_marker(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>label)<span class="question-mark">?</span>;
+<a href=#1140 id=1140 data-nosnippet>1140</a>                        }
+<a href=#1141 id=1141 data-nosnippet>1141</a>                        ArcCommand::BuildAccelerationStructures { blas, tlas } =&gt; {
+<a href=#1142 id=1142 data-nosnippet>1142</a>                            build_acceleration_structures(<span class="kw-2">&amp;mut </span>state, blas, tlas)<span class="question-mark">?</span>;
+<a href=#1143 id=1143 data-nosnippet>1143</a>                        }
+<a href=#1144 id=1144 data-nosnippet>1144</a>                        ArcCommand::TransitionResources {
+<a href=#1145 id=1145 data-nosnippet>1145</a>                            buffer_transitions,
+<a href=#1146 id=1146 data-nosnippet>1146</a>                            texture_transitions,
+<a href=#1147 id=1147 data-nosnippet>1147</a>                        } =&gt; {
+<a href=#1148 id=1148 data-nosnippet>1148</a>                            transition_resources(
+<a href=#1149 id=1149 data-nosnippet>1149</a>                                <span class="kw-2">&amp;mut </span>state,
+<a href=#1150 id=1150 data-nosnippet>1150</a>                                buffer_transitions,
+<a href=#1151 id=1151 data-nosnippet>1151</a>                                texture_transitions,
+<a href=#1152 id=1152 data-nosnippet>1152</a>                            )<span class="question-mark">?</span>;
+<a href=#1153 id=1153 data-nosnippet>1153</a>                        }
+<a href=#1154 id=1154 data-nosnippet>1154</a>                        ArcCommand::RunComputePass { .. } | ArcCommand::RunRenderPass { .. } =&gt; {
+<a href=#1155 id=1155 data-nosnippet>1155</a>                            <span class="macro">unreachable!</span>()
+<a href=#1156 id=1156 data-nosnippet>1156</a>                        }
+<a href=#1157 id=1157 data-nosnippet>1157</a>                    }
+<a href=#1158 id=1158 data-nosnippet>1158</a>                }
+<a href=#1159 id=1159 data-nosnippet>1159</a>            }
+<a href=#1160 id=1160 data-nosnippet>1160</a>
+<a href=#1161 id=1161 data-nosnippet>1161</a>            <span class="kw">if </span>debug_scope_depth &gt; <span class="number">0 </span>{
+<a href=#1162 id=1162 data-nosnippet>1162</a>                <span class="prelude-val">Err</span>(CommandEncoderError::DebugGroupError(
+<a href=#1163 id=1163 data-nosnippet>1163</a>                    DebugGroupError::MissingPop,
+<a href=#1164 id=1164 data-nosnippet>1164</a>                ))<span class="question-mark">?</span>;
+<a href=#1165 id=1165 data-nosnippet>1165</a>            }
+<a href=#1166 id=1166 data-nosnippet>1166</a>
+<a href=#1167 id=1167 data-nosnippet>1167</a>            <span class="comment">// Close the encoder, unless it was closed already by a render or compute pass.
+<a href=#1168 id=1168 data-nosnippet>1168</a>            </span>cmd_buf_data.encoder.close_if_open()<span class="question-mark">?</span>;
+<a href=#1169 id=1169 data-nosnippet>1169</a>
+<a href=#1170 id=1170 data-nosnippet>1170</a>            <span class="comment">// Note: if we want to stop tracking the swapchain texture view,
+<a href=#1171 id=1171 data-nosnippet>1171</a>            // this is the place to do it.
+<a href=#1172 id=1172 data-nosnippet>1172</a>
+<a href=#1173 id=1173 data-nosnippet>1173</a>            </span><span class="prelude-val">Ok</span>(cmd_buf_data)
+<a href=#1174 id=1174 data-nosnippet>1174</a>        });
+<a href=#1175 id=1175 data-nosnippet>1175</a>
+<a href=#1176 id=1176 data-nosnippet>1176</a>        <span class="kw">let </span>(data, error) = <span class="kw">match </span>res {
+<a href=#1177 id=1177 data-nosnippet>1177</a>            <span class="prelude-val">Err</span>(e) =&gt; {
+<a href=#1178 id=1178 data-nosnippet>1178</a>                <span class="kw">if </span>e.is_destroyed_error() {
+<a href=#1179 id=1179 data-nosnippet>1179</a>                    <span class="comment">// Errors related to destroyed resources are not reported until the
+<a href=#1180 id=1180 data-nosnippet>1180</a>                    // command buffer is submitted.
+<a href=#1181 id=1181 data-nosnippet>1181</a>                    </span>(CommandEncoderStatus::Error(e.clone()), <span class="prelude-val">None</span>)
+<a href=#1182 id=1182 data-nosnippet>1182</a>                } <span class="kw">else </span>{
+<a href=#1183 id=1183 data-nosnippet>1183</a>                    (CommandEncoderStatus::Error(e.clone()), <span class="prelude-val">Some</span>(e))
+<a href=#1184 id=1184 data-nosnippet>1184</a>                }
+<a href=#1185 id=1185 data-nosnippet>1185</a>            }
+<a href=#1186 id=1186 data-nosnippet>1186</a>
+<a href=#1187 id=1187 data-nosnippet>1187</a>            <span class="prelude-val">Ok</span>(data) =&gt; (CommandEncoderStatus::Finished(data), <span class="prelude-val">None</span>),
+<a href=#1188 id=1188 data-nosnippet>1188</a>        };
+<a href=#1189 id=1189 data-nosnippet>1189</a>
+<a href=#1190 id=1190 data-nosnippet>1190</a>        <span class="kw">let </span>cmd_buf = Arc::new(CommandBuffer {
+<a href=#1191 id=1191 data-nosnippet>1191</a>            device: <span class="self">self</span>.device.clone(),
+<a href=#1192 id=1192 data-nosnippet>1192</a>            label: desc.label.to_string(),
+<a href=#1193 id=1193 data-nosnippet>1193</a>            data: Mutex::new(rank::COMMAND_BUFFER_DATA, data),
+<a href=#1194 id=1194 data-nosnippet>1194</a>        });
+<a href=#1195 id=1195 data-nosnippet>1195</a>
+<a href=#1196 id=1196 data-nosnippet>1196</a>        (cmd_buf, error)
+<a href=#1197 id=1197 data-nosnippet>1197</a>    }
+<a href=#1198 id=1198 data-nosnippet>1198</a>}
+<a href=#1199 id=1199 data-nosnippet>1199</a>
+<a href=#1200 id=1200 data-nosnippet>1200</a><span class="kw">impl </span>CommandBuffer {
+<a href=#1201 id=1201 data-nosnippet>1201</a>    <span class="doccomment">/// Replay commands from a trace.
+<a href=#1202 id=1202 data-nosnippet>1202</a>    ///
+<a href=#1203 id=1203 data-nosnippet>1203</a>    /// This is exposed for the `player` crate only. It is not a public API.
+<a href=#1204 id=1204 data-nosnippet>1204</a>    /// It is not guaranteed to apply all of the validation that the original
+<a href=#1205 id=1205 data-nosnippet>1205</a>    /// entrypoints provide.
+<a href=#1206 id=1206 data-nosnippet>1206</a>    </span><span class="attr">#[doc(hidden)]
+<a href=#1207 id=1207 data-nosnippet>1207</a>    </span><span class="kw">pub fn </span>from_trace(device: <span class="kw-2">&amp;</span>Arc&lt;Device&gt;, commands: Vec&lt;Command&lt;ArcReferences&gt;&gt;) -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+<a href=#1208 id=1208 data-nosnippet>1208</a>        <span class="kw">let </span>encoder = device.create_command_encoder(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>).unwrap();
+<a href=#1209 id=1209 data-nosnippet>1209</a>        <span class="kw">let </span><span class="kw-2">mut </span>cmd_enc_status = encoder.data.lock();
+<a href=#1210 id=1210 data-nosnippet>1210</a>        cmd_enc_status.replay(commands);
+<a href=#1211 id=1211 data-nosnippet>1211</a>        drop(cmd_enc_status);
+<a href=#1212 id=1212 data-nosnippet>1212</a>
+<a href=#1213 id=1213 data-nosnippet>1213</a>        <span class="kw">let </span>(cmd_buf, error) = encoder.finish(<span class="kw-2">&amp;</span>wgt::CommandBufferDescriptor { label: <span class="prelude-val">None </span>});
+<a href=#1214 id=1214 data-nosnippet>1214</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
+<a href=#1215 id=1215 data-nosnippet>1215</a>            <span class="macro">panic!</span>(<span class="string">"CommandEncoder::finish failed: {err}"</span>);
+<a href=#1216 id=1216 data-nosnippet>1216</a>        }
+<a href=#1217 id=1217 data-nosnippet>1217</a>
+<a href=#1218 id=1218 data-nosnippet>1218</a>        cmd_buf
+<a href=#1219 id=1219 data-nosnippet>1219</a>    }
+<a href=#1220 id=1220 data-nosnippet>1220</a>
+<a href=#1221 id=1221 data-nosnippet>1221</a>    <span class="kw">pub fn </span>take_finished(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;CommandBufferMutable, CommandEncoderError&gt; {
+<a href=#1222 id=1222 data-nosnippet>1222</a>        <span class="kw">use </span>CommandEncoderStatus <span class="kw">as </span>St;
+<a href=#1223 id=1223 data-nosnippet>1223</a>        <span class="kw">match </span>mem::replace(
+<a href=#1224 id=1224 data-nosnippet>1224</a>            <span class="kw-2">&amp;mut *</span><span class="self">self</span>.data.lock(),
+<a href=#1225 id=1225 data-nosnippet>1225</a>            CommandEncoderStatus::Error(EncoderStateError::Submitted.into()),
+<a href=#1226 id=1226 data-nosnippet>1226</a>        ) {
+<a href=#1227 id=1227 data-nosnippet>1227</a>            St::Finished(command_buffer_mutable) =&gt; <span class="prelude-val">Ok</span>(command_buffer_mutable),
+<a href=#1228 id=1228 data-nosnippet>1228</a>            St::Error(err) =&gt; <span class="prelude-val">Err</span>(err),
+<a href=#1229 id=1229 data-nosnippet>1229</a>            St::Recording(<span class="kw">_</span>) | St::Locked(<span class="kw">_</span>) | St::Consumed | St::Transitioning =&gt; <span class="macro">unreachable!</span>(),
+<a href=#1230 id=1230 data-nosnippet>1230</a>        }
+<a href=#1231 id=1231 data-nosnippet>1231</a>    }
+<a href=#1232 id=1232 data-nosnippet>1232</a>}
+<a href=#1233 id=1233 data-nosnippet>1233</a>
+<a href=#1234 id=1234 data-nosnippet>1234</a><span class="macro">crate::impl_resource_type!</span>(CommandBuffer);
+<a href=#1235 id=1235 data-nosnippet>1235</a><span class="macro">crate::impl_labeled!</span>(CommandBuffer);
+<a href=#1236 id=1236 data-nosnippet>1236</a><span class="macro">crate::impl_parent_device!</span>(CommandBuffer);
+<a href=#1237 id=1237 data-nosnippet>1237</a><span class="macro">crate::impl_storage_item!</span>(CommandBuffer);
+<a href=#1238 id=1238 data-nosnippet>1238</a>
+<a href=#1239 id=1239 data-nosnippet>1239</a><span class="doccomment">/// A stream of commands for a render pass or compute pass.
+<a href=#1240 id=1240 data-nosnippet>1240</a>///
+<a href=#1241 id=1241 data-nosnippet>1241</a>/// This also contains side tables referred to by certain commands,
+<a href=#1242 id=1242 data-nosnippet>1242</a>/// like dynamic offsets for [`SetBindGroup`] or string data for
+<a href=#1243 id=1243 data-nosnippet>1243</a>/// [`InsertDebugMarker`].
+<a href=#1244 id=1244 data-nosnippet>1244</a>///
+<a href=#1245 id=1245 data-nosnippet>1245</a>/// Render passes use `BasePass&lt;RenderCommand&gt;`, whereas compute
+<a href=#1246 id=1246 data-nosnippet>1246</a>/// passes use `BasePass&lt;ComputeCommand&gt;`.
+<a href=#1247 id=1247 data-nosnippet>1247</a>///
+<a href=#1248 id=1248 data-nosnippet>1248</a>/// [`SetBindGroup`]: RenderCommand::SetBindGroup
+<a href=#1249 id=1249 data-nosnippet>1249</a>/// [`InsertDebugMarker`]: RenderCommand::InsertDebugMarker
+<a href=#1250 id=1250 data-nosnippet>1250</a></span><span class="attr">#[doc(hidden)]
+<a href=#1251 id=1251 data-nosnippet>1251</a>#[derive(Debug, Clone)]
+<a href=#1252 id=1252 data-nosnippet>1252</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#1253 id=1253 data-nosnippet>1253</a></span><span class="kw">pub struct </span>BasePass&lt;C, E&gt; {
+<a href=#1254 id=1254 data-nosnippet>1254</a>    <span class="kw">pub </span>label: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1255 id=1255 data-nosnippet>1255</a>
+<a href=#1256 id=1256 data-nosnippet>1256</a>    <span class="doccomment">/// If the pass is invalid, contains the error that caused the invalidation.
 <a href=#1257 id=1257 data-nosnippet>1257</a>    ///
-<a href=#1258 id=1258 data-nosnippet>1258</a>    /// Passes are serialized into traces. but we don't support doing so for
-<a href=#1259 id=1259 data-nosnippet>1259</a>    /// passes containing errors. These serde attributes allow `E` to be
-<a href=#1260 id=1260 data-nosnippet>1260</a>    /// `Infallible`.
-<a href=#1261 id=1261 data-nosnippet>1261</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(skip, default = <span class="string">"Option::default"</span>))]
-<a href=#1262 id=1262 data-nosnippet>1262</a>    </span><span class="kw">pub </span>error: <span class="prelude-ty">Option</span>&lt;E&gt;,
-<a href=#1263 id=1263 data-nosnippet>1263</a>
-<a href=#1264 id=1264 data-nosnippet>1264</a>    <span class="doccomment">/// The stream of commands.
-<a href=#1265 id=1265 data-nosnippet>1265</a>    ///
-<a href=#1266 id=1266 data-nosnippet>1266</a>    /// The commands are moved out of this vector when the pass is ended (i.e.
-<a href=#1267 id=1267 data-nosnippet>1267</a>    /// at the same time that `parent` is taken out of the
-<a href=#1268 id=1268 data-nosnippet>1268</a>    /// `ComputePass`/`RenderPass`).
-<a href=#1269 id=1269 data-nosnippet>1269</a>    </span><span class="kw">pub </span>commands: Vec&lt;C&gt;,
-<a href=#1270 id=1270 data-nosnippet>1270</a>
-<a href=#1271 id=1271 data-nosnippet>1271</a>    <span class="doccomment">/// Dynamic offsets consumed by [`SetBindGroup`] commands in `commands`.
-<a href=#1272 id=1272 data-nosnippet>1272</a>    ///
-<a href=#1273 id=1273 data-nosnippet>1273</a>    /// Each successive `SetBindGroup` consumes the next
-<a href=#1274 id=1274 data-nosnippet>1274</a>    /// [`num_dynamic_offsets`] values from this list.
-<a href=#1275 id=1275 data-nosnippet>1275</a>    </span><span class="kw">pub </span>dynamic_offsets: Vec&lt;wgt::DynamicOffset&gt;,
-<a href=#1276 id=1276 data-nosnippet>1276</a>
-<a href=#1277 id=1277 data-nosnippet>1277</a>    <span class="doccomment">/// Strings used by debug instructions.
-<a href=#1278 id=1278 data-nosnippet>1278</a>    ///
-<a href=#1279 id=1279 data-nosnippet>1279</a>    /// Each successive [`PushDebugGroup`] or [`InsertDebugMarker`]
-<a href=#1280 id=1280 data-nosnippet>1280</a>    /// instruction consumes the next `len` bytes from this vector.
-<a href=#1281 id=1281 data-nosnippet>1281</a>    </span><span class="kw">pub </span>string_data: Vec&lt;u8&gt;,
-<a href=#1282 id=1282 data-nosnippet>1282</a>
-<a href=#1283 id=1283 data-nosnippet>1283</a>    <span class="doccomment">/// Data used by `SetPushConstant` instructions.
-<a href=#1284 id=1284 data-nosnippet>1284</a>    ///
-<a href=#1285 id=1285 data-nosnippet>1285</a>    /// See the documentation for [`RenderCommand::SetPushConstant`]
-<a href=#1286 id=1286 data-nosnippet>1286</a>    /// and [`ComputeCommand::SetPushConstant`] for details.
-<a href=#1287 id=1287 data-nosnippet>1287</a>    </span><span class="kw">pub </span>push_constant_data: Vec&lt;u32&gt;,
-<a href=#1288 id=1288 data-nosnippet>1288</a>}
-<a href=#1289 id=1289 data-nosnippet>1289</a>
-<a href=#1290 id=1290 data-nosnippet>1290</a><span class="kw">impl</span>&lt;C: Clone, E: Clone&gt; BasePass&lt;C, E&gt; {
-<a href=#1291 id=1291 data-nosnippet>1291</a>    <span class="kw">fn </span>new(label: <span class="kw-2">&amp;</span>Label) -&gt; <span class="self">Self </span>{
-<a href=#1292 id=1292 data-nosnippet>1292</a>        <span class="self">Self </span>{
-<a href=#1293 id=1293 data-nosnippet>1293</a>            label: label.as_deref().map(str::to_owned),
-<a href=#1294 id=1294 data-nosnippet>1294</a>            error: <span class="prelude-val">None</span>,
-<a href=#1295 id=1295 data-nosnippet>1295</a>            commands: Vec::new(),
-<a href=#1296 id=1296 data-nosnippet>1296</a>            dynamic_offsets: Vec::new(),
-<a href=#1297 id=1297 data-nosnippet>1297</a>            string_data: Vec::new(),
-<a href=#1298 id=1298 data-nosnippet>1298</a>            push_constant_data: Vec::new(),
-<a href=#1299 id=1299 data-nosnippet>1299</a>        }
-<a href=#1300 id=1300 data-nosnippet>1300</a>    }
-<a href=#1301 id=1301 data-nosnippet>1301</a>
-<a href=#1302 id=1302 data-nosnippet>1302</a>    <span class="kw">fn </span>new_invalid(label: <span class="kw-2">&amp;</span>Label, err: E) -&gt; <span class="self">Self </span>{
-<a href=#1303 id=1303 data-nosnippet>1303</a>        <span class="self">Self </span>{
-<a href=#1304 id=1304 data-nosnippet>1304</a>            label: label.as_deref().map(str::to_owned),
-<a href=#1305 id=1305 data-nosnippet>1305</a>            error: <span class="prelude-val">Some</span>(err),
-<a href=#1306 id=1306 data-nosnippet>1306</a>            commands: Vec::new(),
-<a href=#1307 id=1307 data-nosnippet>1307</a>            dynamic_offsets: Vec::new(),
-<a href=#1308 id=1308 data-nosnippet>1308</a>            string_data: Vec::new(),
-<a href=#1309 id=1309 data-nosnippet>1309</a>            push_constant_data: Vec::new(),
-<a href=#1310 id=1310 data-nosnippet>1310</a>        }
-<a href=#1311 id=1311 data-nosnippet>1311</a>    }
-<a href=#1312 id=1312 data-nosnippet>1312</a>
-<a href=#1313 id=1313 data-nosnippet>1313</a>    <span class="doccomment">/// Takes the commands from the pass, or returns an error if the pass is
-<a href=#1314 id=1314 data-nosnippet>1314</a>    /// invalid.
-<a href=#1315 id=1315 data-nosnippet>1315</a>    ///
-<a href=#1316 id=1316 data-nosnippet>1316</a>    /// This is called when the pass is ended, at the same time that the
-<a href=#1317 id=1317 data-nosnippet>1317</a>    /// `parent` member of the `ComputePass` or `RenderPass` containing the pass
-<a href=#1318 id=1318 data-nosnippet>1318</a>    /// is taken.
-<a href=#1319 id=1319 data-nosnippet>1319</a>    </span><span class="kw">fn </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BasePass&lt;C, Infallible&gt;, E&gt; {
-<a href=#1320 id=1320 data-nosnippet>1320</a>        <span class="kw">match </span><span class="self">self</span>.error.as_ref() {
-<a href=#1321 id=1321 data-nosnippet>1321</a>            <span class="prelude-val">Some</span>(err) =&gt; <span class="prelude-val">Err</span>(err.clone()),
-<a href=#1322 id=1322 data-nosnippet>1322</a>            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(BasePass {
-<a href=#1323 id=1323 data-nosnippet>1323</a>                label: <span class="self">self</span>.label.clone(),
-<a href=#1324 id=1324 data-nosnippet>1324</a>                error: <span class="prelude-val">None</span>,
-<a href=#1325 id=1325 data-nosnippet>1325</a>                commands: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.commands),
-<a href=#1326 id=1326 data-nosnippet>1326</a>                dynamic_offsets: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dynamic_offsets),
-<a href=#1327 id=1327 data-nosnippet>1327</a>                string_data: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.string_data),
-<a href=#1328 id=1328 data-nosnippet>1328</a>                push_constant_data: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.push_constant_data),
-<a href=#1329 id=1329 data-nosnippet>1329</a>            }),
-<a href=#1330 id=1330 data-nosnippet>1330</a>        }
-<a href=#1331 id=1331 data-nosnippet>1331</a>    }
-<a href=#1332 id=1332 data-nosnippet>1332</a>}
-<a href=#1333 id=1333 data-nosnippet>1333</a>
-<a href=#1334 id=1334 data-nosnippet>1334</a><span class="doccomment">/// Checks the state of a [`compute::ComputePass`] or [`render::RenderPass`] and
-<a href=#1335 id=1335 data-nosnippet>1335</a>/// evaluates to a mutable reference to the [`BasePass`], if the pass is open and
-<a href=#1336 id=1336 data-nosnippet>1336</a>/// valid.
-<a href=#1337 id=1337 data-nosnippet>1337</a>///
-<a href=#1338 id=1338 data-nosnippet>1338</a>/// If the pass is ended or not valid, **returns from the invoking function**,
-<a href=#1339 id=1339 data-nosnippet>1339</a>/// like the `?` operator.
-<a href=#1340 id=1340 data-nosnippet>1340</a>///
-<a href=#1341 id=1341 data-nosnippet>1341</a>/// If the pass is ended (i.e. the application is attempting to record a command
-<a href=#1342 id=1342 data-nosnippet>1342</a>/// on a finished pass), returns `Err(EncoderStateError::Ended)` from the
-<a href=#1343 id=1343 data-nosnippet>1343</a>/// invoking function, for immediate propagation as a validation error.
-<a href=#1344 id=1344 data-nosnippet>1344</a>///
-<a href=#1345 id=1345 data-nosnippet>1345</a>/// If the pass is open but invalid (i.e. a previous command encountered an
-<a href=#1346 id=1346 data-nosnippet>1346</a>/// error), returns `Ok(())` from the invoking function. The pass should already
-<a href=#1347 id=1347 data-nosnippet>1347</a>/// have stored the previous error, which will be transferred to the parent
-<a href=#1348 id=1348 data-nosnippet>1348</a>/// encoder when the pass is ended, and then raised as a validation error when
-<a href=#1349 id=1349 data-nosnippet>1349</a>/// `finish()` is called for the parent).
-<a href=#1350 id=1350 data-nosnippet>1350</a>///
-<a href=#1351 id=1351 data-nosnippet>1351</a>/// Although in many cases the functionality of `pass_base!` could be achieved
-<a href=#1352 id=1352 data-nosnippet>1352</a>/// by combining a helper method on the passes with the `pass_try!` macro,
-<a href=#1353 id=1353 data-nosnippet>1353</a>/// taking the mutable reference to the base pass in a macro avoids borrowing
-<a href=#1354 id=1354 data-nosnippet>1354</a>/// conflicts when a reference to some other member of the pass struct is
-<a href=#1355 id=1355 data-nosnippet>1355</a>/// needed simultaneously with the base pass reference.
-<a href=#1356 id=1356 data-nosnippet>1356</a></span><span class="macro">macro_rules!</span> pass_base {
-<a href=#1357 id=1357 data-nosnippet>1357</a>    (<span class="macro-nonterminal">$pass</span>:expr, <span class="macro-nonterminal">$scope</span>:expr $(,)<span class="question-mark">?</span>) =&gt; {
-<a href=#1358 id=1358 data-nosnippet>1358</a>        <span class="kw">match </span>(<span class="kw-2">&amp;</span><span class="macro-nonterminal">$pass</span>.parent, <span class="kw-2">&amp;</span><span class="macro-nonterminal">$pass</span>.base.error) {
-<a href=#1359 id=1359 data-nosnippet>1359</a>            <span class="comment">// Pass is ended
-<a href=#1360 id=1360 data-nosnippet>1360</a>            </span>(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(EncoderStateError::Ended).map_pass_err(<span class="macro-nonterminal">$scope</span>),
-<a href=#1361 id=1361 data-nosnippet>1361</a>            <span class="comment">// Pass is invalid
-<a href=#1362 id=1362 data-nosnippet>1362</a>            </span>(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
-<a href=#1363 id=1363 data-nosnippet>1363</a>            <span class="comment">// Pass is open and valid
-<a href=#1364 id=1364 data-nosnippet>1364</a>            </span>(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="prelude-val">None</span>) =&gt; <span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$pass</span>.base,
-<a href=#1365 id=1365 data-nosnippet>1365</a>        }
-<a href=#1366 id=1366 data-nosnippet>1366</a>    };
-<a href=#1367 id=1367 data-nosnippet>1367</a>}
-<a href=#1368 id=1368 data-nosnippet>1368</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>pass_base;
-<a href=#1369 id=1369 data-nosnippet>1369</a>
-<a href=#1370 id=1370 data-nosnippet>1370</a><span class="doccomment">/// Handles the error case in an expression of type `Result&lt;T, E&gt;`.
-<a href=#1371 id=1371 data-nosnippet>1371</a>///
-<a href=#1372 id=1372 data-nosnippet>1372</a>/// This macro operates like the `?` operator (or, in early Rust versions, the
-<a href=#1373 id=1373 data-nosnippet>1373</a>/// `try!` macro, hence the name `pass_try`). **When there is an error, the
-<a href=#1374 id=1374 data-nosnippet>1374</a>/// macro returns from the invoking function.** However, `Ok(())`, and not the
-<a href=#1375 id=1375 data-nosnippet>1375</a>/// error itself, is returned. The error is stored in the pass and will later be
-<a href=#1376 id=1376 data-nosnippet>1376</a>/// transferred to the parent encoder when the pass ends, and then raised as a
-<a href=#1377 id=1377 data-nosnippet>1377</a>/// validation error when `finish()` is called for the parent.
-<a href=#1378 id=1378 data-nosnippet>1378</a>///
-<a href=#1379 id=1379 data-nosnippet>1379</a>/// `pass_try!` also calls [`MapPassErr::map_pass_err`] to annotate the error
-<a href=#1380 id=1380 data-nosnippet>1380</a>/// with the command being encoded at the time it occurred.
-<a href=#1381 id=1381 data-nosnippet>1381</a></span><span class="macro">macro_rules!</span> pass_try {
-<a href=#1382 id=1382 data-nosnippet>1382</a>    (<span class="macro-nonterminal">$base</span>:expr, <span class="macro-nonterminal">$scope</span>:expr, <span class="macro-nonterminal">$res</span>:expr $(,)<span class="question-mark">?</span>) =&gt; {
-<a href=#1383 id=1383 data-nosnippet>1383</a>        <span class="kw">match </span><span class="macro-nonterminal">$res</span>.map_pass_err(<span class="macro-nonterminal">$scope</span>) {
-<a href=#1384 id=1384 data-nosnippet>1384</a>            <span class="prelude-val">Ok</span>(val) =&gt; val,
-<a href=#1385 id=1385 data-nosnippet>1385</a>            <span class="prelude-val">Err</span>(err) =&gt; {
-<a href=#1386 id=1386 data-nosnippet>1386</a>                <span class="macro-nonterminal">$base</span>.error.get_or_insert(err);
-<a href=#1387 id=1387 data-nosnippet>1387</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-<a href=#1388 id=1388 data-nosnippet>1388</a>            }
-<a href=#1389 id=1389 data-nosnippet>1389</a>        }
-<a href=#1390 id=1390 data-nosnippet>1390</a>    };
-<a href=#1391 id=1391 data-nosnippet>1391</a>}
-<a href=#1392 id=1392 data-nosnippet>1392</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>pass_try;
-<a href=#1393 id=1393 data-nosnippet>1393</a>
-<a href=#1394 id=1394 data-nosnippet>1394</a><span class="doccomment">/// Errors related to the state of a command or pass encoder.
-<a href=#1395 id=1395 data-nosnippet>1395</a>///
-<a href=#1396 id=1396 data-nosnippet>1396</a>/// The exact behavior of these errors may change based on the resolution of
-<a href=#1397 id=1397 data-nosnippet>1397</a>/// &lt;https://github.com/gpuweb/gpuweb/issues/5207&gt;.
-<a href=#1398 id=1398 data-nosnippet>1398</a></span><span class="attr">#[derive(Clone, Debug, Error)]
-<a href=#1399 id=1399 data-nosnippet>1399</a>#[non_exhaustive]
-<a href=#1400 id=1400 data-nosnippet>1400</a></span><span class="kw">pub enum </span>EncoderStateError {
-<a href=#1401 id=1401 data-nosnippet>1401</a>    <span class="doccomment">/// Used internally by wgpu functions to indicate the encoder already
-<a href=#1402 id=1402 data-nosnippet>1402</a>    /// contained an error. This variant should usually not be seen by users of
-<a href=#1403 id=1403 data-nosnippet>1403</a>    /// the API, since an effort should be made to provide the caller with a
-<a href=#1404 id=1404 data-nosnippet>1404</a>    /// more specific reason for the encoder being invalid.
-<a href=#1405 id=1405 data-nosnippet>1405</a>    </span><span class="attr">#[error(<span class="string">"Encoder is invalid"</span>)]
-<a href=#1406 id=1406 data-nosnippet>1406</a>    </span>Invalid,
-<a href=#1407 id=1407 data-nosnippet>1407</a>
-<a href=#1408 id=1408 data-nosnippet>1408</a>    <span class="doccomment">/// Returned immediately when an attempt is made to encode a command using
-<a href=#1409 id=1409 data-nosnippet>1409</a>    /// an encoder that has already finished.
-<a href=#1410 id=1410 data-nosnippet>1410</a>    </span><span class="attr">#[error(<span class="string">"Encoding must not have ended"</span>)]
-<a href=#1411 id=1411 data-nosnippet>1411</a>    </span>Ended,
-<a href=#1412 id=1412 data-nosnippet>1412</a>
-<a href=#1413 id=1413 data-nosnippet>1413</a>    <span class="doccomment">/// Returned by a subsequent call to `encoder.finish()`, if there was an
-<a href=#1414 id=1414 data-nosnippet>1414</a>    /// attempt to open a second pass on the encoder while it was locked for
-<a href=#1415 id=1415 data-nosnippet>1415</a>    /// a first pass (i.e. the first pass was still open).
-<a href=#1416 id=1416 data-nosnippet>1416</a>    ///
-<a href=#1417 id=1417 data-nosnippet>1417</a>    /// Note: only command encoders can be locked (not pass encoders).
-<a href=#1418 id=1418 data-nosnippet>1418</a>    </span><span class="attr">#[error(<span class="string">"Encoder is locked by a previously created render/compute pass. Before recording any new commands, the pass must be ended."</span>)]
-<a href=#1419 id=1419 data-nosnippet>1419</a>    </span>Locked,
-<a href=#1420 id=1420 data-nosnippet>1420</a>
-<a href=#1421 id=1421 data-nosnippet>1421</a>    <span class="doccomment">/// Returned when attempting to end a pass if the parent encoder is not
-<a href=#1422 id=1422 data-nosnippet>1422</a>    /// locked. This can only happen if pass begin/end calls are mismatched.
-<a href=#1423 id=1423 data-nosnippet>1423</a>    </span><span class="attr">#[error(
-<a href=#1424 id=1424 data-nosnippet>1424</a>        <span class="string">"Encoder is not currently locked. A pass can only be ended while the encoder is locked."
-<a href=#1425 id=1425 data-nosnippet>1425</a>    </span>)]
-<a href=#1426 id=1426 data-nosnippet>1426</a>    </span>Unlocked,
-<a href=#1427 id=1427 data-nosnippet>1427</a>
-<a href=#1428 id=1428 data-nosnippet>1428</a>    <span class="doccomment">/// The command buffer has already been submitted.
-<a href=#1429 id=1429 data-nosnippet>1429</a>    ///
-<a href=#1430 id=1430 data-nosnippet>1430</a>    /// Although command encoders and command buffers are distinct WebGPU
-<a href=#1431 id=1431 data-nosnippet>1431</a>    /// objects, we use `CommandEncoderStatus` for both.
-<a href=#1432 id=1432 data-nosnippet>1432</a>    </span><span class="attr">#[error(<span class="string">"This command buffer has already been submitted."</span>)]
-<a href=#1433 id=1433 data-nosnippet>1433</a>    </span>Submitted,
-<a href=#1434 id=1434 data-nosnippet>1434</a>}
-<a href=#1435 id=1435 data-nosnippet>1435</a>
-<a href=#1436 id=1436 data-nosnippet>1436</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>EncoderStateError {
-<a href=#1437 id=1437 data-nosnippet>1437</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
-<a href=#1438 id=1438 data-nosnippet>1438</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#1439 id=1439 data-nosnippet>1439</a>            EncoderStateError::Invalid
-<a href=#1440 id=1440 data-nosnippet>1440</a>            | EncoderStateError::Ended
-<a href=#1441 id=1441 data-nosnippet>1441</a>            | EncoderStateError::Locked
-<a href=#1442 id=1442 data-nosnippet>1442</a>            | EncoderStateError::Unlocked
-<a href=#1443 id=1443 data-nosnippet>1443</a>            | EncoderStateError::Submitted =&gt; ErrorType::Validation,
-<a href=#1444 id=1444 data-nosnippet>1444</a>        }
-<a href=#1445 id=1445 data-nosnippet>1445</a>    }
-<a href=#1446 id=1446 data-nosnippet>1446</a>}
-<a href=#1447 id=1447 data-nosnippet>1447</a>
-<a href=#1448 id=1448 data-nosnippet>1448</a><span class="attr">#[derive(Clone, Debug, Error)]
-<a href=#1449 id=1449 data-nosnippet>1449</a>#[non_exhaustive]
-<a href=#1450 id=1450 data-nosnippet>1450</a></span><span class="kw">pub enum </span>CommandEncoderError {
-<a href=#1451 id=1451 data-nosnippet>1451</a>    <span class="attr">#[error(transparent)]
-<a href=#1452 id=1452 data-nosnippet>1452</a>    </span>State(<span class="attr">#[from] </span>EncoderStateError),
+<a href=#1258 id=1258 data-nosnippet>1258</a>    /// If the pass is valid, this is `None`.
+<a href=#1259 id=1259 data-nosnippet>1259</a>    ///
+<a href=#1260 id=1260 data-nosnippet>1260</a>    /// Passes are serialized into traces. but we don't support doing so for
+<a href=#1261 id=1261 data-nosnippet>1261</a>    /// passes containing errors. These serde attributes allow `E` to be
+<a href=#1262 id=1262 data-nosnippet>1262</a>    /// `Infallible`.
+<a href=#1263 id=1263 data-nosnippet>1263</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(skip, default = <span class="string">"Option::default"</span>))]
+<a href=#1264 id=1264 data-nosnippet>1264</a>    </span><span class="kw">pub </span>error: <span class="prelude-ty">Option</span>&lt;E&gt;,
+<a href=#1265 id=1265 data-nosnippet>1265</a>
+<a href=#1266 id=1266 data-nosnippet>1266</a>    <span class="doccomment">/// The stream of commands.
+<a href=#1267 id=1267 data-nosnippet>1267</a>    ///
+<a href=#1268 id=1268 data-nosnippet>1268</a>    /// The commands are moved out of this vector when the pass is ended (i.e.
+<a href=#1269 id=1269 data-nosnippet>1269</a>    /// at the same time that `parent` is taken out of the
+<a href=#1270 id=1270 data-nosnippet>1270</a>    /// `ComputePass`/`RenderPass`).
+<a href=#1271 id=1271 data-nosnippet>1271</a>    </span><span class="kw">pub </span>commands: Vec&lt;C&gt;,
+<a href=#1272 id=1272 data-nosnippet>1272</a>
+<a href=#1273 id=1273 data-nosnippet>1273</a>    <span class="doccomment">/// Dynamic offsets consumed by [`SetBindGroup`] commands in `commands`.
+<a href=#1274 id=1274 data-nosnippet>1274</a>    ///
+<a href=#1275 id=1275 data-nosnippet>1275</a>    /// Each successive `SetBindGroup` consumes the next
+<a href=#1276 id=1276 data-nosnippet>1276</a>    /// [`num_dynamic_offsets`] values from this list.
+<a href=#1277 id=1277 data-nosnippet>1277</a>    </span><span class="kw">pub </span>dynamic_offsets: Vec&lt;wgt::DynamicOffset&gt;,
+<a href=#1278 id=1278 data-nosnippet>1278</a>
+<a href=#1279 id=1279 data-nosnippet>1279</a>    <span class="doccomment">/// Strings used by debug instructions.
+<a href=#1280 id=1280 data-nosnippet>1280</a>    ///
+<a href=#1281 id=1281 data-nosnippet>1281</a>    /// Each successive [`PushDebugGroup`] or [`InsertDebugMarker`]
+<a href=#1282 id=1282 data-nosnippet>1282</a>    /// instruction consumes the next `len` bytes from this vector.
+<a href=#1283 id=1283 data-nosnippet>1283</a>    </span><span class="kw">pub </span>string_data: Vec&lt;u8&gt;,
+<a href=#1284 id=1284 data-nosnippet>1284</a>
+<a href=#1285 id=1285 data-nosnippet>1285</a>    <span class="doccomment">/// Data used by `SetPushConstant` instructions.
+<a href=#1286 id=1286 data-nosnippet>1286</a>    ///
+<a href=#1287 id=1287 data-nosnippet>1287</a>    /// See the documentation for [`RenderCommand::SetPushConstant`]
+<a href=#1288 id=1288 data-nosnippet>1288</a>    /// and [`ComputeCommand::SetPushConstant`] for details.
+<a href=#1289 id=1289 data-nosnippet>1289</a>    </span><span class="kw">pub </span>push_constant_data: Vec&lt;u32&gt;,
+<a href=#1290 id=1290 data-nosnippet>1290</a>}
+<a href=#1291 id=1291 data-nosnippet>1291</a>
+<a href=#1292 id=1292 data-nosnippet>1292</a><span class="kw">impl</span>&lt;C: Clone, E: Clone&gt; BasePass&lt;C, E&gt; {
+<a href=#1293 id=1293 data-nosnippet>1293</a>    <span class="kw">fn </span>new(label: <span class="kw-2">&amp;</span>Label) -&gt; <span class="self">Self </span>{
+<a href=#1294 id=1294 data-nosnippet>1294</a>        <span class="self">Self </span>{
+<a href=#1295 id=1295 data-nosnippet>1295</a>            label: label.as_deref().map(str::to_owned),
+<a href=#1296 id=1296 data-nosnippet>1296</a>            error: <span class="prelude-val">None</span>,
+<a href=#1297 id=1297 data-nosnippet>1297</a>            commands: Vec::new(),
+<a href=#1298 id=1298 data-nosnippet>1298</a>            dynamic_offsets: Vec::new(),
+<a href=#1299 id=1299 data-nosnippet>1299</a>            string_data: Vec::new(),
+<a href=#1300 id=1300 data-nosnippet>1300</a>            push_constant_data: Vec::new(),
+<a href=#1301 id=1301 data-nosnippet>1301</a>        }
+<a href=#1302 id=1302 data-nosnippet>1302</a>    }
+<a href=#1303 id=1303 data-nosnippet>1303</a>
+<a href=#1304 id=1304 data-nosnippet>1304</a>    <span class="kw">fn </span>new_invalid(label: <span class="kw-2">&amp;</span>Label, err: E) -&gt; <span class="self">Self </span>{
+<a href=#1305 id=1305 data-nosnippet>1305</a>        <span class="self">Self </span>{
+<a href=#1306 id=1306 data-nosnippet>1306</a>            label: label.as_deref().map(str::to_owned),
+<a href=#1307 id=1307 data-nosnippet>1307</a>            error: <span class="prelude-val">Some</span>(err),
+<a href=#1308 id=1308 data-nosnippet>1308</a>            commands: Vec::new(),
+<a href=#1309 id=1309 data-nosnippet>1309</a>            dynamic_offsets: Vec::new(),
+<a href=#1310 id=1310 data-nosnippet>1310</a>            string_data: Vec::new(),
+<a href=#1311 id=1311 data-nosnippet>1311</a>            push_constant_data: Vec::new(),
+<a href=#1312 id=1312 data-nosnippet>1312</a>        }
+<a href=#1313 id=1313 data-nosnippet>1313</a>    }
+<a href=#1314 id=1314 data-nosnippet>1314</a>
+<a href=#1315 id=1315 data-nosnippet>1315</a>    <span class="doccomment">/// Takes the commands from the pass, or returns an error if the pass is
+<a href=#1316 id=1316 data-nosnippet>1316</a>    /// invalid.
+<a href=#1317 id=1317 data-nosnippet>1317</a>    ///
+<a href=#1318 id=1318 data-nosnippet>1318</a>    /// This is called when the pass is ended, at the same time that the
+<a href=#1319 id=1319 data-nosnippet>1319</a>    /// `parent` member of the `ComputePass` or `RenderPass` containing the pass
+<a href=#1320 id=1320 data-nosnippet>1320</a>    /// is taken.
+<a href=#1321 id=1321 data-nosnippet>1321</a>    </span><span class="kw">fn </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BasePass&lt;C, Infallible&gt;, E&gt; {
+<a href=#1322 id=1322 data-nosnippet>1322</a>        <span class="kw">match </span><span class="self">self</span>.error.as_ref() {
+<a href=#1323 id=1323 data-nosnippet>1323</a>            <span class="prelude-val">Some</span>(err) =&gt; <span class="prelude-val">Err</span>(err.clone()),
+<a href=#1324 id=1324 data-nosnippet>1324</a>            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(BasePass {
+<a href=#1325 id=1325 data-nosnippet>1325</a>                label: <span class="self">self</span>.label.clone(),
+<a href=#1326 id=1326 data-nosnippet>1326</a>                error: <span class="prelude-val">None</span>,
+<a href=#1327 id=1327 data-nosnippet>1327</a>                commands: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.commands),
+<a href=#1328 id=1328 data-nosnippet>1328</a>                dynamic_offsets: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dynamic_offsets),
+<a href=#1329 id=1329 data-nosnippet>1329</a>                string_data: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.string_data),
+<a href=#1330 id=1330 data-nosnippet>1330</a>                push_constant_data: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.push_constant_data),
+<a href=#1331 id=1331 data-nosnippet>1331</a>            }),
+<a href=#1332 id=1332 data-nosnippet>1332</a>        }
+<a href=#1333 id=1333 data-nosnippet>1333</a>    }
+<a href=#1334 id=1334 data-nosnippet>1334</a>}
+<a href=#1335 id=1335 data-nosnippet>1335</a>
+<a href=#1336 id=1336 data-nosnippet>1336</a><span class="doccomment">/// Checks the state of a [`compute::ComputePass`] or [`render::RenderPass`] and
+<a href=#1337 id=1337 data-nosnippet>1337</a>/// evaluates to a mutable reference to the [`BasePass`], if the pass is open and
+<a href=#1338 id=1338 data-nosnippet>1338</a>/// valid.
+<a href=#1339 id=1339 data-nosnippet>1339</a>///
+<a href=#1340 id=1340 data-nosnippet>1340</a>/// If the pass is ended or not valid, **returns from the invoking function**,
+<a href=#1341 id=1341 data-nosnippet>1341</a>/// like the `?` operator.
+<a href=#1342 id=1342 data-nosnippet>1342</a>///
+<a href=#1343 id=1343 data-nosnippet>1343</a>/// If the pass is ended (i.e. the application is attempting to record a command
+<a href=#1344 id=1344 data-nosnippet>1344</a>/// on a finished pass), returns `Err(EncoderStateError::Ended)` from the
+<a href=#1345 id=1345 data-nosnippet>1345</a>/// invoking function, for immediate propagation as a validation error.
+<a href=#1346 id=1346 data-nosnippet>1346</a>///
+<a href=#1347 id=1347 data-nosnippet>1347</a>/// If the pass is open but invalid (i.e. a previous command encountered an
+<a href=#1348 id=1348 data-nosnippet>1348</a>/// error), returns `Ok(())` from the invoking function. The pass should already
+<a href=#1349 id=1349 data-nosnippet>1349</a>/// have stored the previous error, which will be transferred to the parent
+<a href=#1350 id=1350 data-nosnippet>1350</a>/// encoder when the pass is ended, and then raised as a validation error when
+<a href=#1351 id=1351 data-nosnippet>1351</a>/// `finish()` is called for the parent).
+<a href=#1352 id=1352 data-nosnippet>1352</a>///
+<a href=#1353 id=1353 data-nosnippet>1353</a>/// Although in many cases the functionality of `pass_base!` could be achieved
+<a href=#1354 id=1354 data-nosnippet>1354</a>/// by combining a helper method on the passes with the `pass_try!` macro,
+<a href=#1355 id=1355 data-nosnippet>1355</a>/// taking the mutable reference to the base pass in a macro avoids borrowing
+<a href=#1356 id=1356 data-nosnippet>1356</a>/// conflicts when a reference to some other member of the pass struct is
+<a href=#1357 id=1357 data-nosnippet>1357</a>/// needed simultaneously with the base pass reference.
+<a href=#1358 id=1358 data-nosnippet>1358</a></span><span class="macro">macro_rules!</span> pass_base {
+<a href=#1359 id=1359 data-nosnippet>1359</a>    (<span class="macro-nonterminal">$pass</span>:expr, <span class="macro-nonterminal">$scope</span>:expr $(,)<span class="question-mark">?</span>) =&gt; {
+<a href=#1360 id=1360 data-nosnippet>1360</a>        <span class="kw">match </span>(<span class="kw-2">&amp;</span><span class="macro-nonterminal">$pass</span>.parent, <span class="kw-2">&amp;</span><span class="macro-nonterminal">$pass</span>.base.error) {
+<a href=#1361 id=1361 data-nosnippet>1361</a>            <span class="comment">// Pass is ended
+<a href=#1362 id=1362 data-nosnippet>1362</a>            </span>(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(EncoderStateError::Ended).map_pass_err(<span class="macro-nonterminal">$scope</span>),
+<a href=#1363 id=1363 data-nosnippet>1363</a>            <span class="comment">// Pass is invalid
+<a href=#1364 id=1364 data-nosnippet>1364</a>            </span>(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
+<a href=#1365 id=1365 data-nosnippet>1365</a>            <span class="comment">// Pass is open and valid
+<a href=#1366 id=1366 data-nosnippet>1366</a>            </span>(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="kw-2">&amp;</span><span class="prelude-val">None</span>) =&gt; <span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$pass</span>.base,
+<a href=#1367 id=1367 data-nosnippet>1367</a>        }
+<a href=#1368 id=1368 data-nosnippet>1368</a>    };
+<a href=#1369 id=1369 data-nosnippet>1369</a>}
+<a href=#1370 id=1370 data-nosnippet>1370</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>pass_base;
+<a href=#1371 id=1371 data-nosnippet>1371</a>
+<a href=#1372 id=1372 data-nosnippet>1372</a><span class="doccomment">/// Handles the error case in an expression of type `Result&lt;T, E&gt;`.
+<a href=#1373 id=1373 data-nosnippet>1373</a>///
+<a href=#1374 id=1374 data-nosnippet>1374</a>/// This macro operates like the `?` operator (or, in early Rust versions, the
+<a href=#1375 id=1375 data-nosnippet>1375</a>/// `try!` macro, hence the name `pass_try`). **When there is an error, the
+<a href=#1376 id=1376 data-nosnippet>1376</a>/// macro returns from the invoking function.** However, `Ok(())`, and not the
+<a href=#1377 id=1377 data-nosnippet>1377</a>/// error itself, is returned. The error is stored in the pass and will later be
+<a href=#1378 id=1378 data-nosnippet>1378</a>/// transferred to the parent encoder when the pass ends, and then raised as a
+<a href=#1379 id=1379 data-nosnippet>1379</a>/// validation error when `finish()` is called for the parent.
+<a href=#1380 id=1380 data-nosnippet>1380</a>///
+<a href=#1381 id=1381 data-nosnippet>1381</a>/// `pass_try!` also calls [`MapPassErr::map_pass_err`] to annotate the error
+<a href=#1382 id=1382 data-nosnippet>1382</a>/// with the command being encoded at the time it occurred.
+<a href=#1383 id=1383 data-nosnippet>1383</a></span><span class="macro">macro_rules!</span> pass_try {
+<a href=#1384 id=1384 data-nosnippet>1384</a>    (<span class="macro-nonterminal">$base</span>:expr, <span class="macro-nonterminal">$scope</span>:expr, <span class="macro-nonterminal">$res</span>:expr $(,)<span class="question-mark">?</span>) =&gt; {
+<a href=#1385 id=1385 data-nosnippet>1385</a>        <span class="kw">match </span><span class="macro-nonterminal">$res</span>.map_pass_err(<span class="macro-nonterminal">$scope</span>) {
+<a href=#1386 id=1386 data-nosnippet>1386</a>            <span class="prelude-val">Ok</span>(val) =&gt; val,
+<a href=#1387 id=1387 data-nosnippet>1387</a>            <span class="prelude-val">Err</span>(err) =&gt; {
+<a href=#1388 id=1388 data-nosnippet>1388</a>                <span class="macro-nonterminal">$base</span>.error.get_or_insert(err);
+<a href=#1389 id=1389 data-nosnippet>1389</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+<a href=#1390 id=1390 data-nosnippet>1390</a>            }
+<a href=#1391 id=1391 data-nosnippet>1391</a>        }
+<a href=#1392 id=1392 data-nosnippet>1392</a>    };
+<a href=#1393 id=1393 data-nosnippet>1393</a>}
+<a href=#1394 id=1394 data-nosnippet>1394</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>pass_try;
+<a href=#1395 id=1395 data-nosnippet>1395</a>
+<a href=#1396 id=1396 data-nosnippet>1396</a><span class="doccomment">/// Errors related to the state of a command or pass encoder.
+<a href=#1397 id=1397 data-nosnippet>1397</a>///
+<a href=#1398 id=1398 data-nosnippet>1398</a>/// The exact behavior of these errors may change based on the resolution of
+<a href=#1399 id=1399 data-nosnippet>1399</a>/// &lt;https://github.com/gpuweb/gpuweb/issues/5207&gt;.
+<a href=#1400 id=1400 data-nosnippet>1400</a></span><span class="attr">#[derive(Clone, Debug, Error)]
+<a href=#1401 id=1401 data-nosnippet>1401</a>#[non_exhaustive]
+<a href=#1402 id=1402 data-nosnippet>1402</a></span><span class="kw">pub enum </span>EncoderStateError {
+<a href=#1403 id=1403 data-nosnippet>1403</a>    <span class="doccomment">/// Used internally by wgpu functions to indicate the encoder already
+<a href=#1404 id=1404 data-nosnippet>1404</a>    /// contained an error. This variant should usually not be seen by users of
+<a href=#1405 id=1405 data-nosnippet>1405</a>    /// the API, since an effort should be made to provide the caller with a
+<a href=#1406 id=1406 data-nosnippet>1406</a>    /// more specific reason for the encoder being invalid.
+<a href=#1407 id=1407 data-nosnippet>1407</a>    </span><span class="attr">#[error(<span class="string">"Encoder is invalid"</span>)]
+<a href=#1408 id=1408 data-nosnippet>1408</a>    </span>Invalid,
+<a href=#1409 id=1409 data-nosnippet>1409</a>
+<a href=#1410 id=1410 data-nosnippet>1410</a>    <span class="doccomment">/// Returned immediately when an attempt is made to encode a command using
+<a href=#1411 id=1411 data-nosnippet>1411</a>    /// an encoder that has already finished.
+<a href=#1412 id=1412 data-nosnippet>1412</a>    </span><span class="attr">#[error(<span class="string">"Encoding must not have ended"</span>)]
+<a href=#1413 id=1413 data-nosnippet>1413</a>    </span>Ended,
+<a href=#1414 id=1414 data-nosnippet>1414</a>
+<a href=#1415 id=1415 data-nosnippet>1415</a>    <span class="doccomment">/// Returned by a subsequent call to `encoder.finish()`, if there was an
+<a href=#1416 id=1416 data-nosnippet>1416</a>    /// attempt to open a second pass on the encoder while it was locked for
+<a href=#1417 id=1417 data-nosnippet>1417</a>    /// a first pass (i.e. the first pass was still open).
+<a href=#1418 id=1418 data-nosnippet>1418</a>    ///
+<a href=#1419 id=1419 data-nosnippet>1419</a>    /// Note: only command encoders can be locked (not pass encoders).
+<a href=#1420 id=1420 data-nosnippet>1420</a>    </span><span class="attr">#[error(<span class="string">"Encoder is locked by a previously created render/compute pass. Before recording any new commands, the pass must be ended."</span>)]
+<a href=#1421 id=1421 data-nosnippet>1421</a>    </span>Locked,
+<a href=#1422 id=1422 data-nosnippet>1422</a>
+<a href=#1423 id=1423 data-nosnippet>1423</a>    <span class="doccomment">/// Returned when attempting to end a pass if the parent encoder is not
+<a href=#1424 id=1424 data-nosnippet>1424</a>    /// locked. This can only happen if pass begin/end calls are mismatched.
+<a href=#1425 id=1425 data-nosnippet>1425</a>    </span><span class="attr">#[error(
+<a href=#1426 id=1426 data-nosnippet>1426</a>        <span class="string">"Encoder is not currently locked. A pass can only be ended while the encoder is locked."
+<a href=#1427 id=1427 data-nosnippet>1427</a>    </span>)]
+<a href=#1428 id=1428 data-nosnippet>1428</a>    </span>Unlocked,
+<a href=#1429 id=1429 data-nosnippet>1429</a>
+<a href=#1430 id=1430 data-nosnippet>1430</a>    <span class="doccomment">/// The command buffer has already been submitted.
+<a href=#1431 id=1431 data-nosnippet>1431</a>    ///
+<a href=#1432 id=1432 data-nosnippet>1432</a>    /// Although command encoders and command buffers are distinct WebGPU
+<a href=#1433 id=1433 data-nosnippet>1433</a>    /// objects, we use `CommandEncoderStatus` for both.
+<a href=#1434 id=1434 data-nosnippet>1434</a>    </span><span class="attr">#[error(<span class="string">"This command buffer has already been submitted."</span>)]
+<a href=#1435 id=1435 data-nosnippet>1435</a>    </span>Submitted,
+<a href=#1436 id=1436 data-nosnippet>1436</a>}
+<a href=#1437 id=1437 data-nosnippet>1437</a>
+<a href=#1438 id=1438 data-nosnippet>1438</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>EncoderStateError {
+<a href=#1439 id=1439 data-nosnippet>1439</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+<a href=#1440 id=1440 data-nosnippet>1440</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#1441 id=1441 data-nosnippet>1441</a>            EncoderStateError::Invalid
+<a href=#1442 id=1442 data-nosnippet>1442</a>            | EncoderStateError::Ended
+<a href=#1443 id=1443 data-nosnippet>1443</a>            | EncoderStateError::Locked
+<a href=#1444 id=1444 data-nosnippet>1444</a>            | EncoderStateError::Unlocked
+<a href=#1445 id=1445 data-nosnippet>1445</a>            | EncoderStateError::Submitted =&gt; ErrorType::Validation,
+<a href=#1446 id=1446 data-nosnippet>1446</a>        }
+<a href=#1447 id=1447 data-nosnippet>1447</a>    }
+<a href=#1448 id=1448 data-nosnippet>1448</a>}
+<a href=#1449 id=1449 data-nosnippet>1449</a>
+<a href=#1450 id=1450 data-nosnippet>1450</a><span class="attr">#[derive(Clone, Debug, Error)]
+<a href=#1451 id=1451 data-nosnippet>1451</a>#[non_exhaustive]
+<a href=#1452 id=1452 data-nosnippet>1452</a></span><span class="kw">pub enum </span>CommandEncoderError {
 <a href=#1453 id=1453 data-nosnippet>1453</a>    <span class="attr">#[error(transparent)]
-<a href=#1454 id=1454 data-nosnippet>1454</a>    </span>Device(<span class="attr">#[from] </span>DeviceError),
+<a href=#1454 id=1454 data-nosnippet>1454</a>    </span>State(<span class="attr">#[from] </span>EncoderStateError),
 <a href=#1455 id=1455 data-nosnippet>1455</a>    <span class="attr">#[error(transparent)]
-<a href=#1456 id=1456 data-nosnippet>1456</a>    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
+<a href=#1456 id=1456 data-nosnippet>1456</a>    </span>Device(<span class="attr">#[from] </span>DeviceError),
 <a href=#1457 id=1457 data-nosnippet>1457</a>    <span class="attr">#[error(transparent)]
-<a href=#1458 id=1458 data-nosnippet>1458</a>    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
+<a href=#1458 id=1458 data-nosnippet>1458</a>    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 <a href=#1459 id=1459 data-nosnippet>1459</a>    <span class="attr">#[error(transparent)]
-<a href=#1460 id=1460 data-nosnippet>1460</a>    </span>ResourceUsage(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
+<a href=#1460 id=1460 data-nosnippet>1460</a>    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
 <a href=#1461 id=1461 data-nosnippet>1461</a>    <span class="attr">#[error(transparent)]
-<a href=#1462 id=1462 data-nosnippet>1462</a>    </span>DebugGroupError(<span class="attr">#[from] </span>DebugGroupError),
+<a href=#1462 id=1462 data-nosnippet>1462</a>    </span>ResourceUsage(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
 <a href=#1463 id=1463 data-nosnippet>1463</a>    <span class="attr">#[error(transparent)]
-<a href=#1464 id=1464 data-nosnippet>1464</a>    </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
+<a href=#1464 id=1464 data-nosnippet>1464</a>    </span>DebugGroupError(<span class="attr">#[from] </span>DebugGroupError),
 <a href=#1465 id=1465 data-nosnippet>1465</a>    <span class="attr">#[error(transparent)]
-<a href=#1466 id=1466 data-nosnippet>1466</a>    </span>Transfer(<span class="attr">#[from] </span>TransferError),
+<a href=#1466 id=1466 data-nosnippet>1466</a>    </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
 <a href=#1467 id=1467 data-nosnippet>1467</a>    <span class="attr">#[error(transparent)]
-<a href=#1468 id=1468 data-nosnippet>1468</a>    </span>Clear(<span class="attr">#[from] </span>ClearError),
+<a href=#1468 id=1468 data-nosnippet>1468</a>    </span>Transfer(<span class="attr">#[from] </span>TransferError),
 <a href=#1469 id=1469 data-nosnippet>1469</a>    <span class="attr">#[error(transparent)]
-<a href=#1470 id=1470 data-nosnippet>1470</a>    </span>Query(<span class="attr">#[from] </span>QueryError),
+<a href=#1470 id=1470 data-nosnippet>1470</a>    </span>Clear(<span class="attr">#[from] </span>ClearError),
 <a href=#1471 id=1471 data-nosnippet>1471</a>    <span class="attr">#[error(transparent)]
-<a href=#1472 id=1472 data-nosnippet>1472</a>    </span>BuildAccelerationStructure(<span class="attr">#[from] </span>BuildAccelerationStructureError),
+<a href=#1472 id=1472 data-nosnippet>1472</a>    </span>Query(<span class="attr">#[from] </span>QueryError),
 <a href=#1473 id=1473 data-nosnippet>1473</a>    <span class="attr">#[error(transparent)]
-<a href=#1474 id=1474 data-nosnippet>1474</a>    </span>TransitionResources(<span class="attr">#[from] </span>TransitionResourcesError),
+<a href=#1474 id=1474 data-nosnippet>1474</a>    </span>BuildAccelerationStructure(<span class="attr">#[from] </span>BuildAccelerationStructureError),
 <a href=#1475 id=1475 data-nosnippet>1475</a>    <span class="attr">#[error(transparent)]
-<a href=#1476 id=1476 data-nosnippet>1476</a>    </span>ComputePass(<span class="attr">#[from] </span>ComputePassError),
+<a href=#1476 id=1476 data-nosnippet>1476</a>    </span>TransitionResources(<span class="attr">#[from] </span>TransitionResourcesError),
 <a href=#1477 id=1477 data-nosnippet>1477</a>    <span class="attr">#[error(transparent)]
-<a href=#1478 id=1478 data-nosnippet>1478</a>    </span>RenderPass(<span class="attr">#[from] </span>RenderPassError),
-<a href=#1479 id=1479 data-nosnippet>1479</a>}
-<a href=#1480 id=1480 data-nosnippet>1480</a>
-<a href=#1481 id=1481 data-nosnippet>1481</a><span class="kw">impl </span>CommandEncoderError {
-<a href=#1482 id=1482 data-nosnippet>1482</a>    <span class="kw">fn </span>is_destroyed_error(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-<a href=#1483 id=1483 data-nosnippet>1483</a>        <span class="macro">matches!</span>(
-<a href=#1484 id=1484 data-nosnippet>1484</a>            <span class="self">self</span>,
-<a href=#1485 id=1485 data-nosnippet>1485</a>            <span class="self">Self</span>::DestroyedResource(<span class="kw">_</span>)
-<a href=#1486 id=1486 data-nosnippet>1486</a>                | <span class="self">Self</span>::Clear(ClearError::DestroyedResource(<span class="kw">_</span>))
-<a href=#1487 id=1487 data-nosnippet>1487</a>                | <span class="self">Self</span>::Query(QueryError::DestroyedResource(<span class="kw">_</span>))
-<a href=#1488 id=1488 data-nosnippet>1488</a>                | <span class="self">Self</span>::ComputePass(ComputePassError {
-<a href=#1489 id=1489 data-nosnippet>1489</a>                    inner: ComputePassErrorInner::DestroyedResource(<span class="kw">_</span>),
-<a href=#1490 id=1490 data-nosnippet>1490</a>                    ..
-<a href=#1491 id=1491 data-nosnippet>1491</a>                })
-<a href=#1492 id=1492 data-nosnippet>1492</a>                | <span class="self">Self</span>::RenderPass(RenderPassError {
-<a href=#1493 id=1493 data-nosnippet>1493</a>                    inner: RenderPassErrorInner::DestroyedResource(<span class="kw">_</span>),
-<a href=#1494 id=1494 data-nosnippet>1494</a>                    ..
-<a href=#1495 id=1495 data-nosnippet>1495</a>                })
-<a href=#1496 id=1496 data-nosnippet>1496</a>                | <span class="self">Self</span>::RenderPass(RenderPassError {
-<a href=#1497 id=1497 data-nosnippet>1497</a>                    inner: RenderPassErrorInner::RenderCommand(
-<a href=#1498 id=1498 data-nosnippet>1498</a>                        RenderCommandError::DestroyedResource(<span class="kw">_</span>)
-<a href=#1499 id=1499 data-nosnippet>1499</a>                    ),
-<a href=#1500 id=1500 data-nosnippet>1500</a>                    ..
-<a href=#1501 id=1501 data-nosnippet>1501</a>                })
-<a href=#1502 id=1502 data-nosnippet>1502</a>                | <span class="self">Self</span>::RenderPass(RenderPassError {
-<a href=#1503 id=1503 data-nosnippet>1503</a>                    inner: RenderPassErrorInner::RenderCommand(RenderCommandError::BindingError(
-<a href=#1504 id=1504 data-nosnippet>1504</a>                        BindingError::DestroyedResource(<span class="kw">_</span>)
-<a href=#1505 id=1505 data-nosnippet>1505</a>                    )),
-<a href=#1506 id=1506 data-nosnippet>1506</a>                    ..
-<a href=#1507 id=1507 data-nosnippet>1507</a>                })
-<a href=#1508 id=1508 data-nosnippet>1508</a>        )
-<a href=#1509 id=1509 data-nosnippet>1509</a>    }
-<a href=#1510 id=1510 data-nosnippet>1510</a>}
-<a href=#1511 id=1511 data-nosnippet>1511</a>
-<a href=#1512 id=1512 data-nosnippet>1512</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>CommandEncoderError {
-<a href=#1513 id=1513 data-nosnippet>1513</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
-<a href=#1514 id=1514 data-nosnippet>1514</a>        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
-<a href=#1515 id=1515 data-nosnippet>1515</a>            <span class="self">Self</span>::Device(e) =&gt; e,
-<a href=#1516 id=1516 data-nosnippet>1516</a>            <span class="self">Self</span>::InvalidResource(e) =&gt; e,
-<a href=#1517 id=1517 data-nosnippet>1517</a>            <span class="self">Self</span>::DebugGroupError(e) =&gt; e,
-<a href=#1518 id=1518 data-nosnippet>1518</a>            <span class="self">Self</span>::MissingFeatures(e) =&gt; e,
-<a href=#1519 id=1519 data-nosnippet>1519</a>            <span class="self">Self</span>::State(e) =&gt; e,
-<a href=#1520 id=1520 data-nosnippet>1520</a>            <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
-<a href=#1521 id=1521 data-nosnippet>1521</a>            <span class="self">Self</span>::Transfer(e) =&gt; e,
-<a href=#1522 id=1522 data-nosnippet>1522</a>            <span class="self">Self</span>::Clear(e) =&gt; e,
-<a href=#1523 id=1523 data-nosnippet>1523</a>            <span class="self">Self</span>::Query(e) =&gt; e,
-<a href=#1524 id=1524 data-nosnippet>1524</a>            <span class="self">Self</span>::BuildAccelerationStructure(e) =&gt; e,
-<a href=#1525 id=1525 data-nosnippet>1525</a>            <span class="self">Self</span>::TransitionResources(e) =&gt; e,
-<a href=#1526 id=1526 data-nosnippet>1526</a>            <span class="self">Self</span>::ResourceUsage(e) =&gt; e,
-<a href=#1527 id=1527 data-nosnippet>1527</a>            <span class="self">Self</span>::ComputePass(e) =&gt; e,
-<a href=#1528 id=1528 data-nosnippet>1528</a>            <span class="self">Self</span>::RenderPass(e) =&gt; e,
-<a href=#1529 id=1529 data-nosnippet>1529</a>        };
-<a href=#1530 id=1530 data-nosnippet>1530</a>        e.webgpu_error_type()
-<a href=#1531 id=1531 data-nosnippet>1531</a>    }
-<a href=#1532 id=1532 data-nosnippet>1532</a>}
-<a href=#1533 id=1533 data-nosnippet>1533</a>
-<a href=#1534 id=1534 data-nosnippet>1534</a><span class="attr">#[derive(Clone, Debug, Error)]
-<a href=#1535 id=1535 data-nosnippet>1535</a>#[non_exhaustive]
-<a href=#1536 id=1536 data-nosnippet>1536</a></span><span class="kw">pub enum </span>DebugGroupError {
-<a href=#1537 id=1537 data-nosnippet>1537</a>    <span class="attr">#[error(<span class="string">"Cannot pop debug group, because number of pushed debug groups is zero"</span>)]
-<a href=#1538 id=1538 data-nosnippet>1538</a>    </span>InvalidPop,
-<a href=#1539 id=1539 data-nosnippet>1539</a>    <span class="attr">#[error(<span class="string">"A debug group was not popped before the encoder was finished"</span>)]
-<a href=#1540 id=1540 data-nosnippet>1540</a>    </span>MissingPop,
-<a href=#1541 id=1541 data-nosnippet>1541</a>}
-<a href=#1542 id=1542 data-nosnippet>1542</a>
-<a href=#1543 id=1543 data-nosnippet>1543</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>DebugGroupError {
-<a href=#1544 id=1544 data-nosnippet>1544</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
-<a href=#1545 id=1545 data-nosnippet>1545</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#1546 id=1546 data-nosnippet>1546</a>            <span class="self">Self</span>::InvalidPop | <span class="self">Self</span>::MissingPop =&gt; ErrorType::Validation,
-<a href=#1547 id=1547 data-nosnippet>1547</a>        }
-<a href=#1548 id=1548 data-nosnippet>1548</a>    }
-<a href=#1549 id=1549 data-nosnippet>1549</a>}
-<a href=#1550 id=1550 data-nosnippet>1550</a>
-<a href=#1551 id=1551 data-nosnippet>1551</a><span class="attr">#[derive(Clone, Debug, Error)]
-<a href=#1552 id=1552 data-nosnippet>1552</a>#[non_exhaustive]
-<a href=#1553 id=1553 data-nosnippet>1553</a></span><span class="kw">pub enum </span>TimestampWritesError {
-<a href=#1554 id=1554 data-nosnippet>1554</a>    <span class="attr">#[error(
-<a href=#1555 id=1555 data-nosnippet>1555</a>        <span class="string">"begin and end indices of pass timestamp writes are both set to {idx}, which is not allowed"
-<a href=#1556 id=1556 data-nosnippet>1556</a>    </span>)]
-<a href=#1557 id=1557 data-nosnippet>1557</a>    </span>IndicesEqual { idx: u32 },
-<a href=#1558 id=1558 data-nosnippet>1558</a>    <span class="attr">#[error(<span class="string">"no begin or end indices were specified for pass timestamp writes, expected at least one to be set"</span>)]
-<a href=#1559 id=1559 data-nosnippet>1559</a>    </span>IndicesMissing,
-<a href=#1560 id=1560 data-nosnippet>1560</a>}
-<a href=#1561 id=1561 data-nosnippet>1561</a>
-<a href=#1562 id=1562 data-nosnippet>1562</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>TimestampWritesError {
-<a href=#1563 id=1563 data-nosnippet>1563</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
-<a href=#1564 id=1564 data-nosnippet>1564</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#1565 id=1565 data-nosnippet>1565</a>            <span class="self">Self</span>::IndicesEqual { .. } | <span class="self">Self</span>::IndicesMissing =&gt; ErrorType::Validation,
-<a href=#1566 id=1566 data-nosnippet>1566</a>        }
-<a href=#1567 id=1567 data-nosnippet>1567</a>    }
-<a href=#1568 id=1568 data-nosnippet>1568</a>}
-<a href=#1569 id=1569 data-nosnippet>1569</a>
-<a href=#1570 id=1570 data-nosnippet>1570</a><span class="kw">impl </span>Global {
-<a href=#1571 id=1571 data-nosnippet>1571</a>    <span class="kw">fn </span>resolve_buffer_id(
-<a href=#1572 id=1572 data-nosnippet>1572</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1573 id=1573 data-nosnippet>1573</a>        buffer_id: Id&lt;id::markers::Buffer&gt;,
-<a href=#1574 id=1574 data-nosnippet>1574</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">crate</span>::resource::Buffer&gt;, InvalidResourceError&gt; {
-<a href=#1575 id=1575 data-nosnippet>1575</a>        <span class="self">self</span>.hub.buffers.get(buffer_id).get()
-<a href=#1576 id=1576 data-nosnippet>1576</a>    }
-<a href=#1577 id=1577 data-nosnippet>1577</a>
-<a href=#1578 id=1578 data-nosnippet>1578</a>    <span class="kw">fn </span>resolve_texture_id(
-<a href=#1579 id=1579 data-nosnippet>1579</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1580 id=1580 data-nosnippet>1580</a>        texture_id: Id&lt;id::markers::Texture&gt;,
-<a href=#1581 id=1581 data-nosnippet>1581</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">crate</span>::resource::Texture&gt;, InvalidResourceError&gt; {
-<a href=#1582 id=1582 data-nosnippet>1582</a>        <span class="self">self</span>.hub.textures.get(texture_id).get()
-<a href=#1583 id=1583 data-nosnippet>1583</a>    }
-<a href=#1584 id=1584 data-nosnippet>1584</a>
-<a href=#1585 id=1585 data-nosnippet>1585</a>    <span class="kw">fn </span>resolve_query_set(
-<a href=#1586 id=1586 data-nosnippet>1586</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1587 id=1587 data-nosnippet>1587</a>        query_set_id: Id&lt;id::markers::QuerySet&gt;,
-<a href=#1588 id=1588 data-nosnippet>1588</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;QuerySet&gt;, InvalidResourceError&gt; {
-<a href=#1589 id=1589 data-nosnippet>1589</a>        <span class="self">self</span>.hub.query_sets.get(query_set_id).get()
-<a href=#1590 id=1590 data-nosnippet>1590</a>    }
-<a href=#1591 id=1591 data-nosnippet>1591</a>
-<a href=#1592 id=1592 data-nosnippet>1592</a>    <span class="doccomment">/// Finishes a command encoder, creating a command buffer and returning errors that were
-<a href=#1593 id=1593 data-nosnippet>1593</a>    /// deferred until now.
-<a href=#1594 id=1594 data-nosnippet>1594</a>    ///
-<a href=#1595 id=1595 data-nosnippet>1595</a>    /// The returned `String` is the label of the command encoder, supplied so that `wgpu` can
-<a href=#1596 id=1596 data-nosnippet>1596</a>    /// include the label when printing deferred errors without having its own copy of the label.
-<a href=#1597 id=1597 data-nosnippet>1597</a>    /// This is a kludge and should be replaced if we think of a better solution to propagating
-<a href=#1598 id=1598 data-nosnippet>1598</a>    /// labels.
-<a href=#1599 id=1599 data-nosnippet>1599</a>    </span><span class="kw">pub fn </span>command_encoder_finish(
-<a href=#1600 id=1600 data-nosnippet>1600</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1601 id=1601 data-nosnippet>1601</a>        encoder_id: id::CommandEncoderId,
-<a href=#1602 id=1602 data-nosnippet>1602</a>        desc: <span class="kw-2">&amp;</span>wgt::CommandBufferDescriptor&lt;Label&gt;,
-<a href=#1603 id=1603 data-nosnippet>1603</a>        id_in: <span class="prelude-ty">Option</span>&lt;id::CommandBufferId&gt;,
-<a href=#1604 id=1604 data-nosnippet>1604</a>    ) -&gt; (id::CommandBufferId, <span class="prelude-ty">Option</span>&lt;(String, CommandEncoderError)&gt;) {
-<a href=#1605 id=1605 data-nosnippet>1605</a>        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::finish"</span>);
-<a href=#1606 id=1606 data-nosnippet>1606</a>
-<a href=#1607 id=1607 data-nosnippet>1607</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-<a href=#1608 id=1608 data-nosnippet>1608</a>        <span class="kw">let </span>cmd_enc = hub.command_encoders.get(encoder_id);
-<a href=#1609 id=1609 data-nosnippet>1609</a>
-<a href=#1610 id=1610 data-nosnippet>1610</a>        <span class="kw">let </span>(cmd_buf, opt_error) = cmd_enc.finish(desc);
-<a href=#1611 id=1611 data-nosnippet>1611</a>        <span class="kw">let </span>cmd_buf_id = hub.command_buffers.prepare(id_in).assign(cmd_buf);
-<a href=#1612 id=1612 data-nosnippet>1612</a>
-<a href=#1613 id=1613 data-nosnippet>1613</a>        (
-<a href=#1614 id=1614 data-nosnippet>1614</a>            cmd_buf_id,
-<a href=#1615 id=1615 data-nosnippet>1615</a>            opt_error.map(|error| (cmd_enc.label.clone(), error)),
-<a href=#1616 id=1616 data-nosnippet>1616</a>        )
-<a href=#1617 id=1617 data-nosnippet>1617</a>    }
-<a href=#1618 id=1618 data-nosnippet>1618</a>
-<a href=#1619 id=1619 data-nosnippet>1619</a>    <span class="kw">pub fn </span>command_encoder_push_debug_group(
-<a href=#1620 id=1620 data-nosnippet>1620</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1621 id=1621 data-nosnippet>1621</a>        encoder_id: id::CommandEncoderId,
-<a href=#1622 id=1622 data-nosnippet>1622</a>        label: <span class="kw-2">&amp;</span>str,
-<a href=#1623 id=1623 data-nosnippet>1623</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
-<a href=#1624 id=1624 data-nosnippet>1624</a>        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::push_debug_group"</span>);
-<a href=#1625 id=1625 data-nosnippet>1625</a>        <span class="macro">api_log!</span>(<span class="string">"CommandEncoder::push_debug_group {label}"</span>);
-<a href=#1626 id=1626 data-nosnippet>1626</a>
-<a href=#1627 id=1627 data-nosnippet>1627</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1478 id=1478 data-nosnippet>1478</a>    </span>ComputePass(<span class="attr">#[from] </span>ComputePassError),
+<a href=#1479 id=1479 data-nosnippet>1479</a>    <span class="attr">#[error(transparent)]
+<a href=#1480 id=1480 data-nosnippet>1480</a>    </span>RenderPass(<span class="attr">#[from] </span>RenderPassError),
+<a href=#1481 id=1481 data-nosnippet>1481</a>}
+<a href=#1482 id=1482 data-nosnippet>1482</a>
+<a href=#1483 id=1483 data-nosnippet>1483</a><span class="kw">impl </span>CommandEncoderError {
+<a href=#1484 id=1484 data-nosnippet>1484</a>    <span class="kw">fn </span>is_destroyed_error(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+<a href=#1485 id=1485 data-nosnippet>1485</a>        <span class="macro">matches!</span>(
+<a href=#1486 id=1486 data-nosnippet>1486</a>            <span class="self">self</span>,
+<a href=#1487 id=1487 data-nosnippet>1487</a>            <span class="self">Self</span>::DestroyedResource(<span class="kw">_</span>)
+<a href=#1488 id=1488 data-nosnippet>1488</a>                | <span class="self">Self</span>::Clear(ClearError::DestroyedResource(<span class="kw">_</span>))
+<a href=#1489 id=1489 data-nosnippet>1489</a>                | <span class="self">Self</span>::Query(QueryError::DestroyedResource(<span class="kw">_</span>))
+<a href=#1490 id=1490 data-nosnippet>1490</a>                | <span class="self">Self</span>::ComputePass(ComputePassError {
+<a href=#1491 id=1491 data-nosnippet>1491</a>                    inner: ComputePassErrorInner::DestroyedResource(<span class="kw">_</span>),
+<a href=#1492 id=1492 data-nosnippet>1492</a>                    ..
+<a href=#1493 id=1493 data-nosnippet>1493</a>                })
+<a href=#1494 id=1494 data-nosnippet>1494</a>                | <span class="self">Self</span>::RenderPass(RenderPassError {
+<a href=#1495 id=1495 data-nosnippet>1495</a>                    inner: RenderPassErrorInner::DestroyedResource(<span class="kw">_</span>),
+<a href=#1496 id=1496 data-nosnippet>1496</a>                    ..
+<a href=#1497 id=1497 data-nosnippet>1497</a>                })
+<a href=#1498 id=1498 data-nosnippet>1498</a>                | <span class="self">Self</span>::RenderPass(RenderPassError {
+<a href=#1499 id=1499 data-nosnippet>1499</a>                    inner: RenderPassErrorInner::RenderCommand(
+<a href=#1500 id=1500 data-nosnippet>1500</a>                        RenderCommandError::DestroyedResource(<span class="kw">_</span>)
+<a href=#1501 id=1501 data-nosnippet>1501</a>                    ),
+<a href=#1502 id=1502 data-nosnippet>1502</a>                    ..
+<a href=#1503 id=1503 data-nosnippet>1503</a>                })
+<a href=#1504 id=1504 data-nosnippet>1504</a>                | <span class="self">Self</span>::RenderPass(RenderPassError {
+<a href=#1505 id=1505 data-nosnippet>1505</a>                    inner: RenderPassErrorInner::RenderCommand(RenderCommandError::BindingError(
+<a href=#1506 id=1506 data-nosnippet>1506</a>                        BindingError::DestroyedResource(<span class="kw">_</span>)
+<a href=#1507 id=1507 data-nosnippet>1507</a>                    )),
+<a href=#1508 id=1508 data-nosnippet>1508</a>                    ..
+<a href=#1509 id=1509 data-nosnippet>1509</a>                })
+<a href=#1510 id=1510 data-nosnippet>1510</a>        )
+<a href=#1511 id=1511 data-nosnippet>1511</a>    }
+<a href=#1512 id=1512 data-nosnippet>1512</a>}
+<a href=#1513 id=1513 data-nosnippet>1513</a>
+<a href=#1514 id=1514 data-nosnippet>1514</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>CommandEncoderError {
+<a href=#1515 id=1515 data-nosnippet>1515</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+<a href=#1516 id=1516 data-nosnippet>1516</a>        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
+<a href=#1517 id=1517 data-nosnippet>1517</a>            <span class="self">Self</span>::Device(e) =&gt; e,
+<a href=#1518 id=1518 data-nosnippet>1518</a>            <span class="self">Self</span>::InvalidResource(e) =&gt; e,
+<a href=#1519 id=1519 data-nosnippet>1519</a>            <span class="self">Self</span>::DebugGroupError(e) =&gt; e,
+<a href=#1520 id=1520 data-nosnippet>1520</a>            <span class="self">Self</span>::MissingFeatures(e) =&gt; e,
+<a href=#1521 id=1521 data-nosnippet>1521</a>            <span class="self">Self</span>::State(e) =&gt; e,
+<a href=#1522 id=1522 data-nosnippet>1522</a>            <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
+<a href=#1523 id=1523 data-nosnippet>1523</a>            <span class="self">Self</span>::Transfer(e) =&gt; e,
+<a href=#1524 id=1524 data-nosnippet>1524</a>            <span class="self">Self</span>::Clear(e) =&gt; e,
+<a href=#1525 id=1525 data-nosnippet>1525</a>            <span class="self">Self</span>::Query(e) =&gt; e,
+<a href=#1526 id=1526 data-nosnippet>1526</a>            <span class="self">Self</span>::BuildAccelerationStructure(e) =&gt; e,
+<a href=#1527 id=1527 data-nosnippet>1527</a>            <span class="self">Self</span>::TransitionResources(e) =&gt; e,
+<a href=#1528 id=1528 data-nosnippet>1528</a>            <span class="self">Self</span>::ResourceUsage(e) =&gt; e,
+<a href=#1529 id=1529 data-nosnippet>1529</a>            <span class="self">Self</span>::ComputePass(e) =&gt; e,
+<a href=#1530 id=1530 data-nosnippet>1530</a>            <span class="self">Self</span>::RenderPass(e) =&gt; e,
+<a href=#1531 id=1531 data-nosnippet>1531</a>        };
+<a href=#1532 id=1532 data-nosnippet>1532</a>        e.webgpu_error_type()
+<a href=#1533 id=1533 data-nosnippet>1533</a>    }
+<a href=#1534 id=1534 data-nosnippet>1534</a>}
+<a href=#1535 id=1535 data-nosnippet>1535</a>
+<a href=#1536 id=1536 data-nosnippet>1536</a><span class="attr">#[derive(Clone, Debug, Error)]
+<a href=#1537 id=1537 data-nosnippet>1537</a>#[non_exhaustive]
+<a href=#1538 id=1538 data-nosnippet>1538</a></span><span class="kw">pub enum </span>DebugGroupError {
+<a href=#1539 id=1539 data-nosnippet>1539</a>    <span class="attr">#[error(<span class="string">"Cannot pop debug group, because number of pushed debug groups is zero"</span>)]
+<a href=#1540 id=1540 data-nosnippet>1540</a>    </span>InvalidPop,
+<a href=#1541 id=1541 data-nosnippet>1541</a>    <span class="attr">#[error(<span class="string">"A debug group was not popped before the encoder was finished"</span>)]
+<a href=#1542 id=1542 data-nosnippet>1542</a>    </span>MissingPop,
+<a href=#1543 id=1543 data-nosnippet>1543</a>}
+<a href=#1544 id=1544 data-nosnippet>1544</a>
+<a href=#1545 id=1545 data-nosnippet>1545</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>DebugGroupError {
+<a href=#1546 id=1546 data-nosnippet>1546</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+<a href=#1547 id=1547 data-nosnippet>1547</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#1548 id=1548 data-nosnippet>1548</a>            <span class="self">Self</span>::InvalidPop | <span class="self">Self</span>::MissingPop =&gt; ErrorType::Validation,
+<a href=#1549 id=1549 data-nosnippet>1549</a>        }
+<a href=#1550 id=1550 data-nosnippet>1550</a>    }
+<a href=#1551 id=1551 data-nosnippet>1551</a>}
+<a href=#1552 id=1552 data-nosnippet>1552</a>
+<a href=#1553 id=1553 data-nosnippet>1553</a><span class="attr">#[derive(Clone, Debug, Error)]
+<a href=#1554 id=1554 data-nosnippet>1554</a>#[non_exhaustive]
+<a href=#1555 id=1555 data-nosnippet>1555</a></span><span class="kw">pub enum </span>TimestampWritesError {
+<a href=#1556 id=1556 data-nosnippet>1556</a>    <span class="attr">#[error(
+<a href=#1557 id=1557 data-nosnippet>1557</a>        <span class="string">"begin and end indices of pass timestamp writes are both set to {idx}, which is not allowed"
+<a href=#1558 id=1558 data-nosnippet>1558</a>    </span>)]
+<a href=#1559 id=1559 data-nosnippet>1559</a>    </span>IndicesEqual { idx: u32 },
+<a href=#1560 id=1560 data-nosnippet>1560</a>    <span class="attr">#[error(<span class="string">"no begin or end indices were specified for pass timestamp writes, expected at least one to be set"</span>)]
+<a href=#1561 id=1561 data-nosnippet>1561</a>    </span>IndicesMissing,
+<a href=#1562 id=1562 data-nosnippet>1562</a>}
+<a href=#1563 id=1563 data-nosnippet>1563</a>
+<a href=#1564 id=1564 data-nosnippet>1564</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>TimestampWritesError {
+<a href=#1565 id=1565 data-nosnippet>1565</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+<a href=#1566 id=1566 data-nosnippet>1566</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#1567 id=1567 data-nosnippet>1567</a>            <span class="self">Self</span>::IndicesEqual { .. } | <span class="self">Self</span>::IndicesMissing =&gt; ErrorType::Validation,
+<a href=#1568 id=1568 data-nosnippet>1568</a>        }
+<a href=#1569 id=1569 data-nosnippet>1569</a>    }
+<a href=#1570 id=1570 data-nosnippet>1570</a>}
+<a href=#1571 id=1571 data-nosnippet>1571</a>
+<a href=#1572 id=1572 data-nosnippet>1572</a><span class="kw">impl </span>Global {
+<a href=#1573 id=1573 data-nosnippet>1573</a>    <span class="kw">fn </span>resolve_buffer_id(
+<a href=#1574 id=1574 data-nosnippet>1574</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1575 id=1575 data-nosnippet>1575</a>        buffer_id: Id&lt;id::markers::Buffer&gt;,
+<a href=#1576 id=1576 data-nosnippet>1576</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">crate</span>::resource::Buffer&gt;, InvalidResourceError&gt; {
+<a href=#1577 id=1577 data-nosnippet>1577</a>        <span class="self">self</span>.hub.buffers.get(buffer_id).get()
+<a href=#1578 id=1578 data-nosnippet>1578</a>    }
+<a href=#1579 id=1579 data-nosnippet>1579</a>
+<a href=#1580 id=1580 data-nosnippet>1580</a>    <span class="kw">fn </span>resolve_texture_id(
+<a href=#1581 id=1581 data-nosnippet>1581</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1582 id=1582 data-nosnippet>1582</a>        texture_id: Id&lt;id::markers::Texture&gt;,
+<a href=#1583 id=1583 data-nosnippet>1583</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">crate</span>::resource::Texture&gt;, InvalidResourceError&gt; {
+<a href=#1584 id=1584 data-nosnippet>1584</a>        <span class="self">self</span>.hub.textures.get(texture_id).get()
+<a href=#1585 id=1585 data-nosnippet>1585</a>    }
+<a href=#1586 id=1586 data-nosnippet>1586</a>
+<a href=#1587 id=1587 data-nosnippet>1587</a>    <span class="kw">fn </span>resolve_query_set(
+<a href=#1588 id=1588 data-nosnippet>1588</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1589 id=1589 data-nosnippet>1589</a>        query_set_id: Id&lt;id::markers::QuerySet&gt;,
+<a href=#1590 id=1590 data-nosnippet>1590</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;QuerySet&gt;, InvalidResourceError&gt; {
+<a href=#1591 id=1591 data-nosnippet>1591</a>        <span class="self">self</span>.hub.query_sets.get(query_set_id).get()
+<a href=#1592 id=1592 data-nosnippet>1592</a>    }
+<a href=#1593 id=1593 data-nosnippet>1593</a>
+<a href=#1594 id=1594 data-nosnippet>1594</a>    <span class="doccomment">/// Finishes a command encoder, creating a command buffer and returning errors that were
+<a href=#1595 id=1595 data-nosnippet>1595</a>    /// deferred until now.
+<a href=#1596 id=1596 data-nosnippet>1596</a>    ///
+<a href=#1597 id=1597 data-nosnippet>1597</a>    /// The returned `String` is the label of the command encoder, supplied so that `wgpu` can
+<a href=#1598 id=1598 data-nosnippet>1598</a>    /// include the label when printing deferred errors without having its own copy of the label.
+<a href=#1599 id=1599 data-nosnippet>1599</a>    /// This is a kludge and should be replaced if we think of a better solution to propagating
+<a href=#1600 id=1600 data-nosnippet>1600</a>    /// labels.
+<a href=#1601 id=1601 data-nosnippet>1601</a>    </span><span class="kw">pub fn </span>command_encoder_finish(
+<a href=#1602 id=1602 data-nosnippet>1602</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1603 id=1603 data-nosnippet>1603</a>        encoder_id: id::CommandEncoderId,
+<a href=#1604 id=1604 data-nosnippet>1604</a>        desc: <span class="kw-2">&amp;</span>wgt::CommandBufferDescriptor&lt;Label&gt;,
+<a href=#1605 id=1605 data-nosnippet>1605</a>        id_in: <span class="prelude-ty">Option</span>&lt;id::CommandBufferId&gt;,
+<a href=#1606 id=1606 data-nosnippet>1606</a>    ) -&gt; (id::CommandBufferId, <span class="prelude-ty">Option</span>&lt;(String, CommandEncoderError)&gt;) {
+<a href=#1607 id=1607 data-nosnippet>1607</a>        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::finish"</span>);
+<a href=#1608 id=1608 data-nosnippet>1608</a>
+<a href=#1609 id=1609 data-nosnippet>1609</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1610 id=1610 data-nosnippet>1610</a>        <span class="kw">let </span>cmd_enc = hub.command_encoders.get(encoder_id);
+<a href=#1611 id=1611 data-nosnippet>1611</a>
+<a href=#1612 id=1612 data-nosnippet>1612</a>        <span class="kw">let </span>(cmd_buf, opt_error) = cmd_enc.finish(desc);
+<a href=#1613 id=1613 data-nosnippet>1613</a>        <span class="kw">let </span>cmd_buf_id = hub.command_buffers.prepare(id_in).assign(cmd_buf);
+<a href=#1614 id=1614 data-nosnippet>1614</a>
+<a href=#1615 id=1615 data-nosnippet>1615</a>        (
+<a href=#1616 id=1616 data-nosnippet>1616</a>            cmd_buf_id,
+<a href=#1617 id=1617 data-nosnippet>1617</a>            opt_error.map(|error| (cmd_enc.label.clone(), error)),
+<a href=#1618 id=1618 data-nosnippet>1618</a>        )
+<a href=#1619 id=1619 data-nosnippet>1619</a>    }
+<a href=#1620 id=1620 data-nosnippet>1620</a>
+<a href=#1621 id=1621 data-nosnippet>1621</a>    <span class="kw">pub fn </span>command_encoder_push_debug_group(
+<a href=#1622 id=1622 data-nosnippet>1622</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1623 id=1623 data-nosnippet>1623</a>        encoder_id: id::CommandEncoderId,
+<a href=#1624 id=1624 data-nosnippet>1624</a>        label: <span class="kw-2">&amp;</span>str,
+<a href=#1625 id=1625 data-nosnippet>1625</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
+<a href=#1626 id=1626 data-nosnippet>1626</a>        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::push_debug_group"</span>);
+<a href=#1627 id=1627 data-nosnippet>1627</a>        <span class="macro">api_log!</span>(<span class="string">"CommandEncoder::push_debug_group {label}"</span>);
 <a href=#1628 id=1628 data-nosnippet>1628</a>
-<a href=#1629 id=1629 data-nosnippet>1629</a>        <span class="kw">let </span>cmd_enc = hub.command_encoders.get(encoder_id);
-<a href=#1630 id=1630 data-nosnippet>1630</a>        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_enc.data.lock();
-<a href=#1631 id=1631 data-nosnippet>1631</a>
-<a href=#1632 id=1632 data-nosnippet>1632</a>        cmd_buf_data.push_with(|| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, CommandEncoderError&gt; {
-<a href=#1633 id=1633 data-nosnippet>1633</a>            <span class="prelude-val">Ok</span>(ArcCommand::PushDebugGroup(label.to_owned()))
-<a href=#1634 id=1634 data-nosnippet>1634</a>        })
-<a href=#1635 id=1635 data-nosnippet>1635</a>    }
-<a href=#1636 id=1636 data-nosnippet>1636</a>
-<a href=#1637 id=1637 data-nosnippet>1637</a>    <span class="kw">pub fn </span>command_encoder_insert_debug_marker(
-<a href=#1638 id=1638 data-nosnippet>1638</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1639 id=1639 data-nosnippet>1639</a>        encoder_id: id::CommandEncoderId,
-<a href=#1640 id=1640 data-nosnippet>1640</a>        label: <span class="kw-2">&amp;</span>str,
-<a href=#1641 id=1641 data-nosnippet>1641</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
-<a href=#1642 id=1642 data-nosnippet>1642</a>        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::insert_debug_marker"</span>);
-<a href=#1643 id=1643 data-nosnippet>1643</a>        <span class="macro">api_log!</span>(<span class="string">"CommandEncoder::insert_debug_marker {label}"</span>);
-<a href=#1644 id=1644 data-nosnippet>1644</a>
-<a href=#1645 id=1645 data-nosnippet>1645</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1629 id=1629 data-nosnippet>1629</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1630 id=1630 data-nosnippet>1630</a>
+<a href=#1631 id=1631 data-nosnippet>1631</a>        <span class="kw">let </span>cmd_enc = hub.command_encoders.get(encoder_id);
+<a href=#1632 id=1632 data-nosnippet>1632</a>        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_enc.data.lock();
+<a href=#1633 id=1633 data-nosnippet>1633</a>
+<a href=#1634 id=1634 data-nosnippet>1634</a>        cmd_buf_data.push_with(|| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, CommandEncoderError&gt; {
+<a href=#1635 id=1635 data-nosnippet>1635</a>            <span class="prelude-val">Ok</span>(ArcCommand::PushDebugGroup(label.to_owned()))
+<a href=#1636 id=1636 data-nosnippet>1636</a>        })
+<a href=#1637 id=1637 data-nosnippet>1637</a>    }
+<a href=#1638 id=1638 data-nosnippet>1638</a>
+<a href=#1639 id=1639 data-nosnippet>1639</a>    <span class="kw">pub fn </span>command_encoder_insert_debug_marker(
+<a href=#1640 id=1640 data-nosnippet>1640</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1641 id=1641 data-nosnippet>1641</a>        encoder_id: id::CommandEncoderId,
+<a href=#1642 id=1642 data-nosnippet>1642</a>        label: <span class="kw-2">&amp;</span>str,
+<a href=#1643 id=1643 data-nosnippet>1643</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
+<a href=#1644 id=1644 data-nosnippet>1644</a>        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::insert_debug_marker"</span>);
+<a href=#1645 id=1645 data-nosnippet>1645</a>        <span class="macro">api_log!</span>(<span class="string">"CommandEncoder::insert_debug_marker {label}"</span>);
 <a href=#1646 id=1646 data-nosnippet>1646</a>
-<a href=#1647 id=1647 data-nosnippet>1647</a>        <span class="kw">let </span>cmd_enc = hub.command_encoders.get(encoder_id);
-<a href=#1648 id=1648 data-nosnippet>1648</a>        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_enc.data.lock();
-<a href=#1649 id=1649 data-nosnippet>1649</a>
-<a href=#1650 id=1650 data-nosnippet>1650</a>        cmd_buf_data.push_with(|| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, CommandEncoderError&gt; {
-<a href=#1651 id=1651 data-nosnippet>1651</a>            <span class="prelude-val">Ok</span>(ArcCommand::InsertDebugMarker(label.to_owned()))
-<a href=#1652 id=1652 data-nosnippet>1652</a>        })
-<a href=#1653 id=1653 data-nosnippet>1653</a>    }
-<a href=#1654 id=1654 data-nosnippet>1654</a>
-<a href=#1655 id=1655 data-nosnippet>1655</a>    <span class="kw">pub fn </span>command_encoder_pop_debug_group(
-<a href=#1656 id=1656 data-nosnippet>1656</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1657 id=1657 data-nosnippet>1657</a>        encoder_id: id::CommandEncoderId,
-<a href=#1658 id=1658 data-nosnippet>1658</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
-<a href=#1659 id=1659 data-nosnippet>1659</a>        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::pop_debug_marker"</span>);
-<a href=#1660 id=1660 data-nosnippet>1660</a>        <span class="macro">api_log!</span>(<span class="string">"CommandEncoder::pop_debug_group"</span>);
-<a href=#1661 id=1661 data-nosnippet>1661</a>
-<a href=#1662 id=1662 data-nosnippet>1662</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1647 id=1647 data-nosnippet>1647</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1648 id=1648 data-nosnippet>1648</a>
+<a href=#1649 id=1649 data-nosnippet>1649</a>        <span class="kw">let </span>cmd_enc = hub.command_encoders.get(encoder_id);
+<a href=#1650 id=1650 data-nosnippet>1650</a>        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_enc.data.lock();
+<a href=#1651 id=1651 data-nosnippet>1651</a>
+<a href=#1652 id=1652 data-nosnippet>1652</a>        cmd_buf_data.push_with(|| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, CommandEncoderError&gt; {
+<a href=#1653 id=1653 data-nosnippet>1653</a>            <span class="prelude-val">Ok</span>(ArcCommand::InsertDebugMarker(label.to_owned()))
+<a href=#1654 id=1654 data-nosnippet>1654</a>        })
+<a href=#1655 id=1655 data-nosnippet>1655</a>    }
+<a href=#1656 id=1656 data-nosnippet>1656</a>
+<a href=#1657 id=1657 data-nosnippet>1657</a>    <span class="kw">pub fn </span>command_encoder_pop_debug_group(
+<a href=#1658 id=1658 data-nosnippet>1658</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1659 id=1659 data-nosnippet>1659</a>        encoder_id: id::CommandEncoderId,
+<a href=#1660 id=1660 data-nosnippet>1660</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EncoderStateError&gt; {
+<a href=#1661 id=1661 data-nosnippet>1661</a>        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::pop_debug_marker"</span>);
+<a href=#1662 id=1662 data-nosnippet>1662</a>        <span class="macro">api_log!</span>(<span class="string">"CommandEncoder::pop_debug_group"</span>);
 <a href=#1663 id=1663 data-nosnippet>1663</a>
-<a href=#1664 id=1664 data-nosnippet>1664</a>        <span class="kw">let </span>cmd_enc = hub.command_encoders.get(encoder_id);
-<a href=#1665 id=1665 data-nosnippet>1665</a>        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_enc.data.lock();
-<a href=#1666 id=1666 data-nosnippet>1666</a>
-<a href=#1667 id=1667 data-nosnippet>1667</a>        cmd_buf_data
-<a href=#1668 id=1668 data-nosnippet>1668</a>            .push_with(|| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, CommandEncoderError&gt; { <span class="prelude-val">Ok</span>(ArcCommand::PopDebugGroup) })
-<a href=#1669 id=1669 data-nosnippet>1669</a>    }
-<a href=#1670 id=1670 data-nosnippet>1670</a>
-<a href=#1671 id=1671 data-nosnippet>1671</a>    <span class="kw">fn </span>validate_pass_timestamp_writes&lt;E&gt;(
-<a href=#1672 id=1672 data-nosnippet>1672</a>        device: <span class="kw-2">&amp;</span>Device,
-<a href=#1673 id=1673 data-nosnippet>1673</a>        query_sets: <span class="kw-2">&amp;</span>Storage&lt;Fallible&lt;QuerySet&gt;&gt;,
-<a href=#1674 id=1674 data-nosnippet>1674</a>        timestamp_writes: <span class="kw-2">&amp;</span>PassTimestampWrites,
-<a href=#1675 id=1675 data-nosnippet>1675</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;ArcPassTimestampWrites, E&gt;
-<a href=#1676 id=1676 data-nosnippet>1676</a>    <span class="kw">where
-<a href=#1677 id=1677 data-nosnippet>1677</a>        </span>E: From&lt;TimestampWritesError&gt;
-<a href=#1678 id=1678 data-nosnippet>1678</a>            + From&lt;QueryUseError&gt;
-<a href=#1679 id=1679 data-nosnippet>1679</a>            + From&lt;DeviceError&gt;
-<a href=#1680 id=1680 data-nosnippet>1680</a>            + From&lt;MissingFeatures&gt;
-<a href=#1681 id=1681 data-nosnippet>1681</a>            + From&lt;InvalidResourceError&gt;,
-<a href=#1682 id=1682 data-nosnippet>1682</a>    {
-<a href=#1683 id=1683 data-nosnippet>1683</a>        <span class="kw">let </span><span class="kw-2">&amp;</span>PassTimestampWrites {
-<a href=#1684 id=1684 data-nosnippet>1684</a>            query_set,
-<a href=#1685 id=1685 data-nosnippet>1685</a>            beginning_of_pass_write_index,
-<a href=#1686 id=1686 data-nosnippet>1686</a>            end_of_pass_write_index,
-<a href=#1687 id=1687 data-nosnippet>1687</a>        } = timestamp_writes;
-<a href=#1688 id=1688 data-nosnippet>1688</a>
-<a href=#1689 id=1689 data-nosnippet>1689</a>        device.require_features(wgt::Features::TIMESTAMP_QUERY)<span class="question-mark">?</span>;
+<a href=#1664 id=1664 data-nosnippet>1664</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1665 id=1665 data-nosnippet>1665</a>
+<a href=#1666 id=1666 data-nosnippet>1666</a>        <span class="kw">let </span>cmd_enc = hub.command_encoders.get(encoder_id);
+<a href=#1667 id=1667 data-nosnippet>1667</a>        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_enc.data.lock();
+<a href=#1668 id=1668 data-nosnippet>1668</a>
+<a href=#1669 id=1669 data-nosnippet>1669</a>        cmd_buf_data
+<a href=#1670 id=1670 data-nosnippet>1670</a>            .push_with(|| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, CommandEncoderError&gt; { <span class="prelude-val">Ok</span>(ArcCommand::PopDebugGroup) })
+<a href=#1671 id=1671 data-nosnippet>1671</a>    }
+<a href=#1672 id=1672 data-nosnippet>1672</a>
+<a href=#1673 id=1673 data-nosnippet>1673</a>    <span class="kw">fn </span>validate_pass_timestamp_writes&lt;E&gt;(
+<a href=#1674 id=1674 data-nosnippet>1674</a>        device: <span class="kw-2">&amp;</span>Device,
+<a href=#1675 id=1675 data-nosnippet>1675</a>        query_sets: <span class="kw-2">&amp;</span>Storage&lt;Fallible&lt;QuerySet&gt;&gt;,
+<a href=#1676 id=1676 data-nosnippet>1676</a>        timestamp_writes: <span class="kw-2">&amp;</span>PassTimestampWrites,
+<a href=#1677 id=1677 data-nosnippet>1677</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;ArcPassTimestampWrites, E&gt;
+<a href=#1678 id=1678 data-nosnippet>1678</a>    <span class="kw">where
+<a href=#1679 id=1679 data-nosnippet>1679</a>        </span>E: From&lt;TimestampWritesError&gt;
+<a href=#1680 id=1680 data-nosnippet>1680</a>            + From&lt;QueryUseError&gt;
+<a href=#1681 id=1681 data-nosnippet>1681</a>            + From&lt;DeviceError&gt;
+<a href=#1682 id=1682 data-nosnippet>1682</a>            + From&lt;MissingFeatures&gt;
+<a href=#1683 id=1683 data-nosnippet>1683</a>            + From&lt;InvalidResourceError&gt;,
+<a href=#1684 id=1684 data-nosnippet>1684</a>    {
+<a href=#1685 id=1685 data-nosnippet>1685</a>        <span class="kw">let </span><span class="kw-2">&amp;</span>PassTimestampWrites {
+<a href=#1686 id=1686 data-nosnippet>1686</a>            query_set,
+<a href=#1687 id=1687 data-nosnippet>1687</a>            beginning_of_pass_write_index,
+<a href=#1688 id=1688 data-nosnippet>1688</a>            end_of_pass_write_index,
+<a href=#1689 id=1689 data-nosnippet>1689</a>        } = timestamp_writes;
 <a href=#1690 id=1690 data-nosnippet>1690</a>
-<a href=#1691 id=1691 data-nosnippet>1691</a>        <span class="kw">let </span>query_set = query_sets.get(query_set).get()<span class="question-mark">?</span>;
+<a href=#1691 id=1691 data-nosnippet>1691</a>        device.require_features(wgt::Features::TIMESTAMP_QUERY)<span class="question-mark">?</span>;
 <a href=#1692 id=1692 data-nosnippet>1692</a>
-<a href=#1693 id=1693 data-nosnippet>1693</a>        query_set.same_device(device)<span class="question-mark">?</span>;
+<a href=#1693 id=1693 data-nosnippet>1693</a>        <span class="kw">let </span>query_set = query_sets.get(query_set).get()<span class="question-mark">?</span>;
 <a href=#1694 id=1694 data-nosnippet>1694</a>
-<a href=#1695 id=1695 data-nosnippet>1695</a>        <span class="kw">for </span>idx <span class="kw">in </span>[beginning_of_pass_write_index, end_of_pass_write_index]
-<a href=#1696 id=1696 data-nosnippet>1696</a>            .into_iter()
-<a href=#1697 id=1697 data-nosnippet>1697</a>            .flatten()
-<a href=#1698 id=1698 data-nosnippet>1698</a>        {
-<a href=#1699 id=1699 data-nosnippet>1699</a>            query_set.validate_query(SimplifiedQueryType::Timestamp, idx, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-<a href=#1700 id=1700 data-nosnippet>1700</a>        }
-<a href=#1701 id=1701 data-nosnippet>1701</a>
-<a href=#1702 id=1702 data-nosnippet>1702</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>((begin, end)) = beginning_of_pass_write_index.zip(end_of_pass_write_index) {
-<a href=#1703 id=1703 data-nosnippet>1703</a>            <span class="kw">if </span>begin == end {
-<a href=#1704 id=1704 data-nosnippet>1704</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(TimestampWritesError::IndicesEqual { idx: begin }.into());
-<a href=#1705 id=1705 data-nosnippet>1705</a>            }
-<a href=#1706 id=1706 data-nosnippet>1706</a>        }
-<a href=#1707 id=1707 data-nosnippet>1707</a>
-<a href=#1708 id=1708 data-nosnippet>1708</a>        <span class="kw">if </span>beginning_of_pass_write_index
-<a href=#1709 id=1709 data-nosnippet>1709</a>            .or(end_of_pass_write_index)
-<a href=#1710 id=1710 data-nosnippet>1710</a>            .is_none()
-<a href=#1711 id=1711 data-nosnippet>1711</a>        {
-<a href=#1712 id=1712 data-nosnippet>1712</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(TimestampWritesError::IndicesMissing.into());
-<a href=#1713 id=1713 data-nosnippet>1713</a>        }
-<a href=#1714 id=1714 data-nosnippet>1714</a>
-<a href=#1715 id=1715 data-nosnippet>1715</a>        <span class="prelude-val">Ok</span>(ArcPassTimestampWrites {
-<a href=#1716 id=1716 data-nosnippet>1716</a>            query_set,
-<a href=#1717 id=1717 data-nosnippet>1717</a>            beginning_of_pass_write_index,
-<a href=#1718 id=1718 data-nosnippet>1718</a>            end_of_pass_write_index,
-<a href=#1719 id=1719 data-nosnippet>1719</a>        })
-<a href=#1720 id=1720 data-nosnippet>1720</a>    }
-<a href=#1721 id=1721 data-nosnippet>1721</a>}
-<a href=#1722 id=1722 data-nosnippet>1722</a>
-<a href=#1723 id=1723 data-nosnippet>1723</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_debug_group(
-<a href=#1724 id=1724 data-nosnippet>1724</a>    state: <span class="kw-2">&amp;mut </span>EncodingState,
-<a href=#1725 id=1725 data-nosnippet>1725</a>    label: <span class="kw-2">&amp;</span>str,
-<a href=#1726 id=1726 data-nosnippet>1726</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
-<a href=#1727 id=1727 data-nosnippet>1727</a>    <span class="kw-2">*</span>state.debug_scope_depth += <span class="number">1</span>;
-<a href=#1728 id=1728 data-nosnippet>1728</a>
-<a href=#1729 id=1729 data-nosnippet>1729</a>    <span class="kw">if </span>!state
-<a href=#1730 id=1730 data-nosnippet>1730</a>        .device
-<a href=#1731 id=1731 data-nosnippet>1731</a>        .instance_flags
-<a href=#1732 id=1732 data-nosnippet>1732</a>        .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS)
-<a href=#1733 id=1733 data-nosnippet>1733</a>    {
-<a href=#1734 id=1734 data-nosnippet>1734</a>        <span class="kw">unsafe </span>{ state.raw_encoder.begin_debug_marker(label) };
-<a href=#1735 id=1735 data-nosnippet>1735</a>    }
-<a href=#1736 id=1736 data-nosnippet>1736</a>
-<a href=#1737 id=1737 data-nosnippet>1737</a>    <span class="prelude-val">Ok</span>(())
-<a href=#1738 id=1738 data-nosnippet>1738</a>}
-<a href=#1739 id=1739 data-nosnippet>1739</a>
-<a href=#1740 id=1740 data-nosnippet>1740</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_debug_marker(
-<a href=#1741 id=1741 data-nosnippet>1741</a>    state: <span class="kw-2">&amp;mut </span>EncodingState,
-<a href=#1742 id=1742 data-nosnippet>1742</a>    label: <span class="kw-2">&amp;</span>str,
-<a href=#1743 id=1743 data-nosnippet>1743</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
-<a href=#1744 id=1744 data-nosnippet>1744</a>    <span class="kw">if </span>!state
-<a href=#1745 id=1745 data-nosnippet>1745</a>        .device
-<a href=#1746 id=1746 data-nosnippet>1746</a>        .instance_flags
-<a href=#1747 id=1747 data-nosnippet>1747</a>        .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS)
-<a href=#1748 id=1748 data-nosnippet>1748</a>    {
-<a href=#1749 id=1749 data-nosnippet>1749</a>        <span class="kw">unsafe </span>{ state.raw_encoder.insert_debug_marker(label) };
-<a href=#1750 id=1750 data-nosnippet>1750</a>    }
-<a href=#1751 id=1751 data-nosnippet>1751</a>
-<a href=#1752 id=1752 data-nosnippet>1752</a>    <span class="prelude-val">Ok</span>(())
-<a href=#1753 id=1753 data-nosnippet>1753</a>}
-<a href=#1754 id=1754 data-nosnippet>1754</a>
-<a href=#1755 id=1755 data-nosnippet>1755</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_debug_group(state: <span class="kw-2">&amp;mut </span>EncodingState) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
-<a href=#1756 id=1756 data-nosnippet>1756</a>    <span class="kw">if </span><span class="kw-2">*</span>state.debug_scope_depth == <span class="number">0 </span>{
-<a href=#1757 id=1757 data-nosnippet>1757</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(DebugGroupError::InvalidPop.into());
-<a href=#1758 id=1758 data-nosnippet>1758</a>    }
-<a href=#1759 id=1759 data-nosnippet>1759</a>    <span class="kw-2">*</span>state.debug_scope_depth -= <span class="number">1</span>;
-<a href=#1760 id=1760 data-nosnippet>1760</a>
-<a href=#1761 id=1761 data-nosnippet>1761</a>    <span class="kw">if </span>!state
-<a href=#1762 id=1762 data-nosnippet>1762</a>        .device
-<a href=#1763 id=1763 data-nosnippet>1763</a>        .instance_flags
-<a href=#1764 id=1764 data-nosnippet>1764</a>        .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS)
-<a href=#1765 id=1765 data-nosnippet>1765</a>    {
-<a href=#1766 id=1766 data-nosnippet>1766</a>        <span class="kw">unsafe </span>{ state.raw_encoder.end_debug_marker() };
-<a href=#1767 id=1767 data-nosnippet>1767</a>    }
-<a href=#1768 id=1768 data-nosnippet>1768</a>
-<a href=#1769 id=1769 data-nosnippet>1769</a>    <span class="prelude-val">Ok</span>(())
-<a href=#1770 id=1770 data-nosnippet>1770</a>}
-<a href=#1771 id=1771 data-nosnippet>1771</a>
-<a href=#1772 id=1772 data-nosnippet>1772</a><span class="kw">fn </span>push_constant_clear&lt;PushFn&gt;(offset: u32, size_bytes: u32, <span class="kw-2">mut </span>push_fn: PushFn)
-<a href=#1773 id=1773 data-nosnippet>1773</a><span class="kw">where
-<a href=#1774 id=1774 data-nosnippet>1774</a>    </span>PushFn: FnMut(u32, <span class="kw-2">&amp;</span>[u32]),
-<a href=#1775 id=1775 data-nosnippet>1775</a>{
-<a href=#1776 id=1776 data-nosnippet>1776</a>    <span class="kw">let </span><span class="kw-2">mut </span>count_words = <span class="number">0_u32</span>;
-<a href=#1777 id=1777 data-nosnippet>1777</a>    <span class="kw">let </span>size_words = size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT;
-<a href=#1778 id=1778 data-nosnippet>1778</a>    <span class="kw">while </span>count_words &lt; size_words {
-<a href=#1779 id=1779 data-nosnippet>1779</a>        <span class="kw">let </span>count_bytes = count_words * wgt::PUSH_CONSTANT_ALIGNMENT;
-<a href=#1780 id=1780 data-nosnippet>1780</a>        <span class="kw">let </span>size_to_write_words =
-<a href=#1781 id=1781 data-nosnippet>1781</a>            (size_words - count_words).min(PUSH_CONSTANT_CLEAR_ARRAY.len() <span class="kw">as </span>u32);
-<a href=#1782 id=1782 data-nosnippet>1782</a>
-<a href=#1783 id=1783 data-nosnippet>1783</a>        push_fn(
-<a href=#1784 id=1784 data-nosnippet>1784</a>            offset + count_bytes,
-<a href=#1785 id=1785 data-nosnippet>1785</a>            <span class="kw-2">&amp;</span>PUSH_CONSTANT_CLEAR_ARRAY[<span class="number">0</span>..size_to_write_words <span class="kw">as </span>usize],
-<a href=#1786 id=1786 data-nosnippet>1786</a>        );
-<a href=#1787 id=1787 data-nosnippet>1787</a>
-<a href=#1788 id=1788 data-nosnippet>1788</a>        count_words += size_to_write_words;
-<a href=#1789 id=1789 data-nosnippet>1789</a>    }
-<a href=#1790 id=1790 data-nosnippet>1790</a>}
-<a href=#1791 id=1791 data-nosnippet>1791</a>
-<a href=#1792 id=1792 data-nosnippet>1792</a><span class="attr">#[derive(Debug, Copy, Clone)]
-<a href=#1793 id=1793 data-nosnippet>1793</a></span><span class="kw">struct </span>StateChange&lt;T&gt; {
-<a href=#1794 id=1794 data-nosnippet>1794</a>    last_state: <span class="prelude-ty">Option</span>&lt;T&gt;,
-<a href=#1795 id=1795 data-nosnippet>1795</a>}
-<a href=#1796 id=1796 data-nosnippet>1796</a>
-<a href=#1797 id=1797 data-nosnippet>1797</a><span class="kw">impl</span>&lt;T: Copy + PartialEq&gt; StateChange&lt;T&gt; {
-<a href=#1798 id=1798 data-nosnippet>1798</a>    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
-<a href=#1799 id=1799 data-nosnippet>1799</a>        <span class="self">Self </span>{ last_state: <span class="prelude-val">None </span>}
-<a href=#1800 id=1800 data-nosnippet>1800</a>    }
-<a href=#1801 id=1801 data-nosnippet>1801</a>    <span class="kw">fn </span>set_and_check_redundant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_state: T) -&gt; bool {
-<a href=#1802 id=1802 data-nosnippet>1802</a>        <span class="kw">let </span>already_set = <span class="self">self</span>.last_state == <span class="prelude-val">Some</span>(new_state);
-<a href=#1803 id=1803 data-nosnippet>1803</a>        <span class="self">self</span>.last_state = <span class="prelude-val">Some</span>(new_state);
-<a href=#1804 id=1804 data-nosnippet>1804</a>        already_set
-<a href=#1805 id=1805 data-nosnippet>1805</a>    }
-<a href=#1806 id=1806 data-nosnippet>1806</a>    <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#1807 id=1807 data-nosnippet>1807</a>        <span class="self">self</span>.last_state = <span class="prelude-val">None</span>;
-<a href=#1808 id=1808 data-nosnippet>1808</a>    }
-<a href=#1809 id=1809 data-nosnippet>1809</a>}
-<a href=#1810 id=1810 data-nosnippet>1810</a>
-<a href=#1811 id=1811 data-nosnippet>1811</a><span class="kw">impl</span>&lt;T: Copy + PartialEq&gt; Default <span class="kw">for </span>StateChange&lt;T&gt; {
-<a href=#1812 id=1812 data-nosnippet>1812</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-<a href=#1813 id=1813 data-nosnippet>1813</a>        <span class="self">Self</span>::new()
-<a href=#1814 id=1814 data-nosnippet>1814</a>    }
-<a href=#1815 id=1815 data-nosnippet>1815</a>}
-<a href=#1816 id=1816 data-nosnippet>1816</a>
-<a href=#1817 id=1817 data-nosnippet>1817</a><span class="attr">#[derive(Debug)]
-<a href=#1818 id=1818 data-nosnippet>1818</a></span><span class="kw">struct </span>BindGroupStateChange {
-<a href=#1819 id=1819 data-nosnippet>1819</a>    last_states: [StateChange&lt;<span class="prelude-ty">Option</span>&lt;id::BindGroupId&gt;&gt;; hal::MAX_BIND_GROUPS],
-<a href=#1820 id=1820 data-nosnippet>1820</a>}
-<a href=#1821 id=1821 data-nosnippet>1821</a>
-<a href=#1822 id=1822 data-nosnippet>1822</a><span class="kw">impl </span>BindGroupStateChange {
-<a href=#1823 id=1823 data-nosnippet>1823</a>    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
-<a href=#1824 id=1824 data-nosnippet>1824</a>        <span class="self">Self </span>{
-<a href=#1825 id=1825 data-nosnippet>1825</a>            last_states: [StateChange::new(); hal::MAX_BIND_GROUPS],
-<a href=#1826 id=1826 data-nosnippet>1826</a>        }
-<a href=#1827 id=1827 data-nosnippet>1827</a>    }
-<a href=#1828 id=1828 data-nosnippet>1828</a>
-<a href=#1829 id=1829 data-nosnippet>1829</a>    <span class="kw">fn </span>set_and_check_redundant(
-<a href=#1830 id=1830 data-nosnippet>1830</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#1831 id=1831 data-nosnippet>1831</a>        bind_group_id: <span class="prelude-ty">Option</span>&lt;id::BindGroupId&gt;,
-<a href=#1832 id=1832 data-nosnippet>1832</a>        index: u32,
-<a href=#1833 id=1833 data-nosnippet>1833</a>        dynamic_offsets: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;,
-<a href=#1834 id=1834 data-nosnippet>1834</a>        offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
-<a href=#1835 id=1835 data-nosnippet>1835</a>    ) -&gt; bool {
-<a href=#1836 id=1836 data-nosnippet>1836</a>        <span class="comment">// For now never deduplicate bind groups with dynamic offsets.
-<a href=#1837 id=1837 data-nosnippet>1837</a>        </span><span class="kw">if </span>offsets.is_empty() {
-<a href=#1838 id=1838 data-nosnippet>1838</a>            <span class="comment">// If this get returns None, that means we're well over the limit,
-<a href=#1839 id=1839 data-nosnippet>1839</a>            // so let the call through to get a proper error
-<a href=#1840 id=1840 data-nosnippet>1840</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(current_bind_group) = <span class="self">self</span>.last_states.get_mut(index <span class="kw">as </span>usize) {
-<a href=#1841 id=1841 data-nosnippet>1841</a>                <span class="comment">// Bail out if we're binding the same bind group.
-<a href=#1842 id=1842 data-nosnippet>1842</a>                </span><span class="kw">if </span>current_bind_group.set_and_check_redundant(bind_group_id) {
-<a href=#1843 id=1843 data-nosnippet>1843</a>                    <span class="kw">return </span><span class="bool-val">true</span>;
-<a href=#1844 id=1844 data-nosnippet>1844</a>                }
-<a href=#1845 id=1845 data-nosnippet>1845</a>            }
-<a href=#1846 id=1846 data-nosnippet>1846</a>        } <span class="kw">else </span>{
-<a href=#1847 id=1847 data-nosnippet>1847</a>            <span class="comment">// We intentionally remove the memory of this bind group if we have dynamic offsets,
-<a href=#1848 id=1848 data-nosnippet>1848</a>            // such that if you try to bind this bind group later with _no_ dynamic offsets it
-<a href=#1849 id=1849 data-nosnippet>1849</a>            // tries to bind it again and gives a proper validation error.
-<a href=#1850 id=1850 data-nosnippet>1850</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(current_bind_group) = <span class="self">self</span>.last_states.get_mut(index <span class="kw">as </span>usize) {
-<a href=#1851 id=1851 data-nosnippet>1851</a>                current_bind_group.reset();
-<a href=#1852 id=1852 data-nosnippet>1852</a>            }
-<a href=#1853 id=1853 data-nosnippet>1853</a>            dynamic_offsets.extend_from_slice(offsets);
-<a href=#1854 id=1854 data-nosnippet>1854</a>        }
-<a href=#1855 id=1855 data-nosnippet>1855</a>        <span class="bool-val">false
-<a href=#1856 id=1856 data-nosnippet>1856</a>    </span>}
-<a href=#1857 id=1857 data-nosnippet>1857</a>    <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#1858 id=1858 data-nosnippet>1858</a>        <span class="self">self</span>.last_states = [StateChange::new(); hal::MAX_BIND_GROUPS];
-<a href=#1859 id=1859 data-nosnippet>1859</a>    }
-<a href=#1860 id=1860 data-nosnippet>1860</a>}
-<a href=#1861 id=1861 data-nosnippet>1861</a>
-<a href=#1862 id=1862 data-nosnippet>1862</a><span class="kw">impl </span>Default <span class="kw">for </span>BindGroupStateChange {
-<a href=#1863 id=1863 data-nosnippet>1863</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-<a href=#1864 id=1864 data-nosnippet>1864</a>        <span class="self">Self</span>::new()
-<a href=#1865 id=1865 data-nosnippet>1865</a>    }
-<a href=#1866 id=1866 data-nosnippet>1866</a>}
-<a href=#1867 id=1867 data-nosnippet>1867</a>
-<a href=#1868 id=1868 data-nosnippet>1868</a><span class="doccomment">/// Helper to attach [`PassErrorScope`] to errors.
-<a href=#1869 id=1869 data-nosnippet>1869</a></span><span class="kw">trait </span>MapPassErr&lt;T&gt; {
-<a href=#1870 id=1870 data-nosnippet>1870</a>    <span class="kw">fn </span>map_pass_err(<span class="self">self</span>, scope: PassErrorScope) -&gt; T;
-<a href=#1871 id=1871 data-nosnippet>1871</a>}
-<a href=#1872 id=1872 data-nosnippet>1872</a>
-<a href=#1873 id=1873 data-nosnippet>1873</a><span class="kw">impl</span>&lt;T, E, F&gt; MapPassErr&lt;<span class="prelude-ty">Result</span>&lt;T, F&gt;&gt; <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;T, E&gt;
-<a href=#1874 id=1874 data-nosnippet>1874</a><span class="kw">where
-<a href=#1875 id=1875 data-nosnippet>1875</a>    </span>E: MapPassErr&lt;F&gt;,
-<a href=#1876 id=1876 data-nosnippet>1876</a>{
-<a href=#1877 id=1877 data-nosnippet>1877</a>    <span class="kw">fn </span>map_pass_err(<span class="self">self</span>, scope: PassErrorScope) -&gt; <span class="prelude-ty">Result</span>&lt;T, F&gt; {
-<a href=#1878 id=1878 data-nosnippet>1878</a>        <span class="self">self</span>.map_err(|err| err.map_pass_err(scope))
-<a href=#1879 id=1879 data-nosnippet>1879</a>    }
-<a href=#1880 id=1880 data-nosnippet>1880</a>}
-<a href=#1881 id=1881 data-nosnippet>1881</a>
-<a href=#1882 id=1882 data-nosnippet>1882</a><span class="kw">impl </span>MapPassErr&lt;PassStateError&gt; <span class="kw">for </span>EncoderStateError {
-<a href=#1883 id=1883 data-nosnippet>1883</a>    <span class="kw">fn </span>map_pass_err(<span class="self">self</span>, scope: PassErrorScope) -&gt; PassStateError {
-<a href=#1884 id=1884 data-nosnippet>1884</a>        PassStateError { scope, inner: <span class="self">self </span>}
-<a href=#1885 id=1885 data-nosnippet>1885</a>    }
-<a href=#1886 id=1886 data-nosnippet>1886</a>}
-<a href=#1887 id=1887 data-nosnippet>1887</a>
-<a href=#1888 id=1888 data-nosnippet>1888</a><span class="attr">#[derive(Clone, Copy, Debug)]
-<a href=#1889 id=1889 data-nosnippet>1889</a></span><span class="kw">pub enum </span>DrawKind {
-<a href=#1890 id=1890 data-nosnippet>1890</a>    Draw,
-<a href=#1891 id=1891 data-nosnippet>1891</a>    DrawIndirect,
-<a href=#1892 id=1892 data-nosnippet>1892</a>    MultiDrawIndirect,
-<a href=#1893 id=1893 data-nosnippet>1893</a>    MultiDrawIndirectCount,
-<a href=#1894 id=1894 data-nosnippet>1894</a>}
-<a href=#1895 id=1895 data-nosnippet>1895</a>
-<a href=#1896 id=1896 data-nosnippet>1896</a><span class="doccomment">/// The type of draw command(indexed or not, or mesh shader)
-<a href=#1897 id=1897 data-nosnippet>1897</a></span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#1898 id=1898 data-nosnippet>1898</a>#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-<a href=#1899 id=1899 data-nosnippet>1899</a></span><span class="kw">pub enum </span>DrawCommandFamily {
-<a href=#1900 id=1900 data-nosnippet>1900</a>    Draw,
-<a href=#1901 id=1901 data-nosnippet>1901</a>    DrawIndexed,
-<a href=#1902 id=1902 data-nosnippet>1902</a>    DrawMeshTasks,
-<a href=#1903 id=1903 data-nosnippet>1903</a>}
-<a href=#1904 id=1904 data-nosnippet>1904</a>
-<a href=#1905 id=1905 data-nosnippet>1905</a><span class="doccomment">/// A command that can be recorded in a pass or bundle.
-<a href=#1906 id=1906 data-nosnippet>1906</a>///
-<a href=#1907 id=1907 data-nosnippet>1907</a>/// This is used to provide context for errors during command recording.
-<a href=#1908 id=1908 data-nosnippet>1908</a>/// [`MapPassErr`] is used as a helper to attach a `PassErrorScope` to
-<a href=#1909 id=1909 data-nosnippet>1909</a>/// an error.
-<a href=#1910 id=1910 data-nosnippet>1910</a>///
-<a href=#1911 id=1911 data-nosnippet>1911</a>/// The [`PassErrorScope::Bundle`] and [`PassErrorScope::Pass`] variants
-<a href=#1912 id=1912 data-nosnippet>1912</a>/// are used when the error occurs during the opening or closing of the
-<a href=#1913 id=1913 data-nosnippet>1913</a>/// pass or bundle.
-<a href=#1914 id=1914 data-nosnippet>1914</a></span><span class="attr">#[derive(Clone, Copy, Debug, Error)]
-<a href=#1915 id=1915 data-nosnippet>1915</a></span><span class="kw">pub enum </span>PassErrorScope {
-<a href=#1916 id=1916 data-nosnippet>1916</a>    <span class="comment">// TODO: Extract out the 2 error variants below so that we can always
-<a href=#1917 id=1917 data-nosnippet>1917</a>    // include the ResourceErrorIdent of the pass around all inner errors
-<a href=#1918 id=1918 data-nosnippet>1918</a>    </span><span class="attr">#[error(<span class="string">"In a bundle parameter"</span>)]
-<a href=#1919 id=1919 data-nosnippet>1919</a>    </span>Bundle,
-<a href=#1920 id=1920 data-nosnippet>1920</a>    <span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
-<a href=#1921 id=1921 data-nosnippet>1921</a>    </span>Pass,
-<a href=#1922 id=1922 data-nosnippet>1922</a>    <span class="attr">#[error(<span class="string">"In a set_bind_group command"</span>)]
-<a href=#1923 id=1923 data-nosnippet>1923</a>    </span>SetBindGroup,
-<a href=#1924 id=1924 data-nosnippet>1924</a>    <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
-<a href=#1925 id=1925 data-nosnippet>1925</a>    </span>SetPipelineRender,
+<a href=#1695 id=1695 data-nosnippet>1695</a>        query_set.same_device(device)<span class="question-mark">?</span>;
+<a href=#1696 id=1696 data-nosnippet>1696</a>
+<a href=#1697 id=1697 data-nosnippet>1697</a>        <span class="kw">for </span>idx <span class="kw">in </span>[beginning_of_pass_write_index, end_of_pass_write_index]
+<a href=#1698 id=1698 data-nosnippet>1698</a>            .into_iter()
+<a href=#1699 id=1699 data-nosnippet>1699</a>            .flatten()
+<a href=#1700 id=1700 data-nosnippet>1700</a>        {
+<a href=#1701 id=1701 data-nosnippet>1701</a>            query_set.validate_query(SimplifiedQueryType::Timestamp, idx, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+<a href=#1702 id=1702 data-nosnippet>1702</a>        }
+<a href=#1703 id=1703 data-nosnippet>1703</a>
+<a href=#1704 id=1704 data-nosnippet>1704</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>((begin, end)) = beginning_of_pass_write_index.zip(end_of_pass_write_index) {
+<a href=#1705 id=1705 data-nosnippet>1705</a>            <span class="kw">if </span>begin == end {
+<a href=#1706 id=1706 data-nosnippet>1706</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(TimestampWritesError::IndicesEqual { idx: begin }.into());
+<a href=#1707 id=1707 data-nosnippet>1707</a>            }
+<a href=#1708 id=1708 data-nosnippet>1708</a>        }
+<a href=#1709 id=1709 data-nosnippet>1709</a>
+<a href=#1710 id=1710 data-nosnippet>1710</a>        <span class="kw">if </span>beginning_of_pass_write_index
+<a href=#1711 id=1711 data-nosnippet>1711</a>            .or(end_of_pass_write_index)
+<a href=#1712 id=1712 data-nosnippet>1712</a>            .is_none()
+<a href=#1713 id=1713 data-nosnippet>1713</a>        {
+<a href=#1714 id=1714 data-nosnippet>1714</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(TimestampWritesError::IndicesMissing.into());
+<a href=#1715 id=1715 data-nosnippet>1715</a>        }
+<a href=#1716 id=1716 data-nosnippet>1716</a>
+<a href=#1717 id=1717 data-nosnippet>1717</a>        <span class="prelude-val">Ok</span>(ArcPassTimestampWrites {
+<a href=#1718 id=1718 data-nosnippet>1718</a>            query_set,
+<a href=#1719 id=1719 data-nosnippet>1719</a>            beginning_of_pass_write_index,
+<a href=#1720 id=1720 data-nosnippet>1720</a>            end_of_pass_write_index,
+<a href=#1721 id=1721 data-nosnippet>1721</a>        })
+<a href=#1722 id=1722 data-nosnippet>1722</a>    }
+<a href=#1723 id=1723 data-nosnippet>1723</a>}
+<a href=#1724 id=1724 data-nosnippet>1724</a>
+<a href=#1725 id=1725 data-nosnippet>1725</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_debug_group(
+<a href=#1726 id=1726 data-nosnippet>1726</a>    state: <span class="kw-2">&amp;mut </span>EncodingState,
+<a href=#1727 id=1727 data-nosnippet>1727</a>    label: <span class="kw-2">&amp;</span>str,
+<a href=#1728 id=1728 data-nosnippet>1728</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+<a href=#1729 id=1729 data-nosnippet>1729</a>    <span class="kw-2">*</span>state.debug_scope_depth += <span class="number">1</span>;
+<a href=#1730 id=1730 data-nosnippet>1730</a>
+<a href=#1731 id=1731 data-nosnippet>1731</a>    <span class="kw">if </span>!state
+<a href=#1732 id=1732 data-nosnippet>1732</a>        .device
+<a href=#1733 id=1733 data-nosnippet>1733</a>        .instance_flags
+<a href=#1734 id=1734 data-nosnippet>1734</a>        .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS)
+<a href=#1735 id=1735 data-nosnippet>1735</a>    {
+<a href=#1736 id=1736 data-nosnippet>1736</a>        <span class="kw">unsafe </span>{ state.raw_encoder.begin_debug_marker(label) };
+<a href=#1737 id=1737 data-nosnippet>1737</a>    }
+<a href=#1738 id=1738 data-nosnippet>1738</a>
+<a href=#1739 id=1739 data-nosnippet>1739</a>    <span class="prelude-val">Ok</span>(())
+<a href=#1740 id=1740 data-nosnippet>1740</a>}
+<a href=#1741 id=1741 data-nosnippet>1741</a>
+<a href=#1742 id=1742 data-nosnippet>1742</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_debug_marker(
+<a href=#1743 id=1743 data-nosnippet>1743</a>    state: <span class="kw-2">&amp;mut </span>EncodingState,
+<a href=#1744 id=1744 data-nosnippet>1744</a>    label: <span class="kw-2">&amp;</span>str,
+<a href=#1745 id=1745 data-nosnippet>1745</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+<a href=#1746 id=1746 data-nosnippet>1746</a>    <span class="kw">if </span>!state
+<a href=#1747 id=1747 data-nosnippet>1747</a>        .device
+<a href=#1748 id=1748 data-nosnippet>1748</a>        .instance_flags
+<a href=#1749 id=1749 data-nosnippet>1749</a>        .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS)
+<a href=#1750 id=1750 data-nosnippet>1750</a>    {
+<a href=#1751 id=1751 data-nosnippet>1751</a>        <span class="kw">unsafe </span>{ state.raw_encoder.insert_debug_marker(label) };
+<a href=#1752 id=1752 data-nosnippet>1752</a>    }
+<a href=#1753 id=1753 data-nosnippet>1753</a>
+<a href=#1754 id=1754 data-nosnippet>1754</a>    <span class="prelude-val">Ok</span>(())
+<a href=#1755 id=1755 data-nosnippet>1755</a>}
+<a href=#1756 id=1756 data-nosnippet>1756</a>
+<a href=#1757 id=1757 data-nosnippet>1757</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_debug_group(state: <span class="kw-2">&amp;mut </span>EncodingState) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+<a href=#1758 id=1758 data-nosnippet>1758</a>    <span class="kw">if </span><span class="kw-2">*</span>state.debug_scope_depth == <span class="number">0 </span>{
+<a href=#1759 id=1759 data-nosnippet>1759</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(DebugGroupError::InvalidPop.into());
+<a href=#1760 id=1760 data-nosnippet>1760</a>    }
+<a href=#1761 id=1761 data-nosnippet>1761</a>    <span class="kw-2">*</span>state.debug_scope_depth -= <span class="number">1</span>;
+<a href=#1762 id=1762 data-nosnippet>1762</a>
+<a href=#1763 id=1763 data-nosnippet>1763</a>    <span class="kw">if </span>!state
+<a href=#1764 id=1764 data-nosnippet>1764</a>        .device
+<a href=#1765 id=1765 data-nosnippet>1765</a>        .instance_flags
+<a href=#1766 id=1766 data-nosnippet>1766</a>        .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS)
+<a href=#1767 id=1767 data-nosnippet>1767</a>    {
+<a href=#1768 id=1768 data-nosnippet>1768</a>        <span class="kw">unsafe </span>{ state.raw_encoder.end_debug_marker() };
+<a href=#1769 id=1769 data-nosnippet>1769</a>    }
+<a href=#1770 id=1770 data-nosnippet>1770</a>
+<a href=#1771 id=1771 data-nosnippet>1771</a>    <span class="prelude-val">Ok</span>(())
+<a href=#1772 id=1772 data-nosnippet>1772</a>}
+<a href=#1773 id=1773 data-nosnippet>1773</a>
+<a href=#1774 id=1774 data-nosnippet>1774</a><span class="kw">fn </span>push_constant_clear&lt;PushFn&gt;(offset: u32, size_bytes: u32, <span class="kw-2">mut </span>push_fn: PushFn)
+<a href=#1775 id=1775 data-nosnippet>1775</a><span class="kw">where
+<a href=#1776 id=1776 data-nosnippet>1776</a>    </span>PushFn: FnMut(u32, <span class="kw-2">&amp;</span>[u32]),
+<a href=#1777 id=1777 data-nosnippet>1777</a>{
+<a href=#1778 id=1778 data-nosnippet>1778</a>    <span class="kw">let </span><span class="kw-2">mut </span>count_words = <span class="number">0_u32</span>;
+<a href=#1779 id=1779 data-nosnippet>1779</a>    <span class="kw">let </span>size_words = size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT;
+<a href=#1780 id=1780 data-nosnippet>1780</a>    <span class="kw">while </span>count_words &lt; size_words {
+<a href=#1781 id=1781 data-nosnippet>1781</a>        <span class="kw">let </span>count_bytes = count_words * wgt::PUSH_CONSTANT_ALIGNMENT;
+<a href=#1782 id=1782 data-nosnippet>1782</a>        <span class="kw">let </span>size_to_write_words =
+<a href=#1783 id=1783 data-nosnippet>1783</a>            (size_words - count_words).min(PUSH_CONSTANT_CLEAR_ARRAY.len() <span class="kw">as </span>u32);
+<a href=#1784 id=1784 data-nosnippet>1784</a>
+<a href=#1785 id=1785 data-nosnippet>1785</a>        push_fn(
+<a href=#1786 id=1786 data-nosnippet>1786</a>            offset + count_bytes,
+<a href=#1787 id=1787 data-nosnippet>1787</a>            <span class="kw-2">&amp;</span>PUSH_CONSTANT_CLEAR_ARRAY[<span class="number">0</span>..size_to_write_words <span class="kw">as </span>usize],
+<a href=#1788 id=1788 data-nosnippet>1788</a>        );
+<a href=#1789 id=1789 data-nosnippet>1789</a>
+<a href=#1790 id=1790 data-nosnippet>1790</a>        count_words += size_to_write_words;
+<a href=#1791 id=1791 data-nosnippet>1791</a>    }
+<a href=#1792 id=1792 data-nosnippet>1792</a>}
+<a href=#1793 id=1793 data-nosnippet>1793</a>
+<a href=#1794 id=1794 data-nosnippet>1794</a><span class="attr">#[derive(Debug, Copy, Clone)]
+<a href=#1795 id=1795 data-nosnippet>1795</a></span><span class="kw">struct </span>StateChange&lt;T&gt; {
+<a href=#1796 id=1796 data-nosnippet>1796</a>    last_state: <span class="prelude-ty">Option</span>&lt;T&gt;,
+<a href=#1797 id=1797 data-nosnippet>1797</a>}
+<a href=#1798 id=1798 data-nosnippet>1798</a>
+<a href=#1799 id=1799 data-nosnippet>1799</a><span class="kw">impl</span>&lt;T: Copy + PartialEq&gt; StateChange&lt;T&gt; {
+<a href=#1800 id=1800 data-nosnippet>1800</a>    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+<a href=#1801 id=1801 data-nosnippet>1801</a>        <span class="self">Self </span>{ last_state: <span class="prelude-val">None </span>}
+<a href=#1802 id=1802 data-nosnippet>1802</a>    }
+<a href=#1803 id=1803 data-nosnippet>1803</a>    <span class="kw">fn </span>set_and_check_redundant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_state: T) -&gt; bool {
+<a href=#1804 id=1804 data-nosnippet>1804</a>        <span class="kw">let </span>already_set = <span class="self">self</span>.last_state == <span class="prelude-val">Some</span>(new_state);
+<a href=#1805 id=1805 data-nosnippet>1805</a>        <span class="self">self</span>.last_state = <span class="prelude-val">Some</span>(new_state);
+<a href=#1806 id=1806 data-nosnippet>1806</a>        already_set
+<a href=#1807 id=1807 data-nosnippet>1807</a>    }
+<a href=#1808 id=1808 data-nosnippet>1808</a>    <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#1809 id=1809 data-nosnippet>1809</a>        <span class="self">self</span>.last_state = <span class="prelude-val">None</span>;
+<a href=#1810 id=1810 data-nosnippet>1810</a>    }
+<a href=#1811 id=1811 data-nosnippet>1811</a>}
+<a href=#1812 id=1812 data-nosnippet>1812</a>
+<a href=#1813 id=1813 data-nosnippet>1813</a><span class="kw">impl</span>&lt;T: Copy + PartialEq&gt; Default <span class="kw">for </span>StateChange&lt;T&gt; {
+<a href=#1814 id=1814 data-nosnippet>1814</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#1815 id=1815 data-nosnippet>1815</a>        <span class="self">Self</span>::new()
+<a href=#1816 id=1816 data-nosnippet>1816</a>    }
+<a href=#1817 id=1817 data-nosnippet>1817</a>}
+<a href=#1818 id=1818 data-nosnippet>1818</a>
+<a href=#1819 id=1819 data-nosnippet>1819</a><span class="attr">#[derive(Debug)]
+<a href=#1820 id=1820 data-nosnippet>1820</a></span><span class="kw">struct </span>BindGroupStateChange {
+<a href=#1821 id=1821 data-nosnippet>1821</a>    last_states: [StateChange&lt;<span class="prelude-ty">Option</span>&lt;id::BindGroupId&gt;&gt;; hal::MAX_BIND_GROUPS],
+<a href=#1822 id=1822 data-nosnippet>1822</a>}
+<a href=#1823 id=1823 data-nosnippet>1823</a>
+<a href=#1824 id=1824 data-nosnippet>1824</a><span class="kw">impl </span>BindGroupStateChange {
+<a href=#1825 id=1825 data-nosnippet>1825</a>    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+<a href=#1826 id=1826 data-nosnippet>1826</a>        <span class="self">Self </span>{
+<a href=#1827 id=1827 data-nosnippet>1827</a>            last_states: [StateChange::new(); hal::MAX_BIND_GROUPS],
+<a href=#1828 id=1828 data-nosnippet>1828</a>        }
+<a href=#1829 id=1829 data-nosnippet>1829</a>    }
+<a href=#1830 id=1830 data-nosnippet>1830</a>
+<a href=#1831 id=1831 data-nosnippet>1831</a>    <span class="kw">fn </span>set_and_check_redundant(
+<a href=#1832 id=1832 data-nosnippet>1832</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#1833 id=1833 data-nosnippet>1833</a>        bind_group_id: <span class="prelude-ty">Option</span>&lt;id::BindGroupId&gt;,
+<a href=#1834 id=1834 data-nosnippet>1834</a>        index: u32,
+<a href=#1835 id=1835 data-nosnippet>1835</a>        dynamic_offsets: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;,
+<a href=#1836 id=1836 data-nosnippet>1836</a>        offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
+<a href=#1837 id=1837 data-nosnippet>1837</a>    ) -&gt; bool {
+<a href=#1838 id=1838 data-nosnippet>1838</a>        <span class="comment">// For now never deduplicate bind groups with dynamic offsets.
+<a href=#1839 id=1839 data-nosnippet>1839</a>        </span><span class="kw">if </span>offsets.is_empty() {
+<a href=#1840 id=1840 data-nosnippet>1840</a>            <span class="comment">// If this get returns None, that means we're well over the limit,
+<a href=#1841 id=1841 data-nosnippet>1841</a>            // so let the call through to get a proper error
+<a href=#1842 id=1842 data-nosnippet>1842</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(current_bind_group) = <span class="self">self</span>.last_states.get_mut(index <span class="kw">as </span>usize) {
+<a href=#1843 id=1843 data-nosnippet>1843</a>                <span class="comment">// Bail out if we're binding the same bind group.
+<a href=#1844 id=1844 data-nosnippet>1844</a>                </span><span class="kw">if </span>current_bind_group.set_and_check_redundant(bind_group_id) {
+<a href=#1845 id=1845 data-nosnippet>1845</a>                    <span class="kw">return </span><span class="bool-val">true</span>;
+<a href=#1846 id=1846 data-nosnippet>1846</a>                }
+<a href=#1847 id=1847 data-nosnippet>1847</a>            }
+<a href=#1848 id=1848 data-nosnippet>1848</a>        } <span class="kw">else </span>{
+<a href=#1849 id=1849 data-nosnippet>1849</a>            <span class="comment">// We intentionally remove the memory of this bind group if we have dynamic offsets,
+<a href=#1850 id=1850 data-nosnippet>1850</a>            // such that if you try to bind this bind group later with _no_ dynamic offsets it
+<a href=#1851 id=1851 data-nosnippet>1851</a>            // tries to bind it again and gives a proper validation error.
+<a href=#1852 id=1852 data-nosnippet>1852</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(current_bind_group) = <span class="self">self</span>.last_states.get_mut(index <span class="kw">as </span>usize) {
+<a href=#1853 id=1853 data-nosnippet>1853</a>                current_bind_group.reset();
+<a href=#1854 id=1854 data-nosnippet>1854</a>            }
+<a href=#1855 id=1855 data-nosnippet>1855</a>            dynamic_offsets.extend_from_slice(offsets);
+<a href=#1856 id=1856 data-nosnippet>1856</a>        }
+<a href=#1857 id=1857 data-nosnippet>1857</a>        <span class="bool-val">false
+<a href=#1858 id=1858 data-nosnippet>1858</a>    </span>}
+<a href=#1859 id=1859 data-nosnippet>1859</a>    <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#1860 id=1860 data-nosnippet>1860</a>        <span class="self">self</span>.last_states = [StateChange::new(); hal::MAX_BIND_GROUPS];
+<a href=#1861 id=1861 data-nosnippet>1861</a>    }
+<a href=#1862 id=1862 data-nosnippet>1862</a>}
+<a href=#1863 id=1863 data-nosnippet>1863</a>
+<a href=#1864 id=1864 data-nosnippet>1864</a><span class="kw">impl </span>Default <span class="kw">for </span>BindGroupStateChange {
+<a href=#1865 id=1865 data-nosnippet>1865</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#1866 id=1866 data-nosnippet>1866</a>        <span class="self">Self</span>::new()
+<a href=#1867 id=1867 data-nosnippet>1867</a>    }
+<a href=#1868 id=1868 data-nosnippet>1868</a>}
+<a href=#1869 id=1869 data-nosnippet>1869</a>
+<a href=#1870 id=1870 data-nosnippet>1870</a><span class="doccomment">/// Helper to attach [`PassErrorScope`] to errors.
+<a href=#1871 id=1871 data-nosnippet>1871</a></span><span class="kw">trait </span>MapPassErr&lt;T&gt; {
+<a href=#1872 id=1872 data-nosnippet>1872</a>    <span class="kw">fn </span>map_pass_err(<span class="self">self</span>, scope: PassErrorScope) -&gt; T;
+<a href=#1873 id=1873 data-nosnippet>1873</a>}
+<a href=#1874 id=1874 data-nosnippet>1874</a>
+<a href=#1875 id=1875 data-nosnippet>1875</a><span class="kw">impl</span>&lt;T, E, F&gt; MapPassErr&lt;<span class="prelude-ty">Result</span>&lt;T, F&gt;&gt; <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;T, E&gt;
+<a href=#1876 id=1876 data-nosnippet>1876</a><span class="kw">where
+<a href=#1877 id=1877 data-nosnippet>1877</a>    </span>E: MapPassErr&lt;F&gt;,
+<a href=#1878 id=1878 data-nosnippet>1878</a>{
+<a href=#1879 id=1879 data-nosnippet>1879</a>    <span class="kw">fn </span>map_pass_err(<span class="self">self</span>, scope: PassErrorScope) -&gt; <span class="prelude-ty">Result</span>&lt;T, F&gt; {
+<a href=#1880 id=1880 data-nosnippet>1880</a>        <span class="self">self</span>.map_err(|err| err.map_pass_err(scope))
+<a href=#1881 id=1881 data-nosnippet>1881</a>    }
+<a href=#1882 id=1882 data-nosnippet>1882</a>}
+<a href=#1883 id=1883 data-nosnippet>1883</a>
+<a href=#1884 id=1884 data-nosnippet>1884</a><span class="kw">impl </span>MapPassErr&lt;PassStateError&gt; <span class="kw">for </span>EncoderStateError {
+<a href=#1885 id=1885 data-nosnippet>1885</a>    <span class="kw">fn </span>map_pass_err(<span class="self">self</span>, scope: PassErrorScope) -&gt; PassStateError {
+<a href=#1886 id=1886 data-nosnippet>1886</a>        PassStateError { scope, inner: <span class="self">self </span>}
+<a href=#1887 id=1887 data-nosnippet>1887</a>    }
+<a href=#1888 id=1888 data-nosnippet>1888</a>}
+<a href=#1889 id=1889 data-nosnippet>1889</a>
+<a href=#1890 id=1890 data-nosnippet>1890</a><span class="attr">#[derive(Clone, Copy, Debug)]
+<a href=#1891 id=1891 data-nosnippet>1891</a></span><span class="kw">pub enum </span>DrawKind {
+<a href=#1892 id=1892 data-nosnippet>1892</a>    Draw,
+<a href=#1893 id=1893 data-nosnippet>1893</a>    DrawIndirect,
+<a href=#1894 id=1894 data-nosnippet>1894</a>    MultiDrawIndirect,
+<a href=#1895 id=1895 data-nosnippet>1895</a>    MultiDrawIndirectCount,
+<a href=#1896 id=1896 data-nosnippet>1896</a>}
+<a href=#1897 id=1897 data-nosnippet>1897</a>
+<a href=#1898 id=1898 data-nosnippet>1898</a><span class="doccomment">/// The type of draw command(indexed or not, or mesh shader)
+<a href=#1899 id=1899 data-nosnippet>1899</a></span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#1900 id=1900 data-nosnippet>1900</a>#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+<a href=#1901 id=1901 data-nosnippet>1901</a></span><span class="kw">pub enum </span>DrawCommandFamily {
+<a href=#1902 id=1902 data-nosnippet>1902</a>    Draw,
+<a href=#1903 id=1903 data-nosnippet>1903</a>    DrawIndexed,
+<a href=#1904 id=1904 data-nosnippet>1904</a>    DrawMeshTasks,
+<a href=#1905 id=1905 data-nosnippet>1905</a>}
+<a href=#1906 id=1906 data-nosnippet>1906</a>
+<a href=#1907 id=1907 data-nosnippet>1907</a><span class="doccomment">/// A command that can be recorded in a pass or bundle.
+<a href=#1908 id=1908 data-nosnippet>1908</a>///
+<a href=#1909 id=1909 data-nosnippet>1909</a>/// This is used to provide context for errors during command recording.
+<a href=#1910 id=1910 data-nosnippet>1910</a>/// [`MapPassErr`] is used as a helper to attach a `PassErrorScope` to
+<a href=#1911 id=1911 data-nosnippet>1911</a>/// an error.
+<a href=#1912 id=1912 data-nosnippet>1912</a>///
+<a href=#1913 id=1913 data-nosnippet>1913</a>/// The [`PassErrorScope::Bundle`] and [`PassErrorScope::Pass`] variants
+<a href=#1914 id=1914 data-nosnippet>1914</a>/// are used when the error occurs during the opening or closing of the
+<a href=#1915 id=1915 data-nosnippet>1915</a>/// pass or bundle.
+<a href=#1916 id=1916 data-nosnippet>1916</a></span><span class="attr">#[derive(Clone, Copy, Debug, Error)]
+<a href=#1917 id=1917 data-nosnippet>1917</a></span><span class="kw">pub enum </span>PassErrorScope {
+<a href=#1918 id=1918 data-nosnippet>1918</a>    <span class="comment">// TODO: Extract out the 2 error variants below so that we can always
+<a href=#1919 id=1919 data-nosnippet>1919</a>    // include the ResourceErrorIdent of the pass around all inner errors
+<a href=#1920 id=1920 data-nosnippet>1920</a>    </span><span class="attr">#[error(<span class="string">"In a bundle parameter"</span>)]
+<a href=#1921 id=1921 data-nosnippet>1921</a>    </span>Bundle,
+<a href=#1922 id=1922 data-nosnippet>1922</a>    <span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
+<a href=#1923 id=1923 data-nosnippet>1923</a>    </span>Pass,
+<a href=#1924 id=1924 data-nosnippet>1924</a>    <span class="attr">#[error(<span class="string">"In a set_bind_group command"</span>)]
+<a href=#1925 id=1925 data-nosnippet>1925</a>    </span>SetBindGroup,
 <a href=#1926 id=1926 data-nosnippet>1926</a>    <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
-<a href=#1927 id=1927 data-nosnippet>1927</a>    </span>SetPipelineCompute,
-<a href=#1928 id=1928 data-nosnippet>1928</a>    <span class="attr">#[error(<span class="string">"In a set_push_constant command"</span>)]
-<a href=#1929 id=1929 data-nosnippet>1929</a>    </span>SetPushConstant,
-<a href=#1930 id=1930 data-nosnippet>1930</a>    <span class="attr">#[error(<span class="string">"In a set_vertex_buffer command"</span>)]
-<a href=#1931 id=1931 data-nosnippet>1931</a>    </span>SetVertexBuffer,
-<a href=#1932 id=1932 data-nosnippet>1932</a>    <span class="attr">#[error(<span class="string">"In a set_index_buffer command"</span>)]
-<a href=#1933 id=1933 data-nosnippet>1933</a>    </span>SetIndexBuffer,
-<a href=#1934 id=1934 data-nosnippet>1934</a>    <span class="attr">#[error(<span class="string">"In a set_blend_constant command"</span>)]
-<a href=#1935 id=1935 data-nosnippet>1935</a>    </span>SetBlendConstant,
-<a href=#1936 id=1936 data-nosnippet>1936</a>    <span class="attr">#[error(<span class="string">"In a set_stencil_reference command"</span>)]
-<a href=#1937 id=1937 data-nosnippet>1937</a>    </span>SetStencilReference,
-<a href=#1938 id=1938 data-nosnippet>1938</a>    <span class="attr">#[error(<span class="string">"In a set_viewport command"</span>)]
-<a href=#1939 id=1939 data-nosnippet>1939</a>    </span>SetViewport,
-<a href=#1940 id=1940 data-nosnippet>1940</a>    <span class="attr">#[error(<span class="string">"In a set_scissor_rect command"</span>)]
-<a href=#1941 id=1941 data-nosnippet>1941</a>    </span>SetScissorRect,
-<a href=#1942 id=1942 data-nosnippet>1942</a>    <span class="attr">#[error(<span class="string">"In a draw command, kind: {kind:?}"</span>)]
-<a href=#1943 id=1943 data-nosnippet>1943</a>    </span>Draw {
-<a href=#1944 id=1944 data-nosnippet>1944</a>        kind: DrawKind,
-<a href=#1945 id=1945 data-nosnippet>1945</a>        family: DrawCommandFamily,
-<a href=#1946 id=1946 data-nosnippet>1946</a>    },
-<a href=#1947 id=1947 data-nosnippet>1947</a>    <span class="attr">#[error(<span class="string">"In a write_timestamp command"</span>)]
-<a href=#1948 id=1948 data-nosnippet>1948</a>    </span>WriteTimestamp,
-<a href=#1949 id=1949 data-nosnippet>1949</a>    <span class="attr">#[error(<span class="string">"In a begin_occlusion_query command"</span>)]
-<a href=#1950 id=1950 data-nosnippet>1950</a>    </span>BeginOcclusionQuery,
-<a href=#1951 id=1951 data-nosnippet>1951</a>    <span class="attr">#[error(<span class="string">"In a end_occlusion_query command"</span>)]
-<a href=#1952 id=1952 data-nosnippet>1952</a>    </span>EndOcclusionQuery,
-<a href=#1953 id=1953 data-nosnippet>1953</a>    <span class="attr">#[error(<span class="string">"In a begin_pipeline_statistics_query command"</span>)]
-<a href=#1954 id=1954 data-nosnippet>1954</a>    </span>BeginPipelineStatisticsQuery,
-<a href=#1955 id=1955 data-nosnippet>1955</a>    <span class="attr">#[error(<span class="string">"In a end_pipeline_statistics_query command"</span>)]
-<a href=#1956 id=1956 data-nosnippet>1956</a>    </span>EndPipelineStatisticsQuery,
-<a href=#1957 id=1957 data-nosnippet>1957</a>    <span class="attr">#[error(<span class="string">"In a execute_bundle command"</span>)]
-<a href=#1958 id=1958 data-nosnippet>1958</a>    </span>ExecuteBundle,
-<a href=#1959 id=1959 data-nosnippet>1959</a>    <span class="attr">#[error(<span class="string">"In a dispatch command, indirect:{indirect}"</span>)]
-<a href=#1960 id=1960 data-nosnippet>1960</a>    </span>Dispatch { indirect: bool },
-<a href=#1961 id=1961 data-nosnippet>1961</a>    <span class="attr">#[error(<span class="string">"In a push_debug_group command"</span>)]
-<a href=#1962 id=1962 data-nosnippet>1962</a>    </span>PushDebugGroup,
-<a href=#1963 id=1963 data-nosnippet>1963</a>    <span class="attr">#[error(<span class="string">"In a pop_debug_group command"</span>)]
-<a href=#1964 id=1964 data-nosnippet>1964</a>    </span>PopDebugGroup,
-<a href=#1965 id=1965 data-nosnippet>1965</a>    <span class="attr">#[error(<span class="string">"In a insert_debug_marker command"</span>)]
-<a href=#1966 id=1966 data-nosnippet>1966</a>    </span>InsertDebugMarker,
-<a href=#1967 id=1967 data-nosnippet>1967</a>}
-<a href=#1968 id=1968 data-nosnippet>1968</a>
-<a href=#1969 id=1969 data-nosnippet>1969</a><span class="doccomment">/// Variant of `EncoderStateError` that includes the pass scope.
-<a href=#1970 id=1970 data-nosnippet>1970</a></span><span class="attr">#[derive(Clone, Debug, Error)]
-<a href=#1971 id=1971 data-nosnippet>1971</a>#[error(<span class="string">"{scope}"</span>)]
-<a href=#1972 id=1972 data-nosnippet>1972</a></span><span class="kw">pub struct </span>PassStateError {
-<a href=#1973 id=1973 data-nosnippet>1973</a>    <span class="kw">pub </span>scope: PassErrorScope,
-<a href=#1974 id=1974 data-nosnippet>1974</a>    <span class="attr">#[source]
-<a href=#1975 id=1975 data-nosnippet>1975</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) inner: EncoderStateError,
-<a href=#1976 id=1976 data-nosnippet>1976</a>}
-<a href=#1977 id=1977 data-nosnippet>1977</a>
-<a href=#1978 id=1978 data-nosnippet>1978</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>PassStateError {
-<a href=#1979 id=1979 data-nosnippet>1979</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
-<a href=#1980 id=1980 data-nosnippet>1980</a>        <span class="kw">let </span><span class="self">Self </span>{ scope: <span class="kw">_</span>, inner } = <span class="self">self</span>;
-<a href=#1981 id=1981 data-nosnippet>1981</a>        inner.webgpu_error_type()
-<a href=#1982 id=1982 data-nosnippet>1982</a>    }
-<a href=#1983 id=1983 data-nosnippet>1983</a>}</code></pre></div></section></main></body></html>
+<a href=#1927 id=1927 data-nosnippet>1927</a>    </span>SetPipelineRender,
+<a href=#1928 id=1928 data-nosnippet>1928</a>    <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
+<a href=#1929 id=1929 data-nosnippet>1929</a>    </span>SetPipelineCompute,
+<a href=#1930 id=1930 data-nosnippet>1930</a>    <span class="attr">#[error(<span class="string">"In a set_push_constant command"</span>)]
+<a href=#1931 id=1931 data-nosnippet>1931</a>    </span>SetPushConstant,
+<a href=#1932 id=1932 data-nosnippet>1932</a>    <span class="attr">#[error(<span class="string">"In a set_vertex_buffer command"</span>)]
+<a href=#1933 id=1933 data-nosnippet>1933</a>    </span>SetVertexBuffer,
+<a href=#1934 id=1934 data-nosnippet>1934</a>    <span class="attr">#[error(<span class="string">"In a set_index_buffer command"</span>)]
+<a href=#1935 id=1935 data-nosnippet>1935</a>    </span>SetIndexBuffer,
+<a href=#1936 id=1936 data-nosnippet>1936</a>    <span class="attr">#[error(<span class="string">"In a set_blend_constant command"</span>)]
+<a href=#1937 id=1937 data-nosnippet>1937</a>    </span>SetBlendConstant,
+<a href=#1938 id=1938 data-nosnippet>1938</a>    <span class="attr">#[error(<span class="string">"In a set_stencil_reference command"</span>)]
+<a href=#1939 id=1939 data-nosnippet>1939</a>    </span>SetStencilReference,
+<a href=#1940 id=1940 data-nosnippet>1940</a>    <span class="attr">#[error(<span class="string">"In a set_viewport command"</span>)]
+<a href=#1941 id=1941 data-nosnippet>1941</a>    </span>SetViewport,
+<a href=#1942 id=1942 data-nosnippet>1942</a>    <span class="attr">#[error(<span class="string">"In a set_scissor_rect command"</span>)]
+<a href=#1943 id=1943 data-nosnippet>1943</a>    </span>SetScissorRect,
+<a href=#1944 id=1944 data-nosnippet>1944</a>    <span class="attr">#[error(<span class="string">"In a draw command, kind: {kind:?}"</span>)]
+<a href=#1945 id=1945 data-nosnippet>1945</a>    </span>Draw {
+<a href=#1946 id=1946 data-nosnippet>1946</a>        kind: DrawKind,
+<a href=#1947 id=1947 data-nosnippet>1947</a>        family: DrawCommandFamily,
+<a href=#1948 id=1948 data-nosnippet>1948</a>    },
+<a href=#1949 id=1949 data-nosnippet>1949</a>    <span class="attr">#[error(<span class="string">"In a write_timestamp command"</span>)]
+<a href=#1950 id=1950 data-nosnippet>1950</a>    </span>WriteTimestamp,
+<a href=#1951 id=1951 data-nosnippet>1951</a>    <span class="attr">#[error(<span class="string">"In a begin_occlusion_query command"</span>)]
+<a href=#1952 id=1952 data-nosnippet>1952</a>    </span>BeginOcclusionQuery,
+<a href=#1953 id=1953 data-nosnippet>1953</a>    <span class="attr">#[error(<span class="string">"In a end_occlusion_query command"</span>)]
+<a href=#1954 id=1954 data-nosnippet>1954</a>    </span>EndOcclusionQuery,
+<a href=#1955 id=1955 data-nosnippet>1955</a>    <span class="attr">#[error(<span class="string">"In a begin_pipeline_statistics_query command"</span>)]
+<a href=#1956 id=1956 data-nosnippet>1956</a>    </span>BeginPipelineStatisticsQuery,
+<a href=#1957 id=1957 data-nosnippet>1957</a>    <span class="attr">#[error(<span class="string">"In a end_pipeline_statistics_query command"</span>)]
+<a href=#1958 id=1958 data-nosnippet>1958</a>    </span>EndPipelineStatisticsQuery,
+<a href=#1959 id=1959 data-nosnippet>1959</a>    <span class="attr">#[error(<span class="string">"In a execute_bundle command"</span>)]
+<a href=#1960 id=1960 data-nosnippet>1960</a>    </span>ExecuteBundle,
+<a href=#1961 id=1961 data-nosnippet>1961</a>    <span class="attr">#[error(<span class="string">"In a dispatch command, indirect:{indirect}"</span>)]
+<a href=#1962 id=1962 data-nosnippet>1962</a>    </span>Dispatch { indirect: bool },
+<a href=#1963 id=1963 data-nosnippet>1963</a>    <span class="attr">#[error(<span class="string">"In a push_debug_group command"</span>)]
+<a href=#1964 id=1964 data-nosnippet>1964</a>    </span>PushDebugGroup,
+<a href=#1965 id=1965 data-nosnippet>1965</a>    <span class="attr">#[error(<span class="string">"In a pop_debug_group command"</span>)]
+<a href=#1966 id=1966 data-nosnippet>1966</a>    </span>PopDebugGroup,
+<a href=#1967 id=1967 data-nosnippet>1967</a>    <span class="attr">#[error(<span class="string">"In a insert_debug_marker command"</span>)]
+<a href=#1968 id=1968 data-nosnippet>1968</a>    </span>InsertDebugMarker,
+<a href=#1969 id=1969 data-nosnippet>1969</a>}
+<a href=#1970 id=1970 data-nosnippet>1970</a>
+<a href=#1971 id=1971 data-nosnippet>1971</a><span class="doccomment">/// Variant of `EncoderStateError` that includes the pass scope.
+<a href=#1972 id=1972 data-nosnippet>1972</a></span><span class="attr">#[derive(Clone, Debug, Error)]
+<a href=#1973 id=1973 data-nosnippet>1973</a>#[error(<span class="string">"{scope}"</span>)]
+<a href=#1974 id=1974 data-nosnippet>1974</a></span><span class="kw">pub struct </span>PassStateError {
+<a href=#1975 id=1975 data-nosnippet>1975</a>    <span class="kw">pub </span>scope: PassErrorScope,
+<a href=#1976 id=1976 data-nosnippet>1976</a>    <span class="attr">#[source]
+<a href=#1977 id=1977 data-nosnippet>1977</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) inner: EncoderStateError,
+<a href=#1978 id=1978 data-nosnippet>1978</a>}
+<a href=#1979 id=1979 data-nosnippet>1979</a>
+<a href=#1980 id=1980 data-nosnippet>1980</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>PassStateError {
+<a href=#1981 id=1981 data-nosnippet>1981</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
+<a href=#1982 id=1982 data-nosnippet>1982</a>        <span class="kw">let </span><span class="self">Self </span>{ scope: <span class="kw">_</span>, inner } = <span class="self">self</span>;
+<a href=#1983 id=1983 data-nosnippet>1983</a>        inner.webgpu_error_type()
+<a href=#1984 id=1984 data-nosnippet>1984</a>    }
+<a href=#1985 id=1985 data-nosnippet>1985</a>}</code></pre></div></section></main></body></html>

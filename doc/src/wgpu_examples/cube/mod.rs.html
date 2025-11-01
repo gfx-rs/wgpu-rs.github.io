@@ -256,7 +256,7 @@
 <a href=#256 id=256 data-nosnippet>256</a>            },
 <a href=#257 id=257 data-nosnippet>257</a>            depth_stencil: <span class="prelude-val">None</span>,
 <a href=#258 id=258 data-nosnippet>258</a>            multisample: wgpu::MultisampleState::default(),
-<a href=#259 id=259 data-nosnippet>259</a>            multiview: <span class="prelude-val">None</span>,
+<a href=#259 id=259 data-nosnippet>259</a>            multiview_mask: <span class="prelude-val">None</span>,
 <a href=#260 id=260 data-nosnippet>260</a>            cache: <span class="prelude-val">None</span>,
 <a href=#261 id=261 data-nosnippet>261</a>        });
 <a href=#262 id=262 data-nosnippet>262</a>
@@ -298,7 +298,7 @@
 <a href=#298 id=298 data-nosnippet>298</a>                },
 <a href=#299 id=299 data-nosnippet>299</a>                depth_stencil: <span class="prelude-val">None</span>,
 <a href=#300 id=300 data-nosnippet>300</a>                multisample: wgpu::MultisampleState::default(),
-<a href=#301 id=301 data-nosnippet>301</a>                multiview: <span class="prelude-val">None</span>,
+<a href=#301 id=301 data-nosnippet>301</a>                multiview_mask: <span class="prelude-val">None</span>,
 <a href=#302 id=302 data-nosnippet>302</a>                cache: <span class="prelude-val">None</span>,
 <a href=#303 id=303 data-nosnippet>303</a>            });
 <a href=#304 id=304 data-nosnippet>304</a>            <span class="prelude-val">Some</span>(pipeline_wire)
@@ -356,62 +356,63 @@
 <a href=#356 id=356 data-nosnippet>356</a>                depth_stencil_attachment: <span class="prelude-val">None</span>,
 <a href=#357 id=357 data-nosnippet>357</a>                timestamp_writes: <span class="prelude-val">None</span>,
 <a href=#358 id=358 data-nosnippet>358</a>                occlusion_query_set: <span class="prelude-val">None</span>,
-<a href=#359 id=359 data-nosnippet>359</a>            });
-<a href=#360 id=360 data-nosnippet>360</a>            rpass.push_debug_group(<span class="string">"Prepare data for draw."</span>);
-<a href=#361 id=361 data-nosnippet>361</a>            rpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.pipeline);
-<a href=#362 id=362 data-nosnippet>362</a>            rpass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.bind_group, <span class="kw-2">&amp;</span>[]);
-<a href=#363 id=363 data-nosnippet>363</a>            rpass.set_index_buffer(<span class="self">self</span>.index_buf.slice(..), wgpu::IndexFormat::Uint16);
-<a href=#364 id=364 data-nosnippet>364</a>            rpass.set_vertex_buffer(<span class="number">0</span>, <span class="self">self</span>.vertex_buf.slice(..));
-<a href=#365 id=365 data-nosnippet>365</a>            rpass.pop_debug_group();
-<a href=#366 id=366 data-nosnippet>366</a>            rpass.insert_debug_marker(<span class="string">"Draw!"</span>);
-<a href=#367 id=367 data-nosnippet>367</a>            rpass.draw_indexed(<span class="number">0</span>..<span class="self">self</span>.index_count <span class="kw">as </span>u32, <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);
-<a href=#368 id=368 data-nosnippet>368</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>pipe) = <span class="self">self</span>.pipeline_wire {
-<a href=#369 id=369 data-nosnippet>369</a>                rpass.set_pipeline(pipe);
-<a href=#370 id=370 data-nosnippet>370</a>                rpass.draw_indexed(<span class="number">0</span>..<span class="self">self</span>.index_count <span class="kw">as </span>u32, <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);
-<a href=#371 id=371 data-nosnippet>371</a>            }
-<a href=#372 id=372 data-nosnippet>372</a>        }
-<a href=#373 id=373 data-nosnippet>373</a>
-<a href=#374 id=374 data-nosnippet>374</a>        queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
-<a href=#375 id=375 data-nosnippet>375</a>    }
-<a href=#376 id=376 data-nosnippet>376</a>}
-<a href=#377 id=377 data-nosnippet>377</a>
-<a href=#378 id=378 data-nosnippet>378</a><span class="kw">pub fn </span>main() {
-<a href=#379 id=379 data-nosnippet>379</a>    <span class="kw">crate</span>::framework::run::&lt;Example&gt;(<span class="string">"cube"</span>);
-<a href=#380 id=380 data-nosnippet>380</a>}
-<a href=#381 id=381 data-nosnippet>381</a>
-<a href=#382 id=382 data-nosnippet>382</a><span class="attr">#[cfg(test)]
-<a href=#383 id=383 data-nosnippet>383</a>#[wgpu_test::gpu_test]
-<a href=#384 id=384 data-nosnippet>384</a></span><span class="kw">pub static </span>TEST: <span class="kw">crate</span>::framework::ExampleTestParams = <span class="kw">crate</span>::framework::ExampleTestParams {
-<a href=#385 id=385 data-nosnippet>385</a>    name: <span class="string">"cube"</span>,
-<a href=#386 id=386 data-nosnippet>386</a>    <span class="comment">// Generated on 1080ti on Vk/Windows
-<a href=#387 id=387 data-nosnippet>387</a>    </span>image_path: <span class="string">"/examples/features/src/cube/screenshot.png"</span>,
-<a href=#388 id=388 data-nosnippet>388</a>    width: <span class="number">1024</span>,
-<a href=#389 id=389 data-nosnippet>389</a>    height: <span class="number">768</span>,
-<a href=#390 id=390 data-nosnippet>390</a>    optional_features: wgpu::Features::default(),
-<a href=#391 id=391 data-nosnippet>391</a>    base_test_parameters: wgpu_test::TestParameters::default(),
-<a href=#392 id=392 data-nosnippet>392</a>    comparisons: <span class="kw-2">&amp;</span>[
-<a href=#393 id=393 data-nosnippet>393</a>        wgpu_test::ComparisonType::Mean(<span class="number">0.04</span>), <span class="comment">// Bounded by Intel 630 on Vk/Windows
-<a href=#394 id=394 data-nosnippet>394</a>    </span>],
-<a href=#395 id=395 data-nosnippet>395</a>    _phantom: std::marker::PhantomData::&lt;Example&gt;,
-<a href=#396 id=396 data-nosnippet>396</a>};
-<a href=#397 id=397 data-nosnippet>397</a>
-<a href=#398 id=398 data-nosnippet>398</a><span class="attr">#[cfg(test)]
-<a href=#399 id=399 data-nosnippet>399</a>#[wgpu_test::gpu_test]
-<a href=#400 id=400 data-nosnippet>400</a></span><span class="kw">pub static </span>TEST_LINES: <span class="kw">crate</span>::framework::ExampleTestParams = <span class="kw">crate</span>::framework::ExampleTestParams {
-<a href=#401 id=401 data-nosnippet>401</a>    name: <span class="string">"cube-lines"</span>,
-<a href=#402 id=402 data-nosnippet>402</a>    <span class="comment">// Generated on 1080ti on Vk/Windows
-<a href=#403 id=403 data-nosnippet>403</a>    </span>image_path: <span class="string">"/examples/features/src/cube/screenshot-lines.png"</span>,
-<a href=#404 id=404 data-nosnippet>404</a>    width: <span class="number">1024</span>,
-<a href=#405 id=405 data-nosnippet>405</a>    height: <span class="number">768</span>,
-<a href=#406 id=406 data-nosnippet>406</a>    optional_features: wgpu::Features::POLYGON_MODE_LINE,
-<a href=#407 id=407 data-nosnippet>407</a>    base_test_parameters: wgpu_test::TestParameters::default(),
-<a href=#408 id=408 data-nosnippet>408</a>    <span class="comment">// We're looking for tiny changes here, so we focus on a spike in the 95th percentile.
-<a href=#409 id=409 data-nosnippet>409</a>    </span>comparisons: <span class="kw-2">&amp;</span>[
-<a href=#410 id=410 data-nosnippet>410</a>        wgpu_test::ComparisonType::Mean(<span class="number">0.05</span>), <span class="comment">// Bounded by Intel 630 on Vk/Windows
-<a href=#411 id=411 data-nosnippet>411</a>        </span>wgpu_test::ComparisonType::Percentile {
-<a href=#412 id=412 data-nosnippet>412</a>            percentile: <span class="number">0.95</span>,
-<a href=#413 id=413 data-nosnippet>413</a>            threshold: <span class="number">0.36</span>,
-<a href=#414 id=414 data-nosnippet>414</a>        }, <span class="comment">// Bounded by 1080ti on DX12
-<a href=#415 id=415 data-nosnippet>415</a>    </span>],
-<a href=#416 id=416 data-nosnippet>416</a>    _phantom: std::marker::PhantomData::&lt;Example&gt;,
-<a href=#417 id=417 data-nosnippet>417</a>};</code></pre></div></section></main></body></html>
+<a href=#359 id=359 data-nosnippet>359</a>                multiview_mask: <span class="prelude-val">None</span>,
+<a href=#360 id=360 data-nosnippet>360</a>            });
+<a href=#361 id=361 data-nosnippet>361</a>            rpass.push_debug_group(<span class="string">"Prepare data for draw."</span>);
+<a href=#362 id=362 data-nosnippet>362</a>            rpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.pipeline);
+<a href=#363 id=363 data-nosnippet>363</a>            rpass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.bind_group, <span class="kw-2">&amp;</span>[]);
+<a href=#364 id=364 data-nosnippet>364</a>            rpass.set_index_buffer(<span class="self">self</span>.index_buf.slice(..), wgpu::IndexFormat::Uint16);
+<a href=#365 id=365 data-nosnippet>365</a>            rpass.set_vertex_buffer(<span class="number">0</span>, <span class="self">self</span>.vertex_buf.slice(..));
+<a href=#366 id=366 data-nosnippet>366</a>            rpass.pop_debug_group();
+<a href=#367 id=367 data-nosnippet>367</a>            rpass.insert_debug_marker(<span class="string">"Draw!"</span>);
+<a href=#368 id=368 data-nosnippet>368</a>            rpass.draw_indexed(<span class="number">0</span>..<span class="self">self</span>.index_count <span class="kw">as </span>u32, <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);
+<a href=#369 id=369 data-nosnippet>369</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>pipe) = <span class="self">self</span>.pipeline_wire {
+<a href=#370 id=370 data-nosnippet>370</a>                rpass.set_pipeline(pipe);
+<a href=#371 id=371 data-nosnippet>371</a>                rpass.draw_indexed(<span class="number">0</span>..<span class="self">self</span>.index_count <span class="kw">as </span>u32, <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);
+<a href=#372 id=372 data-nosnippet>372</a>            }
+<a href=#373 id=373 data-nosnippet>373</a>        }
+<a href=#374 id=374 data-nosnippet>374</a>
+<a href=#375 id=375 data-nosnippet>375</a>        queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
+<a href=#376 id=376 data-nosnippet>376</a>    }
+<a href=#377 id=377 data-nosnippet>377</a>}
+<a href=#378 id=378 data-nosnippet>378</a>
+<a href=#379 id=379 data-nosnippet>379</a><span class="kw">pub fn </span>main() {
+<a href=#380 id=380 data-nosnippet>380</a>    <span class="kw">crate</span>::framework::run::&lt;Example&gt;(<span class="string">"cube"</span>);
+<a href=#381 id=381 data-nosnippet>381</a>}
+<a href=#382 id=382 data-nosnippet>382</a>
+<a href=#383 id=383 data-nosnippet>383</a><span class="attr">#[cfg(test)]
+<a href=#384 id=384 data-nosnippet>384</a>#[wgpu_test::gpu_test]
+<a href=#385 id=385 data-nosnippet>385</a></span><span class="kw">pub static </span>TEST: <span class="kw">crate</span>::framework::ExampleTestParams = <span class="kw">crate</span>::framework::ExampleTestParams {
+<a href=#386 id=386 data-nosnippet>386</a>    name: <span class="string">"cube"</span>,
+<a href=#387 id=387 data-nosnippet>387</a>    <span class="comment">// Generated on 1080ti on Vk/Windows
+<a href=#388 id=388 data-nosnippet>388</a>    </span>image_path: <span class="string">"/examples/features/src/cube/screenshot.png"</span>,
+<a href=#389 id=389 data-nosnippet>389</a>    width: <span class="number">1024</span>,
+<a href=#390 id=390 data-nosnippet>390</a>    height: <span class="number">768</span>,
+<a href=#391 id=391 data-nosnippet>391</a>    optional_features: wgpu::Features::default(),
+<a href=#392 id=392 data-nosnippet>392</a>    base_test_parameters: wgpu_test::TestParameters::default(),
+<a href=#393 id=393 data-nosnippet>393</a>    comparisons: <span class="kw-2">&amp;</span>[
+<a href=#394 id=394 data-nosnippet>394</a>        wgpu_test::ComparisonType::Mean(<span class="number">0.04</span>), <span class="comment">// Bounded by Intel 630 on Vk/Windows
+<a href=#395 id=395 data-nosnippet>395</a>    </span>],
+<a href=#396 id=396 data-nosnippet>396</a>    _phantom: std::marker::PhantomData::&lt;Example&gt;,
+<a href=#397 id=397 data-nosnippet>397</a>};
+<a href=#398 id=398 data-nosnippet>398</a>
+<a href=#399 id=399 data-nosnippet>399</a><span class="attr">#[cfg(test)]
+<a href=#400 id=400 data-nosnippet>400</a>#[wgpu_test::gpu_test]
+<a href=#401 id=401 data-nosnippet>401</a></span><span class="kw">pub static </span>TEST_LINES: <span class="kw">crate</span>::framework::ExampleTestParams = <span class="kw">crate</span>::framework::ExampleTestParams {
+<a href=#402 id=402 data-nosnippet>402</a>    name: <span class="string">"cube-lines"</span>,
+<a href=#403 id=403 data-nosnippet>403</a>    <span class="comment">// Generated on 1080ti on Vk/Windows
+<a href=#404 id=404 data-nosnippet>404</a>    </span>image_path: <span class="string">"/examples/features/src/cube/screenshot-lines.png"</span>,
+<a href=#405 id=405 data-nosnippet>405</a>    width: <span class="number">1024</span>,
+<a href=#406 id=406 data-nosnippet>406</a>    height: <span class="number">768</span>,
+<a href=#407 id=407 data-nosnippet>407</a>    optional_features: wgpu::Features::POLYGON_MODE_LINE,
+<a href=#408 id=408 data-nosnippet>408</a>    base_test_parameters: wgpu_test::TestParameters::default(),
+<a href=#409 id=409 data-nosnippet>409</a>    <span class="comment">// We're looking for tiny changes here, so we focus on a spike in the 95th percentile.
+<a href=#410 id=410 data-nosnippet>410</a>    </span>comparisons: <span class="kw-2">&amp;</span>[
+<a href=#411 id=411 data-nosnippet>411</a>        wgpu_test::ComparisonType::Mean(<span class="number">0.05</span>), <span class="comment">// Bounded by Intel 630 on Vk/Windows
+<a href=#412 id=412 data-nosnippet>412</a>        </span>wgpu_test::ComparisonType::Percentile {
+<a href=#413 id=413 data-nosnippet>413</a>            percentile: <span class="number">0.95</span>,
+<a href=#414 id=414 data-nosnippet>414</a>            threshold: <span class="number">0.36</span>,
+<a href=#415 id=415 data-nosnippet>415</a>        }, <span class="comment">// Bounded by 1080ti on DX12
+<a href=#416 id=416 data-nosnippet>416</a>    </span>],
+<a href=#417 id=417 data-nosnippet>417</a>    _phantom: std::marker::PhantomData::&lt;Example&gt;,
+<a href=#418 id=418 data-nosnippet>418</a>};</code></pre></div></section></main></body></html>
