@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["NOOP_WAKER_VTABLE"],"fn":["noop","noop_clone","noop_raw_waker","noop_waker_ref"]};
