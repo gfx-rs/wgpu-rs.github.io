@@ -181,58 +181,59 @@
 <a href=#181 id=181 data-nosnippet>181</a>    <span class="doccomment">/// Sum of the memory used by all allocations, in bytes.
 <a href=#182 id=182 data-nosnippet>182</a>    </span><span class="kw">pub </span>total_allocated_bytes: u64,
 <a href=#183 id=183 data-nosnippet>183</a>    <span class="doccomment">/// Sum of the memory reserved by all memory blocks including unallocated regions, in bytes.
-<a href=#184 id=184 data-nosnippet>184</a>    </span><span class="kw">pub </span>total_reserved_bytes: u64,
-<a href=#185 id=185 data-nosnippet>185</a>}
-<a href=#186 id=186 data-nosnippet>186</a>
-<a href=#187 id=187 data-nosnippet>187</a><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>AllocationReport {
-<a href=#188 id=188 data-nosnippet>188</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-<a href=#189 id=189 data-nosnippet>189</a>        <span class="kw">let </span>name = <span class="kw">if </span>!<span class="self">self</span>.name.is_empty() {
-<a href=#190 id=190 data-nosnippet>190</a>            <span class="self">self</span>.name.as_str()
-<a href=#191 id=191 data-nosnippet>191</a>        } <span class="kw">else </span>{
-<a href=#192 id=192 data-nosnippet>192</a>            <span class="string">"--"
-<a href=#193 id=193 data-nosnippet>193</a>        </span>};
-<a href=#194 id=194 data-nosnippet>194</a>        <span class="macro">write!</span>(f, <span class="string">"{name:?}: {}"</span>, FmtBytes(<span class="self">self</span>.size))
-<a href=#195 id=195 data-nosnippet>195</a>    }
-<a href=#196 id=196 data-nosnippet>196</a>}
-<a href=#197 id=197 data-nosnippet>197</a>
-<a href=#198 id=198 data-nosnippet>198</a><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>AllocatorReport {
-<a href=#199 id=199 data-nosnippet>199</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-<a href=#200 id=200 data-nosnippet>200</a>        <span class="kw">let </span><span class="kw-2">mut </span>allocations = <span class="self">self</span>.allocations.clone();
-<a href=#201 id=201 data-nosnippet>201</a>        allocations.sort_by_key(|alloc| core::cmp::Reverse(alloc.size));
-<a href=#202 id=202 data-nosnippet>202</a>
-<a href=#203 id=203 data-nosnippet>203</a>        <span class="kw">let </span>max_num_allocations_to_print = f.precision().unwrap_or(usize::MAX);
-<a href=#204 id=204 data-nosnippet>204</a>        allocations.truncate(max_num_allocations_to_print);
-<a href=#205 id=205 data-nosnippet>205</a>
-<a href=#206 id=206 data-nosnippet>206</a>        f.debug_struct(<span class="string">"AllocatorReport"</span>)
-<a href=#207 id=207 data-nosnippet>207</a>            .field(
-<a href=#208 id=208 data-nosnippet>208</a>                <span class="string">"summary"</span>,
-<a href=#209 id=209 data-nosnippet>209</a>                <span class="kw-2">&amp;</span><span class="macro">core::format_args!</span>(
-<a href=#210 id=210 data-nosnippet>210</a>                    <span class="string">"{} / {}"</span>,
-<a href=#211 id=211 data-nosnippet>211</a>                    FmtBytes(<span class="self">self</span>.total_allocated_bytes),
-<a href=#212 id=212 data-nosnippet>212</a>                    FmtBytes(<span class="self">self</span>.total_reserved_bytes)
-<a href=#213 id=213 data-nosnippet>213</a>                ),
-<a href=#214 id=214 data-nosnippet>214</a>            )
-<a href=#215 id=215 data-nosnippet>215</a>            .field(<span class="string">"blocks"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blocks.len())
-<a href=#216 id=216 data-nosnippet>216</a>            .field(<span class="string">"allocations"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.allocations.len())
-<a href=#217 id=217 data-nosnippet>217</a>            .field(<span class="string">"largest"</span>, <span class="kw-2">&amp;</span>allocations.as_slice())
-<a href=#218 id=218 data-nosnippet>218</a>            .finish()
-<a href=#219 id=219 data-nosnippet>219</a>    }
-<a href=#220 id=220 data-nosnippet>220</a>}
-<a href=#221 id=221 data-nosnippet>221</a>
-<a href=#222 id=222 data-nosnippet>222</a><span class="kw">struct </span>FmtBytes(u64);
-<a href=#223 id=223 data-nosnippet>223</a>
-<a href=#224 id=224 data-nosnippet>224</a><span class="kw">impl </span>fmt::Display <span class="kw">for </span>FmtBytes {
-<a href=#225 id=225 data-nosnippet>225</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-<a href=#226 id=226 data-nosnippet>226</a>        <span class="kw">const </span>SUFFIX: [<span class="kw-2">&amp;</span>str; <span class="number">5</span>] = [<span class="string">"B"</span>, <span class="string">"KB"</span>, <span class="string">"MB"</span>, <span class="string">"GB"</span>, <span class="string">"TB"</span>];
-<a href=#227 id=227 data-nosnippet>227</a>        <span class="kw">let </span><span class="kw-2">mut </span>idx = <span class="number">0</span>;
-<a href=#228 id=228 data-nosnippet>228</a>        <span class="kw">let </span><span class="kw-2">mut </span>amount = <span class="self">self</span>.<span class="number">0 </span><span class="kw">as </span>f64;
-<a href=#229 id=229 data-nosnippet>229</a>        <span class="kw">loop </span>{
-<a href=#230 id=230 data-nosnippet>230</a>            <span class="kw">if </span>amount &lt; <span class="number">1024.0 </span>|| idx == SUFFIX.len() - <span class="number">1 </span>{
-<a href=#231 id=231 data-nosnippet>231</a>                <span class="kw">return </span><span class="macro">write!</span>(f, <span class="string">"{:.2} {}"</span>, amount, SUFFIX[idx]);
-<a href=#232 id=232 data-nosnippet>232</a>            }
-<a href=#233 id=233 data-nosnippet>233</a>
-<a href=#234 id=234 data-nosnippet>234</a>            amount /= <span class="number">1024.0</span>;
-<a href=#235 id=235 data-nosnippet>235</a>            idx += <span class="number">1</span>;
-<a href=#236 id=236 data-nosnippet>236</a>        }
-<a href=#237 id=237 data-nosnippet>237</a>    }
-<a href=#238 id=238 data-nosnippet>238</a>}</code></pre></div></section></main></body></html>
+<a href=#184 id=184 data-nosnippet>184</a>    </span><span class="comment">// XXX: Rename to total_capacity_bytes following the rename at https://github.com/Traverse-Research/gpu-allocator/pull/266?
+<a href=#185 id=185 data-nosnippet>185</a>    </span><span class="kw">pub </span>total_reserved_bytes: u64,
+<a href=#186 id=186 data-nosnippet>186</a>}
+<a href=#187 id=187 data-nosnippet>187</a>
+<a href=#188 id=188 data-nosnippet>188</a><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>AllocationReport {
+<a href=#189 id=189 data-nosnippet>189</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+<a href=#190 id=190 data-nosnippet>190</a>        <span class="kw">let </span>name = <span class="kw">if </span>!<span class="self">self</span>.name.is_empty() {
+<a href=#191 id=191 data-nosnippet>191</a>            <span class="self">self</span>.name.as_str()
+<a href=#192 id=192 data-nosnippet>192</a>        } <span class="kw">else </span>{
+<a href=#193 id=193 data-nosnippet>193</a>            <span class="string">"--"
+<a href=#194 id=194 data-nosnippet>194</a>        </span>};
+<a href=#195 id=195 data-nosnippet>195</a>        <span class="macro">write!</span>(f, <span class="string">"{name:?}: {}"</span>, FmtBytes(<span class="self">self</span>.size))
+<a href=#196 id=196 data-nosnippet>196</a>    }
+<a href=#197 id=197 data-nosnippet>197</a>}
+<a href=#198 id=198 data-nosnippet>198</a>
+<a href=#199 id=199 data-nosnippet>199</a><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>AllocatorReport {
+<a href=#200 id=200 data-nosnippet>200</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+<a href=#201 id=201 data-nosnippet>201</a>        <span class="kw">let </span><span class="kw-2">mut </span>allocations = <span class="self">self</span>.allocations.clone();
+<a href=#202 id=202 data-nosnippet>202</a>        allocations.sort_by_key(|alloc| core::cmp::Reverse(alloc.size));
+<a href=#203 id=203 data-nosnippet>203</a>
+<a href=#204 id=204 data-nosnippet>204</a>        <span class="kw">let </span>max_num_allocations_to_print = f.precision().unwrap_or(usize::MAX);
+<a href=#205 id=205 data-nosnippet>205</a>        allocations.truncate(max_num_allocations_to_print);
+<a href=#206 id=206 data-nosnippet>206</a>
+<a href=#207 id=207 data-nosnippet>207</a>        f.debug_struct(<span class="string">"AllocatorReport"</span>)
+<a href=#208 id=208 data-nosnippet>208</a>            .field(
+<a href=#209 id=209 data-nosnippet>209</a>                <span class="string">"summary"</span>,
+<a href=#210 id=210 data-nosnippet>210</a>                <span class="kw-2">&amp;</span><span class="macro">core::format_args!</span>(
+<a href=#211 id=211 data-nosnippet>211</a>                    <span class="string">"{} / {}"</span>,
+<a href=#212 id=212 data-nosnippet>212</a>                    FmtBytes(<span class="self">self</span>.total_allocated_bytes),
+<a href=#213 id=213 data-nosnippet>213</a>                    FmtBytes(<span class="self">self</span>.total_reserved_bytes)
+<a href=#214 id=214 data-nosnippet>214</a>                ),
+<a href=#215 id=215 data-nosnippet>215</a>            )
+<a href=#216 id=216 data-nosnippet>216</a>            .field(<span class="string">"blocks"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blocks.len())
+<a href=#217 id=217 data-nosnippet>217</a>            .field(<span class="string">"allocations"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.allocations.len())
+<a href=#218 id=218 data-nosnippet>218</a>            .field(<span class="string">"largest"</span>, <span class="kw-2">&amp;</span>allocations.as_slice())
+<a href=#219 id=219 data-nosnippet>219</a>            .finish()
+<a href=#220 id=220 data-nosnippet>220</a>    }
+<a href=#221 id=221 data-nosnippet>221</a>}
+<a href=#222 id=222 data-nosnippet>222</a>
+<a href=#223 id=223 data-nosnippet>223</a><span class="kw">struct </span>FmtBytes(u64);
+<a href=#224 id=224 data-nosnippet>224</a>
+<a href=#225 id=225 data-nosnippet>225</a><span class="kw">impl </span>fmt::Display <span class="kw">for </span>FmtBytes {
+<a href=#226 id=226 data-nosnippet>226</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+<a href=#227 id=227 data-nosnippet>227</a>        <span class="kw">const </span>SUFFIX: [<span class="kw-2">&amp;</span>str; <span class="number">5</span>] = [<span class="string">"B"</span>, <span class="string">"KB"</span>, <span class="string">"MB"</span>, <span class="string">"GB"</span>, <span class="string">"TB"</span>];
+<a href=#228 id=228 data-nosnippet>228</a>        <span class="kw">let </span><span class="kw-2">mut </span>idx = <span class="number">0</span>;
+<a href=#229 id=229 data-nosnippet>229</a>        <span class="kw">let </span><span class="kw-2">mut </span>amount = <span class="self">self</span>.<span class="number">0 </span><span class="kw">as </span>f64;
+<a href=#230 id=230 data-nosnippet>230</a>        <span class="kw">loop </span>{
+<a href=#231 id=231 data-nosnippet>231</a>            <span class="kw">if </span>amount &lt; <span class="number">1024.0 </span>|| idx == SUFFIX.len() - <span class="number">1 </span>{
+<a href=#232 id=232 data-nosnippet>232</a>                <span class="kw">return </span><span class="macro">write!</span>(f, <span class="string">"{:.2} {}"</span>, amount, SUFFIX[idx]);
+<a href=#233 id=233 data-nosnippet>233</a>            }
+<a href=#234 id=234 data-nosnippet>234</a>
+<a href=#235 id=235 data-nosnippet>235</a>            amount /= <span class="number">1024.0</span>;
+<a href=#236 id=236 data-nosnippet>236</a>            idx += <span class="number">1</span>;
+<a href=#237 id=237 data-nosnippet>237</a>        }
+<a href=#238 id=238 data-nosnippet>238</a>    }
+<a href=#239 id=239 data-nosnippet>239</a>}</code></pre></div></section></main></body></html>
