@@ -1255,423 +1255,434 @@
 <a href=#1255 id=1255 data-nosnippet>1255</a>        ///
 <a href=#1256 id=1256 data-nosnippet>1256</a>        /// While metal supports this in theory, the behavior of `view_index` differs from vulkan and dx12 so the feature isn't exposed.
 <a href=#1257 id=1257 data-nosnippet>1257</a>        </span><span class="kw">const </span>SELECTIVE_MULTIVIEW = <span class="number">1 </span>&lt;&lt; <span class="number">54</span>;
-<a href=#1258 id=1258 data-nosnippet>1258</a>    }
-<a href=#1259 id=1259 data-nosnippet>1259</a>
-<a href=#1260 id=1260 data-nosnippet>1260</a>    <span class="doccomment">/// Features that are not guaranteed to be supported.
-<a href=#1261 id=1261 data-nosnippet>1261</a>    ///
-<a href=#1262 id=1262 data-nosnippet>1262</a>    /// These are part of the WebGPU standard. For all features, see [`Features`].
-<a href=#1263 id=1263 data-nosnippet>1263</a>    ///
-<a href=#1264 id=1264 data-nosnippet>1264</a>    /// If you want to use a feature, you need to first verify that the adapter supports
-<a href=#1265 id=1265 data-nosnippet>1265</a>    /// the feature. If the adapter does not support the feature, requesting a device with it enabled
-<a href=#1266 id=1266 data-nosnippet>1266</a>    /// will panic.
-<a href=#1267 id=1267 data-nosnippet>1267</a>    ///
-<a href=#1268 id=1268 data-nosnippet>1268</a>    /// Corresponds to [WebGPU `GPUFeatureName`](
-<a href=#1269 id=1269 data-nosnippet>1269</a>    /// https://gpuweb.github.io/gpuweb/#enumdef-gpufeaturename).
-<a href=#1270 id=1270 data-nosnippet>1270</a>    </span><span class="attr">#[repr(transparent)]
-<a href=#1271 id=1271 data-nosnippet>1271</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#1272 id=1272 data-nosnippet>1272</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
-<a href=#1273 id=1273 data-nosnippet>1273</a>    #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
-<a href=#1274 id=1274 data-nosnippet>1274</a>    </span><span class="kw">pub struct </span>FeaturesWebGPU features_webgpu {
-<a href=#1275 id=1275 data-nosnippet>1275</a>        <span class="comment">// API:
-<a href=#1276 id=1276 data-nosnippet>1276</a>
-<a href=#1277 id=1277 data-nosnippet>1277</a>        </span><span class="doccomment">/// By default, polygon depth is clipped to 0-1 range before/during rasterization.
-<a href=#1278 id=1278 data-nosnippet>1278</a>        /// Anything outside of that range is rejected, and respective fragments are not touched.
-<a href=#1279 id=1279 data-nosnippet>1279</a>        ///
-<a href=#1280 id=1280 data-nosnippet>1280</a>        /// With this extension, we can disabling clipping. That allows
-<a href=#1281 id=1281 data-nosnippet>1281</a>        /// shadow map occluders to be rendered into a tighter depth range.
-<a href=#1282 id=1282 data-nosnippet>1282</a>        ///
-<a href=#1283 id=1283 data-nosnippet>1283</a>        /// Supported platforms:
-<a href=#1284 id=1284 data-nosnippet>1284</a>        /// - desktops
-<a href=#1285 id=1285 data-nosnippet>1285</a>        /// - some mobile chips
-<a href=#1286 id=1286 data-nosnippet>1286</a>        ///
-<a href=#1287 id=1287 data-nosnippet>1287</a>        /// This is a web and native feature.
-<a href=#1288 id=1288 data-nosnippet>1288</a>        </span><span class="kw">const </span>DEPTH_CLIP_CONTROL = WEBGPU_FEATURE_DEPTH_CLIP_CONTROL;
-<a href=#1289 id=1289 data-nosnippet>1289</a>
-<a href=#1290 id=1290 data-nosnippet>1290</a>        <span class="doccomment">/// Allows for explicit creation of textures of format [`TextureFormat::Depth32FloatStencil8`]
-<a href=#1291 id=1291 data-nosnippet>1291</a>        ///
-<a href=#1292 id=1292 data-nosnippet>1292</a>        /// Supported platforms:
-<a href=#1293 id=1293 data-nosnippet>1293</a>        /// - Vulkan (mostly)
-<a href=#1294 id=1294 data-nosnippet>1294</a>        /// - DX12
-<a href=#1295 id=1295 data-nosnippet>1295</a>        /// - Metal
-<a href=#1296 id=1296 data-nosnippet>1296</a>        /// - OpenGL
-<a href=#1297 id=1297 data-nosnippet>1297</a>        ///
-<a href=#1298 id=1298 data-nosnippet>1298</a>        /// This is a web and native feature.
-<a href=#1299 id=1299 data-nosnippet>1299</a>        ///
-<a href=#1300 id=1300 data-nosnippet>1300</a>        /// [`TextureFormat::Depth32FloatStencil8`]: super::TextureFormat::Depth32FloatStencil8
-<a href=#1301 id=1301 data-nosnippet>1301</a>        </span><span class="kw">const </span>DEPTH32FLOAT_STENCIL8 = WEBGPU_FEATURE_DEPTH32FLOAT_STENCIL8;
-<a href=#1302 id=1302 data-nosnippet>1302</a>
-<a href=#1303 id=1303 data-nosnippet>1303</a>        <span class="doccomment">/// Enables BCn family of compressed textures. All BCn textures use 4x4 pixel blocks
-<a href=#1304 id=1304 data-nosnippet>1304</a>        /// with 8 or 16 bytes per block.
-<a href=#1305 id=1305 data-nosnippet>1305</a>        ///
-<a href=#1306 id=1306 data-nosnippet>1306</a>        /// Compressed textures sacrifice some quality in exchange for significantly reduced
-<a href=#1307 id=1307 data-nosnippet>1307</a>        /// bandwidth usage.
-<a href=#1308 id=1308 data-nosnippet>1308</a>        ///
-<a href=#1309 id=1309 data-nosnippet>1309</a>        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for BCn formats.
-<a href=#1310 id=1310 data-nosnippet>1310</a>        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
-<a href=#1311 id=1311 data-nosnippet>1311</a>        ///
-<a href=#1312 id=1312 data-nosnippet>1312</a>        /// This feature guarantees availability of sliced-3d textures for BC formats when combined with TEXTURE_COMPRESSION_BC_SLICED_3D.
-<a href=#1313 id=1313 data-nosnippet>1313</a>        ///
-<a href=#1314 id=1314 data-nosnippet>1314</a>        /// Supported Platforms:
-<a href=#1315 id=1315 data-nosnippet>1315</a>        /// - desktops
-<a href=#1316 id=1316 data-nosnippet>1316</a>        /// - Mobile (All Apple9 and some Apple7 and Apple8 devices)
-<a href=#1317 id=1317 data-nosnippet>1317</a>        ///
-<a href=#1318 id=1318 data-nosnippet>1318</a>        /// This is a web and native feature.
-<a href=#1319 id=1319 data-nosnippet>1319</a>        </span><span class="kw">const </span>TEXTURE_COMPRESSION_BC = WEBGPU_FEATURE_TEXTURE_COMPRESSION_BC;
-<a href=#1320 id=1320 data-nosnippet>1320</a>
-<a href=#1321 id=1321 data-nosnippet>1321</a>
-<a href=#1322 id=1322 data-nosnippet>1322</a>        <span class="doccomment">/// Allows the 3d dimension for textures with BC compressed formats.
+<a href=#1258 id=1258 data-nosnippet>1258</a>
+<a href=#1259 id=1259 data-nosnippet>1259</a>        <span class="doccomment">/// Enables the use of point-primitive outputs from mesh shaders. Making use of this feature also requires enabling
+<a href=#1260 id=1260 data-nosnippet>1260</a>        /// `Features::EXPERIMENTAL_MESH_SHADER`.
+<a href=#1261 id=1261 data-nosnippet>1261</a>        ///
+<a href=#1262 id=1262 data-nosnippet>1262</a>        /// Supported platforms
+<a href=#1263 id=1263 data-nosnippet>1263</a>        /// - Vulkan
+<a href=#1264 id=1264 data-nosnippet>1264</a>        /// - Metal
+<a href=#1265 id=1265 data-nosnippet>1265</a>        ///
+<a href=#1266 id=1266 data-nosnippet>1266</a>        /// This is a native only feature.
+<a href=#1267 id=1267 data-nosnippet>1267</a>        </span><span class="kw">const </span>EXPERIMENTAL_MESH_SHADER_POINTS = <span class="number">1 </span>&lt;&lt; <span class="number">55</span>;
+<a href=#1268 id=1268 data-nosnippet>1268</a>    }
+<a href=#1269 id=1269 data-nosnippet>1269</a>
+<a href=#1270 id=1270 data-nosnippet>1270</a>    <span class="doccomment">/// Features that are not guaranteed to be supported.
+<a href=#1271 id=1271 data-nosnippet>1271</a>    ///
+<a href=#1272 id=1272 data-nosnippet>1272</a>    /// These are part of the WebGPU standard. For all features, see [`Features`].
+<a href=#1273 id=1273 data-nosnippet>1273</a>    ///
+<a href=#1274 id=1274 data-nosnippet>1274</a>    /// If you want to use a feature, you need to first verify that the adapter supports
+<a href=#1275 id=1275 data-nosnippet>1275</a>    /// the feature. If the adapter does not support the feature, requesting a device with it enabled
+<a href=#1276 id=1276 data-nosnippet>1276</a>    /// will panic.
+<a href=#1277 id=1277 data-nosnippet>1277</a>    ///
+<a href=#1278 id=1278 data-nosnippet>1278</a>    /// Corresponds to [WebGPU `GPUFeatureName`](
+<a href=#1279 id=1279 data-nosnippet>1279</a>    /// https://gpuweb.github.io/gpuweb/#enumdef-gpufeaturename).
+<a href=#1280 id=1280 data-nosnippet>1280</a>    </span><span class="attr">#[repr(transparent)]
+<a href=#1281 id=1281 data-nosnippet>1281</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#1282 id=1282 data-nosnippet>1282</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
+<a href=#1283 id=1283 data-nosnippet>1283</a>    #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
+<a href=#1284 id=1284 data-nosnippet>1284</a>    </span><span class="kw">pub struct </span>FeaturesWebGPU features_webgpu {
+<a href=#1285 id=1285 data-nosnippet>1285</a>        <span class="comment">// API:
+<a href=#1286 id=1286 data-nosnippet>1286</a>
+<a href=#1287 id=1287 data-nosnippet>1287</a>        </span><span class="doccomment">/// By default, polygon depth is clipped to 0-1 range before/during rasterization.
+<a href=#1288 id=1288 data-nosnippet>1288</a>        /// Anything outside of that range is rejected, and respective fragments are not touched.
+<a href=#1289 id=1289 data-nosnippet>1289</a>        ///
+<a href=#1290 id=1290 data-nosnippet>1290</a>        /// With this extension, we can disabling clipping. That allows
+<a href=#1291 id=1291 data-nosnippet>1291</a>        /// shadow map occluders to be rendered into a tighter depth range.
+<a href=#1292 id=1292 data-nosnippet>1292</a>        ///
+<a href=#1293 id=1293 data-nosnippet>1293</a>        /// Supported platforms:
+<a href=#1294 id=1294 data-nosnippet>1294</a>        /// - desktops
+<a href=#1295 id=1295 data-nosnippet>1295</a>        /// - some mobile chips
+<a href=#1296 id=1296 data-nosnippet>1296</a>        ///
+<a href=#1297 id=1297 data-nosnippet>1297</a>        /// This is a web and native feature.
+<a href=#1298 id=1298 data-nosnippet>1298</a>        </span><span class="kw">const </span>DEPTH_CLIP_CONTROL = WEBGPU_FEATURE_DEPTH_CLIP_CONTROL;
+<a href=#1299 id=1299 data-nosnippet>1299</a>
+<a href=#1300 id=1300 data-nosnippet>1300</a>        <span class="doccomment">/// Allows for explicit creation of textures of format [`TextureFormat::Depth32FloatStencil8`]
+<a href=#1301 id=1301 data-nosnippet>1301</a>        ///
+<a href=#1302 id=1302 data-nosnippet>1302</a>        /// Supported platforms:
+<a href=#1303 id=1303 data-nosnippet>1303</a>        /// - Vulkan (mostly)
+<a href=#1304 id=1304 data-nosnippet>1304</a>        /// - DX12
+<a href=#1305 id=1305 data-nosnippet>1305</a>        /// - Metal
+<a href=#1306 id=1306 data-nosnippet>1306</a>        /// - OpenGL
+<a href=#1307 id=1307 data-nosnippet>1307</a>        ///
+<a href=#1308 id=1308 data-nosnippet>1308</a>        /// This is a web and native feature.
+<a href=#1309 id=1309 data-nosnippet>1309</a>        ///
+<a href=#1310 id=1310 data-nosnippet>1310</a>        /// [`TextureFormat::Depth32FloatStencil8`]: super::TextureFormat::Depth32FloatStencil8
+<a href=#1311 id=1311 data-nosnippet>1311</a>        </span><span class="kw">const </span>DEPTH32FLOAT_STENCIL8 = WEBGPU_FEATURE_DEPTH32FLOAT_STENCIL8;
+<a href=#1312 id=1312 data-nosnippet>1312</a>
+<a href=#1313 id=1313 data-nosnippet>1313</a>        <span class="doccomment">/// Enables BCn family of compressed textures. All BCn textures use 4x4 pixel blocks
+<a href=#1314 id=1314 data-nosnippet>1314</a>        /// with 8 or 16 bytes per block.
+<a href=#1315 id=1315 data-nosnippet>1315</a>        ///
+<a href=#1316 id=1316 data-nosnippet>1316</a>        /// Compressed textures sacrifice some quality in exchange for significantly reduced
+<a href=#1317 id=1317 data-nosnippet>1317</a>        /// bandwidth usage.
+<a href=#1318 id=1318 data-nosnippet>1318</a>        ///
+<a href=#1319 id=1319 data-nosnippet>1319</a>        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for BCn formats.
+<a href=#1320 id=1320 data-nosnippet>1320</a>        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
+<a href=#1321 id=1321 data-nosnippet>1321</a>        ///
+<a href=#1322 id=1322 data-nosnippet>1322</a>        /// This feature guarantees availability of sliced-3d textures for BC formats when combined with TEXTURE_COMPRESSION_BC_SLICED_3D.
 <a href=#1323 id=1323 data-nosnippet>1323</a>        ///
-<a href=#1324 id=1324 data-nosnippet>1324</a>        /// This feature must be used in combination with TEXTURE_COMPRESSION_BC to enable 3D textures with BC compression.
-<a href=#1325 id=1325 data-nosnippet>1325</a>        /// It does not enable the BC formats by itself.
-<a href=#1326 id=1326 data-nosnippet>1326</a>        ///
-<a href=#1327 id=1327 data-nosnippet>1327</a>        /// Supported Platforms:
-<a href=#1328 id=1328 data-nosnippet>1328</a>        /// - desktops
-<a href=#1329 id=1329 data-nosnippet>1329</a>        /// - Mobile (All Apple9 and some Apple7 and Apple8 devices)
-<a href=#1330 id=1330 data-nosnippet>1330</a>        ///
-<a href=#1331 id=1331 data-nosnippet>1331</a>        /// This is a web and native feature.
-<a href=#1332 id=1332 data-nosnippet>1332</a>        </span><span class="kw">const </span>TEXTURE_COMPRESSION_BC_SLICED_3D = WEBGPU_FEATURE_TEXTURE_COMPRESSION_BC_SLICED_3D;
-<a href=#1333 id=1333 data-nosnippet>1333</a>
-<a href=#1334 id=1334 data-nosnippet>1334</a>        <span class="doccomment">/// Enables ETC family of compressed textures. All ETC textures use 4x4 pixel blocks.
-<a href=#1335 id=1335 data-nosnippet>1335</a>        /// ETC2 RGB and RGBA1 are 8 bytes per block. RTC2 RGBA8 and EAC are 16 bytes per block.
+<a href=#1324 id=1324 data-nosnippet>1324</a>        /// Supported Platforms:
+<a href=#1325 id=1325 data-nosnippet>1325</a>        /// - desktops
+<a href=#1326 id=1326 data-nosnippet>1326</a>        /// - Mobile (All Apple9 and some Apple7 and Apple8 devices)
+<a href=#1327 id=1327 data-nosnippet>1327</a>        ///
+<a href=#1328 id=1328 data-nosnippet>1328</a>        /// This is a web and native feature.
+<a href=#1329 id=1329 data-nosnippet>1329</a>        </span><span class="kw">const </span>TEXTURE_COMPRESSION_BC = WEBGPU_FEATURE_TEXTURE_COMPRESSION_BC;
+<a href=#1330 id=1330 data-nosnippet>1330</a>
+<a href=#1331 id=1331 data-nosnippet>1331</a>
+<a href=#1332 id=1332 data-nosnippet>1332</a>        <span class="doccomment">/// Allows the 3d dimension for textures with BC compressed formats.
+<a href=#1333 id=1333 data-nosnippet>1333</a>        ///
+<a href=#1334 id=1334 data-nosnippet>1334</a>        /// This feature must be used in combination with TEXTURE_COMPRESSION_BC to enable 3D textures with BC compression.
+<a href=#1335 id=1335 data-nosnippet>1335</a>        /// It does not enable the BC formats by itself.
 <a href=#1336 id=1336 data-nosnippet>1336</a>        ///
-<a href=#1337 id=1337 data-nosnippet>1337</a>        /// Compressed textures sacrifice some quality in exchange for significantly reduced
-<a href=#1338 id=1338 data-nosnippet>1338</a>        /// bandwidth usage.
-<a href=#1339 id=1339 data-nosnippet>1339</a>        ///
-<a href=#1340 id=1340 data-nosnippet>1340</a>        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ETC2 formats.
-<a href=#1341 id=1341 data-nosnippet>1341</a>        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
-<a href=#1342 id=1342 data-nosnippet>1342</a>        ///
-<a href=#1343 id=1343 data-nosnippet>1343</a>        /// Supported Platforms:
-<a href=#1344 id=1344 data-nosnippet>1344</a>        /// - Vulkan on Intel
-<a href=#1345 id=1345 data-nosnippet>1345</a>        /// - Mobile (some)
+<a href=#1337 id=1337 data-nosnippet>1337</a>        /// Supported Platforms:
+<a href=#1338 id=1338 data-nosnippet>1338</a>        /// - desktops
+<a href=#1339 id=1339 data-nosnippet>1339</a>        /// - Mobile (All Apple9 and some Apple7 and Apple8 devices)
+<a href=#1340 id=1340 data-nosnippet>1340</a>        ///
+<a href=#1341 id=1341 data-nosnippet>1341</a>        /// This is a web and native feature.
+<a href=#1342 id=1342 data-nosnippet>1342</a>        </span><span class="kw">const </span>TEXTURE_COMPRESSION_BC_SLICED_3D = WEBGPU_FEATURE_TEXTURE_COMPRESSION_BC_SLICED_3D;
+<a href=#1343 id=1343 data-nosnippet>1343</a>
+<a href=#1344 id=1344 data-nosnippet>1344</a>        <span class="doccomment">/// Enables ETC family of compressed textures. All ETC textures use 4x4 pixel blocks.
+<a href=#1345 id=1345 data-nosnippet>1345</a>        /// ETC2 RGB and RGBA1 are 8 bytes per block. RTC2 RGBA8 and EAC are 16 bytes per block.
 <a href=#1346 id=1346 data-nosnippet>1346</a>        ///
-<a href=#1347 id=1347 data-nosnippet>1347</a>        /// This is a web and native feature.
-<a href=#1348 id=1348 data-nosnippet>1348</a>        </span><span class="kw">const </span>TEXTURE_COMPRESSION_ETC2 = WEBGPU_FEATURE_TEXTURE_COMPRESSION_ETC2;
-<a href=#1349 id=1349 data-nosnippet>1349</a>
-<a href=#1350 id=1350 data-nosnippet>1350</a>        <span class="doccomment">/// Enables ASTC family of compressed textures. ASTC textures use pixel blocks varying from 4x4 to 12x12.
-<a href=#1351 id=1351 data-nosnippet>1351</a>        /// Blocks are always 16 bytes.
+<a href=#1347 id=1347 data-nosnippet>1347</a>        /// Compressed textures sacrifice some quality in exchange for significantly reduced
+<a href=#1348 id=1348 data-nosnippet>1348</a>        /// bandwidth usage.
+<a href=#1349 id=1349 data-nosnippet>1349</a>        ///
+<a href=#1350 id=1350 data-nosnippet>1350</a>        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ETC2 formats.
+<a href=#1351 id=1351 data-nosnippet>1351</a>        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
 <a href=#1352 id=1352 data-nosnippet>1352</a>        ///
-<a href=#1353 id=1353 data-nosnippet>1353</a>        /// Compressed textures sacrifice some quality in exchange for significantly reduced
-<a href=#1354 id=1354 data-nosnippet>1354</a>        /// bandwidth usage.
-<a href=#1355 id=1355 data-nosnippet>1355</a>        ///
-<a href=#1356 id=1356 data-nosnippet>1356</a>        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ASTC formats with Unorm/UnormSrgb channel type.
-<a href=#1357 id=1357 data-nosnippet>1357</a>        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
-<a href=#1358 id=1358 data-nosnippet>1358</a>        ///
-<a href=#1359 id=1359 data-nosnippet>1359</a>        /// This feature does not guarantee availability of sliced 3d textures for ASTC formats.
-<a href=#1360 id=1360 data-nosnippet>1360</a>        /// If available, 3d support can be enabled by TEXTURE_COMPRESSION_ASTC_SLICED_3D feature.
-<a href=#1361 id=1361 data-nosnippet>1361</a>        ///
-<a href=#1362 id=1362 data-nosnippet>1362</a>        /// Supported Platforms:
-<a href=#1363 id=1363 data-nosnippet>1363</a>        /// - Vulkan on Intel
-<a href=#1364 id=1364 data-nosnippet>1364</a>        /// - Mobile (some)
+<a href=#1353 id=1353 data-nosnippet>1353</a>        /// Supported Platforms:
+<a href=#1354 id=1354 data-nosnippet>1354</a>        /// - Vulkan on Intel
+<a href=#1355 id=1355 data-nosnippet>1355</a>        /// - Mobile (some)
+<a href=#1356 id=1356 data-nosnippet>1356</a>        ///
+<a href=#1357 id=1357 data-nosnippet>1357</a>        /// This is a web and native feature.
+<a href=#1358 id=1358 data-nosnippet>1358</a>        </span><span class="kw">const </span>TEXTURE_COMPRESSION_ETC2 = WEBGPU_FEATURE_TEXTURE_COMPRESSION_ETC2;
+<a href=#1359 id=1359 data-nosnippet>1359</a>
+<a href=#1360 id=1360 data-nosnippet>1360</a>        <span class="doccomment">/// Enables ASTC family of compressed textures. ASTC textures use pixel blocks varying from 4x4 to 12x12.
+<a href=#1361 id=1361 data-nosnippet>1361</a>        /// Blocks are always 16 bytes.
+<a href=#1362 id=1362 data-nosnippet>1362</a>        ///
+<a href=#1363 id=1363 data-nosnippet>1363</a>        /// Compressed textures sacrifice some quality in exchange for significantly reduced
+<a href=#1364 id=1364 data-nosnippet>1364</a>        /// bandwidth usage.
 <a href=#1365 id=1365 data-nosnippet>1365</a>        ///
-<a href=#1366 id=1366 data-nosnippet>1366</a>        /// This is a web and native feature.
-<a href=#1367 id=1367 data-nosnippet>1367</a>        </span><span class="kw">const </span>TEXTURE_COMPRESSION_ASTC = WEBGPU_FEATURE_TEXTURE_COMPRESSION_ASTC;
-<a href=#1368 id=1368 data-nosnippet>1368</a>
-<a href=#1369 id=1369 data-nosnippet>1369</a>
-<a href=#1370 id=1370 data-nosnippet>1370</a>        <span class="doccomment">/// Allows the 3d dimension for textures with ASTC compressed formats.
+<a href=#1366 id=1366 data-nosnippet>1366</a>        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ASTC formats with Unorm/UnormSrgb channel type.
+<a href=#1367 id=1367 data-nosnippet>1367</a>        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
+<a href=#1368 id=1368 data-nosnippet>1368</a>        ///
+<a href=#1369 id=1369 data-nosnippet>1369</a>        /// This feature does not guarantee availability of sliced 3d textures for ASTC formats.
+<a href=#1370 id=1370 data-nosnippet>1370</a>        /// If available, 3d support can be enabled by TEXTURE_COMPRESSION_ASTC_SLICED_3D feature.
 <a href=#1371 id=1371 data-nosnippet>1371</a>        ///
-<a href=#1372 id=1372 data-nosnippet>1372</a>        /// This feature must be used in combination with TEXTURE_COMPRESSION_ASTC to enable 3D textures with ASTC compression.
-<a href=#1373 id=1373 data-nosnippet>1373</a>        /// It does not enable the ASTC formats by itself.
-<a href=#1374 id=1374 data-nosnippet>1374</a>        ///
-<a href=#1375 id=1375 data-nosnippet>1375</a>        /// Supported Platforms:
-<a href=#1376 id=1376 data-nosnippet>1376</a>        /// - Vulkan (some)
-<a href=#1377 id=1377 data-nosnippet>1377</a>        /// - Metal on Apple3+
-<a href=#1378 id=1378 data-nosnippet>1378</a>        /// - OpenGL/WebGL (some)
-<a href=#1379 id=1379 data-nosnippet>1379</a>        ///
-<a href=#1380 id=1380 data-nosnippet>1380</a>        /// Not Supported:
-<a href=#1381 id=1381 data-nosnippet>1381</a>        /// - DX12
-<a href=#1382 id=1382 data-nosnippet>1382</a>        ///
-<a href=#1383 id=1383 data-nosnippet>1383</a>        /// This is a web and native feature.
-<a href=#1384 id=1384 data-nosnippet>1384</a>        </span><span class="kw">const </span>TEXTURE_COMPRESSION_ASTC_SLICED_3D = WEBGPU_FEATURE_TEXTURE_COMPRESSION_ASTC_SLICED_3D;
-<a href=#1385 id=1385 data-nosnippet>1385</a>
-<a href=#1386 id=1386 data-nosnippet>1386</a>        <span class="doccomment">/// Enables use of Timestamp Queries. These queries tell the current gpu timestamp when
-<a href=#1387 id=1387 data-nosnippet>1387</a>        /// all work before the query is finished.
-<a href=#1388 id=1388 data-nosnippet>1388</a>        ///
-<a href=#1389 id=1389 data-nosnippet>1389</a>        /// This feature allows the use of
-<a href=#1390 id=1390 data-nosnippet>1390</a>        /// - [`RenderPassDescriptor::timestamp_writes`]
-<a href=#1391 id=1391 data-nosnippet>1391</a>        /// - [`ComputePassDescriptor::timestamp_writes`]
-<a href=#1392 id=1392 data-nosnippet>1392</a>        /// to write out timestamps.
-<a href=#1393 id=1393 data-nosnippet>1393</a>        ///
-<a href=#1394 id=1394 data-nosnippet>1394</a>        /// For arbitrary timestamp write commands on encoders refer to [`Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`].
-<a href=#1395 id=1395 data-nosnippet>1395</a>        /// For arbitrary timestamp write commands on passes refer to [`Features::TIMESTAMP_QUERY_INSIDE_PASSES`].
-<a href=#1396 id=1396 data-nosnippet>1396</a>        ///
-<a href=#1397 id=1397 data-nosnippet>1397</a>        /// They must be resolved using [`CommandEncoder::resolve_query_set`] into a buffer,
-<a href=#1398 id=1398 data-nosnippet>1398</a>        /// then the result must be multiplied by the timestamp period [`Queue::get_timestamp_period`]
-<a href=#1399 id=1399 data-nosnippet>1399</a>        /// to get the timestamp in nanoseconds. Multiple timestamps can then be diffed to get the
-<a href=#1400 id=1400 data-nosnippet>1400</a>        /// time for operations between them to finish.
-<a href=#1401 id=1401 data-nosnippet>1401</a>        ///
-<a href=#1402 id=1402 data-nosnippet>1402</a>        /// Supported Platforms:
-<a href=#1403 id=1403 data-nosnippet>1403</a>        /// - Vulkan
-<a href=#1404 id=1404 data-nosnippet>1404</a>        /// - DX12
-<a href=#1405 id=1405 data-nosnippet>1405</a>        /// - Metal
+<a href=#1372 id=1372 data-nosnippet>1372</a>        /// Supported Platforms:
+<a href=#1373 id=1373 data-nosnippet>1373</a>        /// - Vulkan on Intel
+<a href=#1374 id=1374 data-nosnippet>1374</a>        /// - Mobile (some)
+<a href=#1375 id=1375 data-nosnippet>1375</a>        ///
+<a href=#1376 id=1376 data-nosnippet>1376</a>        /// This is a web and native feature.
+<a href=#1377 id=1377 data-nosnippet>1377</a>        </span><span class="kw">const </span>TEXTURE_COMPRESSION_ASTC = WEBGPU_FEATURE_TEXTURE_COMPRESSION_ASTC;
+<a href=#1378 id=1378 data-nosnippet>1378</a>
+<a href=#1379 id=1379 data-nosnippet>1379</a>
+<a href=#1380 id=1380 data-nosnippet>1380</a>        <span class="doccomment">/// Allows the 3d dimension for textures with ASTC compressed formats.
+<a href=#1381 id=1381 data-nosnippet>1381</a>        ///
+<a href=#1382 id=1382 data-nosnippet>1382</a>        /// This feature must be used in combination with TEXTURE_COMPRESSION_ASTC to enable 3D textures with ASTC compression.
+<a href=#1383 id=1383 data-nosnippet>1383</a>        /// It does not enable the ASTC formats by itself.
+<a href=#1384 id=1384 data-nosnippet>1384</a>        ///
+<a href=#1385 id=1385 data-nosnippet>1385</a>        /// Supported Platforms:
+<a href=#1386 id=1386 data-nosnippet>1386</a>        /// - Vulkan (some)
+<a href=#1387 id=1387 data-nosnippet>1387</a>        /// - Metal on Apple3+
+<a href=#1388 id=1388 data-nosnippet>1388</a>        /// - OpenGL/WebGL (some)
+<a href=#1389 id=1389 data-nosnippet>1389</a>        ///
+<a href=#1390 id=1390 data-nosnippet>1390</a>        /// Not Supported:
+<a href=#1391 id=1391 data-nosnippet>1391</a>        /// - DX12
+<a href=#1392 id=1392 data-nosnippet>1392</a>        ///
+<a href=#1393 id=1393 data-nosnippet>1393</a>        /// This is a web and native feature.
+<a href=#1394 id=1394 data-nosnippet>1394</a>        </span><span class="kw">const </span>TEXTURE_COMPRESSION_ASTC_SLICED_3D = WEBGPU_FEATURE_TEXTURE_COMPRESSION_ASTC_SLICED_3D;
+<a href=#1395 id=1395 data-nosnippet>1395</a>
+<a href=#1396 id=1396 data-nosnippet>1396</a>        <span class="doccomment">/// Enables use of Timestamp Queries. These queries tell the current gpu timestamp when
+<a href=#1397 id=1397 data-nosnippet>1397</a>        /// all work before the query is finished.
+<a href=#1398 id=1398 data-nosnippet>1398</a>        ///
+<a href=#1399 id=1399 data-nosnippet>1399</a>        /// This feature allows the use of
+<a href=#1400 id=1400 data-nosnippet>1400</a>        /// - [`RenderPassDescriptor::timestamp_writes`]
+<a href=#1401 id=1401 data-nosnippet>1401</a>        /// - [`ComputePassDescriptor::timestamp_writes`]
+<a href=#1402 id=1402 data-nosnippet>1402</a>        /// to write out timestamps.
+<a href=#1403 id=1403 data-nosnippet>1403</a>        ///
+<a href=#1404 id=1404 data-nosnippet>1404</a>        /// For arbitrary timestamp write commands on encoders refer to [`Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`].
+<a href=#1405 id=1405 data-nosnippet>1405</a>        /// For arbitrary timestamp write commands on passes refer to [`Features::TIMESTAMP_QUERY_INSIDE_PASSES`].
 <a href=#1406 id=1406 data-nosnippet>1406</a>        ///
-<a href=#1407 id=1407 data-nosnippet>1407</a>        /// This is a web and native feature.
-<a href=#1408 id=1408 data-nosnippet>1408</a>        ///
-<a href=#1409 id=1409 data-nosnippet>1409</a>        /// [`RenderPassDescriptor::timestamp_writes`]: https://docs.rs/wgpu/latest/wgpu/struct.RenderPassDescriptor.html#structfield.timestamp_writes
-<a href=#1410 id=1410 data-nosnippet>1410</a>        /// [`ComputePassDescriptor::timestamp_writes`]: https://docs.rs/wgpu/latest/wgpu/struct.ComputePassDescriptor.html#structfield.timestamp_writes
-<a href=#1411 id=1411 data-nosnippet>1411</a>        /// [`CommandEncoder::resolve_query_set`]: https://docs.rs/wgpu/latest/wgpu/struct.CommandEncoder.html#method.resolve_query_set
-<a href=#1412 id=1412 data-nosnippet>1412</a>        /// [`Queue::get_timestamp_period`]: https://docs.rs/wgpu/latest/wgpu/struct.Queue.html#method.get_timestamp_period
-<a href=#1413 id=1413 data-nosnippet>1413</a>        </span><span class="kw">const </span>TIMESTAMP_QUERY = WEBGPU_FEATURE_TIMESTAMP_QUERY;
-<a href=#1414 id=1414 data-nosnippet>1414</a>
-<a href=#1415 id=1415 data-nosnippet>1415</a>        <span class="doccomment">/// Allows non-zero value for the `first_instance` member in indirect draw calls.
+<a href=#1407 id=1407 data-nosnippet>1407</a>        /// They must be resolved using [`CommandEncoder::resolve_query_set`] into a buffer,
+<a href=#1408 id=1408 data-nosnippet>1408</a>        /// then the result must be multiplied by the timestamp period [`Queue::get_timestamp_period`]
+<a href=#1409 id=1409 data-nosnippet>1409</a>        /// to get the timestamp in nanoseconds. Multiple timestamps can then be diffed to get the
+<a href=#1410 id=1410 data-nosnippet>1410</a>        /// time for operations between them to finish.
+<a href=#1411 id=1411 data-nosnippet>1411</a>        ///
+<a href=#1412 id=1412 data-nosnippet>1412</a>        /// Supported Platforms:
+<a href=#1413 id=1413 data-nosnippet>1413</a>        /// - Vulkan
+<a href=#1414 id=1414 data-nosnippet>1414</a>        /// - DX12
+<a href=#1415 id=1415 data-nosnippet>1415</a>        /// - Metal
 <a href=#1416 id=1416 data-nosnippet>1416</a>        ///
-<a href=#1417 id=1417 data-nosnippet>1417</a>        /// If this feature is not enabled, and the `first_instance` member is non-zero, the behavior may be:
-<a href=#1418 id=1418 data-nosnippet>1418</a>        /// - The draw call is ignored.
-<a href=#1419 id=1419 data-nosnippet>1419</a>        /// - The draw call is executed as if the `first_instance` is zero.
-<a href=#1420 id=1420 data-nosnippet>1420</a>        /// - The draw call is executed with the correct `first_instance` value.
-<a href=#1421 id=1421 data-nosnippet>1421</a>        ///
-<a href=#1422 id=1422 data-nosnippet>1422</a>        /// Supported Platforms:
-<a href=#1423 id=1423 data-nosnippet>1423</a>        /// - Vulkan (mostly)
-<a href=#1424 id=1424 data-nosnippet>1424</a>        /// - DX12
-<a href=#1425 id=1425 data-nosnippet>1425</a>        /// - Metal on Apple3+ or Mac1+
-<a href=#1426 id=1426 data-nosnippet>1426</a>        /// - OpenGL (Desktop 4.2+ with ARB_shader_draw_parameters only)
-<a href=#1427 id=1427 data-nosnippet>1427</a>        ///
-<a href=#1428 id=1428 data-nosnippet>1428</a>        /// Not Supported:
-<a href=#1429 id=1429 data-nosnippet>1429</a>        /// - OpenGL ES / WebGL
-<a href=#1430 id=1430 data-nosnippet>1430</a>        ///
-<a href=#1431 id=1431 data-nosnippet>1431</a>        /// This is a web and native feature.
-<a href=#1432 id=1432 data-nosnippet>1432</a>        </span><span class="kw">const </span>INDIRECT_FIRST_INSTANCE = WEBGPU_FEATURE_INDIRECT_FIRST_INSTANCE;
-<a href=#1433 id=1433 data-nosnippet>1433</a>
-<a href=#1434 id=1434 data-nosnippet>1434</a>        <span class="doccomment">/// Allows shaders to use 16-bit floating point types. You may use them uniform buffers,
-<a href=#1435 id=1435 data-nosnippet>1435</a>        /// storage buffers, and local variables. You may not use them in push constants.
-<a href=#1436 id=1436 data-nosnippet>1436</a>        ///
-<a href=#1437 id=1437 data-nosnippet>1437</a>        /// In order to use this in WGSL shaders, you must add `enable f16;` to the top of your shader,
-<a href=#1438 id=1438 data-nosnippet>1438</a>        /// before any global items.
-<a href=#1439 id=1439 data-nosnippet>1439</a>        ///
-<a href=#1440 id=1440 data-nosnippet>1440</a>        /// Supported Platforms:
-<a href=#1441 id=1441 data-nosnippet>1441</a>        /// - Vulkan
-<a href=#1442 id=1442 data-nosnippet>1442</a>        /// - Metal
-<a href=#1443 id=1443 data-nosnippet>1443</a>        /// - DX12
-<a href=#1444 id=1444 data-nosnippet>1444</a>        ///
-<a href=#1445 id=1445 data-nosnippet>1445</a>        /// This is a web and native feature.
-<a href=#1446 id=1446 data-nosnippet>1446</a>        </span><span class="kw">const </span>SHADER_F16 = WEBGPU_FEATURE_SHADER_F16;
-<a href=#1447 id=1447 data-nosnippet>1447</a>
-<a href=#1448 id=1448 data-nosnippet>1448</a>        <span class="doccomment">/// Allows for usage of textures of format [`TextureFormat::Rg11b10Ufloat`] as a render target
+<a href=#1417 id=1417 data-nosnippet>1417</a>        /// This is a web and native feature.
+<a href=#1418 id=1418 data-nosnippet>1418</a>        ///
+<a href=#1419 id=1419 data-nosnippet>1419</a>        /// [`RenderPassDescriptor::timestamp_writes`]: https://docs.rs/wgpu/latest/wgpu/struct.RenderPassDescriptor.html#structfield.timestamp_writes
+<a href=#1420 id=1420 data-nosnippet>1420</a>        /// [`ComputePassDescriptor::timestamp_writes`]: https://docs.rs/wgpu/latest/wgpu/struct.ComputePassDescriptor.html#structfield.timestamp_writes
+<a href=#1421 id=1421 data-nosnippet>1421</a>        /// [`CommandEncoder::resolve_query_set`]: https://docs.rs/wgpu/latest/wgpu/struct.CommandEncoder.html#method.resolve_query_set
+<a href=#1422 id=1422 data-nosnippet>1422</a>        /// [`Queue::get_timestamp_period`]: https://docs.rs/wgpu/latest/wgpu/struct.Queue.html#method.get_timestamp_period
+<a href=#1423 id=1423 data-nosnippet>1423</a>        </span><span class="kw">const </span>TIMESTAMP_QUERY = WEBGPU_FEATURE_TIMESTAMP_QUERY;
+<a href=#1424 id=1424 data-nosnippet>1424</a>
+<a href=#1425 id=1425 data-nosnippet>1425</a>        <span class="doccomment">/// Allows non-zero value for the `first_instance` member in indirect draw calls.
+<a href=#1426 id=1426 data-nosnippet>1426</a>        ///
+<a href=#1427 id=1427 data-nosnippet>1427</a>        /// If this feature is not enabled, and the `first_instance` member is non-zero, the behavior may be:
+<a href=#1428 id=1428 data-nosnippet>1428</a>        /// - The draw call is ignored.
+<a href=#1429 id=1429 data-nosnippet>1429</a>        /// - The draw call is executed as if the `first_instance` is zero.
+<a href=#1430 id=1430 data-nosnippet>1430</a>        /// - The draw call is executed with the correct `first_instance` value.
+<a href=#1431 id=1431 data-nosnippet>1431</a>        ///
+<a href=#1432 id=1432 data-nosnippet>1432</a>        /// Supported Platforms:
+<a href=#1433 id=1433 data-nosnippet>1433</a>        /// - Vulkan (mostly)
+<a href=#1434 id=1434 data-nosnippet>1434</a>        /// - DX12
+<a href=#1435 id=1435 data-nosnippet>1435</a>        /// - Metal on Apple3+ or Mac1+
+<a href=#1436 id=1436 data-nosnippet>1436</a>        /// - OpenGL (Desktop 4.2+ with ARB_shader_draw_parameters only)
+<a href=#1437 id=1437 data-nosnippet>1437</a>        ///
+<a href=#1438 id=1438 data-nosnippet>1438</a>        /// Not Supported:
+<a href=#1439 id=1439 data-nosnippet>1439</a>        /// - OpenGL ES / WebGL
+<a href=#1440 id=1440 data-nosnippet>1440</a>        ///
+<a href=#1441 id=1441 data-nosnippet>1441</a>        /// This is a web and native feature.
+<a href=#1442 id=1442 data-nosnippet>1442</a>        </span><span class="kw">const </span>INDIRECT_FIRST_INSTANCE = WEBGPU_FEATURE_INDIRECT_FIRST_INSTANCE;
+<a href=#1443 id=1443 data-nosnippet>1443</a>
+<a href=#1444 id=1444 data-nosnippet>1444</a>        <span class="doccomment">/// Allows shaders to use 16-bit floating point types. You may use them uniform buffers,
+<a href=#1445 id=1445 data-nosnippet>1445</a>        /// storage buffers, and local variables. You may not use them in push constants.
+<a href=#1446 id=1446 data-nosnippet>1446</a>        ///
+<a href=#1447 id=1447 data-nosnippet>1447</a>        /// In order to use this in WGSL shaders, you must add `enable f16;` to the top of your shader,
+<a href=#1448 id=1448 data-nosnippet>1448</a>        /// before any global items.
 <a href=#1449 id=1449 data-nosnippet>1449</a>        ///
-<a href=#1450 id=1450 data-nosnippet>1450</a>        /// Supported platforms:
+<a href=#1450 id=1450 data-nosnippet>1450</a>        /// Supported Platforms:
 <a href=#1451 id=1451 data-nosnippet>1451</a>        /// - Vulkan
-<a href=#1452 id=1452 data-nosnippet>1452</a>        /// - DX12
-<a href=#1453 id=1453 data-nosnippet>1453</a>        /// - Metal
+<a href=#1452 id=1452 data-nosnippet>1452</a>        /// - Metal
+<a href=#1453 id=1453 data-nosnippet>1453</a>        /// - DX12
 <a href=#1454 id=1454 data-nosnippet>1454</a>        ///
 <a href=#1455 id=1455 data-nosnippet>1455</a>        /// This is a web and native feature.
-<a href=#1456 id=1456 data-nosnippet>1456</a>        ///
-<a href=#1457 id=1457 data-nosnippet>1457</a>        /// [`TextureFormat::Rg11b10Ufloat`]: super::TextureFormat::Rg11b10Ufloat
-<a href=#1458 id=1458 data-nosnippet>1458</a>        </span><span class="kw">const </span>RG11B10UFLOAT_RENDERABLE = WEBGPU_FEATURE_RG11B10UFLOAT_RENDERABLE;
-<a href=#1459 id=1459 data-nosnippet>1459</a>
-<a href=#1460 id=1460 data-nosnippet>1460</a>        <span class="doccomment">/// Allows the [`TextureUsages::STORAGE_BINDING`] usage on textures with format [`TextureFormat::Bgra8Unorm`]
-<a href=#1461 id=1461 data-nosnippet>1461</a>        ///
-<a href=#1462 id=1462 data-nosnippet>1462</a>        /// Supported Platforms:
-<a href=#1463 id=1463 data-nosnippet>1463</a>        /// - Vulkan
-<a href=#1464 id=1464 data-nosnippet>1464</a>        /// - DX12
-<a href=#1465 id=1465 data-nosnippet>1465</a>        /// - Metal
+<a href=#1456 id=1456 data-nosnippet>1456</a>        </span><span class="kw">const </span>SHADER_F16 = WEBGPU_FEATURE_SHADER_F16;
+<a href=#1457 id=1457 data-nosnippet>1457</a>
+<a href=#1458 id=1458 data-nosnippet>1458</a>        <span class="doccomment">/// Allows for usage of textures of format [`TextureFormat::Rg11b10Ufloat`] as a render target
+<a href=#1459 id=1459 data-nosnippet>1459</a>        ///
+<a href=#1460 id=1460 data-nosnippet>1460</a>        /// Supported platforms:
+<a href=#1461 id=1461 data-nosnippet>1461</a>        /// - Vulkan
+<a href=#1462 id=1462 data-nosnippet>1462</a>        /// - DX12
+<a href=#1463 id=1463 data-nosnippet>1463</a>        /// - Metal
+<a href=#1464 id=1464 data-nosnippet>1464</a>        ///
+<a href=#1465 id=1465 data-nosnippet>1465</a>        /// This is a web and native feature.
 <a href=#1466 id=1466 data-nosnippet>1466</a>        ///
-<a href=#1467 id=1467 data-nosnippet>1467</a>        /// This is a web and native feature.
-<a href=#1468 id=1468 data-nosnippet>1468</a>        ///
-<a href=#1469 id=1469 data-nosnippet>1469</a>        /// [`TextureFormat::Bgra8Unorm`]: super::TextureFormat::Bgra8Unorm
-<a href=#1470 id=1470 data-nosnippet>1470</a>        /// [`TextureUsages::STORAGE_BINDING`]: super::TextureUsages::STORAGE_BINDING
-<a href=#1471 id=1471 data-nosnippet>1471</a>        </span><span class="kw">const </span>BGRA8UNORM_STORAGE = WEBGPU_FEATURE_BGRA8UNORM_STORAGE;
-<a href=#1472 id=1472 data-nosnippet>1472</a>
-<a href=#1473 id=1473 data-nosnippet>1473</a>
-<a href=#1474 id=1474 data-nosnippet>1474</a>        <span class="doccomment">/// Allows textures with formats "r32float", "rg32float", and "rgba32float" to be filterable.
-<a href=#1475 id=1475 data-nosnippet>1475</a>        ///
-<a href=#1476 id=1476 data-nosnippet>1476</a>        /// Supported Platforms:
-<a href=#1477 id=1477 data-nosnippet>1477</a>        /// - Vulkan (mainly on Desktop GPUs)
-<a href=#1478 id=1478 data-nosnippet>1478</a>        /// - DX12
-<a href=#1479 id=1479 data-nosnippet>1479</a>        /// - Metal on macOS or Apple9+ GPUs, optional on iOS/iPadOS with Apple7/8 GPUs
-<a href=#1480 id=1480 data-nosnippet>1480</a>        /// - GL with one of `GL_ARB_color_buffer_float`/`GL_EXT_color_buffer_float`/`OES_texture_float_linear`
-<a href=#1481 id=1481 data-nosnippet>1481</a>        ///
-<a href=#1482 id=1482 data-nosnippet>1482</a>        /// This is a web and native feature.
-<a href=#1483 id=1483 data-nosnippet>1483</a>        </span><span class="kw">const </span>FLOAT32_FILTERABLE = WEBGPU_FEATURE_FLOAT32_FILTERABLE;
-<a href=#1484 id=1484 data-nosnippet>1484</a>
-<a href=#1485 id=1485 data-nosnippet>1485</a>        <span class="doccomment">/// Allows two outputs from a shader to be used for blending.
-<a href=#1486 id=1486 data-nosnippet>1486</a>        /// Note that dual-source blending doesn't support multiple render targets.
-<a href=#1487 id=1487 data-nosnippet>1487</a>        ///
-<a href=#1488 id=1488 data-nosnippet>1488</a>        /// For more info see the OpenGL ES extension GL_EXT_blend_func_extended.
-<a href=#1489 id=1489 data-nosnippet>1489</a>        ///
-<a href=#1490 id=1490 data-nosnippet>1490</a>        /// Supported platforms:
-<a href=#1491 id=1491 data-nosnippet>1491</a>        /// - OpenGL ES (with GL_EXT_blend_func_extended)
-<a href=#1492 id=1492 data-nosnippet>1492</a>        /// - Metal (with MSL 1.2+)
-<a href=#1493 id=1493 data-nosnippet>1493</a>        /// - Vulkan (with dualSrcBlend)
-<a href=#1494 id=1494 data-nosnippet>1494</a>        /// - DX12
-<a href=#1495 id=1495 data-nosnippet>1495</a>        ///
-<a href=#1496 id=1496 data-nosnippet>1496</a>        /// This is a web and native feature.
-<a href=#1497 id=1497 data-nosnippet>1497</a>        </span><span class="kw">const </span>DUAL_SOURCE_BLENDING = WEBGPU_FEATURE_DUAL_SOURCE_BLENDING;
-<a href=#1498 id=1498 data-nosnippet>1498</a>
-<a href=#1499 id=1499 data-nosnippet>1499</a>        <span class="doccomment">/// Allows the use of `@builtin(clip_distances)` in WGSL.
-<a href=#1500 id=1500 data-nosnippet>1500</a>        ///
-<a href=#1501 id=1501 data-nosnippet>1501</a>        /// Supported platforms:
-<a href=#1502 id=1502 data-nosnippet>1502</a>        /// - Vulkan (mainly on Desktop GPUs)
-<a href=#1503 id=1503 data-nosnippet>1503</a>        /// - GL (Desktop or `GL_EXT_clip_cull_distance`)
-<a href=#1504 id=1504 data-nosnippet>1504</a>        ///
-<a href=#1505 id=1505 data-nosnippet>1505</a>        /// This is a web and native feature.
-<a href=#1506 id=1506 data-nosnippet>1506</a>        </span><span class="kw">const </span>CLIP_DISTANCES = WEBGPU_FEATURE_CLIP_DISTANCES;
-<a href=#1507 id=1507 data-nosnippet>1507</a>    }
-<a href=#1508 id=1508 data-nosnippet>1508</a>}
-<a href=#1509 id=1509 data-nosnippet>1509</a>
-<a href=#1510 id=1510 data-nosnippet>1510</a><span class="kw">impl </span>Features {
-<a href=#1511 id=1511 data-nosnippet>1511</a>    <span class="doccomment">/// Mask of all features which are part of the upstream WebGPU standard.
-<a href=#1512 id=1512 data-nosnippet>1512</a>    </span><span class="attr">#[must_use]
-<a href=#1513 id=1513 data-nosnippet>1513</a>    </span><span class="kw">pub const fn </span>all_webgpu_mask() -&gt; <span class="self">Self </span>{
-<a href=#1514 id=1514 data-nosnippet>1514</a>        <span class="self">Self</span>::from_bits_truncate(FeatureBits([
-<a href=#1515 id=1515 data-nosnippet>1515</a>            FeaturesWGPU::empty().bits(),
-<a href=#1516 id=1516 data-nosnippet>1516</a>            FeaturesWebGPU::all().bits(),
-<a href=#1517 id=1517 data-nosnippet>1517</a>        ]))
-<a href=#1518 id=1518 data-nosnippet>1518</a>    }
+<a href=#1467 id=1467 data-nosnippet>1467</a>        /// [`TextureFormat::Rg11b10Ufloat`]: super::TextureFormat::Rg11b10Ufloat
+<a href=#1468 id=1468 data-nosnippet>1468</a>        </span><span class="kw">const </span>RG11B10UFLOAT_RENDERABLE = WEBGPU_FEATURE_RG11B10UFLOAT_RENDERABLE;
+<a href=#1469 id=1469 data-nosnippet>1469</a>
+<a href=#1470 id=1470 data-nosnippet>1470</a>        <span class="doccomment">/// Allows the [`TextureUsages::STORAGE_BINDING`] usage on textures with format [`TextureFormat::Bgra8Unorm`]
+<a href=#1471 id=1471 data-nosnippet>1471</a>        ///
+<a href=#1472 id=1472 data-nosnippet>1472</a>        /// Supported Platforms:
+<a href=#1473 id=1473 data-nosnippet>1473</a>        /// - Vulkan
+<a href=#1474 id=1474 data-nosnippet>1474</a>        /// - DX12
+<a href=#1475 id=1475 data-nosnippet>1475</a>        /// - Metal
+<a href=#1476 id=1476 data-nosnippet>1476</a>        ///
+<a href=#1477 id=1477 data-nosnippet>1477</a>        /// This is a web and native feature.
+<a href=#1478 id=1478 data-nosnippet>1478</a>        ///
+<a href=#1479 id=1479 data-nosnippet>1479</a>        /// [`TextureFormat::Bgra8Unorm`]: super::TextureFormat::Bgra8Unorm
+<a href=#1480 id=1480 data-nosnippet>1480</a>        /// [`TextureUsages::STORAGE_BINDING`]: super::TextureUsages::STORAGE_BINDING
+<a href=#1481 id=1481 data-nosnippet>1481</a>        </span><span class="kw">const </span>BGRA8UNORM_STORAGE = WEBGPU_FEATURE_BGRA8UNORM_STORAGE;
+<a href=#1482 id=1482 data-nosnippet>1482</a>
+<a href=#1483 id=1483 data-nosnippet>1483</a>
+<a href=#1484 id=1484 data-nosnippet>1484</a>        <span class="doccomment">/// Allows textures with formats "r32float", "rg32float", and "rgba32float" to be filterable.
+<a href=#1485 id=1485 data-nosnippet>1485</a>        ///
+<a href=#1486 id=1486 data-nosnippet>1486</a>        /// Supported Platforms:
+<a href=#1487 id=1487 data-nosnippet>1487</a>        /// - Vulkan (mainly on Desktop GPUs)
+<a href=#1488 id=1488 data-nosnippet>1488</a>        /// - DX12
+<a href=#1489 id=1489 data-nosnippet>1489</a>        /// - Metal on macOS or Apple9+ GPUs, optional on iOS/iPadOS with Apple7/8 GPUs
+<a href=#1490 id=1490 data-nosnippet>1490</a>        /// - GL with one of `GL_ARB_color_buffer_float`/`GL_EXT_color_buffer_float`/`OES_texture_float_linear`
+<a href=#1491 id=1491 data-nosnippet>1491</a>        ///
+<a href=#1492 id=1492 data-nosnippet>1492</a>        /// This is a web and native feature.
+<a href=#1493 id=1493 data-nosnippet>1493</a>        </span><span class="kw">const </span>FLOAT32_FILTERABLE = WEBGPU_FEATURE_FLOAT32_FILTERABLE;
+<a href=#1494 id=1494 data-nosnippet>1494</a>
+<a href=#1495 id=1495 data-nosnippet>1495</a>        <span class="doccomment">/// Allows two outputs from a shader to be used for blending.
+<a href=#1496 id=1496 data-nosnippet>1496</a>        /// Note that dual-source blending doesn't support multiple render targets.
+<a href=#1497 id=1497 data-nosnippet>1497</a>        ///
+<a href=#1498 id=1498 data-nosnippet>1498</a>        /// For more info see the OpenGL ES extension GL_EXT_blend_func_extended.
+<a href=#1499 id=1499 data-nosnippet>1499</a>        ///
+<a href=#1500 id=1500 data-nosnippet>1500</a>        /// Supported platforms:
+<a href=#1501 id=1501 data-nosnippet>1501</a>        /// - OpenGL ES (with GL_EXT_blend_func_extended)
+<a href=#1502 id=1502 data-nosnippet>1502</a>        /// - Metal (with MSL 1.2+)
+<a href=#1503 id=1503 data-nosnippet>1503</a>        /// - Vulkan (with dualSrcBlend)
+<a href=#1504 id=1504 data-nosnippet>1504</a>        /// - DX12
+<a href=#1505 id=1505 data-nosnippet>1505</a>        ///
+<a href=#1506 id=1506 data-nosnippet>1506</a>        /// This is a web and native feature.
+<a href=#1507 id=1507 data-nosnippet>1507</a>        </span><span class="kw">const </span>DUAL_SOURCE_BLENDING = WEBGPU_FEATURE_DUAL_SOURCE_BLENDING;
+<a href=#1508 id=1508 data-nosnippet>1508</a>
+<a href=#1509 id=1509 data-nosnippet>1509</a>        <span class="doccomment">/// Allows the use of `@builtin(clip_distances)` in WGSL.
+<a href=#1510 id=1510 data-nosnippet>1510</a>        ///
+<a href=#1511 id=1511 data-nosnippet>1511</a>        /// Supported platforms:
+<a href=#1512 id=1512 data-nosnippet>1512</a>        /// - Vulkan (mainly on Desktop GPUs)
+<a href=#1513 id=1513 data-nosnippet>1513</a>        /// - GL (Desktop or `GL_EXT_clip_cull_distance`)
+<a href=#1514 id=1514 data-nosnippet>1514</a>        ///
+<a href=#1515 id=1515 data-nosnippet>1515</a>        /// This is a web and native feature.
+<a href=#1516 id=1516 data-nosnippet>1516</a>        </span><span class="kw">const </span>CLIP_DISTANCES = WEBGPU_FEATURE_CLIP_DISTANCES;
+<a href=#1517 id=1517 data-nosnippet>1517</a>    }
+<a href=#1518 id=1518 data-nosnippet>1518</a>}
 <a href=#1519 id=1519 data-nosnippet>1519</a>
-<a href=#1520 id=1520 data-nosnippet>1520</a>    <span class="doccomment">/// Mask of all features that are only available when targeting native (not web).
-<a href=#1521 id=1521 data-nosnippet>1521</a>    </span><span class="attr">#[must_use]
-<a href=#1522 id=1522 data-nosnippet>1522</a>    </span><span class="kw">pub const fn </span>all_native_mask() -&gt; <span class="self">Self </span>{
-<a href=#1523 id=1523 data-nosnippet>1523</a>        <span class="self">Self</span>::from_bits_truncate(FeatureBits([
-<a href=#1524 id=1524 data-nosnippet>1524</a>            FeaturesWGPU::all().bits(),
-<a href=#1525 id=1525 data-nosnippet>1525</a>            FeaturesWebGPU::empty().bits(),
-<a href=#1526 id=1526 data-nosnippet>1526</a>        ]))
-<a href=#1527 id=1527 data-nosnippet>1527</a>    }
-<a href=#1528 id=1528 data-nosnippet>1528</a>
-<a href=#1529 id=1529 data-nosnippet>1529</a>    <span class="doccomment">/// Mask of all features which are experimental.
-<a href=#1530 id=1530 data-nosnippet>1530</a>    </span><span class="attr">#[must_use]
-<a href=#1531 id=1531 data-nosnippet>1531</a>    </span><span class="kw">pub const fn </span>all_experimental_mask() -&gt; <span class="self">Self </span>{
-<a href=#1532 id=1532 data-nosnippet>1532</a>        <span class="self">Self</span>::from_bits_truncate(FeatureBits([
-<a href=#1533 id=1533 data-nosnippet>1533</a>            FeaturesWGPU::EXPERIMENTAL_MESH_SHADER.bits()
-<a href=#1534 id=1534 data-nosnippet>1534</a>                | FeaturesWGPU::EXPERIMENTAL_MESH_SHADER_MULTIVIEW.bits()
-<a href=#1535 id=1535 data-nosnippet>1535</a>                | FeaturesWGPU::EXPERIMENTAL_RAY_QUERY.bits()
-<a href=#1536 id=1536 data-nosnippet>1536</a>                | FeaturesWGPU::EXPERIMENTAL_RAY_HIT_VERTEX_RETURN.bits()
-<a href=#1537 id=1537 data-nosnippet>1537</a>                | FeaturesWGPU::EXPERIMENTAL_PASSTHROUGH_SHADERS.bits(),
-<a href=#1538 id=1538 data-nosnippet>1538</a>            FeaturesWebGPU::empty().bits(),
-<a href=#1539 id=1539 data-nosnippet>1539</a>        ]))
-<a href=#1540 id=1540 data-nosnippet>1540</a>    }
-<a href=#1541 id=1541 data-nosnippet>1541</a>
-<a href=#1542 id=1542 data-nosnippet>1542</a>    <span class="doccomment">/// Vertex formats allowed for creating and building BLASes
-<a href=#1543 id=1543 data-nosnippet>1543</a>    </span><span class="attr">#[must_use]
-<a href=#1544 id=1544 data-nosnippet>1544</a>    </span><span class="kw">pub fn </span>allowed_vertex_formats_for_blas(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;VertexFormat&gt; {
-<a href=#1545 id=1545 data-nosnippet>1545</a>        <span class="kw">let </span><span class="kw-2">mut </span>formats = Vec::new();
-<a href=#1546 id=1546 data-nosnippet>1546</a>        <span class="kw">if </span><span class="self">self</span>.intersects(<span class="self">Self</span>::EXPERIMENTAL_RAY_QUERY) {
-<a href=#1547 id=1547 data-nosnippet>1547</a>            formats.push(VertexFormat::Float32x3);
-<a href=#1548 id=1548 data-nosnippet>1548</a>        }
-<a href=#1549 id=1549 data-nosnippet>1549</a>        <span class="kw">if </span><span class="self">self</span>.contains(<span class="self">Self</span>::EXTENDED_ACCELERATION_STRUCTURE_VERTEX_FORMATS) {
-<a href=#1550 id=1550 data-nosnippet>1550</a>            formats.push(VertexFormat::Float32x2);
-<a href=#1551 id=1551 data-nosnippet>1551</a>            formats.push(VertexFormat::Float16x2);
-<a href=#1552 id=1552 data-nosnippet>1552</a>            formats.push(VertexFormat::Float16x4);
-<a href=#1553 id=1553 data-nosnippet>1553</a>            formats.push(VertexFormat::Snorm16x2);
-<a href=#1554 id=1554 data-nosnippet>1554</a>            formats.push(VertexFormat::Snorm16x4);
-<a href=#1555 id=1555 data-nosnippet>1555</a>        }
-<a href=#1556 id=1556 data-nosnippet>1556</a>        formats
-<a href=#1557 id=1557 data-nosnippet>1557</a>    }
-<a href=#1558 id=1558 data-nosnippet>1558</a>}
-<a href=#1559 id=1559 data-nosnippet>1559</a>
-<a href=#1560 id=1560 data-nosnippet>1560</a><span class="attr">#[cfg(test)]
-<a href=#1561 id=1561 data-nosnippet>1561</a></span><span class="kw">mod </span>tests {
-<a href=#1562 id=1562 data-nosnippet>1562</a>    <span class="kw">use crate</span>::{Features, FeaturesWGPU, FeaturesWebGPU};
-<a href=#1563 id=1563 data-nosnippet>1563</a>
-<a href=#1564 id=1564 data-nosnippet>1564</a>    <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
-<a href=#1565 id=1565 data-nosnippet>1565</a>    #[test]
-<a href=#1566 id=1566 data-nosnippet>1566</a>    </span><span class="kw">fn </span>check_hex() {
-<a href=#1567 id=1567 data-nosnippet>1567</a>        <span class="kw">use </span><span class="kw">crate</span>::FeatureBits;
-<a href=#1568 id=1568 data-nosnippet>1568</a>
-<a href=#1569 id=1569 data-nosnippet>1569</a>        <span class="kw">use </span>bitflags::{
-<a href=#1570 id=1570 data-nosnippet>1570</a>            parser::{ParseHex <span class="kw">as _</span>, WriteHex <span class="kw">as _</span>},
-<a href=#1571 id=1571 data-nosnippet>1571</a>            Bits <span class="kw">as _</span>,
-<a href=#1572 id=1572 data-nosnippet>1572</a>        };
-<a href=#1573 id=1573 data-nosnippet>1573</a>
-<a href=#1574 id=1574 data-nosnippet>1574</a>        <span class="kw">let </span><span class="kw-2">mut </span>hex = alloc::string::String::new();
-<a href=#1575 id=1575 data-nosnippet>1575</a>        FeatureBits::ALL.write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
-<a href=#1576 id=1576 data-nosnippet>1576</a>        <span class="macro">assert_eq!</span>(
-<a href=#1577 id=1577 data-nosnippet>1577</a>            FeatureBits::parse_hex(hex.as_str()).unwrap(),
-<a href=#1578 id=1578 data-nosnippet>1578</a>            FeatureBits::ALL
-<a href=#1579 id=1579 data-nosnippet>1579</a>        );
-<a href=#1580 id=1580 data-nosnippet>1580</a>
-<a href=#1581 id=1581 data-nosnippet>1581</a>        hex.clear();
-<a href=#1582 id=1582 data-nosnippet>1582</a>        FeatureBits::EMPTY.write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
-<a href=#1583 id=1583 data-nosnippet>1583</a>        <span class="macro">assert_eq!</span>(
-<a href=#1584 id=1584 data-nosnippet>1584</a>            FeatureBits::parse_hex(hex.as_str()).unwrap(),
-<a href=#1585 id=1585 data-nosnippet>1585</a>            FeatureBits::EMPTY
-<a href=#1586 id=1586 data-nosnippet>1586</a>        );
-<a href=#1587 id=1587 data-nosnippet>1587</a>
-<a href=#1588 id=1588 data-nosnippet>1588</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
-<a href=#1589 id=1589 data-nosnippet>1589</a>            hex.clear();
-<a href=#1590 id=1590 data-nosnippet>1590</a>            feature.value().bits().write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
-<a href=#1591 id=1591 data-nosnippet>1591</a>            <span class="macro">assert_eq!</span>(
-<a href=#1592 id=1592 data-nosnippet>1592</a>                FeatureBits::parse_hex(hex.as_str()).unwrap(),
-<a href=#1593 id=1593 data-nosnippet>1593</a>                feature.value().bits(),
-<a href=#1594 id=1594 data-nosnippet>1594</a>                <span class="string">"{hex}"
-<a href=#1595 id=1595 data-nosnippet>1595</a>            </span>);
-<a href=#1596 id=1596 data-nosnippet>1596</a>        }
-<a href=#1597 id=1597 data-nosnippet>1597</a>    }
+<a href=#1520 id=1520 data-nosnippet>1520</a><span class="kw">impl </span>Features {
+<a href=#1521 id=1521 data-nosnippet>1521</a>    <span class="doccomment">/// Mask of all features which are part of the upstream WebGPU standard.
+<a href=#1522 id=1522 data-nosnippet>1522</a>    </span><span class="attr">#[must_use]
+<a href=#1523 id=1523 data-nosnippet>1523</a>    </span><span class="kw">pub const fn </span>all_webgpu_mask() -&gt; <span class="self">Self </span>{
+<a href=#1524 id=1524 data-nosnippet>1524</a>        <span class="self">Self</span>::from_bits_truncate(FeatureBits([
+<a href=#1525 id=1525 data-nosnippet>1525</a>            FeaturesWGPU::empty().bits(),
+<a href=#1526 id=1526 data-nosnippet>1526</a>            FeaturesWebGPU::all().bits(),
+<a href=#1527 id=1527 data-nosnippet>1527</a>        ]))
+<a href=#1528 id=1528 data-nosnippet>1528</a>    }
+<a href=#1529 id=1529 data-nosnippet>1529</a>
+<a href=#1530 id=1530 data-nosnippet>1530</a>    <span class="doccomment">/// Mask of all features that are only available when targeting native (not web).
+<a href=#1531 id=1531 data-nosnippet>1531</a>    </span><span class="attr">#[must_use]
+<a href=#1532 id=1532 data-nosnippet>1532</a>    </span><span class="kw">pub const fn </span>all_native_mask() -&gt; <span class="self">Self </span>{
+<a href=#1533 id=1533 data-nosnippet>1533</a>        <span class="self">Self</span>::from_bits_truncate(FeatureBits([
+<a href=#1534 id=1534 data-nosnippet>1534</a>            FeaturesWGPU::all().bits(),
+<a href=#1535 id=1535 data-nosnippet>1535</a>            FeaturesWebGPU::empty().bits(),
+<a href=#1536 id=1536 data-nosnippet>1536</a>        ]))
+<a href=#1537 id=1537 data-nosnippet>1537</a>    }
+<a href=#1538 id=1538 data-nosnippet>1538</a>
+<a href=#1539 id=1539 data-nosnippet>1539</a>    <span class="doccomment">/// Mask of all features which are experimental.
+<a href=#1540 id=1540 data-nosnippet>1540</a>    </span><span class="attr">#[must_use]
+<a href=#1541 id=1541 data-nosnippet>1541</a>    </span><span class="kw">pub const fn </span>all_experimental_mask() -&gt; <span class="self">Self </span>{
+<a href=#1542 id=1542 data-nosnippet>1542</a>        <span class="self">Self</span>::from_bits_truncate(FeatureBits([
+<a href=#1543 id=1543 data-nosnippet>1543</a>            FeaturesWGPU::EXPERIMENTAL_MESH_SHADER.bits()
+<a href=#1544 id=1544 data-nosnippet>1544</a>                | FeaturesWGPU::EXPERIMENTAL_MESH_SHADER_MULTIVIEW.bits()
+<a href=#1545 id=1545 data-nosnippet>1545</a>                | FeaturesWGPU::EXPERIMENTAL_MESH_SHADER_POINTS.bits()
+<a href=#1546 id=1546 data-nosnippet>1546</a>                | FeaturesWGPU::EXPERIMENTAL_RAY_QUERY.bits()
+<a href=#1547 id=1547 data-nosnippet>1547</a>                | FeaturesWGPU::EXPERIMENTAL_RAY_HIT_VERTEX_RETURN.bits()
+<a href=#1548 id=1548 data-nosnippet>1548</a>                | FeaturesWGPU::EXPERIMENTAL_PASSTHROUGH_SHADERS.bits(),
+<a href=#1549 id=1549 data-nosnippet>1549</a>            FeaturesWebGPU::empty().bits(),
+<a href=#1550 id=1550 data-nosnippet>1550</a>        ]))
+<a href=#1551 id=1551 data-nosnippet>1551</a>    }
+<a href=#1552 id=1552 data-nosnippet>1552</a>
+<a href=#1553 id=1553 data-nosnippet>1553</a>    <span class="doccomment">/// Vertex formats allowed for creating and building BLASes
+<a href=#1554 id=1554 data-nosnippet>1554</a>    </span><span class="attr">#[must_use]
+<a href=#1555 id=1555 data-nosnippet>1555</a>    </span><span class="kw">pub fn </span>allowed_vertex_formats_for_blas(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;VertexFormat&gt; {
+<a href=#1556 id=1556 data-nosnippet>1556</a>        <span class="kw">let </span><span class="kw-2">mut </span>formats = Vec::new();
+<a href=#1557 id=1557 data-nosnippet>1557</a>        <span class="kw">if </span><span class="self">self</span>.intersects(<span class="self">Self</span>::EXPERIMENTAL_RAY_QUERY) {
+<a href=#1558 id=1558 data-nosnippet>1558</a>            formats.push(VertexFormat::Float32x3);
+<a href=#1559 id=1559 data-nosnippet>1559</a>        }
+<a href=#1560 id=1560 data-nosnippet>1560</a>        <span class="kw">if </span><span class="self">self</span>.contains(<span class="self">Self</span>::EXTENDED_ACCELERATION_STRUCTURE_VERTEX_FORMATS) {
+<a href=#1561 id=1561 data-nosnippet>1561</a>            formats.push(VertexFormat::Float32x2);
+<a href=#1562 id=1562 data-nosnippet>1562</a>            formats.push(VertexFormat::Float16x2);
+<a href=#1563 id=1563 data-nosnippet>1563</a>            formats.push(VertexFormat::Float16x4);
+<a href=#1564 id=1564 data-nosnippet>1564</a>            formats.push(VertexFormat::Snorm16x2);
+<a href=#1565 id=1565 data-nosnippet>1565</a>            formats.push(VertexFormat::Snorm16x4);
+<a href=#1566 id=1566 data-nosnippet>1566</a>        }
+<a href=#1567 id=1567 data-nosnippet>1567</a>        formats
+<a href=#1568 id=1568 data-nosnippet>1568</a>    }
+<a href=#1569 id=1569 data-nosnippet>1569</a>}
+<a href=#1570 id=1570 data-nosnippet>1570</a>
+<a href=#1571 id=1571 data-nosnippet>1571</a><span class="attr">#[cfg(test)]
+<a href=#1572 id=1572 data-nosnippet>1572</a></span><span class="kw">mod </span>tests {
+<a href=#1573 id=1573 data-nosnippet>1573</a>    <span class="kw">use crate</span>::{Features, FeaturesWGPU, FeaturesWebGPU};
+<a href=#1574 id=1574 data-nosnippet>1574</a>
+<a href=#1575 id=1575 data-nosnippet>1575</a>    <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
+<a href=#1576 id=1576 data-nosnippet>1576</a>    #[test]
+<a href=#1577 id=1577 data-nosnippet>1577</a>    </span><span class="kw">fn </span>check_hex() {
+<a href=#1578 id=1578 data-nosnippet>1578</a>        <span class="kw">use </span><span class="kw">crate</span>::FeatureBits;
+<a href=#1579 id=1579 data-nosnippet>1579</a>
+<a href=#1580 id=1580 data-nosnippet>1580</a>        <span class="kw">use </span>bitflags::{
+<a href=#1581 id=1581 data-nosnippet>1581</a>            parser::{ParseHex <span class="kw">as _</span>, WriteHex <span class="kw">as _</span>},
+<a href=#1582 id=1582 data-nosnippet>1582</a>            Bits <span class="kw">as _</span>,
+<a href=#1583 id=1583 data-nosnippet>1583</a>        };
+<a href=#1584 id=1584 data-nosnippet>1584</a>
+<a href=#1585 id=1585 data-nosnippet>1585</a>        <span class="kw">let </span><span class="kw-2">mut </span>hex = alloc::string::String::new();
+<a href=#1586 id=1586 data-nosnippet>1586</a>        FeatureBits::ALL.write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
+<a href=#1587 id=1587 data-nosnippet>1587</a>        <span class="macro">assert_eq!</span>(
+<a href=#1588 id=1588 data-nosnippet>1588</a>            FeatureBits::parse_hex(hex.as_str()).unwrap(),
+<a href=#1589 id=1589 data-nosnippet>1589</a>            FeatureBits::ALL
+<a href=#1590 id=1590 data-nosnippet>1590</a>        );
+<a href=#1591 id=1591 data-nosnippet>1591</a>
+<a href=#1592 id=1592 data-nosnippet>1592</a>        hex.clear();
+<a href=#1593 id=1593 data-nosnippet>1593</a>        FeatureBits::EMPTY.write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
+<a href=#1594 id=1594 data-nosnippet>1594</a>        <span class="macro">assert_eq!</span>(
+<a href=#1595 id=1595 data-nosnippet>1595</a>            FeatureBits::parse_hex(hex.as_str()).unwrap(),
+<a href=#1596 id=1596 data-nosnippet>1596</a>            FeatureBits::EMPTY
+<a href=#1597 id=1597 data-nosnippet>1597</a>        );
 <a href=#1598 id=1598 data-nosnippet>1598</a>
-<a href=#1599 id=1599 data-nosnippet>1599</a>    <span class="attr">#[test]
-<a href=#1600 id=1600 data-nosnippet>1600</a>    </span><span class="kw">fn </span>check_features_display() {
-<a href=#1601 id=1601 data-nosnippet>1601</a>        <span class="kw">use </span>alloc::format;
-<a href=#1602 id=1602 data-nosnippet>1602</a>
-<a href=#1603 id=1603 data-nosnippet>1603</a>        <span class="kw">let </span>feature = Features::CLEAR_TEXTURE;
-<a href=#1604 id=1604 data-nosnippet>1604</a>        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{feature}"</span>), <span class="string">"CLEAR_TEXTURE"</span>);
-<a href=#1605 id=1605 data-nosnippet>1605</a>
-<a href=#1606 id=1606 data-nosnippet>1606</a>        <span class="kw">let </span>feature = Features::CLEAR_TEXTURE | Features::BGRA8UNORM_STORAGE;
-<a href=#1607 id=1607 data-nosnippet>1607</a>        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{feature}"</span>), <span class="string">"CLEAR_TEXTURE | BGRA8UNORM_STORAGE"</span>);
+<a href=#1599 id=1599 data-nosnippet>1599</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
+<a href=#1600 id=1600 data-nosnippet>1600</a>            hex.clear();
+<a href=#1601 id=1601 data-nosnippet>1601</a>            feature.value().bits().write_hex(<span class="kw-2">&amp;mut </span>hex).unwrap();
+<a href=#1602 id=1602 data-nosnippet>1602</a>            <span class="macro">assert_eq!</span>(
+<a href=#1603 id=1603 data-nosnippet>1603</a>                FeatureBits::parse_hex(hex.as_str()).unwrap(),
+<a href=#1604 id=1604 data-nosnippet>1604</a>                feature.value().bits(),
+<a href=#1605 id=1605 data-nosnippet>1605</a>                <span class="string">"{hex}"
+<a href=#1606 id=1606 data-nosnippet>1606</a>            </span>);
+<a href=#1607 id=1607 data-nosnippet>1607</a>        }
 <a href=#1608 id=1608 data-nosnippet>1608</a>    }
 <a href=#1609 id=1609 data-nosnippet>1609</a>
 <a href=#1610 id=1610 data-nosnippet>1610</a>    <span class="attr">#[test]
-<a href=#1611 id=1611 data-nosnippet>1611</a>    </span><span class="kw">fn </span>check_features_bits() {
-<a href=#1612 id=1612 data-nosnippet>1612</a>        <span class="kw">let </span>bits = Features::all().bits();
-<a href=#1613 id=1613 data-nosnippet>1613</a>        <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), Features::all());
-<a href=#1614 id=1614 data-nosnippet>1614</a>
-<a href=#1615 id=1615 data-nosnippet>1615</a>        <span class="kw">let </span>bits = Features::empty().bits();
-<a href=#1616 id=1616 data-nosnippet>1616</a>        <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), Features::empty());
-<a href=#1617 id=1617 data-nosnippet>1617</a>
-<a href=#1618 id=1618 data-nosnippet>1618</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
-<a href=#1619 id=1619 data-nosnippet>1619</a>            <span class="kw">let </span>bits = feature.value().bits();
-<a href=#1620 id=1620 data-nosnippet>1620</a>            <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), <span class="kw-2">*</span>feature.value());
-<a href=#1621 id=1621 data-nosnippet>1621</a>        }
-<a href=#1622 id=1622 data-nosnippet>1622</a>
+<a href=#1611 id=1611 data-nosnippet>1611</a>    </span><span class="kw">fn </span>check_features_display() {
+<a href=#1612 id=1612 data-nosnippet>1612</a>        <span class="kw">use </span>alloc::format;
+<a href=#1613 id=1613 data-nosnippet>1613</a>
+<a href=#1614 id=1614 data-nosnippet>1614</a>        <span class="kw">let </span>feature = Features::CLEAR_TEXTURE;
+<a href=#1615 id=1615 data-nosnippet>1615</a>        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{feature}"</span>), <span class="string">"CLEAR_TEXTURE"</span>);
+<a href=#1616 id=1616 data-nosnippet>1616</a>
+<a href=#1617 id=1617 data-nosnippet>1617</a>        <span class="kw">let </span>feature = Features::CLEAR_TEXTURE | Features::BGRA8UNORM_STORAGE;
+<a href=#1618 id=1618 data-nosnippet>1618</a>        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{feature}"</span>), <span class="string">"CLEAR_TEXTURE | BGRA8UNORM_STORAGE"</span>);
+<a href=#1619 id=1619 data-nosnippet>1619</a>    }
+<a href=#1620 id=1620 data-nosnippet>1620</a>
+<a href=#1621 id=1621 data-nosnippet>1621</a>    <span class="attr">#[test]
+<a href=#1622 id=1622 data-nosnippet>1622</a>    </span><span class="kw">fn </span>check_features_bits() {
 <a href=#1623 id=1623 data-nosnippet>1623</a>        <span class="kw">let </span>bits = Features::all().bits();
-<a href=#1624 id=1624 data-nosnippet>1624</a>        <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), Features::all());
+<a href=#1624 id=1624 data-nosnippet>1624</a>        <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), Features::all());
 <a href=#1625 id=1625 data-nosnippet>1625</a>
 <a href=#1626 id=1626 data-nosnippet>1626</a>        <span class="kw">let </span>bits = Features::empty().bits();
-<a href=#1627 id=1627 data-nosnippet>1627</a>        <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), Features::empty());
+<a href=#1627 id=1627 data-nosnippet>1627</a>        <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), Features::empty());
 <a href=#1628 id=1628 data-nosnippet>1628</a>
 <a href=#1629 id=1629 data-nosnippet>1629</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
 <a href=#1630 id=1630 data-nosnippet>1630</a>            <span class="kw">let </span>bits = feature.value().bits();
-<a href=#1631 id=1631 data-nosnippet>1631</a>            <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), <span class="kw-2">*</span>feature.value());
+<a href=#1631 id=1631 data-nosnippet>1631</a>            <span class="macro">assert_eq!</span>(Features::from_bits_retain(bits), <span class="kw-2">*</span>feature.value());
 <a href=#1632 id=1632 data-nosnippet>1632</a>        }
 <a href=#1633 id=1633 data-nosnippet>1633</a>
 <a href=#1634 id=1634 data-nosnippet>1634</a>        <span class="kw">let </span>bits = Features::all().bits();
-<a href=#1635 id=1635 data-nosnippet>1635</a>        <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), Features::all());
+<a href=#1635 id=1635 data-nosnippet>1635</a>        <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), Features::all());
 <a href=#1636 id=1636 data-nosnippet>1636</a>
 <a href=#1637 id=1637 data-nosnippet>1637</a>        <span class="kw">let </span>bits = Features::empty().bits();
-<a href=#1638 id=1638 data-nosnippet>1638</a>        <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), Features::empty());
+<a href=#1638 id=1638 data-nosnippet>1638</a>        <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), Features::empty());
 <a href=#1639 id=1639 data-nosnippet>1639</a>
 <a href=#1640 id=1640 data-nosnippet>1640</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
 <a href=#1641 id=1641 data-nosnippet>1641</a>            <span class="kw">let </span>bits = feature.value().bits();
-<a href=#1642 id=1642 data-nosnippet>1642</a>            <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), <span class="kw-2">*</span>feature.value());
+<a href=#1642 id=1642 data-nosnippet>1642</a>            <span class="macro">assert_eq!</span>(Features::from_bits_truncate(bits), <span class="kw-2">*</span>feature.value());
 <a href=#1643 id=1643 data-nosnippet>1643</a>        }
-<a href=#1644 id=1644 data-nosnippet>1644</a>    }
-<a href=#1645 id=1645 data-nosnippet>1645</a>
-<a href=#1646 id=1646 data-nosnippet>1646</a>    <span class="attr">#[test]
-<a href=#1647 id=1647 data-nosnippet>1647</a>    </span><span class="kw">fn </span>create_features_from_parts() {
-<a href=#1648 id=1648 data-nosnippet>1648</a>        <span class="kw">let </span>features: Features = FeaturesWGPU::TEXTURE_ATOMIC.into();
-<a href=#1649 id=1649 data-nosnippet>1649</a>        <span class="macro">assert_eq!</span>(features, Features::TEXTURE_ATOMIC);
+<a href=#1644 id=1644 data-nosnippet>1644</a>
+<a href=#1645 id=1645 data-nosnippet>1645</a>        <span class="kw">let </span>bits = Features::all().bits();
+<a href=#1646 id=1646 data-nosnippet>1646</a>        <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), Features::all());
+<a href=#1647 id=1647 data-nosnippet>1647</a>
+<a href=#1648 id=1648 data-nosnippet>1648</a>        <span class="kw">let </span>bits = Features::empty().bits();
+<a href=#1649 id=1649 data-nosnippet>1649</a>        <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), Features::empty());
 <a href=#1650 id=1650 data-nosnippet>1650</a>
-<a href=#1651 id=1651 data-nosnippet>1651</a>        <span class="kw">let </span>features: Features = FeaturesWebGPU::TIMESTAMP_QUERY.into();
-<a href=#1652 id=1652 data-nosnippet>1652</a>        <span class="macro">assert_eq!</span>(features, Features::TIMESTAMP_QUERY);
-<a href=#1653 id=1653 data-nosnippet>1653</a>
-<a href=#1654 id=1654 data-nosnippet>1654</a>        <span class="kw">let </span>features: Features = Features::from(FeaturesWGPU::TEXTURE_ATOMIC)
-<a href=#1655 id=1655 data-nosnippet>1655</a>            | Features::from(FeaturesWebGPU::TIMESTAMP_QUERY);
-<a href=#1656 id=1656 data-nosnippet>1656</a>        <span class="macro">assert_eq!</span>(
-<a href=#1657 id=1657 data-nosnippet>1657</a>            features,
-<a href=#1658 id=1658 data-nosnippet>1658</a>            Features::TEXTURE_ATOMIC | Features::TIMESTAMP_QUERY
-<a href=#1659 id=1659 data-nosnippet>1659</a>        );
-<a href=#1660 id=1660 data-nosnippet>1660</a>        <span class="macro">assert_eq!</span>(
-<a href=#1661 id=1661 data-nosnippet>1661</a>            features,
-<a href=#1662 id=1662 data-nosnippet>1662</a>            Features::from_internal_flags(
-<a href=#1663 id=1663 data-nosnippet>1663</a>                FeaturesWGPU::TEXTURE_ATOMIC,
-<a href=#1664 id=1664 data-nosnippet>1664</a>                FeaturesWebGPU::TIMESTAMP_QUERY
-<a href=#1665 id=1665 data-nosnippet>1665</a>            )
-<a href=#1666 id=1666 data-nosnippet>1666</a>        );
-<a href=#1667 id=1667 data-nosnippet>1667</a>    }
-<a href=#1668 id=1668 data-nosnippet>1668</a>
-<a href=#1669 id=1669 data-nosnippet>1669</a>    <span class="attr">#[test]
-<a href=#1670 id=1670 data-nosnippet>1670</a>    </span><span class="kw">fn </span>experimental_features_part_of_experimental_mask() {
-<a href=#1671 id=1671 data-nosnippet>1671</a>        <span class="kw">for </span>(name, feature) <span class="kw">in </span>Features::all().iter_names() {
-<a href=#1672 id=1672 data-nosnippet>1672</a>            <span class="kw">let </span>prefixed_with_experimental = name.starts_with(<span class="string">"EXPERIMENTAL_"</span>);
-<a href=#1673 id=1673 data-nosnippet>1673</a>            <span class="kw">let </span>in_experimental_mask = Features::all_experimental_mask().contains(feature);
-<a href=#1674 id=1674 data-nosnippet>1674</a>            <span class="macro">assert_eq!</span>(in_experimental_mask, prefixed_with_experimental);
-<a href=#1675 id=1675 data-nosnippet>1675</a>        }
-<a href=#1676 id=1676 data-nosnippet>1676</a>    }
-<a href=#1677 id=1677 data-nosnippet>1677</a>}</code></pre></div></section></main></body></html>
+<a href=#1651 id=1651 data-nosnippet>1651</a>        <span class="kw">for </span>feature <span class="kw">in </span>Features::FLAGS {
+<a href=#1652 id=1652 data-nosnippet>1652</a>            <span class="kw">let </span>bits = feature.value().bits();
+<a href=#1653 id=1653 data-nosnippet>1653</a>            <span class="macro">assert_eq!</span>(Features::from_bits(bits).unwrap(), <span class="kw-2">*</span>feature.value());
+<a href=#1654 id=1654 data-nosnippet>1654</a>        }
+<a href=#1655 id=1655 data-nosnippet>1655</a>    }
+<a href=#1656 id=1656 data-nosnippet>1656</a>
+<a href=#1657 id=1657 data-nosnippet>1657</a>    <span class="attr">#[test]
+<a href=#1658 id=1658 data-nosnippet>1658</a>    </span><span class="kw">fn </span>create_features_from_parts() {
+<a href=#1659 id=1659 data-nosnippet>1659</a>        <span class="kw">let </span>features: Features = FeaturesWGPU::TEXTURE_ATOMIC.into();
+<a href=#1660 id=1660 data-nosnippet>1660</a>        <span class="macro">assert_eq!</span>(features, Features::TEXTURE_ATOMIC);
+<a href=#1661 id=1661 data-nosnippet>1661</a>
+<a href=#1662 id=1662 data-nosnippet>1662</a>        <span class="kw">let </span>features: Features = FeaturesWebGPU::TIMESTAMP_QUERY.into();
+<a href=#1663 id=1663 data-nosnippet>1663</a>        <span class="macro">assert_eq!</span>(features, Features::TIMESTAMP_QUERY);
+<a href=#1664 id=1664 data-nosnippet>1664</a>
+<a href=#1665 id=1665 data-nosnippet>1665</a>        <span class="kw">let </span>features: Features = Features::from(FeaturesWGPU::TEXTURE_ATOMIC)
+<a href=#1666 id=1666 data-nosnippet>1666</a>            | Features::from(FeaturesWebGPU::TIMESTAMP_QUERY);
+<a href=#1667 id=1667 data-nosnippet>1667</a>        <span class="macro">assert_eq!</span>(
+<a href=#1668 id=1668 data-nosnippet>1668</a>            features,
+<a href=#1669 id=1669 data-nosnippet>1669</a>            Features::TEXTURE_ATOMIC | Features::TIMESTAMP_QUERY
+<a href=#1670 id=1670 data-nosnippet>1670</a>        );
+<a href=#1671 id=1671 data-nosnippet>1671</a>        <span class="macro">assert_eq!</span>(
+<a href=#1672 id=1672 data-nosnippet>1672</a>            features,
+<a href=#1673 id=1673 data-nosnippet>1673</a>            Features::from_internal_flags(
+<a href=#1674 id=1674 data-nosnippet>1674</a>                FeaturesWGPU::TEXTURE_ATOMIC,
+<a href=#1675 id=1675 data-nosnippet>1675</a>                FeaturesWebGPU::TIMESTAMP_QUERY
+<a href=#1676 id=1676 data-nosnippet>1676</a>            )
+<a href=#1677 id=1677 data-nosnippet>1677</a>        );
+<a href=#1678 id=1678 data-nosnippet>1678</a>    }
+<a href=#1679 id=1679 data-nosnippet>1679</a>
+<a href=#1680 id=1680 data-nosnippet>1680</a>    <span class="attr">#[test]
+<a href=#1681 id=1681 data-nosnippet>1681</a>    </span><span class="kw">fn </span>experimental_features_part_of_experimental_mask() {
+<a href=#1682 id=1682 data-nosnippet>1682</a>        <span class="kw">for </span>(name, feature) <span class="kw">in </span>Features::all().iter_names() {
+<a href=#1683 id=1683 data-nosnippet>1683</a>            <span class="kw">let </span>prefixed_with_experimental = name.starts_with(<span class="string">"EXPERIMENTAL_"</span>);
+<a href=#1684 id=1684 data-nosnippet>1684</a>            <span class="kw">let </span>in_experimental_mask = Features::all_experimental_mask().contains(feature);
+<a href=#1685 id=1685 data-nosnippet>1685</a>            <span class="macro">assert_eq!</span>(in_experimental_mask, prefixed_with_experimental);
+<a href=#1686 id=1686 data-nosnippet>1686</a>        }
+<a href=#1687 id=1687 data-nosnippet>1687</a>    }
+<a href=#1688 id=1688 data-nosnippet>1688</a>}</code></pre></div></section></main></body></html>

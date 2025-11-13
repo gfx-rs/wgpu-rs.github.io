@@ -714,103 +714,107 @@
 <a href=#714 id=714 data-nosnippet>714</a>                    Bi::CullPrimitive =&gt; <span class="string">"primitive_culled"</span>,
 <a href=#715 id=715 data-nosnippet>715</a>                    <span class="comment">// TODO: figure out how to make this written as a function call
 <a href=#716 id=716 data-nosnippet>716</a>                    </span>Bi::PointIndex | Bi::LineIndices | Bi::TriangleIndices =&gt; <span class="macro">unimplemented!</span>(),
-<a href=#717 id=717 data-nosnippet>717</a>                    Bi::MeshTaskSize =&gt; <span class="macro">unreachable!</span>(),
-<a href=#718 id=718 data-nosnippet>718</a>                };
-<a href=#719 id=719 data-nosnippet>719</a>                <span class="macro">write!</span>(out, <span class="string">"{name}"</span>)<span class="question-mark">?</span>;
-<a href=#720 id=720 data-nosnippet>720</a>            }
-<a href=#721 id=721 data-nosnippet>721</a>            <span class="self">Self</span>::Attribute(index) =&gt; <span class="macro">write!</span>(out, <span class="string">"attribute({index})"</span>)<span class="question-mark">?</span>,
-<a href=#722 id=722 data-nosnippet>722</a>            <span class="self">Self</span>::Color {
-<a href=#723 id=723 data-nosnippet>723</a>                location,
-<a href=#724 id=724 data-nosnippet>724</a>                blend_src,
-<a href=#725 id=725 data-nosnippet>725</a>            } =&gt; {
-<a href=#726 id=726 data-nosnippet>726</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(blend_src) = blend_src {
-<a href=#727 id=727 data-nosnippet>727</a>                    <span class="macro">write!</span>(out, <span class="string">"color({location}) index({blend_src})"</span>)<span class="question-mark">?
-<a href=#728 id=728 data-nosnippet>728</a>                </span>} <span class="kw">else </span>{
-<a href=#729 id=729 data-nosnippet>729</a>                    <span class="macro">write!</span>(out, <span class="string">"color({location})"</span>)<span class="question-mark">?
-<a href=#730 id=730 data-nosnippet>730</a>                </span>}
-<a href=#731 id=731 data-nosnippet>731</a>            }
-<a href=#732 id=732 data-nosnippet>732</a>            <span class="self">Self</span>::User {
-<a href=#733 id=733 data-nosnippet>733</a>                prefix,
-<a href=#734 id=734 data-nosnippet>734</a>                index,
-<a href=#735 id=735 data-nosnippet>735</a>                interpolation,
-<a href=#736 id=736 data-nosnippet>736</a>            } =&gt; {
-<a href=#737 id=737 data-nosnippet>737</a>                <span class="macro">write!</span>(out, <span class="string">"user({prefix}{index})"</span>)<span class="question-mark">?</span>;
-<a href=#738 id=738 data-nosnippet>738</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(interpolation) = interpolation {
-<a href=#739 id=739 data-nosnippet>739</a>                    <span class="macro">write!</span>(out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-<a href=#740 id=740 data-nosnippet>740</a>                    interpolation.try_fmt(out)<span class="question-mark">?</span>;
-<a href=#741 id=741 data-nosnippet>741</a>                }
-<a href=#742 id=742 data-nosnippet>742</a>            }
-<a href=#743 id=743 data-nosnippet>743</a>            <span class="self">Self</span>::Resource(<span class="kw-2">ref </span>target) =&gt; {
-<a href=#744 id=744 data-nosnippet>744</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = target.buffer {
-<a href=#745 id=745 data-nosnippet>745</a>                    <span class="macro">write!</span>(out, <span class="string">"buffer({id})"</span>)<span class="question-mark">?</span>;
-<a href=#746 id=746 data-nosnippet>746</a>                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(id) = target.texture {
-<a href=#747 id=747 data-nosnippet>747</a>                    <span class="macro">write!</span>(out, <span class="string">"texture({id})"</span>)<span class="question-mark">?</span>;
-<a href=#748 id=748 data-nosnippet>748</a>                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(BindSamplerTarget::Resource(id)) = target.sampler {
-<a href=#749 id=749 data-nosnippet>749</a>                    <span class="macro">write!</span>(out, <span class="string">"sampler({id})"</span>)<span class="question-mark">?</span>;
-<a href=#750 id=750 data-nosnippet>750</a>                } <span class="kw">else </span>{
-<a href=#751 id=751 data-nosnippet>751</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnimplementedBindTarget(target.clone()));
-<a href=#752 id=752 data-nosnippet>752</a>                }
-<a href=#753 id=753 data-nosnippet>753</a>            }
-<a href=#754 id=754 data-nosnippet>754</a>        }
-<a href=#755 id=755 data-nosnippet>755</a>        <span class="macro">write!</span>(out, <span class="string">"]]"</span>)<span class="question-mark">?</span>;
-<a href=#756 id=756 data-nosnippet>756</a>        <span class="prelude-val">Ok</span>(())
-<a href=#757 id=757 data-nosnippet>757</a>    }
-<a href=#758 id=758 data-nosnippet>758</a>}
-<a href=#759 id=759 data-nosnippet>759</a>
-<a href=#760 id=760 data-nosnippet>760</a><span class="kw">impl </span>ResolvedInterpolation {
-<a href=#761 id=761 data-nosnippet>761</a>    <span class="kw">const fn </span>from_binding(interpolation: <span class="kw">crate</span>::Interpolation, sampling: <span class="kw">crate</span>::Sampling) -&gt; <span class="self">Self </span>{
-<a href=#762 id=762 data-nosnippet>762</a>        <span class="kw">use </span><span class="kw">crate</span>::Interpolation <span class="kw">as </span>I;
-<a href=#763 id=763 data-nosnippet>763</a>        <span class="kw">use </span><span class="kw">crate</span>::Sampling <span class="kw">as </span>S;
-<a href=#764 id=764 data-nosnippet>764</a>
-<a href=#765 id=765 data-nosnippet>765</a>        <span class="kw">match </span>(interpolation, sampling) {
-<a href=#766 id=766 data-nosnippet>766</a>            (I::Perspective, S::Center) =&gt; <span class="self">Self</span>::CenterPerspective,
-<a href=#767 id=767 data-nosnippet>767</a>            (I::Perspective, S::Centroid) =&gt; <span class="self">Self</span>::CentroidPerspective,
-<a href=#768 id=768 data-nosnippet>768</a>            (I::Perspective, S::Sample) =&gt; <span class="self">Self</span>::SamplePerspective,
-<a href=#769 id=769 data-nosnippet>769</a>            (I::Linear, S::Center) =&gt; <span class="self">Self</span>::CenterNoPerspective,
-<a href=#770 id=770 data-nosnippet>770</a>            (I::Linear, S::Centroid) =&gt; <span class="self">Self</span>::CentroidNoPerspective,
-<a href=#771 id=771 data-nosnippet>771</a>            (I::Linear, S::Sample) =&gt; <span class="self">Self</span>::SampleNoPerspective,
-<a href=#772 id=772 data-nosnippet>772</a>            (I::Flat, <span class="kw">_</span>) =&gt; <span class="self">Self</span>::Flat,
-<a href=#773 id=773 data-nosnippet>773</a>            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-<a href=#774 id=774 data-nosnippet>774</a>        }
-<a href=#775 id=775 data-nosnippet>775</a>    }
-<a href=#776 id=776 data-nosnippet>776</a>
-<a href=#777 id=777 data-nosnippet>777</a>    <span class="kw">fn </span>try_fmt&lt;W: Write&gt;(<span class="self">self</span>, out: <span class="kw-2">&amp;mut </span>W) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-<a href=#778 id=778 data-nosnippet>778</a>        <span class="kw">let </span>identifier = <span class="kw">match </span><span class="self">self </span>{
-<a href=#779 id=779 data-nosnippet>779</a>            <span class="self">Self</span>::CenterPerspective =&gt; <span class="string">"center_perspective"</span>,
-<a href=#780 id=780 data-nosnippet>780</a>            <span class="self">Self</span>::CenterNoPerspective =&gt; <span class="string">"center_no_perspective"</span>,
-<a href=#781 id=781 data-nosnippet>781</a>            <span class="self">Self</span>::CentroidPerspective =&gt; <span class="string">"centroid_perspective"</span>,
-<a href=#782 id=782 data-nosnippet>782</a>            <span class="self">Self</span>::CentroidNoPerspective =&gt; <span class="string">"centroid_no_perspective"</span>,
-<a href=#783 id=783 data-nosnippet>783</a>            <span class="self">Self</span>::SamplePerspective =&gt; <span class="string">"sample_perspective"</span>,
-<a href=#784 id=784 data-nosnippet>784</a>            <span class="self">Self</span>::SampleNoPerspective =&gt; <span class="string">"sample_no_perspective"</span>,
-<a href=#785 id=785 data-nosnippet>785</a>            <span class="self">Self</span>::Flat =&gt; <span class="string">"flat"</span>,
-<a href=#786 id=786 data-nosnippet>786</a>        };
-<a href=#787 id=787 data-nosnippet>787</a>        out.write_str(identifier)<span class="question-mark">?</span>;
-<a href=#788 id=788 data-nosnippet>788</a>        <span class="prelude-val">Ok</span>(())
-<a href=#789 id=789 data-nosnippet>789</a>    }
-<a href=#790 id=790 data-nosnippet>790</a>}
-<a href=#791 id=791 data-nosnippet>791</a>
-<a href=#792 id=792 data-nosnippet>792</a><span class="doccomment">/// Information about a translated module that is required
-<a href=#793 id=793 data-nosnippet>793</a>/// for the use of the result.
-<a href=#794 id=794 data-nosnippet>794</a></span><span class="kw">pub struct </span>TranslationInfo {
-<a href=#795 id=795 data-nosnippet>795</a>    <span class="doccomment">/// Mapping of the entry point names. Each item in the array
-<a href=#796 id=796 data-nosnippet>796</a>    /// corresponds to an entry point index.
-<a href=#797 id=797 data-nosnippet>797</a>    ///
-<a href=#798 id=798 data-nosnippet>798</a>    ///Note: Some entry points may fail translation because of missing bindings.
-<a href=#799 id=799 data-nosnippet>799</a>    </span><span class="kw">pub </span>entry_point_names: Vec&lt;<span class="prelude-ty">Result</span>&lt;String, EntryPointError&gt;&gt;,
-<a href=#800 id=800 data-nosnippet>800</a>}
-<a href=#801 id=801 data-nosnippet>801</a>
-<a href=#802 id=802 data-nosnippet>802</a><span class="kw">pub fn </span>write_string(
-<a href=#803 id=803 data-nosnippet>803</a>    module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
-<a href=#804 id=804 data-nosnippet>804</a>    info: <span class="kw-2">&amp;</span>ModuleInfo,
-<a href=#805 id=805 data-nosnippet>805</a>    options: <span class="kw-2">&amp;</span>Options,
-<a href=#806 id=806 data-nosnippet>806</a>    pipeline_options: <span class="kw-2">&amp;</span>PipelineOptions,
-<a href=#807 id=807 data-nosnippet>807</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(String, TranslationInfo), Error&gt; {
-<a href=#808 id=808 data-nosnippet>808</a>    <span class="kw">let </span><span class="kw-2">mut </span>w = Writer::new(String::new());
-<a href=#809 id=809 data-nosnippet>809</a>    <span class="kw">let </span>info = w.write(module, info, options, pipeline_options)<span class="question-mark">?</span>;
-<a href=#810 id=810 data-nosnippet>810</a>    <span class="prelude-val">Ok</span>((w.finish(), info))
-<a href=#811 id=811 data-nosnippet>811</a>}
-<a href=#812 id=812 data-nosnippet>812</a>
-<a href=#813 id=813 data-nosnippet>813</a><span class="attr">#[test]
-<a href=#814 id=814 data-nosnippet>814</a></span><span class="kw">fn </span>test_error_size() {
-<a href=#815 id=815 data-nosnippet>815</a>    <span class="macro">assert_eq!</span>(size_of::&lt;Error&gt;(), <span class="number">40</span>);
-<a href=#816 id=816 data-nosnippet>816</a>}</code></pre></div></section></main></body></html>
+<a href=#717 id=717 data-nosnippet>717</a>                    Bi::MeshTaskSize
+<a href=#718 id=718 data-nosnippet>718</a>                    | Bi::VertexCount
+<a href=#719 id=719 data-nosnippet>719</a>                    | Bi::PrimitiveCount
+<a href=#720 id=720 data-nosnippet>720</a>                    | Bi::Vertices
+<a href=#721 id=721 data-nosnippet>721</a>                    | Bi::Primitives =&gt; <span class="macro">unreachable!</span>(),
+<a href=#722 id=722 data-nosnippet>722</a>                };
+<a href=#723 id=723 data-nosnippet>723</a>                <span class="macro">write!</span>(out, <span class="string">"{name}"</span>)<span class="question-mark">?</span>;
+<a href=#724 id=724 data-nosnippet>724</a>            }
+<a href=#725 id=725 data-nosnippet>725</a>            <span class="self">Self</span>::Attribute(index) =&gt; <span class="macro">write!</span>(out, <span class="string">"attribute({index})"</span>)<span class="question-mark">?</span>,
+<a href=#726 id=726 data-nosnippet>726</a>            <span class="self">Self</span>::Color {
+<a href=#727 id=727 data-nosnippet>727</a>                location,
+<a href=#728 id=728 data-nosnippet>728</a>                blend_src,
+<a href=#729 id=729 data-nosnippet>729</a>            } =&gt; {
+<a href=#730 id=730 data-nosnippet>730</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(blend_src) = blend_src {
+<a href=#731 id=731 data-nosnippet>731</a>                    <span class="macro">write!</span>(out, <span class="string">"color({location}) index({blend_src})"</span>)<span class="question-mark">?
+<a href=#732 id=732 data-nosnippet>732</a>                </span>} <span class="kw">else </span>{
+<a href=#733 id=733 data-nosnippet>733</a>                    <span class="macro">write!</span>(out, <span class="string">"color({location})"</span>)<span class="question-mark">?
+<a href=#734 id=734 data-nosnippet>734</a>                </span>}
+<a href=#735 id=735 data-nosnippet>735</a>            }
+<a href=#736 id=736 data-nosnippet>736</a>            <span class="self">Self</span>::User {
+<a href=#737 id=737 data-nosnippet>737</a>                prefix,
+<a href=#738 id=738 data-nosnippet>738</a>                index,
+<a href=#739 id=739 data-nosnippet>739</a>                interpolation,
+<a href=#740 id=740 data-nosnippet>740</a>            } =&gt; {
+<a href=#741 id=741 data-nosnippet>741</a>                <span class="macro">write!</span>(out, <span class="string">"user({prefix}{index})"</span>)<span class="question-mark">?</span>;
+<a href=#742 id=742 data-nosnippet>742</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(interpolation) = interpolation {
+<a href=#743 id=743 data-nosnippet>743</a>                    <span class="macro">write!</span>(out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+<a href=#744 id=744 data-nosnippet>744</a>                    interpolation.try_fmt(out)<span class="question-mark">?</span>;
+<a href=#745 id=745 data-nosnippet>745</a>                }
+<a href=#746 id=746 data-nosnippet>746</a>            }
+<a href=#747 id=747 data-nosnippet>747</a>            <span class="self">Self</span>::Resource(<span class="kw-2">ref </span>target) =&gt; {
+<a href=#748 id=748 data-nosnippet>748</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = target.buffer {
+<a href=#749 id=749 data-nosnippet>749</a>                    <span class="macro">write!</span>(out, <span class="string">"buffer({id})"</span>)<span class="question-mark">?</span>;
+<a href=#750 id=750 data-nosnippet>750</a>                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(id) = target.texture {
+<a href=#751 id=751 data-nosnippet>751</a>                    <span class="macro">write!</span>(out, <span class="string">"texture({id})"</span>)<span class="question-mark">?</span>;
+<a href=#752 id=752 data-nosnippet>752</a>                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(BindSamplerTarget::Resource(id)) = target.sampler {
+<a href=#753 id=753 data-nosnippet>753</a>                    <span class="macro">write!</span>(out, <span class="string">"sampler({id})"</span>)<span class="question-mark">?</span>;
+<a href=#754 id=754 data-nosnippet>754</a>                } <span class="kw">else </span>{
+<a href=#755 id=755 data-nosnippet>755</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnimplementedBindTarget(target.clone()));
+<a href=#756 id=756 data-nosnippet>756</a>                }
+<a href=#757 id=757 data-nosnippet>757</a>            }
+<a href=#758 id=758 data-nosnippet>758</a>        }
+<a href=#759 id=759 data-nosnippet>759</a>        <span class="macro">write!</span>(out, <span class="string">"]]"</span>)<span class="question-mark">?</span>;
+<a href=#760 id=760 data-nosnippet>760</a>        <span class="prelude-val">Ok</span>(())
+<a href=#761 id=761 data-nosnippet>761</a>    }
+<a href=#762 id=762 data-nosnippet>762</a>}
+<a href=#763 id=763 data-nosnippet>763</a>
+<a href=#764 id=764 data-nosnippet>764</a><span class="kw">impl </span>ResolvedInterpolation {
+<a href=#765 id=765 data-nosnippet>765</a>    <span class="kw">const fn </span>from_binding(interpolation: <span class="kw">crate</span>::Interpolation, sampling: <span class="kw">crate</span>::Sampling) -&gt; <span class="self">Self </span>{
+<a href=#766 id=766 data-nosnippet>766</a>        <span class="kw">use </span><span class="kw">crate</span>::Interpolation <span class="kw">as </span>I;
+<a href=#767 id=767 data-nosnippet>767</a>        <span class="kw">use </span><span class="kw">crate</span>::Sampling <span class="kw">as </span>S;
+<a href=#768 id=768 data-nosnippet>768</a>
+<a href=#769 id=769 data-nosnippet>769</a>        <span class="kw">match </span>(interpolation, sampling) {
+<a href=#770 id=770 data-nosnippet>770</a>            (I::Perspective, S::Center) =&gt; <span class="self">Self</span>::CenterPerspective,
+<a href=#771 id=771 data-nosnippet>771</a>            (I::Perspective, S::Centroid) =&gt; <span class="self">Self</span>::CentroidPerspective,
+<a href=#772 id=772 data-nosnippet>772</a>            (I::Perspective, S::Sample) =&gt; <span class="self">Self</span>::SamplePerspective,
+<a href=#773 id=773 data-nosnippet>773</a>            (I::Linear, S::Center) =&gt; <span class="self">Self</span>::CenterNoPerspective,
+<a href=#774 id=774 data-nosnippet>774</a>            (I::Linear, S::Centroid) =&gt; <span class="self">Self</span>::CentroidNoPerspective,
+<a href=#775 id=775 data-nosnippet>775</a>            (I::Linear, S::Sample) =&gt; <span class="self">Self</span>::SampleNoPerspective,
+<a href=#776 id=776 data-nosnippet>776</a>            (I::Flat, <span class="kw">_</span>) =&gt; <span class="self">Self</span>::Flat,
+<a href=#777 id=777 data-nosnippet>777</a>            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+<a href=#778 id=778 data-nosnippet>778</a>        }
+<a href=#779 id=779 data-nosnippet>779</a>    }
+<a href=#780 id=780 data-nosnippet>780</a>
+<a href=#781 id=781 data-nosnippet>781</a>    <span class="kw">fn </span>try_fmt&lt;W: Write&gt;(<span class="self">self</span>, out: <span class="kw-2">&amp;mut </span>W) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+<a href=#782 id=782 data-nosnippet>782</a>        <span class="kw">let </span>identifier = <span class="kw">match </span><span class="self">self </span>{
+<a href=#783 id=783 data-nosnippet>783</a>            <span class="self">Self</span>::CenterPerspective =&gt; <span class="string">"center_perspective"</span>,
+<a href=#784 id=784 data-nosnippet>784</a>            <span class="self">Self</span>::CenterNoPerspective =&gt; <span class="string">"center_no_perspective"</span>,
+<a href=#785 id=785 data-nosnippet>785</a>            <span class="self">Self</span>::CentroidPerspective =&gt; <span class="string">"centroid_perspective"</span>,
+<a href=#786 id=786 data-nosnippet>786</a>            <span class="self">Self</span>::CentroidNoPerspective =&gt; <span class="string">"centroid_no_perspective"</span>,
+<a href=#787 id=787 data-nosnippet>787</a>            <span class="self">Self</span>::SamplePerspective =&gt; <span class="string">"sample_perspective"</span>,
+<a href=#788 id=788 data-nosnippet>788</a>            <span class="self">Self</span>::SampleNoPerspective =&gt; <span class="string">"sample_no_perspective"</span>,
+<a href=#789 id=789 data-nosnippet>789</a>            <span class="self">Self</span>::Flat =&gt; <span class="string">"flat"</span>,
+<a href=#790 id=790 data-nosnippet>790</a>        };
+<a href=#791 id=791 data-nosnippet>791</a>        out.write_str(identifier)<span class="question-mark">?</span>;
+<a href=#792 id=792 data-nosnippet>792</a>        <span class="prelude-val">Ok</span>(())
+<a href=#793 id=793 data-nosnippet>793</a>    }
+<a href=#794 id=794 data-nosnippet>794</a>}
+<a href=#795 id=795 data-nosnippet>795</a>
+<a href=#796 id=796 data-nosnippet>796</a><span class="doccomment">/// Information about a translated module that is required
+<a href=#797 id=797 data-nosnippet>797</a>/// for the use of the result.
+<a href=#798 id=798 data-nosnippet>798</a></span><span class="kw">pub struct </span>TranslationInfo {
+<a href=#799 id=799 data-nosnippet>799</a>    <span class="doccomment">/// Mapping of the entry point names. Each item in the array
+<a href=#800 id=800 data-nosnippet>800</a>    /// corresponds to an entry point index.
+<a href=#801 id=801 data-nosnippet>801</a>    ///
+<a href=#802 id=802 data-nosnippet>802</a>    ///Note: Some entry points may fail translation because of missing bindings.
+<a href=#803 id=803 data-nosnippet>803</a>    </span><span class="kw">pub </span>entry_point_names: Vec&lt;<span class="prelude-ty">Result</span>&lt;String, EntryPointError&gt;&gt;,
+<a href=#804 id=804 data-nosnippet>804</a>}
+<a href=#805 id=805 data-nosnippet>805</a>
+<a href=#806 id=806 data-nosnippet>806</a><span class="kw">pub fn </span>write_string(
+<a href=#807 id=807 data-nosnippet>807</a>    module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
+<a href=#808 id=808 data-nosnippet>808</a>    info: <span class="kw-2">&amp;</span>ModuleInfo,
+<a href=#809 id=809 data-nosnippet>809</a>    options: <span class="kw-2">&amp;</span>Options,
+<a href=#810 id=810 data-nosnippet>810</a>    pipeline_options: <span class="kw-2">&amp;</span>PipelineOptions,
+<a href=#811 id=811 data-nosnippet>811</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(String, TranslationInfo), Error&gt; {
+<a href=#812 id=812 data-nosnippet>812</a>    <span class="kw">let </span><span class="kw-2">mut </span>w = Writer::new(String::new());
+<a href=#813 id=813 data-nosnippet>813</a>    <span class="kw">let </span>info = w.write(module, info, options, pipeline_options)<span class="question-mark">?</span>;
+<a href=#814 id=814 data-nosnippet>814</a>    <span class="prelude-val">Ok</span>((w.finish(), info))
+<a href=#815 id=815 data-nosnippet>815</a>}
+<a href=#816 id=816 data-nosnippet>816</a>
+<a href=#817 id=817 data-nosnippet>817</a><span class="attr">#[test]
+<a href=#818 id=818 data-nosnippet>818</a></span><span class="kw">fn </span>test_error_size() {
+<a href=#819 id=819 data-nosnippet>819</a>    <span class="macro">assert_eq!</span>(size_of::&lt;Error&gt;(), <span class="number">40</span>);
+<a href=#820 id=820 data-nosnippet>820</a>}</code></pre></div></section></main></body></html>
