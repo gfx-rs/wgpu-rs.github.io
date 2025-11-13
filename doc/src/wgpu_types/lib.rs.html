@@ -7977,397 +7977,412 @@
 <a href=#7977 id=7977 data-nosnippet>7977</a>    /// conclusions about other safety-critical code paths. This option SHOULD NOT be disabled
 <a href=#7978 id=7978 data-nosnippet>7978</a>    /// when running untrusted code.
 <a href=#7979 id=7979 data-nosnippet>7979</a>    </span><span class="kw">pub </span>force_loop_bounding: bool,
-<a href=#7980 id=7980 data-nosnippet>7980</a>}
-<a href=#7981 id=7981 data-nosnippet>7981</a>
-<a href=#7982 id=7982 data-nosnippet>7982</a><span class="kw">impl </span>ShaderRuntimeChecks {
-<a href=#7983 id=7983 data-nosnippet>7983</a>    <span class="doccomment">/// Creates a new configuration where the shader is fully checked.
-<a href=#7984 id=7984 data-nosnippet>7984</a>    </span><span class="attr">#[must_use]
-<a href=#7985 id=7985 data-nosnippet>7985</a>    </span><span class="kw">pub const fn </span>checked() -&gt; <span class="self">Self </span>{
-<a href=#7986 id=7986 data-nosnippet>7986</a>        <span class="kw">unsafe </span>{ <span class="self">Self</span>::all(<span class="bool-val">true</span>) }
-<a href=#7987 id=7987 data-nosnippet>7987</a>    }
-<a href=#7988 id=7988 data-nosnippet>7988</a>
-<a href=#7989 id=7989 data-nosnippet>7989</a>    <span class="doccomment">/// Creates a new configuration where none of the checks are performed.
-<a href=#7990 id=7990 data-nosnippet>7990</a>    ///
-<a href=#7991 id=7991 data-nosnippet>7991</a>    /// # Safety
-<a href=#7992 id=7992 data-nosnippet>7992</a>    ///
-<a href=#7993 id=7993 data-nosnippet>7993</a>    /// See the documentation for the `set_*` methods for the safety requirements
-<a href=#7994 id=7994 data-nosnippet>7994</a>    /// of each sub-configuration.
-<a href=#7995 id=7995 data-nosnippet>7995</a>    </span><span class="attr">#[must_use]
-<a href=#7996 id=7996 data-nosnippet>7996</a>    </span><span class="kw">pub const fn </span>unchecked() -&gt; <span class="self">Self </span>{
-<a href=#7997 id=7997 data-nosnippet>7997</a>        <span class="kw">unsafe </span>{ <span class="self">Self</span>::all(<span class="bool-val">false</span>) }
-<a href=#7998 id=7998 data-nosnippet>7998</a>    }
-<a href=#7999 id=7999 data-nosnippet>7999</a>
-<a href=#8000 id=8000 data-nosnippet>8000</a>    <span class="doccomment">/// Creates a new configuration where all checks are enabled or disabled. To safely
-<a href=#8001 id=8001 data-nosnippet>8001</a>    /// create a configuration with all checks enabled, use [`ShaderRuntimeChecks::checked`].
-<a href=#8002 id=8002 data-nosnippet>8002</a>    ///
-<a href=#8003 id=8003 data-nosnippet>8003</a>    /// # Safety
+<a href=#7980 id=7980 data-nosnippet>7980</a>    <span class="doccomment">/// If false, the caller **MUST** ensure that in all passed shaders every function operating
+<a href=#7981 id=7981 data-nosnippet>7981</a>    /// on a ray query must obey these rules (functions using wgsl naming)
+<a href=#7982 id=7982 data-nosnippet>7982</a>    /// - `rayQueryInitialize` must have called before `rayQueryProceed`
+<a href=#7983 id=7983 data-nosnippet>7983</a>    /// - `rayQueryProceed` must have been called, returned true and have hit an AABB before
+<a href=#7984 id=7984 data-nosnippet>7984</a>    ///   `rayQueryGenerateIntersection` is called
+<a href=#7985 id=7985 data-nosnippet>7985</a>    /// - `rayQueryProceed` must have been called, returned true and have hit a triangle before
+<a href=#7986 id=7986 data-nosnippet>7986</a>    ///   `rayQueryConfirmIntersection` is called
+<a href=#7987 id=7987 data-nosnippet>7987</a>    /// - `rayQueryProceed` must have been called and have returned true before `rayQueryTerminate`,
+<a href=#7988 id=7988 data-nosnippet>7988</a>    ///   `getCandidateHitVertexPositions` or `rayQueryGetCandidateIntersection` is called
+<a href=#7989 id=7989 data-nosnippet>7989</a>    /// - `rayQueryProceed` must have been called and have returned false before `rayQueryGetCommittedIntersection`
+<a href=#7990 id=7990 data-nosnippet>7990</a>    ///   or `getCommittedHitVertexPositions` are called
+<a href=#7991 id=7991 data-nosnippet>7991</a>    ///
+<a href=#7992 id=7992 data-nosnippet>7992</a>    /// It is the aim that these cases will not cause UB if this is set to true, but currently this will still happen on DX12 and Metal.
+<a href=#7993 id=7993 data-nosnippet>7993</a>    </span><span class="kw">pub </span>ray_query_initialization_tracking: bool,
+<a href=#7994 id=7994 data-nosnippet>7994</a>}
+<a href=#7995 id=7995 data-nosnippet>7995</a>
+<a href=#7996 id=7996 data-nosnippet>7996</a><span class="kw">impl </span>ShaderRuntimeChecks {
+<a href=#7997 id=7997 data-nosnippet>7997</a>    <span class="doccomment">/// Creates a new configuration where the shader is fully checked.
+<a href=#7998 id=7998 data-nosnippet>7998</a>    </span><span class="attr">#[must_use]
+<a href=#7999 id=7999 data-nosnippet>7999</a>    </span><span class="kw">pub const fn </span>checked() -&gt; <span class="self">Self </span>{
+<a href=#8000 id=8000 data-nosnippet>8000</a>        <span class="kw">unsafe </span>{ <span class="self">Self</span>::all(<span class="bool-val">true</span>) }
+<a href=#8001 id=8001 data-nosnippet>8001</a>    }
+<a href=#8002 id=8002 data-nosnippet>8002</a>
+<a href=#8003 id=8003 data-nosnippet>8003</a>    <span class="doccomment">/// Creates a new configuration where none of the checks are performed.
 <a href=#8004 id=8004 data-nosnippet>8004</a>    ///
-<a href=#8005 id=8005 data-nosnippet>8005</a>    /// See the documentation for the `set_*` methods for the safety requirements
-<a href=#8006 id=8006 data-nosnippet>8006</a>    /// of each sub-configuration.
-<a href=#8007 id=8007 data-nosnippet>8007</a>    </span><span class="attr">#[must_use]
-<a href=#8008 id=8008 data-nosnippet>8008</a>    </span><span class="kw">pub const unsafe fn </span>all(all_checks: bool) -&gt; <span class="self">Self </span>{
-<a href=#8009 id=8009 data-nosnippet>8009</a>        <span class="self">Self </span>{
-<a href=#8010 id=8010 data-nosnippet>8010</a>            bounds_checks: all_checks,
-<a href=#8011 id=8011 data-nosnippet>8011</a>            force_loop_bounding: all_checks,
-<a href=#8012 id=8012 data-nosnippet>8012</a>        }
-<a href=#8013 id=8013 data-nosnippet>8013</a>    }
-<a href=#8014 id=8014 data-nosnippet>8014</a>}
-<a href=#8015 id=8015 data-nosnippet>8015</a>
-<a href=#8016 id=8016 data-nosnippet>8016</a><span class="kw">impl </span>Default <span class="kw">for </span>ShaderRuntimeChecks {
-<a href=#8017 id=8017 data-nosnippet>8017</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-<a href=#8018 id=8018 data-nosnippet>8018</a>        <span class="self">Self</span>::checked()
-<a href=#8019 id=8019 data-nosnippet>8019</a>    }
-<a href=#8020 id=8020 data-nosnippet>8020</a>}
-<a href=#8021 id=8021 data-nosnippet>8021</a>
-<a href=#8022 id=8022 data-nosnippet>8022</a><span class="attr">#[derive(Clone, Debug, PartialEq, Eq)]
-<a href=#8023 id=8023 data-nosnippet>8023</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#8024 id=8024 data-nosnippet>8024</a></span><span class="doccomment">/// Descriptor for all size defining attributes of a single triangle geometry inside a bottom level acceleration structure.
-<a href=#8025 id=8025 data-nosnippet>8025</a></span><span class="kw">pub struct </span>BlasTriangleGeometrySizeDescriptor {
-<a href=#8026 id=8026 data-nosnippet>8026</a>    <span class="doccomment">/// Format of a vertex position, must be [`VertexFormat::Float32x3`]
-<a href=#8027 id=8027 data-nosnippet>8027</a>    /// with just [`Features::EXPERIMENTAL_RAY_QUERY`]
-<a href=#8028 id=8028 data-nosnippet>8028</a>    /// but [`Features::EXTENDED_ACCELERATION_STRUCTURE_VERTEX_FORMATS`] adds more.
-<a href=#8029 id=8029 data-nosnippet>8029</a>    </span><span class="kw">pub </span>vertex_format: VertexFormat,
-<a href=#8030 id=8030 data-nosnippet>8030</a>    <span class="doccomment">/// Number of vertices.
-<a href=#8031 id=8031 data-nosnippet>8031</a>    </span><span class="kw">pub </span>vertex_count: u32,
-<a href=#8032 id=8032 data-nosnippet>8032</a>    <span class="doccomment">/// Format of an index. Only needed if an index buffer is used.
-<a href=#8033 id=8033 data-nosnippet>8033</a>    /// If `index_format` is provided `index_count` is required.
-<a href=#8034 id=8034 data-nosnippet>8034</a>    </span><span class="kw">pub </span>index_format: <span class="prelude-ty">Option</span>&lt;IndexFormat&gt;,
-<a href=#8035 id=8035 data-nosnippet>8035</a>    <span class="doccomment">/// Number of indices. Only needed if an index buffer is used.
-<a href=#8036 id=8036 data-nosnippet>8036</a>    /// If `index_count` is provided `index_format` is required.
-<a href=#8037 id=8037 data-nosnippet>8037</a>    </span><span class="kw">pub </span>index_count: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-<a href=#8038 id=8038 data-nosnippet>8038</a>    <span class="doccomment">/// Flags for the geometry.
-<a href=#8039 id=8039 data-nosnippet>8039</a>    </span><span class="kw">pub </span>flags: AccelerationStructureGeometryFlags,
-<a href=#8040 id=8040 data-nosnippet>8040</a>}
-<a href=#8041 id=8041 data-nosnippet>8041</a>
-<a href=#8042 id=8042 data-nosnippet>8042</a><span class="attr">#[derive(Clone, Debug)]
-<a href=#8043 id=8043 data-nosnippet>8043</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#8044 id=8044 data-nosnippet>8044</a></span><span class="doccomment">/// Descriptor for all size defining attributes of all geometries inside a bottom level acceleration structure.
-<a href=#8045 id=8045 data-nosnippet>8045</a></span><span class="kw">pub enum </span>BlasGeometrySizeDescriptors {
-<a href=#8046 id=8046 data-nosnippet>8046</a>    <span class="doccomment">/// Triangle geometry version.
-<a href=#8047 id=8047 data-nosnippet>8047</a>    </span>Triangles {
-<a href=#8048 id=8048 data-nosnippet>8048</a>        <span class="doccomment">/// Descriptor for each triangle geometry.
-<a href=#8049 id=8049 data-nosnippet>8049</a>        </span>descriptors: Vec&lt;BlasTriangleGeometrySizeDescriptor&gt;,
-<a href=#8050 id=8050 data-nosnippet>8050</a>    },
-<a href=#8051 id=8051 data-nosnippet>8051</a>}
-<a href=#8052 id=8052 data-nosnippet>8052</a>
-<a href=#8053 id=8053 data-nosnippet>8053</a><span class="attr">#[repr(u8)]
-<a href=#8054 id=8054 data-nosnippet>8054</a>#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-<a href=#8055 id=8055 data-nosnippet>8055</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#8056 id=8056 data-nosnippet>8056</a></span><span class="doccomment">/// Update mode for acceleration structure builds.
-<a href=#8057 id=8057 data-nosnippet>8057</a></span><span class="kw">pub enum </span>AccelerationStructureUpdateMode {
-<a href=#8058 id=8058 data-nosnippet>8058</a>    <span class="doccomment">/// Always perform a full build.
-<a href=#8059 id=8059 data-nosnippet>8059</a>    </span>Build,
-<a href=#8060 id=8060 data-nosnippet>8060</a>    <span class="doccomment">/// If possible, perform an incremental update.
-<a href=#8061 id=8061 data-nosnippet>8061</a>    ///
-<a href=#8062 id=8062 data-nosnippet>8062</a>    /// Not advised for major topology changes.
-<a href=#8063 id=8063 data-nosnippet>8063</a>    /// (Useful for e.g. skinning)
-<a href=#8064 id=8064 data-nosnippet>8064</a>    </span>PreferUpdate,
-<a href=#8065 id=8065 data-nosnippet>8065</a>}
-<a href=#8066 id=8066 data-nosnippet>8066</a>
-<a href=#8067 id=8067 data-nosnippet>8067</a><span class="attr">#[repr(C)]
-<a href=#8068 id=8068 data-nosnippet>8068</a>#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-<a href=#8069 id=8069 data-nosnippet>8069</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#8070 id=8070 data-nosnippet>8070</a></span><span class="doccomment">/// Descriptor for creating a bottom level acceleration structure.
-<a href=#8071 id=8071 data-nosnippet>8071</a></span><span class="kw">pub struct </span>CreateBlasDescriptor&lt;L&gt; {
-<a href=#8072 id=8072 data-nosnippet>8072</a>    <span class="doccomment">/// Label for the bottom level acceleration structure.
-<a href=#8073 id=8073 data-nosnippet>8073</a>    </span><span class="kw">pub </span>label: L,
-<a href=#8074 id=8074 data-nosnippet>8074</a>    <span class="doccomment">/// Flags for the bottom level acceleration structure.
-<a href=#8075 id=8075 data-nosnippet>8075</a>    </span><span class="kw">pub </span>flags: AccelerationStructureFlags,
-<a href=#8076 id=8076 data-nosnippet>8076</a>    <span class="doccomment">/// Update mode for the bottom level acceleration structure.
-<a href=#8077 id=8077 data-nosnippet>8077</a>    </span><span class="kw">pub </span>update_mode: AccelerationStructureUpdateMode,
-<a href=#8078 id=8078 data-nosnippet>8078</a>}
-<a href=#8079 id=8079 data-nosnippet>8079</a>
-<a href=#8080 id=8080 data-nosnippet>8080</a><span class="kw">impl</span>&lt;L&gt; CreateBlasDescriptor&lt;L&gt; {
-<a href=#8081 id=8081 data-nosnippet>8081</a>    <span class="doccomment">/// Takes a closure and maps the label of the blas descriptor into another.
-<a href=#8082 id=8082 data-nosnippet>8082</a>    </span><span class="kw">pub fn </span>map_label&lt;K&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K) -&gt; CreateBlasDescriptor&lt;K&gt; {
-<a href=#8083 id=8083 data-nosnippet>8083</a>        CreateBlasDescriptor {
-<a href=#8084 id=8084 data-nosnippet>8084</a>            label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
-<a href=#8085 id=8085 data-nosnippet>8085</a>            flags: <span class="self">self</span>.flags,
-<a href=#8086 id=8086 data-nosnippet>8086</a>            update_mode: <span class="self">self</span>.update_mode,
-<a href=#8087 id=8087 data-nosnippet>8087</a>        }
-<a href=#8088 id=8088 data-nosnippet>8088</a>    }
-<a href=#8089 id=8089 data-nosnippet>8089</a>}
-<a href=#8090 id=8090 data-nosnippet>8090</a>
-<a href=#8091 id=8091 data-nosnippet>8091</a><span class="attr">#[repr(C)]
-<a href=#8092 id=8092 data-nosnippet>8092</a>#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-<a href=#8093 id=8093 data-nosnippet>8093</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#8094 id=8094 data-nosnippet>8094</a></span><span class="doccomment">/// Descriptor for creating a top level acceleration structure.
-<a href=#8095 id=8095 data-nosnippet>8095</a></span><span class="kw">pub struct </span>CreateTlasDescriptor&lt;L&gt; {
-<a href=#8096 id=8096 data-nosnippet>8096</a>    <span class="doccomment">/// Label for the top level acceleration structure.
-<a href=#8097 id=8097 data-nosnippet>8097</a>    </span><span class="kw">pub </span>label: L,
-<a href=#8098 id=8098 data-nosnippet>8098</a>    <span class="doccomment">/// Number of instances that can be stored in the acceleration structure.
-<a href=#8099 id=8099 data-nosnippet>8099</a>    </span><span class="kw">pub </span>max_instances: u32,
-<a href=#8100 id=8100 data-nosnippet>8100</a>    <span class="doccomment">/// Flags for the bottom level acceleration structure.
-<a href=#8101 id=8101 data-nosnippet>8101</a>    </span><span class="kw">pub </span>flags: AccelerationStructureFlags,
-<a href=#8102 id=8102 data-nosnippet>8102</a>    <span class="doccomment">/// Update mode for the bottom level acceleration structure.
-<a href=#8103 id=8103 data-nosnippet>8103</a>    </span><span class="kw">pub </span>update_mode: AccelerationStructureUpdateMode,
+<a href=#8005 id=8005 data-nosnippet>8005</a>    /// # Safety
+<a href=#8006 id=8006 data-nosnippet>8006</a>    ///
+<a href=#8007 id=8007 data-nosnippet>8007</a>    /// See the documentation for the `set_*` methods for the safety requirements
+<a href=#8008 id=8008 data-nosnippet>8008</a>    /// of each sub-configuration.
+<a href=#8009 id=8009 data-nosnippet>8009</a>    </span><span class="attr">#[must_use]
+<a href=#8010 id=8010 data-nosnippet>8010</a>    </span><span class="kw">pub const fn </span>unchecked() -&gt; <span class="self">Self </span>{
+<a href=#8011 id=8011 data-nosnippet>8011</a>        <span class="kw">unsafe </span>{ <span class="self">Self</span>::all(<span class="bool-val">false</span>) }
+<a href=#8012 id=8012 data-nosnippet>8012</a>    }
+<a href=#8013 id=8013 data-nosnippet>8013</a>
+<a href=#8014 id=8014 data-nosnippet>8014</a>    <span class="doccomment">/// Creates a new configuration where all checks are enabled or disabled. To safely
+<a href=#8015 id=8015 data-nosnippet>8015</a>    /// create a configuration with all checks enabled, use [`ShaderRuntimeChecks::checked`].
+<a href=#8016 id=8016 data-nosnippet>8016</a>    ///
+<a href=#8017 id=8017 data-nosnippet>8017</a>    /// # Safety
+<a href=#8018 id=8018 data-nosnippet>8018</a>    ///
+<a href=#8019 id=8019 data-nosnippet>8019</a>    /// See the documentation for the `set_*` methods for the safety requirements
+<a href=#8020 id=8020 data-nosnippet>8020</a>    /// of each sub-configuration.
+<a href=#8021 id=8021 data-nosnippet>8021</a>    </span><span class="attr">#[must_use]
+<a href=#8022 id=8022 data-nosnippet>8022</a>    </span><span class="kw">pub const unsafe fn </span>all(all_checks: bool) -&gt; <span class="self">Self </span>{
+<a href=#8023 id=8023 data-nosnippet>8023</a>        <span class="self">Self </span>{
+<a href=#8024 id=8024 data-nosnippet>8024</a>            bounds_checks: all_checks,
+<a href=#8025 id=8025 data-nosnippet>8025</a>            force_loop_bounding: all_checks,
+<a href=#8026 id=8026 data-nosnippet>8026</a>            ray_query_initialization_tracking: all_checks,
+<a href=#8027 id=8027 data-nosnippet>8027</a>        }
+<a href=#8028 id=8028 data-nosnippet>8028</a>    }
+<a href=#8029 id=8029 data-nosnippet>8029</a>}
+<a href=#8030 id=8030 data-nosnippet>8030</a>
+<a href=#8031 id=8031 data-nosnippet>8031</a><span class="kw">impl </span>Default <span class="kw">for </span>ShaderRuntimeChecks {
+<a href=#8032 id=8032 data-nosnippet>8032</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#8033 id=8033 data-nosnippet>8033</a>        <span class="self">Self</span>::checked()
+<a href=#8034 id=8034 data-nosnippet>8034</a>    }
+<a href=#8035 id=8035 data-nosnippet>8035</a>}
+<a href=#8036 id=8036 data-nosnippet>8036</a>
+<a href=#8037 id=8037 data-nosnippet>8037</a><span class="attr">#[derive(Clone, Debug, PartialEq, Eq)]
+<a href=#8038 id=8038 data-nosnippet>8038</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#8039 id=8039 data-nosnippet>8039</a></span><span class="doccomment">/// Descriptor for all size defining attributes of a single triangle geometry inside a bottom level acceleration structure.
+<a href=#8040 id=8040 data-nosnippet>8040</a></span><span class="kw">pub struct </span>BlasTriangleGeometrySizeDescriptor {
+<a href=#8041 id=8041 data-nosnippet>8041</a>    <span class="doccomment">/// Format of a vertex position, must be [`VertexFormat::Float32x3`]
+<a href=#8042 id=8042 data-nosnippet>8042</a>    /// with just [`Features::EXPERIMENTAL_RAY_QUERY`]
+<a href=#8043 id=8043 data-nosnippet>8043</a>    /// but [`Features::EXTENDED_ACCELERATION_STRUCTURE_VERTEX_FORMATS`] adds more.
+<a href=#8044 id=8044 data-nosnippet>8044</a>    </span><span class="kw">pub </span>vertex_format: VertexFormat,
+<a href=#8045 id=8045 data-nosnippet>8045</a>    <span class="doccomment">/// Number of vertices.
+<a href=#8046 id=8046 data-nosnippet>8046</a>    </span><span class="kw">pub </span>vertex_count: u32,
+<a href=#8047 id=8047 data-nosnippet>8047</a>    <span class="doccomment">/// Format of an index. Only needed if an index buffer is used.
+<a href=#8048 id=8048 data-nosnippet>8048</a>    /// If `index_format` is provided `index_count` is required.
+<a href=#8049 id=8049 data-nosnippet>8049</a>    </span><span class="kw">pub </span>index_format: <span class="prelude-ty">Option</span>&lt;IndexFormat&gt;,
+<a href=#8050 id=8050 data-nosnippet>8050</a>    <span class="doccomment">/// Number of indices. Only needed if an index buffer is used.
+<a href=#8051 id=8051 data-nosnippet>8051</a>    /// If `index_count` is provided `index_format` is required.
+<a href=#8052 id=8052 data-nosnippet>8052</a>    </span><span class="kw">pub </span>index_count: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+<a href=#8053 id=8053 data-nosnippet>8053</a>    <span class="doccomment">/// Flags for the geometry.
+<a href=#8054 id=8054 data-nosnippet>8054</a>    </span><span class="kw">pub </span>flags: AccelerationStructureGeometryFlags,
+<a href=#8055 id=8055 data-nosnippet>8055</a>}
+<a href=#8056 id=8056 data-nosnippet>8056</a>
+<a href=#8057 id=8057 data-nosnippet>8057</a><span class="attr">#[derive(Clone, Debug)]
+<a href=#8058 id=8058 data-nosnippet>8058</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#8059 id=8059 data-nosnippet>8059</a></span><span class="doccomment">/// Descriptor for all size defining attributes of all geometries inside a bottom level acceleration structure.
+<a href=#8060 id=8060 data-nosnippet>8060</a></span><span class="kw">pub enum </span>BlasGeometrySizeDescriptors {
+<a href=#8061 id=8061 data-nosnippet>8061</a>    <span class="doccomment">/// Triangle geometry version.
+<a href=#8062 id=8062 data-nosnippet>8062</a>    </span>Triangles {
+<a href=#8063 id=8063 data-nosnippet>8063</a>        <span class="doccomment">/// Descriptor for each triangle geometry.
+<a href=#8064 id=8064 data-nosnippet>8064</a>        </span>descriptors: Vec&lt;BlasTriangleGeometrySizeDescriptor&gt;,
+<a href=#8065 id=8065 data-nosnippet>8065</a>    },
+<a href=#8066 id=8066 data-nosnippet>8066</a>}
+<a href=#8067 id=8067 data-nosnippet>8067</a>
+<a href=#8068 id=8068 data-nosnippet>8068</a><span class="attr">#[repr(u8)]
+<a href=#8069 id=8069 data-nosnippet>8069</a>#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+<a href=#8070 id=8070 data-nosnippet>8070</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#8071 id=8071 data-nosnippet>8071</a></span><span class="doccomment">/// Update mode for acceleration structure builds.
+<a href=#8072 id=8072 data-nosnippet>8072</a></span><span class="kw">pub enum </span>AccelerationStructureUpdateMode {
+<a href=#8073 id=8073 data-nosnippet>8073</a>    <span class="doccomment">/// Always perform a full build.
+<a href=#8074 id=8074 data-nosnippet>8074</a>    </span>Build,
+<a href=#8075 id=8075 data-nosnippet>8075</a>    <span class="doccomment">/// If possible, perform an incremental update.
+<a href=#8076 id=8076 data-nosnippet>8076</a>    ///
+<a href=#8077 id=8077 data-nosnippet>8077</a>    /// Not advised for major topology changes.
+<a href=#8078 id=8078 data-nosnippet>8078</a>    /// (Useful for e.g. skinning)
+<a href=#8079 id=8079 data-nosnippet>8079</a>    </span>PreferUpdate,
+<a href=#8080 id=8080 data-nosnippet>8080</a>}
+<a href=#8081 id=8081 data-nosnippet>8081</a>
+<a href=#8082 id=8082 data-nosnippet>8082</a><span class="attr">#[repr(C)]
+<a href=#8083 id=8083 data-nosnippet>8083</a>#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+<a href=#8084 id=8084 data-nosnippet>8084</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#8085 id=8085 data-nosnippet>8085</a></span><span class="doccomment">/// Descriptor for creating a bottom level acceleration structure.
+<a href=#8086 id=8086 data-nosnippet>8086</a></span><span class="kw">pub struct </span>CreateBlasDescriptor&lt;L&gt; {
+<a href=#8087 id=8087 data-nosnippet>8087</a>    <span class="doccomment">/// Label for the bottom level acceleration structure.
+<a href=#8088 id=8088 data-nosnippet>8088</a>    </span><span class="kw">pub </span>label: L,
+<a href=#8089 id=8089 data-nosnippet>8089</a>    <span class="doccomment">/// Flags for the bottom level acceleration structure.
+<a href=#8090 id=8090 data-nosnippet>8090</a>    </span><span class="kw">pub </span>flags: AccelerationStructureFlags,
+<a href=#8091 id=8091 data-nosnippet>8091</a>    <span class="doccomment">/// Update mode for the bottom level acceleration structure.
+<a href=#8092 id=8092 data-nosnippet>8092</a>    </span><span class="kw">pub </span>update_mode: AccelerationStructureUpdateMode,
+<a href=#8093 id=8093 data-nosnippet>8093</a>}
+<a href=#8094 id=8094 data-nosnippet>8094</a>
+<a href=#8095 id=8095 data-nosnippet>8095</a><span class="kw">impl</span>&lt;L&gt; CreateBlasDescriptor&lt;L&gt; {
+<a href=#8096 id=8096 data-nosnippet>8096</a>    <span class="doccomment">/// Takes a closure and maps the label of the blas descriptor into another.
+<a href=#8097 id=8097 data-nosnippet>8097</a>    </span><span class="kw">pub fn </span>map_label&lt;K&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K) -&gt; CreateBlasDescriptor&lt;K&gt; {
+<a href=#8098 id=8098 data-nosnippet>8098</a>        CreateBlasDescriptor {
+<a href=#8099 id=8099 data-nosnippet>8099</a>            label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
+<a href=#8100 id=8100 data-nosnippet>8100</a>            flags: <span class="self">self</span>.flags,
+<a href=#8101 id=8101 data-nosnippet>8101</a>            update_mode: <span class="self">self</span>.update_mode,
+<a href=#8102 id=8102 data-nosnippet>8102</a>        }
+<a href=#8103 id=8103 data-nosnippet>8103</a>    }
 <a href=#8104 id=8104 data-nosnippet>8104</a>}
 <a href=#8105 id=8105 data-nosnippet>8105</a>
-<a href=#8106 id=8106 data-nosnippet>8106</a><span class="kw">impl</span>&lt;L&gt; CreateTlasDescriptor&lt;L&gt; {
-<a href=#8107 id=8107 data-nosnippet>8107</a>    <span class="doccomment">/// Takes a closure and maps the label of the blas descriptor into another.
-<a href=#8108 id=8108 data-nosnippet>8108</a>    </span><span class="kw">pub fn </span>map_label&lt;K&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K) -&gt; CreateTlasDescriptor&lt;K&gt; {
-<a href=#8109 id=8109 data-nosnippet>8109</a>        CreateTlasDescriptor {
-<a href=#8110 id=8110 data-nosnippet>8110</a>            label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
-<a href=#8111 id=8111 data-nosnippet>8111</a>            flags: <span class="self">self</span>.flags,
-<a href=#8112 id=8112 data-nosnippet>8112</a>            update_mode: <span class="self">self</span>.update_mode,
-<a href=#8113 id=8113 data-nosnippet>8113</a>            max_instances: <span class="self">self</span>.max_instances,
-<a href=#8114 id=8114 data-nosnippet>8114</a>        }
-<a href=#8115 id=8115 data-nosnippet>8115</a>    }
-<a href=#8116 id=8116 data-nosnippet>8116</a>}
-<a href=#8117 id=8117 data-nosnippet>8117</a>
-<a href=#8118 id=8118 data-nosnippet>8118</a><span class="macro">bitflags::bitflags!</span>(
-<a href=#8119 id=8119 data-nosnippet>8119</a>    <span class="doccomment">/// Flags for acceleration structures
-<a href=#8120 id=8120 data-nosnippet>8120</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#8121 id=8121 data-nosnippet>8121</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
-<a href=#8122 id=8122 data-nosnippet>8122</a>    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-<a href=#8123 id=8123 data-nosnippet>8123</a>    </span><span class="kw">pub struct </span>AccelerationStructureFlags: u8 {
-<a href=#8124 id=8124 data-nosnippet>8124</a>        <span class="doccomment">/// Allow for incremental updates (no change in size), currently this is unimplemented
-<a href=#8125 id=8125 data-nosnippet>8125</a>        /// and will build as normal (this is fine, update vs build should be unnoticeable)
-<a href=#8126 id=8126 data-nosnippet>8126</a>        </span><span class="kw">const </span>ALLOW_UPDATE = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
-<a href=#8127 id=8127 data-nosnippet>8127</a>        <span class="doccomment">/// Allow the acceleration structure to be compacted in a copy operation
-<a href=#8128 id=8128 data-nosnippet>8128</a>        /// (`Blas::prepare_for_compaction`, `CommandEncoder::compact_blas`).
-<a href=#8129 id=8129 data-nosnippet>8129</a>        </span><span class="kw">const </span>ALLOW_COMPACTION = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
-<a href=#8130 id=8130 data-nosnippet>8130</a>        <span class="doccomment">/// Optimize for fast ray tracing performance, recommended if the geometry is unlikely
-<a href=#8131 id=8131 data-nosnippet>8131</a>        /// to change (e.g. in a game: non-interactive scene geometry)
-<a href=#8132 id=8132 data-nosnippet>8132</a>        </span><span class="kw">const </span>PREFER_FAST_TRACE = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
-<a href=#8133 id=8133 data-nosnippet>8133</a>        <span class="doccomment">/// Optimize for fast build time, recommended if geometry is likely to change frequently
-<a href=#8134 id=8134 data-nosnippet>8134</a>        /// (e.g. in a game: player model).
-<a href=#8135 id=8135 data-nosnippet>8135</a>        </span><span class="kw">const </span>PREFER_FAST_BUILD = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
-<a href=#8136 id=8136 data-nosnippet>8136</a>        <span class="doccomment">/// Optimize for low memory footprint (both while building and in the output BLAS).
-<a href=#8137 id=8137 data-nosnippet>8137</a>        </span><span class="kw">const </span>LOW_MEMORY = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
-<a href=#8138 id=8138 data-nosnippet>8138</a>        <span class="doccomment">/// Use `BlasTriangleGeometry::transform_buffer` when building a BLAS (only allowed in
-<a href=#8139 id=8139 data-nosnippet>8139</a>        /// BLAS creation)
-<a href=#8140 id=8140 data-nosnippet>8140</a>        </span><span class="kw">const </span>USE_TRANSFORM = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
-<a href=#8141 id=8141 data-nosnippet>8141</a>        <span class="doccomment">/// Allow retrieval of the vertices of the triangle hit by a ray.
-<a href=#8142 id=8142 data-nosnippet>8142</a>        </span><span class="kw">const </span>ALLOW_RAY_HIT_VERTEX_RETURN = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
-<a href=#8143 id=8143 data-nosnippet>8143</a>    }
-<a href=#8144 id=8144 data-nosnippet>8144</a>);
-<a href=#8145 id=8145 data-nosnippet>8145</a>
-<a href=#8146 id=8146 data-nosnippet>8146</a><span class="macro">bitflags::bitflags!</span>(
-<a href=#8147 id=8147 data-nosnippet>8147</a>    <span class="doccomment">/// Flags for acceleration structure geometries
-<a href=#8148 id=8148 data-nosnippet>8148</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#8149 id=8149 data-nosnippet>8149</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
-<a href=#8150 id=8150 data-nosnippet>8150</a>    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-<a href=#8151 id=8151 data-nosnippet>8151</a>    </span><span class="kw">pub struct </span>AccelerationStructureGeometryFlags: u8 {
-<a href=#8152 id=8152 data-nosnippet>8152</a>        <span class="doccomment">/// Is OPAQUE (is there no alpha test) recommended as currently in naga there is no
-<a href=#8153 id=8153 data-nosnippet>8153</a>        /// candidate intersections yet so currently BLASes without this flag will not have hits.
-<a href=#8154 id=8154 data-nosnippet>8154</a>        /// Not enabling this makes the BLAS unable to be interacted with in WGSL.
-<a href=#8155 id=8155 data-nosnippet>8155</a>        </span><span class="kw">const </span>OPAQUE = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
-<a href=#8156 id=8156 data-nosnippet>8156</a>        <span class="doccomment">/// NO_DUPLICATE_ANY_HIT_INVOCATION, not useful unless using hal with wgpu, ray-tracing
-<a href=#8157 id=8157 data-nosnippet>8157</a>        /// pipelines are not supported in wgpu so any-hit shaders do not exist. For when any-hit
-<a href=#8158 id=8158 data-nosnippet>8158</a>        /// shaders are implemented (or experienced users who combine this with an underlying library:
-<a href=#8159 id=8159 data-nosnippet>8159</a>        /// for any primitive (triangle or AABB) multiple any-hit shaders sometimes may be invoked
-<a href=#8160 id=8160 data-nosnippet>8160</a>        /// (especially in AABBs like a sphere), if this flag in present only one hit on a primitive may
-<a href=#8161 id=8161 data-nosnippet>8161</a>        /// invoke an any-hit shader.
-<a href=#8162 id=8162 data-nosnippet>8162</a>        </span><span class="kw">const </span>NO_DUPLICATE_ANY_HIT_INVOCATION = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
-<a href=#8163 id=8163 data-nosnippet>8163</a>    }
-<a href=#8164 id=8164 data-nosnippet>8164</a>);
-<a href=#8165 id=8165 data-nosnippet>8165</a>
-<a href=#8166 id=8166 data-nosnippet>8166</a><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-<a href=#8167 id=8167 data-nosnippet>8167</a></span><span class="doccomment">/// What a copy between acceleration structures should do
-<a href=#8168 id=8168 data-nosnippet>8168</a></span><span class="kw">pub enum </span>AccelerationStructureCopy {
-<a href=#8169 id=8169 data-nosnippet>8169</a>    <span class="doccomment">/// Directly duplicate an acceleration structure to another
-<a href=#8170 id=8170 data-nosnippet>8170</a>    </span>Clone,
-<a href=#8171 id=8171 data-nosnippet>8171</a>    <span class="doccomment">/// Duplicate and compact an acceleration structure
-<a href=#8172 id=8172 data-nosnippet>8172</a>    </span>Compact,
-<a href=#8173 id=8173 data-nosnippet>8173</a>}
-<a href=#8174 id=8174 data-nosnippet>8174</a>
-<a href=#8175 id=8175 data-nosnippet>8175</a><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-<a href=#8176 id=8176 data-nosnippet>8176</a></span><span class="doccomment">/// What type the data of an acceleration structure is
-<a href=#8177 id=8177 data-nosnippet>8177</a></span><span class="kw">pub enum </span>AccelerationStructureType {
-<a href=#8178 id=8178 data-nosnippet>8178</a>    <span class="doccomment">/// The types of the acceleration structure are triangles
-<a href=#8179 id=8179 data-nosnippet>8179</a>    </span>Triangles,
-<a href=#8180 id=8180 data-nosnippet>8180</a>    <span class="doccomment">/// The types of the acceleration structure are axis aligned bounding boxes
-<a href=#8181 id=8181 data-nosnippet>8181</a>    </span>AABBs,
-<a href=#8182 id=8182 data-nosnippet>8182</a>    <span class="doccomment">/// The types of the acceleration structure are instances
-<a href=#8183 id=8183 data-nosnippet>8183</a>    </span>Instances,
-<a href=#8184 id=8184 data-nosnippet>8184</a>}
-<a href=#8185 id=8185 data-nosnippet>8185</a>
-<a href=#8186 id=8186 data-nosnippet>8186</a><span class="doccomment">/// Alignment requirement for transform buffers used in acceleration structure builds
-<a href=#8187 id=8187 data-nosnippet>8187</a></span><span class="kw">pub const </span>TRANSFORM_BUFFER_ALIGNMENT: BufferAddress = <span class="number">16</span>;
-<a href=#8188 id=8188 data-nosnippet>8188</a>
-<a href=#8189 id=8189 data-nosnippet>8189</a><span class="doccomment">/// Alignment requirement for instance buffers used in acceleration structure builds (`build_acceleration_structures_unsafe_tlas`)
-<a href=#8190 id=8190 data-nosnippet>8190</a></span><span class="kw">pub const </span>INSTANCE_BUFFER_ALIGNMENT: BufferAddress = <span class="number">16</span>;
-<a href=#8191 id=8191 data-nosnippet>8191</a>
-<a href=#8192 id=8192 data-nosnippet>8192</a><span class="kw">pub use </span>send_sync::<span class="kw-2">*</span>;
-<a href=#8193 id=8193 data-nosnippet>8193</a>
-<a href=#8194 id=8194 data-nosnippet>8194</a><span class="attr">#[doc(hidden)]
-<a href=#8195 id=8195 data-nosnippet>8195</a></span><span class="kw">mod </span>send_sync {
-<a href=#8196 id=8196 data-nosnippet>8196</a>    <span class="kw">pub trait </span>WasmNotSendSync: WasmNotSend + WasmNotSync {}
-<a href=#8197 id=8197 data-nosnippet>8197</a>    <span class="kw">impl</span>&lt;T: WasmNotSend + WasmNotSync&gt; WasmNotSendSync <span class="kw">for </span>T {}
-<a href=#8198 id=8198 data-nosnippet>8198</a>    <span class="attr">#[cfg(any(
-<a href=#8199 id=8199 data-nosnippet>8199</a>        not(target_arch = <span class="string">"wasm32"</span>),
-<a href=#8200 id=8200 data-nosnippet>8200</a>        all(
-<a href=#8201 id=8201 data-nosnippet>8201</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-<a href=#8202 id=8202 data-nosnippet>8202</a>            not(target_feature = <span class="string">"atomics"</span>)
-<a href=#8203 id=8203 data-nosnippet>8203</a>        )
-<a href=#8204 id=8204 data-nosnippet>8204</a>    ))]
-<a href=#8205 id=8205 data-nosnippet>8205</a>    </span><span class="kw">pub trait </span>WasmNotSend: Send {}
-<a href=#8206 id=8206 data-nosnippet>8206</a>    <span class="attr">#[cfg(any(
-<a href=#8207 id=8207 data-nosnippet>8207</a>        not(target_arch = <span class="string">"wasm32"</span>),
-<a href=#8208 id=8208 data-nosnippet>8208</a>        all(
-<a href=#8209 id=8209 data-nosnippet>8209</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-<a href=#8210 id=8210 data-nosnippet>8210</a>            not(target_feature = <span class="string">"atomics"</span>)
-<a href=#8211 id=8211 data-nosnippet>8211</a>        )
-<a href=#8212 id=8212 data-nosnippet>8212</a>    ))]
-<a href=#8213 id=8213 data-nosnippet>8213</a>    </span><span class="kw">impl</span>&lt;T: Send&gt; WasmNotSend <span class="kw">for </span>T {}
-<a href=#8214 id=8214 data-nosnippet>8214</a>    <span class="attr">#[cfg(not(any(
-<a href=#8215 id=8215 data-nosnippet>8215</a>        not(target_arch = <span class="string">"wasm32"</span>),
-<a href=#8216 id=8216 data-nosnippet>8216</a>        all(
-<a href=#8217 id=8217 data-nosnippet>8217</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-<a href=#8218 id=8218 data-nosnippet>8218</a>            not(target_feature = <span class="string">"atomics"</span>)
-<a href=#8219 id=8219 data-nosnippet>8219</a>        )
-<a href=#8220 id=8220 data-nosnippet>8220</a>    )))]
-<a href=#8221 id=8221 data-nosnippet>8221</a>    </span><span class="kw">pub trait </span>WasmNotSend {}
-<a href=#8222 id=8222 data-nosnippet>8222</a>    <span class="attr">#[cfg(not(any(
-<a href=#8223 id=8223 data-nosnippet>8223</a>        not(target_arch = <span class="string">"wasm32"</span>),
-<a href=#8224 id=8224 data-nosnippet>8224</a>        all(
-<a href=#8225 id=8225 data-nosnippet>8225</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-<a href=#8226 id=8226 data-nosnippet>8226</a>            not(target_feature = <span class="string">"atomics"</span>)
-<a href=#8227 id=8227 data-nosnippet>8227</a>        )
-<a href=#8228 id=8228 data-nosnippet>8228</a>    )))]
-<a href=#8229 id=8229 data-nosnippet>8229</a>    </span><span class="kw">impl</span>&lt;T&gt; WasmNotSend <span class="kw">for </span>T {}
-<a href=#8230 id=8230 data-nosnippet>8230</a>
-<a href=#8231 id=8231 data-nosnippet>8231</a>    <span class="attr">#[cfg(any(
-<a href=#8232 id=8232 data-nosnippet>8232</a>        not(target_arch = <span class="string">"wasm32"</span>),
-<a href=#8233 id=8233 data-nosnippet>8233</a>        all(
-<a href=#8234 id=8234 data-nosnippet>8234</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-<a href=#8235 id=8235 data-nosnippet>8235</a>            not(target_feature = <span class="string">"atomics"</span>)
-<a href=#8236 id=8236 data-nosnippet>8236</a>        )
-<a href=#8237 id=8237 data-nosnippet>8237</a>    ))]
-<a href=#8238 id=8238 data-nosnippet>8238</a>    </span><span class="kw">pub trait </span>WasmNotSync: Sync {}
-<a href=#8239 id=8239 data-nosnippet>8239</a>    <span class="attr">#[cfg(any(
-<a href=#8240 id=8240 data-nosnippet>8240</a>        not(target_arch = <span class="string">"wasm32"</span>),
-<a href=#8241 id=8241 data-nosnippet>8241</a>        all(
-<a href=#8242 id=8242 data-nosnippet>8242</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-<a href=#8243 id=8243 data-nosnippet>8243</a>            not(target_feature = <span class="string">"atomics"</span>)
-<a href=#8244 id=8244 data-nosnippet>8244</a>        )
-<a href=#8245 id=8245 data-nosnippet>8245</a>    ))]
-<a href=#8246 id=8246 data-nosnippet>8246</a>    </span><span class="kw">impl</span>&lt;T: Sync&gt; WasmNotSync <span class="kw">for </span>T {}
-<a href=#8247 id=8247 data-nosnippet>8247</a>    <span class="attr">#[cfg(not(any(
-<a href=#8248 id=8248 data-nosnippet>8248</a>        not(target_arch = <span class="string">"wasm32"</span>),
-<a href=#8249 id=8249 data-nosnippet>8249</a>        all(
-<a href=#8250 id=8250 data-nosnippet>8250</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-<a href=#8251 id=8251 data-nosnippet>8251</a>            not(target_feature = <span class="string">"atomics"</span>)
-<a href=#8252 id=8252 data-nosnippet>8252</a>        )
-<a href=#8253 id=8253 data-nosnippet>8253</a>    )))]
-<a href=#8254 id=8254 data-nosnippet>8254</a>    </span><span class="kw">pub trait </span>WasmNotSync {}
-<a href=#8255 id=8255 data-nosnippet>8255</a>    <span class="attr">#[cfg(not(any(
-<a href=#8256 id=8256 data-nosnippet>8256</a>        not(target_arch = <span class="string">"wasm32"</span>),
-<a href=#8257 id=8257 data-nosnippet>8257</a>        all(
-<a href=#8258 id=8258 data-nosnippet>8258</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-<a href=#8259 id=8259 data-nosnippet>8259</a>            not(target_feature = <span class="string">"atomics"</span>)
-<a href=#8260 id=8260 data-nosnippet>8260</a>        )
-<a href=#8261 id=8261 data-nosnippet>8261</a>    )))]
-<a href=#8262 id=8262 data-nosnippet>8262</a>    </span><span class="kw">impl</span>&lt;T&gt; WasmNotSync <span class="kw">for </span>T {}
-<a href=#8263 id=8263 data-nosnippet>8263</a>}
-<a href=#8264 id=8264 data-nosnippet>8264</a>
-<a href=#8265 id=8265 data-nosnippet>8265</a><span class="doccomment">/// Corresponds to a [`GPUDeviceLostReason`].
-<a href=#8266 id=8266 data-nosnippet>8266</a>///
-<a href=#8267 id=8267 data-nosnippet>8267</a>/// [`GPUDeviceLostReason`]: https://www.w3.org/TR/webgpu/#enumdef-gpudevicelostreason
-<a href=#8268 id=8268 data-nosnippet>8268</a></span><span class="attr">#[repr(u8)]
-<a href=#8269 id=8269 data-nosnippet>8269</a>#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-<a href=#8270 id=8270 data-nosnippet>8270</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#8271 id=8271 data-nosnippet>8271</a></span><span class="kw">pub enum </span>DeviceLostReason {
-<a href=#8272 id=8272 data-nosnippet>8272</a>    <span class="doccomment">/// The device was lost for an unspecific reason, including driver errors.
-<a href=#8273 id=8273 data-nosnippet>8273</a>    </span>Unknown = <span class="number">0</span>,
-<a href=#8274 id=8274 data-nosnippet>8274</a>    <span class="doccomment">/// The device's `destroy` method was called.
-<a href=#8275 id=8275 data-nosnippet>8275</a>    </span>Destroyed = <span class="number">1</span>,
-<a href=#8276 id=8276 data-nosnippet>8276</a>}
-<a href=#8277 id=8277 data-nosnippet>8277</a>
-<a href=#8278 id=8278 data-nosnippet>8278</a><span class="doccomment">/// Descriptor for a shader module given by any of several sources.
-<a href=#8279 id=8279 data-nosnippet>8279</a>/// These shaders are passed through directly to the underlying api.
-<a href=#8280 id=8280 data-nosnippet>8280</a>/// At least one shader type that may be used by the backend must be `Some` or a panic is raised.
-<a href=#8281 id=8281 data-nosnippet>8281</a></span><span class="attr">#[derive(Debug, Clone)]
-<a href=#8282 id=8282 data-nosnippet>8282</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#8283 id=8283 data-nosnippet>8283</a></span><span class="kw">pub struct </span>CreateShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>, L&gt; {
-<a href=#8284 id=8284 data-nosnippet>8284</a>    <span class="doccomment">/// Entrypoint. Unused for Spir-V.
-<a href=#8285 id=8285 data-nosnippet>8285</a>    </span><span class="kw">pub </span>entry_point: String,
-<a href=#8286 id=8286 data-nosnippet>8286</a>    <span class="doccomment">/// Debug label of the shader module. This will show up in graphics debuggers for easy identification.
-<a href=#8287 id=8287 data-nosnippet>8287</a>    </span><span class="kw">pub </span>label: L,
-<a href=#8288 id=8288 data-nosnippet>8288</a>    <span class="doccomment">/// Number of workgroups in each dimension x, y and z. Unused for Spir-V.
-<a href=#8289 id=8289 data-nosnippet>8289</a>    </span><span class="kw">pub </span>num_workgroups: (u32, u32, u32),
-<a href=#8290 id=8290 data-nosnippet>8290</a>    <span class="doccomment">/// Runtime checks that should be enabled.
-<a href=#8291 id=8291 data-nosnippet>8291</a>    </span><span class="kw">pub </span>runtime_checks: ShaderRuntimeChecks,
+<a href=#8106 id=8106 data-nosnippet>8106</a><span class="attr">#[repr(C)]
+<a href=#8107 id=8107 data-nosnippet>8107</a>#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+<a href=#8108 id=8108 data-nosnippet>8108</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#8109 id=8109 data-nosnippet>8109</a></span><span class="doccomment">/// Descriptor for creating a top level acceleration structure.
+<a href=#8110 id=8110 data-nosnippet>8110</a></span><span class="kw">pub struct </span>CreateTlasDescriptor&lt;L&gt; {
+<a href=#8111 id=8111 data-nosnippet>8111</a>    <span class="doccomment">/// Label for the top level acceleration structure.
+<a href=#8112 id=8112 data-nosnippet>8112</a>    </span><span class="kw">pub </span>label: L,
+<a href=#8113 id=8113 data-nosnippet>8113</a>    <span class="doccomment">/// Number of instances that can be stored in the acceleration structure.
+<a href=#8114 id=8114 data-nosnippet>8114</a>    </span><span class="kw">pub </span>max_instances: u32,
+<a href=#8115 id=8115 data-nosnippet>8115</a>    <span class="doccomment">/// Flags for the bottom level acceleration structure.
+<a href=#8116 id=8116 data-nosnippet>8116</a>    </span><span class="kw">pub </span>flags: AccelerationStructureFlags,
+<a href=#8117 id=8117 data-nosnippet>8117</a>    <span class="doccomment">/// Update mode for the bottom level acceleration structure.
+<a href=#8118 id=8118 data-nosnippet>8118</a>    </span><span class="kw">pub </span>update_mode: AccelerationStructureUpdateMode,
+<a href=#8119 id=8119 data-nosnippet>8119</a>}
+<a href=#8120 id=8120 data-nosnippet>8120</a>
+<a href=#8121 id=8121 data-nosnippet>8121</a><span class="kw">impl</span>&lt;L&gt; CreateTlasDescriptor&lt;L&gt; {
+<a href=#8122 id=8122 data-nosnippet>8122</a>    <span class="doccomment">/// Takes a closure and maps the label of the blas descriptor into another.
+<a href=#8123 id=8123 data-nosnippet>8123</a>    </span><span class="kw">pub fn </span>map_label&lt;K&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K) -&gt; CreateTlasDescriptor&lt;K&gt; {
+<a href=#8124 id=8124 data-nosnippet>8124</a>        CreateTlasDescriptor {
+<a href=#8125 id=8125 data-nosnippet>8125</a>            label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
+<a href=#8126 id=8126 data-nosnippet>8126</a>            flags: <span class="self">self</span>.flags,
+<a href=#8127 id=8127 data-nosnippet>8127</a>            update_mode: <span class="self">self</span>.update_mode,
+<a href=#8128 id=8128 data-nosnippet>8128</a>            max_instances: <span class="self">self</span>.max_instances,
+<a href=#8129 id=8129 data-nosnippet>8129</a>        }
+<a href=#8130 id=8130 data-nosnippet>8130</a>    }
+<a href=#8131 id=8131 data-nosnippet>8131</a>}
+<a href=#8132 id=8132 data-nosnippet>8132</a>
+<a href=#8133 id=8133 data-nosnippet>8133</a><span class="macro">bitflags::bitflags!</span>(
+<a href=#8134 id=8134 data-nosnippet>8134</a>    <span class="doccomment">/// Flags for acceleration structures
+<a href=#8135 id=8135 data-nosnippet>8135</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#8136 id=8136 data-nosnippet>8136</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
+<a href=#8137 id=8137 data-nosnippet>8137</a>    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+<a href=#8138 id=8138 data-nosnippet>8138</a>    </span><span class="kw">pub struct </span>AccelerationStructureFlags: u8 {
+<a href=#8139 id=8139 data-nosnippet>8139</a>        <span class="doccomment">/// Allow for incremental updates (no change in size), currently this is unimplemented
+<a href=#8140 id=8140 data-nosnippet>8140</a>        /// and will build as normal (this is fine, update vs build should be unnoticeable)
+<a href=#8141 id=8141 data-nosnippet>8141</a>        </span><span class="kw">const </span>ALLOW_UPDATE = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
+<a href=#8142 id=8142 data-nosnippet>8142</a>        <span class="doccomment">/// Allow the acceleration structure to be compacted in a copy operation
+<a href=#8143 id=8143 data-nosnippet>8143</a>        /// (`Blas::prepare_for_compaction`, `CommandEncoder::compact_blas`).
+<a href=#8144 id=8144 data-nosnippet>8144</a>        </span><span class="kw">const </span>ALLOW_COMPACTION = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+<a href=#8145 id=8145 data-nosnippet>8145</a>        <span class="doccomment">/// Optimize for fast ray tracing performance, recommended if the geometry is unlikely
+<a href=#8146 id=8146 data-nosnippet>8146</a>        /// to change (e.g. in a game: non-interactive scene geometry)
+<a href=#8147 id=8147 data-nosnippet>8147</a>        </span><span class="kw">const </span>PREFER_FAST_TRACE = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+<a href=#8148 id=8148 data-nosnippet>8148</a>        <span class="doccomment">/// Optimize for fast build time, recommended if geometry is likely to change frequently
+<a href=#8149 id=8149 data-nosnippet>8149</a>        /// (e.g. in a game: player model).
+<a href=#8150 id=8150 data-nosnippet>8150</a>        </span><span class="kw">const </span>PREFER_FAST_BUILD = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+<a href=#8151 id=8151 data-nosnippet>8151</a>        <span class="doccomment">/// Optimize for low memory footprint (both while building and in the output BLAS).
+<a href=#8152 id=8152 data-nosnippet>8152</a>        </span><span class="kw">const </span>LOW_MEMORY = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+<a href=#8153 id=8153 data-nosnippet>8153</a>        <span class="doccomment">/// Use `BlasTriangleGeometry::transform_buffer` when building a BLAS (only allowed in
+<a href=#8154 id=8154 data-nosnippet>8154</a>        /// BLAS creation)
+<a href=#8155 id=8155 data-nosnippet>8155</a>        </span><span class="kw">const </span>USE_TRANSFORM = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+<a href=#8156 id=8156 data-nosnippet>8156</a>        <span class="doccomment">/// Allow retrieval of the vertices of the triangle hit by a ray.
+<a href=#8157 id=8157 data-nosnippet>8157</a>        </span><span class="kw">const </span>ALLOW_RAY_HIT_VERTEX_RETURN = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
+<a href=#8158 id=8158 data-nosnippet>8158</a>    }
+<a href=#8159 id=8159 data-nosnippet>8159</a>);
+<a href=#8160 id=8160 data-nosnippet>8160</a>
+<a href=#8161 id=8161 data-nosnippet>8161</a><span class="macro">bitflags::bitflags!</span>(
+<a href=#8162 id=8162 data-nosnippet>8162</a>    <span class="doccomment">/// Flags for acceleration structure geometries
+<a href=#8163 id=8163 data-nosnippet>8163</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#8164 id=8164 data-nosnippet>8164</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
+<a href=#8165 id=8165 data-nosnippet>8165</a>    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+<a href=#8166 id=8166 data-nosnippet>8166</a>    </span><span class="kw">pub struct </span>AccelerationStructureGeometryFlags: u8 {
+<a href=#8167 id=8167 data-nosnippet>8167</a>        <span class="doccomment">/// Is OPAQUE (is there no alpha test) recommended as currently in naga there is no
+<a href=#8168 id=8168 data-nosnippet>8168</a>        /// candidate intersections yet so currently BLASes without this flag will not have hits.
+<a href=#8169 id=8169 data-nosnippet>8169</a>        /// Not enabling this makes the BLAS unable to be interacted with in WGSL.
+<a href=#8170 id=8170 data-nosnippet>8170</a>        </span><span class="kw">const </span>OPAQUE = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
+<a href=#8171 id=8171 data-nosnippet>8171</a>        <span class="doccomment">/// NO_DUPLICATE_ANY_HIT_INVOCATION, not useful unless using hal with wgpu, ray-tracing
+<a href=#8172 id=8172 data-nosnippet>8172</a>        /// pipelines are not supported in wgpu so any-hit shaders do not exist. For when any-hit
+<a href=#8173 id=8173 data-nosnippet>8173</a>        /// shaders are implemented (or experienced users who combine this with an underlying library:
+<a href=#8174 id=8174 data-nosnippet>8174</a>        /// for any primitive (triangle or AABB) multiple any-hit shaders sometimes may be invoked
+<a href=#8175 id=8175 data-nosnippet>8175</a>        /// (especially in AABBs like a sphere), if this flag in present only one hit on a primitive may
+<a href=#8176 id=8176 data-nosnippet>8176</a>        /// invoke an any-hit shader.
+<a href=#8177 id=8177 data-nosnippet>8177</a>        </span><span class="kw">const </span>NO_DUPLICATE_ANY_HIT_INVOCATION = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+<a href=#8178 id=8178 data-nosnippet>8178</a>    }
+<a href=#8179 id=8179 data-nosnippet>8179</a>);
+<a href=#8180 id=8180 data-nosnippet>8180</a>
+<a href=#8181 id=8181 data-nosnippet>8181</a><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+<a href=#8182 id=8182 data-nosnippet>8182</a></span><span class="doccomment">/// What a copy between acceleration structures should do
+<a href=#8183 id=8183 data-nosnippet>8183</a></span><span class="kw">pub enum </span>AccelerationStructureCopy {
+<a href=#8184 id=8184 data-nosnippet>8184</a>    <span class="doccomment">/// Directly duplicate an acceleration structure to another
+<a href=#8185 id=8185 data-nosnippet>8185</a>    </span>Clone,
+<a href=#8186 id=8186 data-nosnippet>8186</a>    <span class="doccomment">/// Duplicate and compact an acceleration structure
+<a href=#8187 id=8187 data-nosnippet>8187</a>    </span>Compact,
+<a href=#8188 id=8188 data-nosnippet>8188</a>}
+<a href=#8189 id=8189 data-nosnippet>8189</a>
+<a href=#8190 id=8190 data-nosnippet>8190</a><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+<a href=#8191 id=8191 data-nosnippet>8191</a></span><span class="doccomment">/// What type the data of an acceleration structure is
+<a href=#8192 id=8192 data-nosnippet>8192</a></span><span class="kw">pub enum </span>AccelerationStructureType {
+<a href=#8193 id=8193 data-nosnippet>8193</a>    <span class="doccomment">/// The types of the acceleration structure are triangles
+<a href=#8194 id=8194 data-nosnippet>8194</a>    </span>Triangles,
+<a href=#8195 id=8195 data-nosnippet>8195</a>    <span class="doccomment">/// The types of the acceleration structure are axis aligned bounding boxes
+<a href=#8196 id=8196 data-nosnippet>8196</a>    </span>AABBs,
+<a href=#8197 id=8197 data-nosnippet>8197</a>    <span class="doccomment">/// The types of the acceleration structure are instances
+<a href=#8198 id=8198 data-nosnippet>8198</a>    </span>Instances,
+<a href=#8199 id=8199 data-nosnippet>8199</a>}
+<a href=#8200 id=8200 data-nosnippet>8200</a>
+<a href=#8201 id=8201 data-nosnippet>8201</a><span class="doccomment">/// Alignment requirement for transform buffers used in acceleration structure builds
+<a href=#8202 id=8202 data-nosnippet>8202</a></span><span class="kw">pub const </span>TRANSFORM_BUFFER_ALIGNMENT: BufferAddress = <span class="number">16</span>;
+<a href=#8203 id=8203 data-nosnippet>8203</a>
+<a href=#8204 id=8204 data-nosnippet>8204</a><span class="doccomment">/// Alignment requirement for instance buffers used in acceleration structure builds (`build_acceleration_structures_unsafe_tlas`)
+<a href=#8205 id=8205 data-nosnippet>8205</a></span><span class="kw">pub const </span>INSTANCE_BUFFER_ALIGNMENT: BufferAddress = <span class="number">16</span>;
+<a href=#8206 id=8206 data-nosnippet>8206</a>
+<a href=#8207 id=8207 data-nosnippet>8207</a><span class="kw">pub use </span>send_sync::<span class="kw-2">*</span>;
+<a href=#8208 id=8208 data-nosnippet>8208</a>
+<a href=#8209 id=8209 data-nosnippet>8209</a><span class="attr">#[doc(hidden)]
+<a href=#8210 id=8210 data-nosnippet>8210</a></span><span class="kw">mod </span>send_sync {
+<a href=#8211 id=8211 data-nosnippet>8211</a>    <span class="kw">pub trait </span>WasmNotSendSync: WasmNotSend + WasmNotSync {}
+<a href=#8212 id=8212 data-nosnippet>8212</a>    <span class="kw">impl</span>&lt;T: WasmNotSend + WasmNotSync&gt; WasmNotSendSync <span class="kw">for </span>T {}
+<a href=#8213 id=8213 data-nosnippet>8213</a>    <span class="attr">#[cfg(any(
+<a href=#8214 id=8214 data-nosnippet>8214</a>        not(target_arch = <span class="string">"wasm32"</span>),
+<a href=#8215 id=8215 data-nosnippet>8215</a>        all(
+<a href=#8216 id=8216 data-nosnippet>8216</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+<a href=#8217 id=8217 data-nosnippet>8217</a>            not(target_feature = <span class="string">"atomics"</span>)
+<a href=#8218 id=8218 data-nosnippet>8218</a>        )
+<a href=#8219 id=8219 data-nosnippet>8219</a>    ))]
+<a href=#8220 id=8220 data-nosnippet>8220</a>    </span><span class="kw">pub trait </span>WasmNotSend: Send {}
+<a href=#8221 id=8221 data-nosnippet>8221</a>    <span class="attr">#[cfg(any(
+<a href=#8222 id=8222 data-nosnippet>8222</a>        not(target_arch = <span class="string">"wasm32"</span>),
+<a href=#8223 id=8223 data-nosnippet>8223</a>        all(
+<a href=#8224 id=8224 data-nosnippet>8224</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+<a href=#8225 id=8225 data-nosnippet>8225</a>            not(target_feature = <span class="string">"atomics"</span>)
+<a href=#8226 id=8226 data-nosnippet>8226</a>        )
+<a href=#8227 id=8227 data-nosnippet>8227</a>    ))]
+<a href=#8228 id=8228 data-nosnippet>8228</a>    </span><span class="kw">impl</span>&lt;T: Send&gt; WasmNotSend <span class="kw">for </span>T {}
+<a href=#8229 id=8229 data-nosnippet>8229</a>    <span class="attr">#[cfg(not(any(
+<a href=#8230 id=8230 data-nosnippet>8230</a>        not(target_arch = <span class="string">"wasm32"</span>),
+<a href=#8231 id=8231 data-nosnippet>8231</a>        all(
+<a href=#8232 id=8232 data-nosnippet>8232</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+<a href=#8233 id=8233 data-nosnippet>8233</a>            not(target_feature = <span class="string">"atomics"</span>)
+<a href=#8234 id=8234 data-nosnippet>8234</a>        )
+<a href=#8235 id=8235 data-nosnippet>8235</a>    )))]
+<a href=#8236 id=8236 data-nosnippet>8236</a>    </span><span class="kw">pub trait </span>WasmNotSend {}
+<a href=#8237 id=8237 data-nosnippet>8237</a>    <span class="attr">#[cfg(not(any(
+<a href=#8238 id=8238 data-nosnippet>8238</a>        not(target_arch = <span class="string">"wasm32"</span>),
+<a href=#8239 id=8239 data-nosnippet>8239</a>        all(
+<a href=#8240 id=8240 data-nosnippet>8240</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+<a href=#8241 id=8241 data-nosnippet>8241</a>            not(target_feature = <span class="string">"atomics"</span>)
+<a href=#8242 id=8242 data-nosnippet>8242</a>        )
+<a href=#8243 id=8243 data-nosnippet>8243</a>    )))]
+<a href=#8244 id=8244 data-nosnippet>8244</a>    </span><span class="kw">impl</span>&lt;T&gt; WasmNotSend <span class="kw">for </span>T {}
+<a href=#8245 id=8245 data-nosnippet>8245</a>
+<a href=#8246 id=8246 data-nosnippet>8246</a>    <span class="attr">#[cfg(any(
+<a href=#8247 id=8247 data-nosnippet>8247</a>        not(target_arch = <span class="string">"wasm32"</span>),
+<a href=#8248 id=8248 data-nosnippet>8248</a>        all(
+<a href=#8249 id=8249 data-nosnippet>8249</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+<a href=#8250 id=8250 data-nosnippet>8250</a>            not(target_feature = <span class="string">"atomics"</span>)
+<a href=#8251 id=8251 data-nosnippet>8251</a>        )
+<a href=#8252 id=8252 data-nosnippet>8252</a>    ))]
+<a href=#8253 id=8253 data-nosnippet>8253</a>    </span><span class="kw">pub trait </span>WasmNotSync: Sync {}
+<a href=#8254 id=8254 data-nosnippet>8254</a>    <span class="attr">#[cfg(any(
+<a href=#8255 id=8255 data-nosnippet>8255</a>        not(target_arch = <span class="string">"wasm32"</span>),
+<a href=#8256 id=8256 data-nosnippet>8256</a>        all(
+<a href=#8257 id=8257 data-nosnippet>8257</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+<a href=#8258 id=8258 data-nosnippet>8258</a>            not(target_feature = <span class="string">"atomics"</span>)
+<a href=#8259 id=8259 data-nosnippet>8259</a>        )
+<a href=#8260 id=8260 data-nosnippet>8260</a>    ))]
+<a href=#8261 id=8261 data-nosnippet>8261</a>    </span><span class="kw">impl</span>&lt;T: Sync&gt; WasmNotSync <span class="kw">for </span>T {}
+<a href=#8262 id=8262 data-nosnippet>8262</a>    <span class="attr">#[cfg(not(any(
+<a href=#8263 id=8263 data-nosnippet>8263</a>        not(target_arch = <span class="string">"wasm32"</span>),
+<a href=#8264 id=8264 data-nosnippet>8264</a>        all(
+<a href=#8265 id=8265 data-nosnippet>8265</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+<a href=#8266 id=8266 data-nosnippet>8266</a>            not(target_feature = <span class="string">"atomics"</span>)
+<a href=#8267 id=8267 data-nosnippet>8267</a>        )
+<a href=#8268 id=8268 data-nosnippet>8268</a>    )))]
+<a href=#8269 id=8269 data-nosnippet>8269</a>    </span><span class="kw">pub trait </span>WasmNotSync {}
+<a href=#8270 id=8270 data-nosnippet>8270</a>    <span class="attr">#[cfg(not(any(
+<a href=#8271 id=8271 data-nosnippet>8271</a>        not(target_arch = <span class="string">"wasm32"</span>),
+<a href=#8272 id=8272 data-nosnippet>8272</a>        all(
+<a href=#8273 id=8273 data-nosnippet>8273</a>            feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+<a href=#8274 id=8274 data-nosnippet>8274</a>            not(target_feature = <span class="string">"atomics"</span>)
+<a href=#8275 id=8275 data-nosnippet>8275</a>        )
+<a href=#8276 id=8276 data-nosnippet>8276</a>    )))]
+<a href=#8277 id=8277 data-nosnippet>8277</a>    </span><span class="kw">impl</span>&lt;T&gt; WasmNotSync <span class="kw">for </span>T {}
+<a href=#8278 id=8278 data-nosnippet>8278</a>}
+<a href=#8279 id=8279 data-nosnippet>8279</a>
+<a href=#8280 id=8280 data-nosnippet>8280</a><span class="doccomment">/// Corresponds to a [`GPUDeviceLostReason`].
+<a href=#8281 id=8281 data-nosnippet>8281</a>///
+<a href=#8282 id=8282 data-nosnippet>8282</a>/// [`GPUDeviceLostReason`]: https://www.w3.org/TR/webgpu/#enumdef-gpudevicelostreason
+<a href=#8283 id=8283 data-nosnippet>8283</a></span><span class="attr">#[repr(u8)]
+<a href=#8284 id=8284 data-nosnippet>8284</a>#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+<a href=#8285 id=8285 data-nosnippet>8285</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#8286 id=8286 data-nosnippet>8286</a></span><span class="kw">pub enum </span>DeviceLostReason {
+<a href=#8287 id=8287 data-nosnippet>8287</a>    <span class="doccomment">/// The device was lost for an unspecific reason, including driver errors.
+<a href=#8288 id=8288 data-nosnippet>8288</a>    </span>Unknown = <span class="number">0</span>,
+<a href=#8289 id=8289 data-nosnippet>8289</a>    <span class="doccomment">/// The device's `destroy` method was called.
+<a href=#8290 id=8290 data-nosnippet>8290</a>    </span>Destroyed = <span class="number">1</span>,
+<a href=#8291 id=8291 data-nosnippet>8291</a>}
 <a href=#8292 id=8292 data-nosnippet>8292</a>
-<a href=#8293 id=8293 data-nosnippet>8293</a>    <span class="doccomment">/// Binary SPIR-V data, in 4-byte words.
-<a href=#8294 id=8294 data-nosnippet>8294</a>    </span><span class="kw">pub </span>spirv: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, [u32]&gt;&gt;,
-<a href=#8295 id=8295 data-nosnippet>8295</a>    <span class="doccomment">/// Shader DXIL source.
-<a href=#8296 id=8296 data-nosnippet>8296</a>    </span><span class="kw">pub </span>dxil: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, [u8]&gt;&gt;,
-<a href=#8297 id=8297 data-nosnippet>8297</a>    <span class="doccomment">/// Shader MSL source.
-<a href=#8298 id=8298 data-nosnippet>8298</a>    </span><span class="kw">pub </span>msl: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;&gt;,
-<a href=#8299 id=8299 data-nosnippet>8299</a>    <span class="doccomment">/// Shader HLSL source.
-<a href=#8300 id=8300 data-nosnippet>8300</a>    </span><span class="kw">pub </span>hlsl: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;&gt;,
-<a href=#8301 id=8301 data-nosnippet>8301</a>    <span class="doccomment">/// Shader GLSL source (currently unused).
-<a href=#8302 id=8302 data-nosnippet>8302</a>    </span><span class="kw">pub </span>glsl: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;&gt;,
-<a href=#8303 id=8303 data-nosnippet>8303</a>    <span class="doccomment">/// Shader WGSL source.
-<a href=#8304 id=8304 data-nosnippet>8304</a>    </span><span class="kw">pub </span>wgsl: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;&gt;,
-<a href=#8305 id=8305 data-nosnippet>8305</a>}
-<a href=#8306 id=8306 data-nosnippet>8306</a>
-<a href=#8307 id=8307 data-nosnippet>8307</a><span class="comment">// This is so people don't have to fill in fields they don't use, like num_workgroups,
-<a href=#8308 id=8308 data-nosnippet>8308</a>// entry_point, or other shader languages they didn't compile for
-<a href=#8309 id=8309 data-nosnippet>8309</a></span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, L: Default&gt; Default <span class="kw">for </span>CreateShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>, L&gt; {
-<a href=#8310 id=8310 data-nosnippet>8310</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-<a href=#8311 id=8311 data-nosnippet>8311</a>        <span class="self">Self </span>{
-<a href=#8312 id=8312 data-nosnippet>8312</a>            entry_point: <span class="string">""</span>.into(),
-<a href=#8313 id=8313 data-nosnippet>8313</a>            label: Default::default(),
-<a href=#8314 id=8314 data-nosnippet>8314</a>            num_workgroups: (<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>),
-<a href=#8315 id=8315 data-nosnippet>8315</a>            runtime_checks: ShaderRuntimeChecks::unchecked(),
-<a href=#8316 id=8316 data-nosnippet>8316</a>            spirv: <span class="prelude-val">None</span>,
-<a href=#8317 id=8317 data-nosnippet>8317</a>            dxil: <span class="prelude-val">None</span>,
-<a href=#8318 id=8318 data-nosnippet>8318</a>            msl: <span class="prelude-val">None</span>,
-<a href=#8319 id=8319 data-nosnippet>8319</a>            hlsl: <span class="prelude-val">None</span>,
-<a href=#8320 id=8320 data-nosnippet>8320</a>            glsl: <span class="prelude-val">None</span>,
-<a href=#8321 id=8321 data-nosnippet>8321</a>            wgsl: <span class="prelude-val">None</span>,
-<a href=#8322 id=8322 data-nosnippet>8322</a>        }
-<a href=#8323 id=8323 data-nosnippet>8323</a>    }
-<a href=#8324 id=8324 data-nosnippet>8324</a>}
-<a href=#8325 id=8325 data-nosnippet>8325</a>
-<a href=#8326 id=8326 data-nosnippet>8326</a><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, L&gt; CreateShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>, L&gt; {
-<a href=#8327 id=8327 data-nosnippet>8327</a>    <span class="doccomment">/// Takes a closure and maps the label of the shader module descriptor into another.
-<a href=#8328 id=8328 data-nosnippet>8328</a>    </span><span class="kw">pub fn </span>map_label&lt;K&gt;(
-<a href=#8329 id=8329 data-nosnippet>8329</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#8330 id=8330 data-nosnippet>8330</a>        fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K,
-<a href=#8331 id=8331 data-nosnippet>8331</a>    ) -&gt; CreateShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>, K&gt; {
-<a href=#8332 id=8332 data-nosnippet>8332</a>        CreateShaderModuleDescriptorPassthrough {
-<a href=#8333 id=8333 data-nosnippet>8333</a>            entry_point: <span class="self">self</span>.entry_point.clone(),
-<a href=#8334 id=8334 data-nosnippet>8334</a>            label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
-<a href=#8335 id=8335 data-nosnippet>8335</a>            num_workgroups: <span class="self">self</span>.num_workgroups,
-<a href=#8336 id=8336 data-nosnippet>8336</a>            runtime_checks: <span class="self">self</span>.runtime_checks,
-<a href=#8337 id=8337 data-nosnippet>8337</a>            spirv: <span class="self">self</span>.spirv.clone(),
-<a href=#8338 id=8338 data-nosnippet>8338</a>            dxil: <span class="self">self</span>.dxil.clone(),
-<a href=#8339 id=8339 data-nosnippet>8339</a>            msl: <span class="self">self</span>.msl.clone(),
-<a href=#8340 id=8340 data-nosnippet>8340</a>            hlsl: <span class="self">self</span>.hlsl.clone(),
-<a href=#8341 id=8341 data-nosnippet>8341</a>            glsl: <span class="self">self</span>.glsl.clone(),
-<a href=#8342 id=8342 data-nosnippet>8342</a>            wgsl: <span class="self">self</span>.wgsl.clone(),
-<a href=#8343 id=8343 data-nosnippet>8343</a>        }
-<a href=#8344 id=8344 data-nosnippet>8344</a>    }
-<a href=#8345 id=8345 data-nosnippet>8345</a>
-<a href=#8346 id=8346 data-nosnippet>8346</a>    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-<a href=#8347 id=8347 data-nosnippet>8347</a>    </span><span class="doccomment">/// Returns the source data for tracing purpose.
-<a href=#8348 id=8348 data-nosnippet>8348</a>    </span><span class="kw">pub fn </span>trace_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-<a href=#8349 id=8349 data-nosnippet>8349</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(spirv) = <span class="kw-2">&amp;</span><span class="self">self</span>.spirv {
-<a href=#8350 id=8350 data-nosnippet>8350</a>            bytemuck::cast_slice(spirv)
-<a href=#8351 id=8351 data-nosnippet>8351</a>        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(msl) = <span class="kw-2">&amp;</span><span class="self">self</span>.msl {
-<a href=#8352 id=8352 data-nosnippet>8352</a>            msl.as_bytes()
-<a href=#8353 id=8353 data-nosnippet>8353</a>        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(dxil) = <span class="kw-2">&amp;</span><span class="self">self</span>.dxil {
-<a href=#8354 id=8354 data-nosnippet>8354</a>            dxil
-<a href=#8355 id=8355 data-nosnippet>8355</a>        } <span class="kw">else </span>{
-<a href=#8356 id=8356 data-nosnippet>8356</a>            <span class="macro">panic!</span>(<span class="string">"No binary data provided to `ShaderModuleDescriptorGeneric`"</span>)
-<a href=#8357 id=8357 data-nosnippet>8357</a>        }
-<a href=#8358 id=8358 data-nosnippet>8358</a>    }
-<a href=#8359 id=8359 data-nosnippet>8359</a>
-<a href=#8360 id=8360 data-nosnippet>8360</a>    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-<a href=#8361 id=8361 data-nosnippet>8361</a>    </span><span class="doccomment">/// Returns the binary file extension for tracing purpose.
-<a href=#8362 id=8362 data-nosnippet>8362</a>    </span><span class="kw">pub fn </span>trace_binary_ext(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
-<a href=#8363 id=8363 data-nosnippet>8363</a>        <span class="kw">if </span><span class="self">self</span>.spirv.is_some() {
-<a href=#8364 id=8364 data-nosnippet>8364</a>            <span class="string">"spv"
-<a href=#8365 id=8365 data-nosnippet>8365</a>        </span>} <span class="kw">else if </span><span class="self">self</span>.msl.is_some() {
-<a href=#8366 id=8366 data-nosnippet>8366</a>            <span class="string">"msl"
-<a href=#8367 id=8367 data-nosnippet>8367</a>        </span>} <span class="kw">else if </span><span class="self">self</span>.dxil.is_some() {
-<a href=#8368 id=8368 data-nosnippet>8368</a>            <span class="string">"dxil"
-<a href=#8369 id=8369 data-nosnippet>8369</a>        </span>} <span class="kw">else </span>{
-<a href=#8370 id=8370 data-nosnippet>8370</a>            <span class="macro">panic!</span>(<span class="string">"No binary data provided to `ShaderModuleDescriptorGeneric`"</span>)
-<a href=#8371 id=8371 data-nosnippet>8371</a>        }
-<a href=#8372 id=8372 data-nosnippet>8372</a>    }
-<a href=#8373 id=8373 data-nosnippet>8373</a>}</code></pre></div></section></main></body></html>
+<a href=#8293 id=8293 data-nosnippet>8293</a><span class="doccomment">/// Descriptor for a shader module given by any of several sources.
+<a href=#8294 id=8294 data-nosnippet>8294</a>/// These shaders are passed through directly to the underlying api.
+<a href=#8295 id=8295 data-nosnippet>8295</a>/// At least one shader type that may be used by the backend must be `Some` or a panic is raised.
+<a href=#8296 id=8296 data-nosnippet>8296</a></span><span class="attr">#[derive(Debug, Clone)]
+<a href=#8297 id=8297 data-nosnippet>8297</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#8298 id=8298 data-nosnippet>8298</a></span><span class="kw">pub struct </span>CreateShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>, L&gt; {
+<a href=#8299 id=8299 data-nosnippet>8299</a>    <span class="doccomment">/// Entrypoint. Unused for Spir-V.
+<a href=#8300 id=8300 data-nosnippet>8300</a>    </span><span class="kw">pub </span>entry_point: String,
+<a href=#8301 id=8301 data-nosnippet>8301</a>    <span class="doccomment">/// Debug label of the shader module. This will show up in graphics debuggers for easy identification.
+<a href=#8302 id=8302 data-nosnippet>8302</a>    </span><span class="kw">pub </span>label: L,
+<a href=#8303 id=8303 data-nosnippet>8303</a>    <span class="doccomment">/// Number of workgroups in each dimension x, y and z. Unused for Spir-V.
+<a href=#8304 id=8304 data-nosnippet>8304</a>    </span><span class="kw">pub </span>num_workgroups: (u32, u32, u32),
+<a href=#8305 id=8305 data-nosnippet>8305</a>    <span class="doccomment">/// Runtime checks that should be enabled.
+<a href=#8306 id=8306 data-nosnippet>8306</a>    </span><span class="kw">pub </span>runtime_checks: ShaderRuntimeChecks,
+<a href=#8307 id=8307 data-nosnippet>8307</a>
+<a href=#8308 id=8308 data-nosnippet>8308</a>    <span class="doccomment">/// Binary SPIR-V data, in 4-byte words.
+<a href=#8309 id=8309 data-nosnippet>8309</a>    </span><span class="kw">pub </span>spirv: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, [u32]&gt;&gt;,
+<a href=#8310 id=8310 data-nosnippet>8310</a>    <span class="doccomment">/// Shader DXIL source.
+<a href=#8311 id=8311 data-nosnippet>8311</a>    </span><span class="kw">pub </span>dxil: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, [u8]&gt;&gt;,
+<a href=#8312 id=8312 data-nosnippet>8312</a>    <span class="doccomment">/// Shader MSL source.
+<a href=#8313 id=8313 data-nosnippet>8313</a>    </span><span class="kw">pub </span>msl: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;&gt;,
+<a href=#8314 id=8314 data-nosnippet>8314</a>    <span class="doccomment">/// Shader HLSL source.
+<a href=#8315 id=8315 data-nosnippet>8315</a>    </span><span class="kw">pub </span>hlsl: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;&gt;,
+<a href=#8316 id=8316 data-nosnippet>8316</a>    <span class="doccomment">/// Shader GLSL source (currently unused).
+<a href=#8317 id=8317 data-nosnippet>8317</a>    </span><span class="kw">pub </span>glsl: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;&gt;,
+<a href=#8318 id=8318 data-nosnippet>8318</a>    <span class="doccomment">/// Shader WGSL source.
+<a href=#8319 id=8319 data-nosnippet>8319</a>    </span><span class="kw">pub </span>wgsl: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;&gt;,
+<a href=#8320 id=8320 data-nosnippet>8320</a>}
+<a href=#8321 id=8321 data-nosnippet>8321</a>
+<a href=#8322 id=8322 data-nosnippet>8322</a><span class="comment">// This is so people don't have to fill in fields they don't use, like num_workgroups,
+<a href=#8323 id=8323 data-nosnippet>8323</a>// entry_point, or other shader languages they didn't compile for
+<a href=#8324 id=8324 data-nosnippet>8324</a></span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, L: Default&gt; Default <span class="kw">for </span>CreateShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>, L&gt; {
+<a href=#8325 id=8325 data-nosnippet>8325</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#8326 id=8326 data-nosnippet>8326</a>        <span class="self">Self </span>{
+<a href=#8327 id=8327 data-nosnippet>8327</a>            entry_point: <span class="string">""</span>.into(),
+<a href=#8328 id=8328 data-nosnippet>8328</a>            label: Default::default(),
+<a href=#8329 id=8329 data-nosnippet>8329</a>            num_workgroups: (<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>),
+<a href=#8330 id=8330 data-nosnippet>8330</a>            runtime_checks: ShaderRuntimeChecks::unchecked(),
+<a href=#8331 id=8331 data-nosnippet>8331</a>            spirv: <span class="prelude-val">None</span>,
+<a href=#8332 id=8332 data-nosnippet>8332</a>            dxil: <span class="prelude-val">None</span>,
+<a href=#8333 id=8333 data-nosnippet>8333</a>            msl: <span class="prelude-val">None</span>,
+<a href=#8334 id=8334 data-nosnippet>8334</a>            hlsl: <span class="prelude-val">None</span>,
+<a href=#8335 id=8335 data-nosnippet>8335</a>            glsl: <span class="prelude-val">None</span>,
+<a href=#8336 id=8336 data-nosnippet>8336</a>            wgsl: <span class="prelude-val">None</span>,
+<a href=#8337 id=8337 data-nosnippet>8337</a>        }
+<a href=#8338 id=8338 data-nosnippet>8338</a>    }
+<a href=#8339 id=8339 data-nosnippet>8339</a>}
+<a href=#8340 id=8340 data-nosnippet>8340</a>
+<a href=#8341 id=8341 data-nosnippet>8341</a><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, L&gt; CreateShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>, L&gt; {
+<a href=#8342 id=8342 data-nosnippet>8342</a>    <span class="doccomment">/// Takes a closure and maps the label of the shader module descriptor into another.
+<a href=#8343 id=8343 data-nosnippet>8343</a>    </span><span class="kw">pub fn </span>map_label&lt;K&gt;(
+<a href=#8344 id=8344 data-nosnippet>8344</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#8345 id=8345 data-nosnippet>8345</a>        fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K,
+<a href=#8346 id=8346 data-nosnippet>8346</a>    ) -&gt; CreateShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>, K&gt; {
+<a href=#8347 id=8347 data-nosnippet>8347</a>        CreateShaderModuleDescriptorPassthrough {
+<a href=#8348 id=8348 data-nosnippet>8348</a>            entry_point: <span class="self">self</span>.entry_point.clone(),
+<a href=#8349 id=8349 data-nosnippet>8349</a>            label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
+<a href=#8350 id=8350 data-nosnippet>8350</a>            num_workgroups: <span class="self">self</span>.num_workgroups,
+<a href=#8351 id=8351 data-nosnippet>8351</a>            runtime_checks: <span class="self">self</span>.runtime_checks,
+<a href=#8352 id=8352 data-nosnippet>8352</a>            spirv: <span class="self">self</span>.spirv.clone(),
+<a href=#8353 id=8353 data-nosnippet>8353</a>            dxil: <span class="self">self</span>.dxil.clone(),
+<a href=#8354 id=8354 data-nosnippet>8354</a>            msl: <span class="self">self</span>.msl.clone(),
+<a href=#8355 id=8355 data-nosnippet>8355</a>            hlsl: <span class="self">self</span>.hlsl.clone(),
+<a href=#8356 id=8356 data-nosnippet>8356</a>            glsl: <span class="self">self</span>.glsl.clone(),
+<a href=#8357 id=8357 data-nosnippet>8357</a>            wgsl: <span class="self">self</span>.wgsl.clone(),
+<a href=#8358 id=8358 data-nosnippet>8358</a>        }
+<a href=#8359 id=8359 data-nosnippet>8359</a>    }
+<a href=#8360 id=8360 data-nosnippet>8360</a>
+<a href=#8361 id=8361 data-nosnippet>8361</a>    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href=#8362 id=8362 data-nosnippet>8362</a>    </span><span class="doccomment">/// Returns the source data for tracing purpose.
+<a href=#8363 id=8363 data-nosnippet>8363</a>    </span><span class="kw">pub fn </span>trace_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+<a href=#8364 id=8364 data-nosnippet>8364</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(spirv) = <span class="kw-2">&amp;</span><span class="self">self</span>.spirv {
+<a href=#8365 id=8365 data-nosnippet>8365</a>            bytemuck::cast_slice(spirv)
+<a href=#8366 id=8366 data-nosnippet>8366</a>        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(msl) = <span class="kw-2">&amp;</span><span class="self">self</span>.msl {
+<a href=#8367 id=8367 data-nosnippet>8367</a>            msl.as_bytes()
+<a href=#8368 id=8368 data-nosnippet>8368</a>        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(dxil) = <span class="kw-2">&amp;</span><span class="self">self</span>.dxil {
+<a href=#8369 id=8369 data-nosnippet>8369</a>            dxil
+<a href=#8370 id=8370 data-nosnippet>8370</a>        } <span class="kw">else </span>{
+<a href=#8371 id=8371 data-nosnippet>8371</a>            <span class="macro">panic!</span>(<span class="string">"No binary data provided to `ShaderModuleDescriptorGeneric`"</span>)
+<a href=#8372 id=8372 data-nosnippet>8372</a>        }
+<a href=#8373 id=8373 data-nosnippet>8373</a>    }
+<a href=#8374 id=8374 data-nosnippet>8374</a>
+<a href=#8375 id=8375 data-nosnippet>8375</a>    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href=#8376 id=8376 data-nosnippet>8376</a>    </span><span class="doccomment">/// Returns the binary file extension for tracing purpose.
+<a href=#8377 id=8377 data-nosnippet>8377</a>    </span><span class="kw">pub fn </span>trace_binary_ext(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+<a href=#8378 id=8378 data-nosnippet>8378</a>        <span class="kw">if </span><span class="self">self</span>.spirv.is_some() {
+<a href=#8379 id=8379 data-nosnippet>8379</a>            <span class="string">"spv"
+<a href=#8380 id=8380 data-nosnippet>8380</a>        </span>} <span class="kw">else if </span><span class="self">self</span>.msl.is_some() {
+<a href=#8381 id=8381 data-nosnippet>8381</a>            <span class="string">"msl"
+<a href=#8382 id=8382 data-nosnippet>8382</a>        </span>} <span class="kw">else if </span><span class="self">self</span>.dxil.is_some() {
+<a href=#8383 id=8383 data-nosnippet>8383</a>            <span class="string">"dxil"
+<a href=#8384 id=8384 data-nosnippet>8384</a>        </span>} <span class="kw">else </span>{
+<a href=#8385 id=8385 data-nosnippet>8385</a>            <span class="macro">panic!</span>(<span class="string">"No binary data provided to `ShaderModuleDescriptorGeneric`"</span>)
+<a href=#8386 id=8386 data-nosnippet>8386</a>        }
+<a href=#8387 id=8387 data-nosnippet>8387</a>    }
+<a href=#8388 id=8388 data-nosnippet>8388</a>}</code></pre></div></section></main></body></html>
