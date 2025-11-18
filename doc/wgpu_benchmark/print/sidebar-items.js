@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_change_color","human_scale","print_results"],"struct":["Delta"]};

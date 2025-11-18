@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["FILE_PREFIX","PREVIOUS"],"fn":["get_comparison_file","write_results_file"]};
