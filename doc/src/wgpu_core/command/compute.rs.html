@@ -491,850 +491,849 @@
 <a href=#491 id=491 data-nosnippet>491</a>
 <a href=#492 id=492 data-nosnippet>492</a>        <span class="kw">let </span>base = pass.base.take();
 <a href=#493 id=493 data-nosnippet>493</a>
-<a href=#494 id=494 data-nosnippet>494</a>        <span class="kw">if </span><span class="macro">matches!</span>(
-<a href=#495 id=495 data-nosnippet>495</a>            base,
-<a href=#496 id=496 data-nosnippet>496</a>            <span class="prelude-val">Err</span>(ComputePassError {
-<a href=#497 id=497 data-nosnippet>497</a>                inner: ComputePassErrorInner::EncoderState(EncoderStateError::Ended),
-<a href=#498 id=498 data-nosnippet>498</a>                scope: <span class="kw">_</span>,
-<a href=#499 id=499 data-nosnippet>499</a>            })
-<a href=#500 id=500 data-nosnippet>500</a>        ) {
-<a href=#501 id=501 data-nosnippet>501</a>            <span class="comment">// If the encoder was already finished at time of pass creation,
-<a href=#502 id=502 data-nosnippet>502</a>            // then it was not put in the locked state, so we need to
-<a href=#503 id=503 data-nosnippet>503</a>            // generate a validation error here and now due to the encoder not
-<a href=#504 id=504 data-nosnippet>504</a>            // being locked. The encoder already holds an error from when the
-<a href=#505 id=505 data-nosnippet>505</a>            // pass was opened, or earlier.
-<a href=#506 id=506 data-nosnippet>506</a>            //
-<a href=#507 id=507 data-nosnippet>507</a>            // All other errors are propagated to the encoder within `push_with`,
-<a href=#508 id=508 data-nosnippet>508</a>            // and will be reported later.
-<a href=#509 id=509 data-nosnippet>509</a>            </span><span class="kw">return </span><span class="prelude-val">Err</span>(EncoderStateError::Ended);
-<a href=#510 id=510 data-nosnippet>510</a>        }
-<a href=#511 id=511 data-nosnippet>511</a>
-<a href=#512 id=512 data-nosnippet>512</a>        cmd_buf_data.push_with(|| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, ComputePassError&gt; {
-<a href=#513 id=513 data-nosnippet>513</a>            <span class="prelude-val">Ok</span>(ArcCommand::RunComputePass {
-<a href=#514 id=514 data-nosnippet>514</a>                pass: base<span class="question-mark">?</span>,
-<a href=#515 id=515 data-nosnippet>515</a>                timestamp_writes: pass.timestamp_writes.take(),
-<a href=#516 id=516 data-nosnippet>516</a>            })
-<a href=#517 id=517 data-nosnippet>517</a>        })
-<a href=#518 id=518 data-nosnippet>518</a>    }
-<a href=#519 id=519 data-nosnippet>519</a>}
-<a href=#520 id=520 data-nosnippet>520</a>
-<a href=#521 id=521 data-nosnippet>521</a><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>encode_compute_pass(
-<a href=#522 id=522 data-nosnippet>522</a>    parent_state: <span class="kw-2">&amp;mut </span>EncodingState&lt;InnerCommandEncoder&gt;,
-<a href=#523 id=523 data-nosnippet>523</a>    <span class="kw-2">mut </span>base: BasePass&lt;ArcComputeCommand, Infallible&gt;,
-<a href=#524 id=524 data-nosnippet>524</a>    <span class="kw-2">mut </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcPassTimestampWrites&gt;,
-<a href=#525 id=525 data-nosnippet>525</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
-<a href=#526 id=526 data-nosnippet>526</a>    <span class="kw">let </span>pass_scope = PassErrorScope::Pass;
-<a href=#527 id=527 data-nosnippet>527</a>
-<a href=#528 id=528 data-nosnippet>528</a>    <span class="kw">let </span>device = parent_state.device;
-<a href=#529 id=529 data-nosnippet>529</a>
-<a href=#530 id=530 data-nosnippet>530</a>    <span class="comment">// We automatically keep extending command buffers over time, and because
-<a href=#531 id=531 data-nosnippet>531</a>    // we want to insert a command buffer _before_ what we're about to record,
-<a href=#532 id=532 data-nosnippet>532</a>    // we need to make sure to close the previous one.
-<a href=#533 id=533 data-nosnippet>533</a>    </span>parent_state
-<a href=#534 id=534 data-nosnippet>534</a>        .raw_encoder
-<a href=#535 id=535 data-nosnippet>535</a>        .close_if_open()
-<a href=#536 id=536 data-nosnippet>536</a>        .map_pass_err(pass_scope)<span class="question-mark">?</span>;
-<a href=#537 id=537 data-nosnippet>537</a>    <span class="kw">let </span>raw_encoder = parent_state
-<a href=#538 id=538 data-nosnippet>538</a>        .raw_encoder
-<a href=#539 id=539 data-nosnippet>539</a>        .open_pass(base.label.as_deref())
-<a href=#540 id=540 data-nosnippet>540</a>        .map_pass_err(pass_scope)<span class="question-mark">?</span>;
-<a href=#541 id=541 data-nosnippet>541</a>
-<a href=#542 id=542 data-nosnippet>542</a>    <span class="kw">let </span><span class="kw-2">mut </span>debug_scope_depth = <span class="number">0</span>;
-<a href=#543 id=543 data-nosnippet>543</a>
-<a href=#544 id=544 data-nosnippet>544</a>    <span class="kw">let </span><span class="kw-2">mut </span>state = State {
-<a href=#545 id=545 data-nosnippet>545</a>        pipeline: <span class="prelude-val">None</span>,
-<a href=#546 id=546 data-nosnippet>546</a>
-<a href=#547 id=547 data-nosnippet>547</a>        pass: pass::PassState {
-<a href=#548 id=548 data-nosnippet>548</a>            base: EncodingState {
-<a href=#549 id=549 data-nosnippet>549</a>                device,
-<a href=#550 id=550 data-nosnippet>550</a>                raw_encoder,
-<a href=#551 id=551 data-nosnippet>551</a>                tracker: parent_state.tracker,
-<a href=#552 id=552 data-nosnippet>552</a>                buffer_memory_init_actions: parent_state.buffer_memory_init_actions,
-<a href=#553 id=553 data-nosnippet>553</a>                texture_memory_actions: parent_state.texture_memory_actions,
-<a href=#554 id=554 data-nosnippet>554</a>                as_actions: parent_state.as_actions,
-<a href=#555 id=555 data-nosnippet>555</a>                temp_resources: parent_state.temp_resources,
-<a href=#556 id=556 data-nosnippet>556</a>                indirect_draw_validation_resources: parent_state.indirect_draw_validation_resources,
-<a href=#557 id=557 data-nosnippet>557</a>                snatch_guard: parent_state.snatch_guard,
-<a href=#558 id=558 data-nosnippet>558</a>                debug_scope_depth: <span class="kw-2">&amp;mut </span>debug_scope_depth,
-<a href=#559 id=559 data-nosnippet>559</a>            },
-<a href=#560 id=560 data-nosnippet>560</a>            binder: Binder::new(),
-<a href=#561 id=561 data-nosnippet>561</a>            temp_offsets: Vec::new(),
-<a href=#562 id=562 data-nosnippet>562</a>            dynamic_offset_count: <span class="number">0</span>,
-<a href=#563 id=563 data-nosnippet>563</a>            pending_discard_init_fixups: SurfacesInDiscardState::new(),
-<a href=#564 id=564 data-nosnippet>564</a>            scope: device.new_usage_scope(),
-<a href=#565 id=565 data-nosnippet>565</a>            string_offset: <span class="number">0</span>,
-<a href=#566 id=566 data-nosnippet>566</a>        },
-<a href=#567 id=567 data-nosnippet>567</a>        active_query: <span class="prelude-val">None</span>,
-<a href=#568 id=568 data-nosnippet>568</a>
-<a href=#569 id=569 data-nosnippet>569</a>        push_constants: Vec::new(),
-<a href=#570 id=570 data-nosnippet>570</a>
-<a href=#571 id=571 data-nosnippet>571</a>        intermediate_trackers: Tracker::new(),
-<a href=#572 id=572 data-nosnippet>572</a>    };
-<a href=#573 id=573 data-nosnippet>573</a>
-<a href=#574 id=574 data-nosnippet>574</a>    <span class="kw">let </span>indices = <span class="kw-2">&amp;</span>device.tracker_indices;
-<a href=#575 id=575 data-nosnippet>575</a>    state
-<a href=#576 id=576 data-nosnippet>576</a>        .pass
-<a href=#577 id=577 data-nosnippet>577</a>        .base
-<a href=#578 id=578 data-nosnippet>578</a>        .tracker
-<a href=#579 id=579 data-nosnippet>579</a>        .buffers
-<a href=#580 id=580 data-nosnippet>580</a>        .set_size(indices.buffers.size());
-<a href=#581 id=581 data-nosnippet>581</a>    state
-<a href=#582 id=582 data-nosnippet>582</a>        .pass
-<a href=#583 id=583 data-nosnippet>583</a>        .base
-<a href=#584 id=584 data-nosnippet>584</a>        .tracker
-<a href=#585 id=585 data-nosnippet>585</a>        .textures
-<a href=#586 id=586 data-nosnippet>586</a>        .set_size(indices.textures.size());
-<a href=#587 id=587 data-nosnippet>587</a>
-<a href=#588 id=588 data-nosnippet>588</a>    <span class="kw">let </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;hal::PassTimestampWrites&lt;<span class="lifetime">'_</span>, <span class="kw">dyn </span>hal::DynQuerySet&gt;&gt; =
-<a href=#589 id=589 data-nosnippet>589</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = timestamp_writes.take() {
-<a href=#590 id=590 data-nosnippet>590</a>            tw.query_set.same_device(device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
-<a href=#591 id=591 data-nosnippet>591</a>
-<a href=#592 id=592 data-nosnippet>592</a>            <span class="kw">let </span>query_set = state
-<a href=#593 id=593 data-nosnippet>593</a>                .pass
-<a href=#594 id=594 data-nosnippet>594</a>                .base
-<a href=#595 id=595 data-nosnippet>595</a>                .tracker
-<a href=#596 id=596 data-nosnippet>596</a>                .query_sets
-<a href=#597 id=597 data-nosnippet>597</a>                .insert_single(tw.query_set);
-<a href=#598 id=598 data-nosnippet>598</a>
-<a href=#599 id=599 data-nosnippet>599</a>            <span class="comment">// Unlike in render passes we can't delay resetting the query sets since
-<a href=#600 id=600 data-nosnippet>600</a>            // there is no auxiliary pass.
-<a href=#601 id=601 data-nosnippet>601</a>            </span><span class="kw">let </span>range = <span class="kw">if let </span>(<span class="prelude-val">Some</span>(index_a), <span class="prelude-val">Some</span>(index_b)) =
-<a href=#602 id=602 data-nosnippet>602</a>                (tw.beginning_of_pass_write_index, tw.end_of_pass_write_index)
-<a href=#603 id=603 data-nosnippet>603</a>            {
-<a href=#604 id=604 data-nosnippet>604</a>                <span class="prelude-val">Some</span>(index_a.min(index_b)..index_a.max(index_b) + <span class="number">1</span>)
-<a href=#605 id=605 data-nosnippet>605</a>            } <span class="kw">else </span>{
-<a href=#606 id=606 data-nosnippet>606</a>                tw.beginning_of_pass_write_index
-<a href=#607 id=607 data-nosnippet>607</a>                    .or(tw.end_of_pass_write_index)
-<a href=#608 id=608 data-nosnippet>608</a>                    .map(|i| i..i + <span class="number">1</span>)
-<a href=#609 id=609 data-nosnippet>609</a>            };
-<a href=#610 id=610 data-nosnippet>610</a>            <span class="comment">// Range should always be Some, both values being None should lead to a validation error.
-<a href=#611 id=611 data-nosnippet>611</a>            // But no point in erroring over that nuance here!
-<a href=#612 id=612 data-nosnippet>612</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(range) = range {
-<a href=#613 id=613 data-nosnippet>613</a>                <span class="kw">unsafe </span>{
-<a href=#614 id=614 data-nosnippet>614</a>                    state
-<a href=#615 id=615 data-nosnippet>615</a>                        .pass
-<a href=#616 id=616 data-nosnippet>616</a>                        .base
-<a href=#617 id=617 data-nosnippet>617</a>                        .raw_encoder
-<a href=#618 id=618 data-nosnippet>618</a>                        .reset_queries(query_set.raw(), range);
-<a href=#619 id=619 data-nosnippet>619</a>                }
-<a href=#620 id=620 data-nosnippet>620</a>            }
-<a href=#621 id=621 data-nosnippet>621</a>
-<a href=#622 id=622 data-nosnippet>622</a>            <span class="prelude-val">Some</span>(hal::PassTimestampWrites {
-<a href=#623 id=623 data-nosnippet>623</a>                query_set: query_set.raw(),
-<a href=#624 id=624 data-nosnippet>624</a>                beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
-<a href=#625 id=625 data-nosnippet>625</a>                end_of_pass_write_index: tw.end_of_pass_write_index,
-<a href=#626 id=626 data-nosnippet>626</a>            })
-<a href=#627 id=627 data-nosnippet>627</a>        } <span class="kw">else </span>{
-<a href=#628 id=628 data-nosnippet>628</a>            <span class="prelude-val">None
-<a href=#629 id=629 data-nosnippet>629</a>        </span>};
-<a href=#630 id=630 data-nosnippet>630</a>
-<a href=#631 id=631 data-nosnippet>631</a>    <span class="kw">let </span>hal_desc = hal::ComputePassDescriptor {
-<a href=#632 id=632 data-nosnippet>632</a>        label: hal_label(base.label.as_deref(), device.instance_flags),
-<a href=#633 id=633 data-nosnippet>633</a>        timestamp_writes,
-<a href=#634 id=634 data-nosnippet>634</a>    };
-<a href=#635 id=635 data-nosnippet>635</a>
-<a href=#636 id=636 data-nosnippet>636</a>    <span class="kw">unsafe </span>{
-<a href=#637 id=637 data-nosnippet>637</a>        state.pass.base.raw_encoder.begin_compute_pass(<span class="kw-2">&amp;</span>hal_desc);
-<a href=#638 id=638 data-nosnippet>638</a>    }
-<a href=#639 id=639 data-nosnippet>639</a>
-<a href=#640 id=640 data-nosnippet>640</a>    <span class="kw">for </span>command <span class="kw">in </span>base.commands.drain(..) {
-<a href=#641 id=641 data-nosnippet>641</a>        <span class="kw">match </span>command {
-<a href=#642 id=642 data-nosnippet>642</a>            ArcComputeCommand::SetBindGroup {
-<a href=#643 id=643 data-nosnippet>643</a>                index,
-<a href=#644 id=644 data-nosnippet>644</a>                num_dynamic_offsets,
-<a href=#645 id=645 data-nosnippet>645</a>                bind_group,
-<a href=#646 id=646 data-nosnippet>646</a>            } =&gt; {
-<a href=#647 id=647 data-nosnippet>647</a>                <span class="kw">let </span>scope = PassErrorScope::SetBindGroup;
-<a href=#648 id=648 data-nosnippet>648</a>                pass::set_bind_group::&lt;ComputePassErrorInner&gt;(
-<a href=#649 id=649 data-nosnippet>649</a>                    <span class="kw-2">&amp;mut </span>state.pass,
-<a href=#650 id=650 data-nosnippet>650</a>                    device,
-<a href=#651 id=651 data-nosnippet>651</a>                    <span class="kw-2">&amp;</span>base.dynamic_offsets,
-<a href=#652 id=652 data-nosnippet>652</a>                    index,
-<a href=#653 id=653 data-nosnippet>653</a>                    num_dynamic_offsets,
-<a href=#654 id=654 data-nosnippet>654</a>                    bind_group,
-<a href=#655 id=655 data-nosnippet>655</a>                    <span class="bool-val">false</span>,
-<a href=#656 id=656 data-nosnippet>656</a>                )
-<a href=#657 id=657 data-nosnippet>657</a>                .map_pass_err(scope)<span class="question-mark">?</span>;
-<a href=#658 id=658 data-nosnippet>658</a>            }
-<a href=#659 id=659 data-nosnippet>659</a>            ArcComputeCommand::SetPipeline(pipeline) =&gt; {
-<a href=#660 id=660 data-nosnippet>660</a>                <span class="kw">let </span>scope = PassErrorScope::SetPipelineCompute;
-<a href=#661 id=661 data-nosnippet>661</a>                set_pipeline(<span class="kw-2">&amp;mut </span>state, device, pipeline).map_pass_err(scope)<span class="question-mark">?</span>;
-<a href=#662 id=662 data-nosnippet>662</a>            }
-<a href=#663 id=663 data-nosnippet>663</a>            ArcComputeCommand::SetPushConstant {
-<a href=#664 id=664 data-nosnippet>664</a>                offset,
-<a href=#665 id=665 data-nosnippet>665</a>                size_bytes,
-<a href=#666 id=666 data-nosnippet>666</a>                values_offset,
-<a href=#667 id=667 data-nosnippet>667</a>            } =&gt; {
-<a href=#668 id=668 data-nosnippet>668</a>                <span class="kw">let </span>scope = PassErrorScope::SetPushConstant;
-<a href=#669 id=669 data-nosnippet>669</a>                pass::set_push_constant::&lt;ComputePassErrorInner, <span class="kw">_</span>&gt;(
-<a href=#670 id=670 data-nosnippet>670</a>                    <span class="kw-2">&amp;mut </span>state.pass,
-<a href=#671 id=671 data-nosnippet>671</a>                    <span class="kw-2">&amp;</span>base.push_constant_data,
-<a href=#672 id=672 data-nosnippet>672</a>                    wgt::ShaderStages::COMPUTE,
-<a href=#673 id=673 data-nosnippet>673</a>                    offset,
-<a href=#674 id=674 data-nosnippet>674</a>                    size_bytes,
-<a href=#675 id=675 data-nosnippet>675</a>                    <span class="prelude-val">Some</span>(values_offset),
-<a href=#676 id=676 data-nosnippet>676</a>                    |data_slice| {
-<a href=#677 id=677 data-nosnippet>677</a>                        <span class="kw">let </span>offset_in_elements = (offset / wgt::PUSH_CONSTANT_ALIGNMENT) <span class="kw">as </span>usize;
-<a href=#678 id=678 data-nosnippet>678</a>                        <span class="kw">let </span>size_in_elements = (size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT) <span class="kw">as </span>usize;
-<a href=#679 id=679 data-nosnippet>679</a>                        state.push_constants[offset_in_elements..][..size_in_elements]
-<a href=#680 id=680 data-nosnippet>680</a>                            .copy_from_slice(data_slice);
-<a href=#681 id=681 data-nosnippet>681</a>                    },
-<a href=#682 id=682 data-nosnippet>682</a>                )
-<a href=#683 id=683 data-nosnippet>683</a>                .map_pass_err(scope)<span class="question-mark">?</span>;
-<a href=#684 id=684 data-nosnippet>684</a>            }
-<a href=#685 id=685 data-nosnippet>685</a>            ArcComputeCommand::Dispatch(groups) =&gt; {
-<a href=#686 id=686 data-nosnippet>686</a>                <span class="kw">let </span>scope = PassErrorScope::Dispatch { indirect: <span class="bool-val">false </span>};
-<a href=#687 id=687 data-nosnippet>687</a>                dispatch(<span class="kw-2">&amp;mut </span>state, groups).map_pass_err(scope)<span class="question-mark">?</span>;
-<a href=#688 id=688 data-nosnippet>688</a>            }
-<a href=#689 id=689 data-nosnippet>689</a>            ArcComputeCommand::DispatchIndirect { buffer, offset } =&gt; {
-<a href=#690 id=690 data-nosnippet>690</a>                <span class="kw">let </span>scope = PassErrorScope::Dispatch { indirect: <span class="bool-val">true </span>};
-<a href=#691 id=691 data-nosnippet>691</a>                dispatch_indirect(<span class="kw-2">&amp;mut </span>state, device, buffer, offset).map_pass_err(scope)<span class="question-mark">?</span>;
-<a href=#692 id=692 data-nosnippet>692</a>            }
-<a href=#693 id=693 data-nosnippet>693</a>            ArcComputeCommand::PushDebugGroup { color: <span class="kw">_</span>, len } =&gt; {
-<a href=#694 id=694 data-nosnippet>694</a>                pass::push_debug_group(<span class="kw-2">&amp;mut </span>state.pass, <span class="kw-2">&amp;</span>base.string_data, len);
-<a href=#695 id=695 data-nosnippet>695</a>            }
-<a href=#696 id=696 data-nosnippet>696</a>            ArcComputeCommand::PopDebugGroup =&gt; {
-<a href=#697 id=697 data-nosnippet>697</a>                <span class="kw">let </span>scope = PassErrorScope::PopDebugGroup;
-<a href=#698 id=698 data-nosnippet>698</a>                pass::pop_debug_group::&lt;ComputePassErrorInner&gt;(<span class="kw-2">&amp;mut </span>state.pass)
-<a href=#699 id=699 data-nosnippet>699</a>                    .map_pass_err(scope)<span class="question-mark">?</span>;
-<a href=#700 id=700 data-nosnippet>700</a>            }
-<a href=#701 id=701 data-nosnippet>701</a>            ArcComputeCommand::InsertDebugMarker { color: <span class="kw">_</span>, len } =&gt; {
-<a href=#702 id=702 data-nosnippet>702</a>                pass::insert_debug_marker(<span class="kw-2">&amp;mut </span>state.pass, <span class="kw-2">&amp;</span>base.string_data, len);
-<a href=#703 id=703 data-nosnippet>703</a>            }
-<a href=#704 id=704 data-nosnippet>704</a>            ArcComputeCommand::WriteTimestamp {
-<a href=#705 id=705 data-nosnippet>705</a>                query_set,
-<a href=#706 id=706 data-nosnippet>706</a>                query_index,
-<a href=#707 id=707 data-nosnippet>707</a>            } =&gt; {
-<a href=#708 id=708 data-nosnippet>708</a>                <span class="kw">let </span>scope = PassErrorScope::WriteTimestamp;
-<a href=#709 id=709 data-nosnippet>709</a>                pass::write_timestamp::&lt;ComputePassErrorInner&gt;(
-<a href=#710 id=710 data-nosnippet>710</a>                    <span class="kw-2">&amp;mut </span>state.pass,
-<a href=#711 id=711 data-nosnippet>711</a>                    device,
-<a href=#712 id=712 data-nosnippet>712</a>                    <span class="prelude-val">None</span>, <span class="comment">// compute passes do not attempt to coalesce query resets
-<a href=#713 id=713 data-nosnippet>713</a>                    </span>query_set,
-<a href=#714 id=714 data-nosnippet>714</a>                    query_index,
-<a href=#715 id=715 data-nosnippet>715</a>                )
-<a href=#716 id=716 data-nosnippet>716</a>                .map_pass_err(scope)<span class="question-mark">?</span>;
-<a href=#717 id=717 data-nosnippet>717</a>            }
-<a href=#718 id=718 data-nosnippet>718</a>            ArcComputeCommand::BeginPipelineStatisticsQuery {
-<a href=#719 id=719 data-nosnippet>719</a>                query_set,
-<a href=#720 id=720 data-nosnippet>720</a>                query_index,
-<a href=#721 id=721 data-nosnippet>721</a>            } =&gt; {
-<a href=#722 id=722 data-nosnippet>722</a>                <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
-<a href=#723 id=723 data-nosnippet>723</a>                validate_and_begin_pipeline_statistics_query(
-<a href=#724 id=724 data-nosnippet>724</a>                    query_set,
-<a href=#725 id=725 data-nosnippet>725</a>                    state.pass.base.raw_encoder,
-<a href=#726 id=726 data-nosnippet>726</a>                    <span class="kw-2">&amp;mut </span>state.pass.base.tracker.query_sets,
-<a href=#727 id=727 data-nosnippet>727</a>                    device,
-<a href=#728 id=728 data-nosnippet>728</a>                    query_index,
-<a href=#729 id=729 data-nosnippet>729</a>                    <span class="prelude-val">None</span>,
-<a href=#730 id=730 data-nosnippet>730</a>                    <span class="kw-2">&amp;mut </span>state.active_query,
-<a href=#731 id=731 data-nosnippet>731</a>                )
-<a href=#732 id=732 data-nosnippet>732</a>                .map_pass_err(scope)<span class="question-mark">?</span>;
-<a href=#733 id=733 data-nosnippet>733</a>            }
-<a href=#734 id=734 data-nosnippet>734</a>            ArcComputeCommand::EndPipelineStatisticsQuery =&gt; {
-<a href=#735 id=735 data-nosnippet>735</a>                <span class="kw">let </span>scope = PassErrorScope::EndPipelineStatisticsQuery;
-<a href=#736 id=736 data-nosnippet>736</a>                end_pipeline_statistics_query(state.pass.base.raw_encoder, <span class="kw-2">&amp;mut </span>state.active_query)
-<a href=#737 id=737 data-nosnippet>737</a>                    .map_pass_err(scope)<span class="question-mark">?</span>;
-<a href=#738 id=738 data-nosnippet>738</a>            }
-<a href=#739 id=739 data-nosnippet>739</a>        }
-<a href=#740 id=740 data-nosnippet>740</a>    }
-<a href=#741 id=741 data-nosnippet>741</a>
-<a href=#742 id=742 data-nosnippet>742</a>    <span class="kw">if </span><span class="kw-2">*</span>state.pass.base.debug_scope_depth &gt; <span class="number">0 </span>{
-<a href=#743 id=743 data-nosnippet>743</a>        <span class="prelude-val">Err</span>(
-<a href=#744 id=744 data-nosnippet>744</a>            ComputePassErrorInner::DebugGroupError(DebugGroupError::MissingPop)
-<a href=#745 id=745 data-nosnippet>745</a>                .map_pass_err(pass_scope),
-<a href=#746 id=746 data-nosnippet>746</a>        )<span class="question-mark">?</span>;
-<a href=#747 id=747 data-nosnippet>747</a>    }
-<a href=#748 id=748 data-nosnippet>748</a>
-<a href=#749 id=749 data-nosnippet>749</a>    <span class="kw">unsafe </span>{
-<a href=#750 id=750 data-nosnippet>750</a>        state.pass.base.raw_encoder.end_compute_pass();
-<a href=#751 id=751 data-nosnippet>751</a>    }
-<a href=#752 id=752 data-nosnippet>752</a>
-<a href=#753 id=753 data-nosnippet>753</a>    <span class="kw">let </span>State {
-<a href=#754 id=754 data-nosnippet>754</a>        pass: pass::PassState {
-<a href=#755 id=755 data-nosnippet>755</a>            pending_discard_init_fixups,
-<a href=#756 id=756 data-nosnippet>756</a>            ..
-<a href=#757 id=757 data-nosnippet>757</a>        },
-<a href=#758 id=758 data-nosnippet>758</a>        intermediate_trackers,
-<a href=#759 id=759 data-nosnippet>759</a>        ..
-<a href=#760 id=760 data-nosnippet>760</a>    } = state;
-<a href=#761 id=761 data-nosnippet>761</a>
-<a href=#762 id=762 data-nosnippet>762</a>    <span class="comment">// Stop the current command encoder.
-<a href=#763 id=763 data-nosnippet>763</a>    </span>parent_state.raw_encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
-<a href=#764 id=764 data-nosnippet>764</a>
-<a href=#765 id=765 data-nosnippet>765</a>    <span class="comment">// Create a new command encoder, which we will insert _before_ the body of the compute pass.
-<a href=#766 id=766 data-nosnippet>766</a>    //
-<a href=#767 id=767 data-nosnippet>767</a>    // Use that buffer to insert barriers and clear discarded images.
-<a href=#768 id=768 data-nosnippet>768</a>    </span><span class="kw">let </span>transit = parent_state
-<a href=#769 id=769 data-nosnippet>769</a>        .raw_encoder
-<a href=#770 id=770 data-nosnippet>770</a>        .open_pass(hal_label(
-<a href=#771 id=771 data-nosnippet>771</a>            <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Pre Pass"</span>),
-<a href=#772 id=772 data-nosnippet>772</a>            device.instance_flags,
-<a href=#773 id=773 data-nosnippet>773</a>        ))
-<a href=#774 id=774 data-nosnippet>774</a>        .map_pass_err(pass_scope)<span class="question-mark">?</span>;
-<a href=#775 id=775 data-nosnippet>775</a>    fixup_discarded_surfaces(
-<a href=#776 id=776 data-nosnippet>776</a>        pending_discard_init_fixups.into_iter(),
-<a href=#777 id=777 data-nosnippet>777</a>        transit,
-<a href=#778 id=778 data-nosnippet>778</a>        <span class="kw-2">&amp;mut </span>parent_state.tracker.textures,
-<a href=#779 id=779 data-nosnippet>779</a>        device,
-<a href=#780 id=780 data-nosnippet>780</a>        parent_state.snatch_guard,
-<a href=#781 id=781 data-nosnippet>781</a>    );
-<a href=#782 id=782 data-nosnippet>782</a>    CommandEncoder::insert_barriers_from_tracker(
-<a href=#783 id=783 data-nosnippet>783</a>        transit,
-<a href=#784 id=784 data-nosnippet>784</a>        parent_state.tracker,
-<a href=#785 id=785 data-nosnippet>785</a>        <span class="kw-2">&amp;</span>intermediate_trackers,
-<a href=#786 id=786 data-nosnippet>786</a>        parent_state.snatch_guard,
-<a href=#787 id=787 data-nosnippet>787</a>    );
-<a href=#788 id=788 data-nosnippet>788</a>    <span class="comment">// Close the command encoder, and swap it with the previous.
-<a href=#789 id=789 data-nosnippet>789</a>    </span>parent_state
-<a href=#790 id=790 data-nosnippet>790</a>        .raw_encoder
-<a href=#791 id=791 data-nosnippet>791</a>        .close_and_swap()
-<a href=#792 id=792 data-nosnippet>792</a>        .map_pass_err(pass_scope)<span class="question-mark">?</span>;
-<a href=#793 id=793 data-nosnippet>793</a>
-<a href=#794 id=794 data-nosnippet>794</a>    <span class="prelude-val">Ok</span>(())
-<a href=#795 id=795 data-nosnippet>795</a>}
-<a href=#796 id=796 data-nosnippet>796</a>
-<a href=#797 id=797 data-nosnippet>797</a><span class="kw">fn </span>set_pipeline(
-<a href=#798 id=798 data-nosnippet>798</a>    state: <span class="kw-2">&amp;mut </span>State,
-<a href=#799 id=799 data-nosnippet>799</a>    device: <span class="kw-2">&amp;</span>Arc&lt;Device&gt;,
-<a href=#800 id=800 data-nosnippet>800</a>    pipeline: Arc&lt;ComputePipeline&gt;,
-<a href=#801 id=801 data-nosnippet>801</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassErrorInner&gt; {
-<a href=#802 id=802 data-nosnippet>802</a>    pipeline.same_device(device)<span class="question-mark">?</span>;
-<a href=#803 id=803 data-nosnippet>803</a>
-<a href=#804 id=804 data-nosnippet>804</a>    state.pipeline = <span class="prelude-val">Some</span>(pipeline.clone());
-<a href=#805 id=805 data-nosnippet>805</a>
-<a href=#806 id=806 data-nosnippet>806</a>    <span class="kw">let </span>pipeline = state
-<a href=#807 id=807 data-nosnippet>807</a>        .pass
-<a href=#808 id=808 data-nosnippet>808</a>        .base
-<a href=#809 id=809 data-nosnippet>809</a>        .tracker
-<a href=#810 id=810 data-nosnippet>810</a>        .compute_pipelines
-<a href=#811 id=811 data-nosnippet>811</a>        .insert_single(pipeline)
-<a href=#812 id=812 data-nosnippet>812</a>        .clone();
-<a href=#813 id=813 data-nosnippet>813</a>
-<a href=#814 id=814 data-nosnippet>814</a>    <span class="kw">unsafe </span>{
-<a href=#815 id=815 data-nosnippet>815</a>        state
-<a href=#816 id=816 data-nosnippet>816</a>            .pass
-<a href=#817 id=817 data-nosnippet>817</a>            .base
-<a href=#818 id=818 data-nosnippet>818</a>            .raw_encoder
-<a href=#819 id=819 data-nosnippet>819</a>            .set_compute_pipeline(pipeline.raw());
-<a href=#820 id=820 data-nosnippet>820</a>    }
-<a href=#821 id=821 data-nosnippet>821</a>
-<a href=#822 id=822 data-nosnippet>822</a>    <span class="comment">// Rebind resources
-<a href=#823 id=823 data-nosnippet>823</a>    </span>pass::change_pipeline_layout::&lt;ComputePassErrorInner, <span class="kw">_</span>&gt;(
-<a href=#824 id=824 data-nosnippet>824</a>        <span class="kw-2">&amp;mut </span>state.pass,
-<a href=#825 id=825 data-nosnippet>825</a>        <span class="kw-2">&amp;</span>pipeline.layout,
-<a href=#826 id=826 data-nosnippet>826</a>        <span class="kw-2">&amp;</span>pipeline.late_sized_buffer_groups,
-<a href=#827 id=827 data-nosnippet>827</a>        || {
-<a href=#828 id=828 data-nosnippet>828</a>            <span class="comment">// This only needs to be here for compute pipelines because they use push constants for
-<a href=#829 id=829 data-nosnippet>829</a>            // validating indirect draws.
-<a href=#830 id=830 data-nosnippet>830</a>            </span>state.push_constants.clear();
-<a href=#831 id=831 data-nosnippet>831</a>            <span class="comment">// Note that can only be one range for each stage. See the `MoreThanOnePushConstantRangePerStage` error.
-<a href=#832 id=832 data-nosnippet>832</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(push_constant_range) =
-<a href=#833 id=833 data-nosnippet>833</a>                pipeline.layout.push_constant_ranges.iter().find_map(|pcr| {
-<a href=#834 id=834 data-nosnippet>834</a>                    pcr.stages
-<a href=#835 id=835 data-nosnippet>835</a>                        .contains(wgt::ShaderStages::COMPUTE)
-<a href=#836 id=836 data-nosnippet>836</a>                        .then_some(pcr.range.clone())
-<a href=#837 id=837 data-nosnippet>837</a>                })
-<a href=#838 id=838 data-nosnippet>838</a>            {
-<a href=#839 id=839 data-nosnippet>839</a>                <span class="comment">// Note that non-0 range start doesn't work anyway https://github.com/gfx-rs/wgpu/issues/4502
-<a href=#840 id=840 data-nosnippet>840</a>                </span><span class="kw">let </span>len = push_constant_range.len() / wgt::PUSH_CONSTANT_ALIGNMENT <span class="kw">as </span>usize;
-<a href=#841 id=841 data-nosnippet>841</a>                state.push_constants.extend(core::iter::repeat_n(<span class="number">0</span>, len));
-<a href=#842 id=842 data-nosnippet>842</a>            }
-<a href=#843 id=843 data-nosnippet>843</a>        },
-<a href=#844 id=844 data-nosnippet>844</a>    )
-<a href=#845 id=845 data-nosnippet>845</a>}
-<a href=#846 id=846 data-nosnippet>846</a>
-<a href=#847 id=847 data-nosnippet>847</a><span class="kw">fn </span>dispatch(state: <span class="kw-2">&amp;mut </span>State, groups: [u32; <span class="number">3</span>]) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassErrorInner&gt; {
-<a href=#848 id=848 data-nosnippet>848</a>    <span class="macro">api_log!</span>(<span class="string">"ComputePass::dispatch {groups:?}"</span>);
-<a href=#849 id=849 data-nosnippet>849</a>
-<a href=#850 id=850 data-nosnippet>850</a>    state.is_ready()<span class="question-mark">?</span>;
-<a href=#851 id=851 data-nosnippet>851</a>
-<a href=#852 id=852 data-nosnippet>852</a>    state.flush_bindings(<span class="prelude-val">None</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
-<a href=#853 id=853 data-nosnippet>853</a>
-<a href=#854 id=854 data-nosnippet>854</a>    <span class="kw">let </span>groups_size_limit = state
-<a href=#855 id=855 data-nosnippet>855</a>        .pass
-<a href=#856 id=856 data-nosnippet>856</a>        .base
-<a href=#857 id=857 data-nosnippet>857</a>        .device
-<a href=#858 id=858 data-nosnippet>858</a>        .limits
-<a href=#859 id=859 data-nosnippet>859</a>        .max_compute_workgroups_per_dimension;
-<a href=#860 id=860 data-nosnippet>860</a>
-<a href=#861 id=861 data-nosnippet>861</a>    <span class="kw">if </span>groups[<span class="number">0</span>] &gt; groups_size_limit
-<a href=#862 id=862 data-nosnippet>862</a>        || groups[<span class="number">1</span>] &gt; groups_size_limit
-<a href=#863 id=863 data-nosnippet>863</a>        || groups[<span class="number">2</span>] &gt; groups_size_limit
-<a href=#864 id=864 data-nosnippet>864</a>    {
-<a href=#865 id=865 data-nosnippet>865</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::Dispatch(
-<a href=#866 id=866 data-nosnippet>866</a>            DispatchError::InvalidGroupSize {
-<a href=#867 id=867 data-nosnippet>867</a>                current: groups,
-<a href=#868 id=868 data-nosnippet>868</a>                limit: groups_size_limit,
-<a href=#869 id=869 data-nosnippet>869</a>            },
-<a href=#870 id=870 data-nosnippet>870</a>        ));
-<a href=#871 id=871 data-nosnippet>871</a>    }
-<a href=#872 id=872 data-nosnippet>872</a>
-<a href=#873 id=873 data-nosnippet>873</a>    <span class="kw">unsafe </span>{
-<a href=#874 id=874 data-nosnippet>874</a>        state.pass.base.raw_encoder.dispatch(groups);
-<a href=#875 id=875 data-nosnippet>875</a>    }
-<a href=#876 id=876 data-nosnippet>876</a>    <span class="prelude-val">Ok</span>(())
-<a href=#877 id=877 data-nosnippet>877</a>}
-<a href=#878 id=878 data-nosnippet>878</a>
-<a href=#879 id=879 data-nosnippet>879</a><span class="kw">fn </span>dispatch_indirect(
-<a href=#880 id=880 data-nosnippet>880</a>    state: <span class="kw-2">&amp;mut </span>State,
-<a href=#881 id=881 data-nosnippet>881</a>    device: <span class="kw-2">&amp;</span>Arc&lt;Device&gt;,
-<a href=#882 id=882 data-nosnippet>882</a>    buffer: Arc&lt;Buffer&gt;,
-<a href=#883 id=883 data-nosnippet>883</a>    offset: u64,
-<a href=#884 id=884 data-nosnippet>884</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassErrorInner&gt; {
-<a href=#885 id=885 data-nosnippet>885</a>    <span class="macro">api_log!</span>(<span class="string">"ComputePass::dispatch_indirect"</span>);
-<a href=#886 id=886 data-nosnippet>886</a>
-<a href=#887 id=887 data-nosnippet>887</a>    buffer.same_device(device)<span class="question-mark">?</span>;
-<a href=#888 id=888 data-nosnippet>888</a>
-<a href=#889 id=889 data-nosnippet>889</a>    state.is_ready()<span class="question-mark">?</span>;
-<a href=#890 id=890 data-nosnippet>890</a>
-<a href=#891 id=891 data-nosnippet>891</a>    state
-<a href=#892 id=892 data-nosnippet>892</a>        .pass
-<a href=#893 id=893 data-nosnippet>893</a>        .base
-<a href=#894 id=894 data-nosnippet>894</a>        .device
-<a href=#895 id=895 data-nosnippet>895</a>        .require_downlevel_flags(wgt::DownlevelFlags::INDIRECT_EXECUTION)<span class="question-mark">?</span>;
-<a href=#896 id=896 data-nosnippet>896</a>
-<a href=#897 id=897 data-nosnippet>897</a>    buffer.check_usage(wgt::BufferUsages::INDIRECT)<span class="question-mark">?</span>;
-<a href=#898 id=898 data-nosnippet>898</a>    buffer.check_destroyed(state.pass.base.snatch_guard)<span class="question-mark">?</span>;
-<a href=#899 id=899 data-nosnippet>899</a>
-<a href=#900 id=900 data-nosnippet>900</a>    <span class="kw">if </span>offset % <span class="number">4 </span>!= <span class="number">0 </span>{
-<a href=#901 id=901 data-nosnippet>901</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::UnalignedIndirectBufferOffset(offset));
-<a href=#902 id=902 data-nosnippet>902</a>    }
-<a href=#903 id=903 data-nosnippet>903</a>
-<a href=#904 id=904 data-nosnippet>904</a>    <span class="kw">let </span>end_offset = offset + size_of::&lt;wgt::DispatchIndirectArgs&gt;() <span class="kw">as </span>u64;
-<a href=#905 id=905 data-nosnippet>905</a>    <span class="kw">if </span>end_offset &gt; buffer.size {
-<a href=#906 id=906 data-nosnippet>906</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::IndirectBufferOverrun {
-<a href=#907 id=907 data-nosnippet>907</a>            offset,
-<a href=#908 id=908 data-nosnippet>908</a>            end_offset,
-<a href=#909 id=909 data-nosnippet>909</a>            buffer_size: buffer.size,
-<a href=#910 id=910 data-nosnippet>910</a>        });
-<a href=#911 id=911 data-nosnippet>911</a>    }
-<a href=#912 id=912 data-nosnippet>912</a>
-<a href=#913 id=913 data-nosnippet>913</a>    <span class="kw">let </span>stride = <span class="number">3 </span>* <span class="number">4</span>; <span class="comment">// 3 integers, x/y/z group size
-<a href=#914 id=914 data-nosnippet>914</a>    </span>state.pass.base.buffer_memory_init_actions.extend(
-<a href=#915 id=915 data-nosnippet>915</a>        buffer.initialization_status.read().create_action(
-<a href=#916 id=916 data-nosnippet>916</a>            <span class="kw-2">&amp;</span>buffer,
-<a href=#917 id=917 data-nosnippet>917</a>            offset..(offset + stride),
-<a href=#918 id=918 data-nosnippet>918</a>            MemoryInitKind::NeedsInitializedMemory,
-<a href=#919 id=919 data-nosnippet>919</a>        ),
-<a href=#920 id=920 data-nosnippet>920</a>    );
-<a href=#921 id=921 data-nosnippet>921</a>
-<a href=#922 id=922 data-nosnippet>922</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>indirect_validation) = state.pass.base.device.indirect_validation {
-<a href=#923 id=923 data-nosnippet>923</a>        <span class="kw">let </span>params = indirect_validation.dispatch.params(
-<a href=#924 id=924 data-nosnippet>924</a>            <span class="kw-2">&amp;</span>state.pass.base.device.limits,
-<a href=#925 id=925 data-nosnippet>925</a>            offset,
-<a href=#926 id=926 data-nosnippet>926</a>            buffer.size,
-<a href=#927 id=927 data-nosnippet>927</a>        );
-<a href=#928 id=928 data-nosnippet>928</a>
-<a href=#929 id=929 data-nosnippet>929</a>        <span class="kw">unsafe </span>{
-<a href=#930 id=930 data-nosnippet>930</a>            state
-<a href=#931 id=931 data-nosnippet>931</a>                .pass
-<a href=#932 id=932 data-nosnippet>932</a>                .base
-<a href=#933 id=933 data-nosnippet>933</a>                .raw_encoder
-<a href=#934 id=934 data-nosnippet>934</a>                .set_compute_pipeline(params.pipeline);
-<a href=#935 id=935 data-nosnippet>935</a>        }
-<a href=#936 id=936 data-nosnippet>936</a>
-<a href=#937 id=937 data-nosnippet>937</a>        <span class="kw">unsafe </span>{
-<a href=#938 id=938 data-nosnippet>938</a>            state.pass.base.raw_encoder.set_push_constants(
-<a href=#939 id=939 data-nosnippet>939</a>                params.pipeline_layout,
-<a href=#940 id=940 data-nosnippet>940</a>                wgt::ShaderStages::COMPUTE,
-<a href=#941 id=941 data-nosnippet>941</a>                <span class="number">0</span>,
-<a href=#942 id=942 data-nosnippet>942</a>                <span class="kw-2">&amp;</span>[params.offset_remainder <span class="kw">as </span>u32 / <span class="number">4</span>],
-<a href=#943 id=943 data-nosnippet>943</a>            );
-<a href=#944 id=944 data-nosnippet>944</a>        }
-<a href=#945 id=945 data-nosnippet>945</a>
-<a href=#946 id=946 data-nosnippet>946</a>        <span class="kw">unsafe </span>{
-<a href=#947 id=947 data-nosnippet>947</a>            state.pass.base.raw_encoder.set_bind_group(
-<a href=#948 id=948 data-nosnippet>948</a>                params.pipeline_layout,
-<a href=#949 id=949 data-nosnippet>949</a>                <span class="number">0</span>,
-<a href=#950 id=950 data-nosnippet>950</a>                <span class="prelude-val">Some</span>(params.dst_bind_group),
-<a href=#951 id=951 data-nosnippet>951</a>                <span class="kw-2">&amp;</span>[],
-<a href=#952 id=952 data-nosnippet>952</a>            );
-<a href=#953 id=953 data-nosnippet>953</a>        }
-<a href=#954 id=954 data-nosnippet>954</a>        <span class="kw">unsafe </span>{
-<a href=#955 id=955 data-nosnippet>955</a>            state.pass.base.raw_encoder.set_bind_group(
-<a href=#956 id=956 data-nosnippet>956</a>                params.pipeline_layout,
-<a href=#957 id=957 data-nosnippet>957</a>                <span class="number">1</span>,
-<a href=#958 id=958 data-nosnippet>958</a>                <span class="prelude-val">Some</span>(
-<a href=#959 id=959 data-nosnippet>959</a>                    buffer
-<a href=#960 id=960 data-nosnippet>960</a>                        .indirect_validation_bind_groups
-<a href=#961 id=961 data-nosnippet>961</a>                        .get(state.pass.base.snatch_guard)
-<a href=#962 id=962 data-nosnippet>962</a>                        .unwrap()
-<a href=#963 id=963 data-nosnippet>963</a>                        .dispatch
-<a href=#964 id=964 data-nosnippet>964</a>                        .as_ref(),
-<a href=#965 id=965 data-nosnippet>965</a>                ),
-<a href=#966 id=966 data-nosnippet>966</a>                <span class="kw-2">&amp;</span>[params.aligned_offset <span class="kw">as </span>u32],
-<a href=#967 id=967 data-nosnippet>967</a>            );
-<a href=#968 id=968 data-nosnippet>968</a>        }
-<a href=#969 id=969 data-nosnippet>969</a>
-<a href=#970 id=970 data-nosnippet>970</a>        <span class="kw">let </span>src_transition = state
-<a href=#971 id=971 data-nosnippet>971</a>            .intermediate_trackers
-<a href=#972 id=972 data-nosnippet>972</a>            .buffers
-<a href=#973 id=973 data-nosnippet>973</a>            .set_single(<span class="kw-2">&amp;</span>buffer, wgt::BufferUses::STORAGE_READ_ONLY);
-<a href=#974 id=974 data-nosnippet>974</a>        <span class="kw">let </span>src_barrier = src_transition
-<a href=#975 id=975 data-nosnippet>975</a>            .map(|transition| transition.into_hal(<span class="kw-2">&amp;</span>buffer, state.pass.base.snatch_guard));
-<a href=#976 id=976 data-nosnippet>976</a>        <span class="kw">unsafe </span>{
-<a href=#977 id=977 data-nosnippet>977</a>            state
-<a href=#978 id=978 data-nosnippet>978</a>                .pass
-<a href=#979 id=979 data-nosnippet>979</a>                .base
-<a href=#980 id=980 data-nosnippet>980</a>                .raw_encoder
-<a href=#981 id=981 data-nosnippet>981</a>                .transition_buffers(src_barrier.as_slice());
-<a href=#982 id=982 data-nosnippet>982</a>        }
-<a href=#983 id=983 data-nosnippet>983</a>
-<a href=#984 id=984 data-nosnippet>984</a>        <span class="kw">unsafe </span>{
-<a href=#985 id=985 data-nosnippet>985</a>            state
-<a href=#986 id=986 data-nosnippet>986</a>                .pass
-<a href=#987 id=987 data-nosnippet>987</a>                .base
-<a href=#988 id=988 data-nosnippet>988</a>                .raw_encoder
-<a href=#989 id=989 data-nosnippet>989</a>                .transition_buffers(<span class="kw-2">&amp;</span>[hal::BufferBarrier {
-<a href=#990 id=990 data-nosnippet>990</a>                    buffer: params.dst_buffer,
-<a href=#991 id=991 data-nosnippet>991</a>                    usage: hal::StateTransition {
-<a href=#992 id=992 data-nosnippet>992</a>                        from: wgt::BufferUses::INDIRECT,
-<a href=#993 id=993 data-nosnippet>993</a>                        to: wgt::BufferUses::STORAGE_READ_WRITE,
-<a href=#994 id=994 data-nosnippet>994</a>                    },
-<a href=#995 id=995 data-nosnippet>995</a>                }]);
-<a href=#996 id=996 data-nosnippet>996</a>        }
-<a href=#997 id=997 data-nosnippet>997</a>
-<a href=#998 id=998 data-nosnippet>998</a>        <span class="kw">unsafe </span>{
-<a href=#999 id=999 data-nosnippet>999</a>            state.pass.base.raw_encoder.dispatch([<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>]);
-<a href=#1000 id=1000 data-nosnippet>1000</a>        }
-<a href=#1001 id=1001 data-nosnippet>1001</a>
-<a href=#1002 id=1002 data-nosnippet>1002</a>        <span class="comment">// reset state
-<a href=#1003 id=1003 data-nosnippet>1003</a>        </span>{
-<a href=#1004 id=1004 data-nosnippet>1004</a>            <span class="kw">let </span>pipeline = state.pipeline.as_ref().unwrap();
-<a href=#1005 id=1005 data-nosnippet>1005</a>
-<a href=#1006 id=1006 data-nosnippet>1006</a>            <span class="kw">unsafe </span>{
-<a href=#1007 id=1007 data-nosnippet>1007</a>                state
-<a href=#1008 id=1008 data-nosnippet>1008</a>                    .pass
-<a href=#1009 id=1009 data-nosnippet>1009</a>                    .base
-<a href=#1010 id=1010 data-nosnippet>1010</a>                    .raw_encoder
-<a href=#1011 id=1011 data-nosnippet>1011</a>                    .set_compute_pipeline(pipeline.raw());
-<a href=#1012 id=1012 data-nosnippet>1012</a>            }
-<a href=#1013 id=1013 data-nosnippet>1013</a>
-<a href=#1014 id=1014 data-nosnippet>1014</a>            <span class="kw">if </span>!state.push_constants.is_empty() {
-<a href=#1015 id=1015 data-nosnippet>1015</a>                <span class="kw">unsafe </span>{
-<a href=#1016 id=1016 data-nosnippet>1016</a>                    state.pass.base.raw_encoder.set_push_constants(
-<a href=#1017 id=1017 data-nosnippet>1017</a>                        pipeline.layout.raw(),
-<a href=#1018 id=1018 data-nosnippet>1018</a>                        wgt::ShaderStages::COMPUTE,
-<a href=#1019 id=1019 data-nosnippet>1019</a>                        <span class="number">0</span>,
-<a href=#1020 id=1020 data-nosnippet>1020</a>                        <span class="kw-2">&amp;</span>state.push_constants,
-<a href=#1021 id=1021 data-nosnippet>1021</a>                    );
-<a href=#1022 id=1022 data-nosnippet>1022</a>                }
-<a href=#1023 id=1023 data-nosnippet>1023</a>            }
-<a href=#1024 id=1024 data-nosnippet>1024</a>
-<a href=#1025 id=1025 data-nosnippet>1025</a>            <span class="kw">for </span>(i, e) <span class="kw">in </span>state.pass.binder.list_valid() {
-<a href=#1026 id=1026 data-nosnippet>1026</a>                <span class="kw">let </span>group = e.group.as_ref().unwrap();
-<a href=#1027 id=1027 data-nosnippet>1027</a>                <span class="kw">let </span>raw_bg = group.try_raw(state.pass.base.snatch_guard)<span class="question-mark">?</span>;
-<a href=#1028 id=1028 data-nosnippet>1028</a>                <span class="kw">unsafe </span>{
-<a href=#1029 id=1029 data-nosnippet>1029</a>                    state.pass.base.raw_encoder.set_bind_group(
-<a href=#1030 id=1030 data-nosnippet>1030</a>                        pipeline.layout.raw(),
-<a href=#1031 id=1031 data-nosnippet>1031</a>                        i <span class="kw">as </span>u32,
-<a href=#1032 id=1032 data-nosnippet>1032</a>                        <span class="prelude-val">Some</span>(raw_bg),
-<a href=#1033 id=1033 data-nosnippet>1033</a>                        <span class="kw-2">&amp;</span>e.dynamic_offsets,
-<a href=#1034 id=1034 data-nosnippet>1034</a>                    );
-<a href=#1035 id=1035 data-nosnippet>1035</a>                }
-<a href=#1036 id=1036 data-nosnippet>1036</a>            }
-<a href=#1037 id=1037 data-nosnippet>1037</a>        }
-<a href=#1038 id=1038 data-nosnippet>1038</a>
-<a href=#1039 id=1039 data-nosnippet>1039</a>        <span class="kw">unsafe </span>{
-<a href=#1040 id=1040 data-nosnippet>1040</a>            state
-<a href=#1041 id=1041 data-nosnippet>1041</a>                .pass
-<a href=#1042 id=1042 data-nosnippet>1042</a>                .base
-<a href=#1043 id=1043 data-nosnippet>1043</a>                .raw_encoder
-<a href=#1044 id=1044 data-nosnippet>1044</a>                .transition_buffers(<span class="kw-2">&amp;</span>[hal::BufferBarrier {
-<a href=#1045 id=1045 data-nosnippet>1045</a>                    buffer: params.dst_buffer,
-<a href=#1046 id=1046 data-nosnippet>1046</a>                    usage: hal::StateTransition {
-<a href=#1047 id=1047 data-nosnippet>1047</a>                        from: wgt::BufferUses::STORAGE_READ_WRITE,
-<a href=#1048 id=1048 data-nosnippet>1048</a>                        to: wgt::BufferUses::INDIRECT,
-<a href=#1049 id=1049 data-nosnippet>1049</a>                    },
-<a href=#1050 id=1050 data-nosnippet>1050</a>                }]);
-<a href=#1051 id=1051 data-nosnippet>1051</a>        }
-<a href=#1052 id=1052 data-nosnippet>1052</a>
-<a href=#1053 id=1053 data-nosnippet>1053</a>        state.flush_bindings(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>buffer), <span class="bool-val">false</span>)<span class="question-mark">?</span>;
-<a href=#1054 id=1054 data-nosnippet>1054</a>        <span class="kw">unsafe </span>{
-<a href=#1055 id=1055 data-nosnippet>1055</a>            state
-<a href=#1056 id=1056 data-nosnippet>1056</a>                .pass
-<a href=#1057 id=1057 data-nosnippet>1057</a>                .base
-<a href=#1058 id=1058 data-nosnippet>1058</a>                .raw_encoder
-<a href=#1059 id=1059 data-nosnippet>1059</a>                .dispatch_indirect(params.dst_buffer, <span class="number">0</span>);
-<a href=#1060 id=1060 data-nosnippet>1060</a>        }
-<a href=#1061 id=1061 data-nosnippet>1061</a>    } <span class="kw">else </span>{
-<a href=#1062 id=1062 data-nosnippet>1062</a>        state.flush_bindings(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>buffer), <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-<a href=#1063 id=1063 data-nosnippet>1063</a>
-<a href=#1064 id=1064 data-nosnippet>1064</a>        <span class="kw">let </span>buf_raw = buffer.try_raw(state.pass.base.snatch_guard)<span class="question-mark">?</span>;
-<a href=#1065 id=1065 data-nosnippet>1065</a>        <span class="kw">unsafe </span>{
-<a href=#1066 id=1066 data-nosnippet>1066</a>            state
-<a href=#1067 id=1067 data-nosnippet>1067</a>                .pass
-<a href=#1068 id=1068 data-nosnippet>1068</a>                .base
-<a href=#1069 id=1069 data-nosnippet>1069</a>                .raw_encoder
-<a href=#1070 id=1070 data-nosnippet>1070</a>                .dispatch_indirect(buf_raw, offset);
-<a href=#1071 id=1071 data-nosnippet>1071</a>        }
-<a href=#1072 id=1072 data-nosnippet>1072</a>    }
-<a href=#1073 id=1073 data-nosnippet>1073</a>
-<a href=#1074 id=1074 data-nosnippet>1074</a>    <span class="prelude-val">Ok</span>(())
-<a href=#1075 id=1075 data-nosnippet>1075</a>}
-<a href=#1076 id=1076 data-nosnippet>1076</a>
-<a href=#1077 id=1077 data-nosnippet>1077</a><span class="comment">// Recording a compute pass.
-<a href=#1078 id=1078 data-nosnippet>1078</a>//
-<a href=#1079 id=1079 data-nosnippet>1079</a>// The only error that should be returned from these methods is
-<a href=#1080 id=1080 data-nosnippet>1080</a>// `EncoderStateError::Ended`, when the pass has already ended and an immediate
-<a href=#1081 id=1081 data-nosnippet>1081</a>// validation error is raised.
-<a href=#1082 id=1082 data-nosnippet>1082</a>//
-<a href=#1083 id=1083 data-nosnippet>1083</a>// All other errors should be stored in the pass for later reporting when
-<a href=#1084 id=1084 data-nosnippet>1084</a>// `CommandEncoder.finish()` is called.
-<a href=#1085 id=1085 data-nosnippet>1085</a>//
-<a href=#1086 id=1086 data-nosnippet>1086</a>// The `pass_try!` macro should be used to handle errors appropriately. Note
-<a href=#1087 id=1087 data-nosnippet>1087</a>// that the `pass_try!` and `pass_base!` macros may return early from the
-<a href=#1088 id=1088 data-nosnippet>1088</a>// function that invokes them, like the `?` operator.
-<a href=#1089 id=1089 data-nosnippet>1089</a></span><span class="kw">impl </span>Global {
-<a href=#1090 id=1090 data-nosnippet>1090</a>    <span class="kw">pub fn </span>compute_pass_set_bind_group(
-<a href=#1091 id=1091 data-nosnippet>1091</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1092 id=1092 data-nosnippet>1092</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1093 id=1093 data-nosnippet>1093</a>        index: u32,
-<a href=#1094 id=1094 data-nosnippet>1094</a>        bind_group_id: <span class="prelude-ty">Option</span>&lt;id::BindGroupId&gt;,
-<a href=#1095 id=1095 data-nosnippet>1095</a>        offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
-<a href=#1096 id=1096 data-nosnippet>1096</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1097 id=1097 data-nosnippet>1097</a>        <span class="kw">let </span>scope = PassErrorScope::SetBindGroup;
-<a href=#1098 id=1098 data-nosnippet>1098</a>
-<a href=#1099 id=1099 data-nosnippet>1099</a>        <span class="comment">// This statement will return an error if the pass is ended. It's
-<a href=#1100 id=1100 data-nosnippet>1100</a>        // important the error check comes before the early-out for
-<a href=#1101 id=1101 data-nosnippet>1101</a>        // `set_and_check_redundant`.
-<a href=#1102 id=1102 data-nosnippet>1102</a>        </span><span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
-<a href=#1103 id=1103 data-nosnippet>1103</a>
-<a href=#1104 id=1104 data-nosnippet>1104</a>        <span class="kw">if </span>pass.current_bind_groups.set_and_check_redundant(
-<a href=#1105 id=1105 data-nosnippet>1105</a>            bind_group_id,
-<a href=#1106 id=1106 data-nosnippet>1106</a>            index,
-<a href=#1107 id=1107 data-nosnippet>1107</a>            <span class="kw-2">&amp;mut </span>base.dynamic_offsets,
-<a href=#1108 id=1108 data-nosnippet>1108</a>            offsets,
-<a href=#1109 id=1109 data-nosnippet>1109</a>        ) {
-<a href=#1110 id=1110 data-nosnippet>1110</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-<a href=#1111 id=1111 data-nosnippet>1111</a>        }
-<a href=#1112 id=1112 data-nosnippet>1112</a>
-<a href=#1113 id=1113 data-nosnippet>1113</a>        <span class="kw">let </span><span class="kw-2">mut </span>bind_group = <span class="prelude-val">None</span>;
-<a href=#1114 id=1114 data-nosnippet>1114</a>        <span class="kw">if </span>bind_group_id.is_some() {
-<a href=#1115 id=1115 data-nosnippet>1115</a>            <span class="kw">let </span>bind_group_id = bind_group_id.unwrap();
-<a href=#1116 id=1116 data-nosnippet>1116</a>
-<a href=#1117 id=1117 data-nosnippet>1117</a>            <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-<a href=#1118 id=1118 data-nosnippet>1118</a>            bind_group = <span class="prelude-val">Some</span>(<span class="macro">pass_try!</span>(
-<a href=#1119 id=1119 data-nosnippet>1119</a>                base,
-<a href=#1120 id=1120 data-nosnippet>1120</a>                scope,
-<a href=#1121 id=1121 data-nosnippet>1121</a>                hub.bind_groups.get(bind_group_id).get(),
-<a href=#1122 id=1122 data-nosnippet>1122</a>            ));
-<a href=#1123 id=1123 data-nosnippet>1123</a>        }
-<a href=#1124 id=1124 data-nosnippet>1124</a>
-<a href=#1125 id=1125 data-nosnippet>1125</a>        base.commands.push(ArcComputeCommand::SetBindGroup {
-<a href=#1126 id=1126 data-nosnippet>1126</a>            index,
-<a href=#1127 id=1127 data-nosnippet>1127</a>            num_dynamic_offsets: offsets.len(),
-<a href=#1128 id=1128 data-nosnippet>1128</a>            bind_group,
-<a href=#1129 id=1129 data-nosnippet>1129</a>        });
-<a href=#1130 id=1130 data-nosnippet>1130</a>
-<a href=#1131 id=1131 data-nosnippet>1131</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1132 id=1132 data-nosnippet>1132</a>    }
-<a href=#1133 id=1133 data-nosnippet>1133</a>
-<a href=#1134 id=1134 data-nosnippet>1134</a>    <span class="kw">pub fn </span>compute_pass_set_pipeline(
-<a href=#1135 id=1135 data-nosnippet>1135</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1136 id=1136 data-nosnippet>1136</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1137 id=1137 data-nosnippet>1137</a>        pipeline_id: id::ComputePipelineId,
-<a href=#1138 id=1138 data-nosnippet>1138</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1139 id=1139 data-nosnippet>1139</a>        <span class="kw">let </span>redundant = pass.current_pipeline.set_and_check_redundant(pipeline_id);
-<a href=#1140 id=1140 data-nosnippet>1140</a>
-<a href=#1141 id=1141 data-nosnippet>1141</a>        <span class="kw">let </span>scope = PassErrorScope::SetPipelineCompute;
-<a href=#1142 id=1142 data-nosnippet>1142</a>
-<a href=#1143 id=1143 data-nosnippet>1143</a>        <span class="comment">// This statement will return an error if the pass is ended.
-<a href=#1144 id=1144 data-nosnippet>1144</a>        // Its important the error check comes before the early-out for `redundant`.
-<a href=#1145 id=1145 data-nosnippet>1145</a>        </span><span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
-<a href=#1146 id=1146 data-nosnippet>1146</a>
-<a href=#1147 id=1147 data-nosnippet>1147</a>        <span class="kw">if </span>redundant {
-<a href=#1148 id=1148 data-nosnippet>1148</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-<a href=#1149 id=1149 data-nosnippet>1149</a>        }
-<a href=#1150 id=1150 data-nosnippet>1150</a>
-<a href=#1151 id=1151 data-nosnippet>1151</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-<a href=#1152 id=1152 data-nosnippet>1152</a>        <span class="kw">let </span>pipeline = <span class="macro">pass_try!</span>(base, scope, hub.compute_pipelines.get(pipeline_id).get());
-<a href=#1153 id=1153 data-nosnippet>1153</a>
-<a href=#1154 id=1154 data-nosnippet>1154</a>        base.commands.push(ArcComputeCommand::SetPipeline(pipeline));
-<a href=#1155 id=1155 data-nosnippet>1155</a>
-<a href=#1156 id=1156 data-nosnippet>1156</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1157 id=1157 data-nosnippet>1157</a>    }
-<a href=#1158 id=1158 data-nosnippet>1158</a>
-<a href=#1159 id=1159 data-nosnippet>1159</a>    <span class="kw">pub fn </span>compute_pass_set_push_constants(
-<a href=#1160 id=1160 data-nosnippet>1160</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1161 id=1161 data-nosnippet>1161</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1162 id=1162 data-nosnippet>1162</a>        offset: u32,
-<a href=#1163 id=1163 data-nosnippet>1163</a>        data: <span class="kw-2">&amp;</span>[u8],
-<a href=#1164 id=1164 data-nosnippet>1164</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1165 id=1165 data-nosnippet>1165</a>        <span class="kw">let </span>scope = PassErrorScope::SetPushConstant;
-<a href=#1166 id=1166 data-nosnippet>1166</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
-<a href=#1167 id=1167 data-nosnippet>1167</a>
-<a href=#1168 id=1168 data-nosnippet>1168</a>        <span class="kw">if </span>offset &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>) != <span class="number">0 </span>{
-<a href=#1169 id=1169 data-nosnippet>1169</a>            <span class="macro">pass_try!</span>(
-<a href=#1170 id=1170 data-nosnippet>1170</a>                base,
-<a href=#1171 id=1171 data-nosnippet>1171</a>                scope,
-<a href=#1172 id=1172 data-nosnippet>1172</a>                <span class="prelude-val">Err</span>(ComputePassErrorInner::PushConstantOffsetAlignment),
-<a href=#1173 id=1173 data-nosnippet>1173</a>            );
-<a href=#1174 id=1174 data-nosnippet>1174</a>        }
-<a href=#1175 id=1175 data-nosnippet>1175</a>
-<a href=#1176 id=1176 data-nosnippet>1176</a>        <span class="kw">if </span>data.len() <span class="kw">as </span>u32 &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>) != <span class="number">0 </span>{
-<a href=#1177 id=1177 data-nosnippet>1177</a>            <span class="macro">pass_try!</span>(
-<a href=#1178 id=1178 data-nosnippet>1178</a>                base,
-<a href=#1179 id=1179 data-nosnippet>1179</a>                scope,
-<a href=#1180 id=1180 data-nosnippet>1180</a>                <span class="prelude-val">Err</span>(ComputePassErrorInner::PushConstantSizeAlignment),
-<a href=#1181 id=1181 data-nosnippet>1181</a>            )
-<a href=#1182 id=1182 data-nosnippet>1182</a>        }
-<a href=#1183 id=1183 data-nosnippet>1183</a>        <span class="kw">let </span>value_offset = <span class="macro">pass_try!</span>(
-<a href=#1184 id=1184 data-nosnippet>1184</a>            base,
-<a href=#1185 id=1185 data-nosnippet>1185</a>            scope,
-<a href=#1186 id=1186 data-nosnippet>1186</a>            base.push_constant_data
-<a href=#1187 id=1187 data-nosnippet>1187</a>                .len()
-<a href=#1188 id=1188 data-nosnippet>1188</a>                .try_into()
-<a href=#1189 id=1189 data-nosnippet>1189</a>                .map_err(|<span class="kw">_</span>| ComputePassErrorInner::PushConstantOutOfMemory)
-<a href=#1190 id=1190 data-nosnippet>1190</a>        );
-<a href=#1191 id=1191 data-nosnippet>1191</a>
-<a href=#1192 id=1192 data-nosnippet>1192</a>        base.push_constant_data.extend(
-<a href=#1193 id=1193 data-nosnippet>1193</a>            data.chunks_exact(wgt::PUSH_CONSTANT_ALIGNMENT <span class="kw">as </span>usize)
-<a href=#1194 id=1194 data-nosnippet>1194</a>                .map(|arr| u32::from_ne_bytes([arr[<span class="number">0</span>], arr[<span class="number">1</span>], arr[<span class="number">2</span>], arr[<span class="number">3</span>]])),
-<a href=#1195 id=1195 data-nosnippet>1195</a>        );
-<a href=#1196 id=1196 data-nosnippet>1196</a>
-<a href=#1197 id=1197 data-nosnippet>1197</a>        base.commands.push(ArcComputeCommand::SetPushConstant {
-<a href=#1198 id=1198 data-nosnippet>1198</a>            offset,
-<a href=#1199 id=1199 data-nosnippet>1199</a>            size_bytes: data.len() <span class="kw">as </span>u32,
-<a href=#1200 id=1200 data-nosnippet>1200</a>            values_offset: value_offset,
-<a href=#1201 id=1201 data-nosnippet>1201</a>        });
-<a href=#1202 id=1202 data-nosnippet>1202</a>
-<a href=#1203 id=1203 data-nosnippet>1203</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1204 id=1204 data-nosnippet>1204</a>    }
-<a href=#1205 id=1205 data-nosnippet>1205</a>
-<a href=#1206 id=1206 data-nosnippet>1206</a>    <span class="kw">pub fn </span>compute_pass_dispatch_workgroups(
-<a href=#1207 id=1207 data-nosnippet>1207</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1208 id=1208 data-nosnippet>1208</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1209 id=1209 data-nosnippet>1209</a>        groups_x: u32,
-<a href=#1210 id=1210 data-nosnippet>1210</a>        groups_y: u32,
-<a href=#1211 id=1211 data-nosnippet>1211</a>        groups_z: u32,
-<a href=#1212 id=1212 data-nosnippet>1212</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1213 id=1213 data-nosnippet>1213</a>        <span class="kw">let </span>scope = PassErrorScope::Dispatch { indirect: <span class="bool-val">false </span>};
-<a href=#1214 id=1214 data-nosnippet>1214</a>
-<a href=#1215 id=1215 data-nosnippet>1215</a>        <span class="macro">pass_base!</span>(pass, scope)
-<a href=#1216 id=1216 data-nosnippet>1216</a>            .commands
-<a href=#1217 id=1217 data-nosnippet>1217</a>            .push(ArcComputeCommand::Dispatch([groups_x, groups_y, groups_z]));
-<a href=#1218 id=1218 data-nosnippet>1218</a>
-<a href=#1219 id=1219 data-nosnippet>1219</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1220 id=1220 data-nosnippet>1220</a>    }
-<a href=#1221 id=1221 data-nosnippet>1221</a>
-<a href=#1222 id=1222 data-nosnippet>1222</a>    <span class="kw">pub fn </span>compute_pass_dispatch_workgroups_indirect(
-<a href=#1223 id=1223 data-nosnippet>1223</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1224 id=1224 data-nosnippet>1224</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1225 id=1225 data-nosnippet>1225</a>        buffer_id: id::BufferId,
-<a href=#1226 id=1226 data-nosnippet>1226</a>        offset: BufferAddress,
-<a href=#1227 id=1227 data-nosnippet>1227</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1228 id=1228 data-nosnippet>1228</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-<a href=#1229 id=1229 data-nosnippet>1229</a>        <span class="kw">let </span>scope = PassErrorScope::Dispatch { indirect: <span class="bool-val">true </span>};
-<a href=#1230 id=1230 data-nosnippet>1230</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
-<a href=#1231 id=1231 data-nosnippet>1231</a>
-<a href=#1232 id=1232 data-nosnippet>1232</a>        <span class="kw">let </span>buffer = <span class="macro">pass_try!</span>(base, scope, hub.buffers.get(buffer_id).get());
-<a href=#1233 id=1233 data-nosnippet>1233</a>
-<a href=#1234 id=1234 data-nosnippet>1234</a>        base.commands
-<a href=#1235 id=1235 data-nosnippet>1235</a>            .push(ArcComputeCommand::DispatchIndirect { buffer, offset });
-<a href=#1236 id=1236 data-nosnippet>1236</a>
-<a href=#1237 id=1237 data-nosnippet>1237</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1238 id=1238 data-nosnippet>1238</a>    }
-<a href=#1239 id=1239 data-nosnippet>1239</a>
-<a href=#1240 id=1240 data-nosnippet>1240</a>    <span class="kw">pub fn </span>compute_pass_push_debug_group(
-<a href=#1241 id=1241 data-nosnippet>1241</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1242 id=1242 data-nosnippet>1242</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1243 id=1243 data-nosnippet>1243</a>        label: <span class="kw-2">&amp;</span>str,
-<a href=#1244 id=1244 data-nosnippet>1244</a>        color: u32,
-<a href=#1245 id=1245 data-nosnippet>1245</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1246 id=1246 data-nosnippet>1246</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, PassErrorScope::PushDebugGroup);
-<a href=#1247 id=1247 data-nosnippet>1247</a>
-<a href=#1248 id=1248 data-nosnippet>1248</a>        <span class="kw">let </span>bytes = label.as_bytes();
-<a href=#1249 id=1249 data-nosnippet>1249</a>        base.string_data.extend_from_slice(bytes);
-<a href=#1250 id=1250 data-nosnippet>1250</a>
-<a href=#1251 id=1251 data-nosnippet>1251</a>        base.commands.push(ArcComputeCommand::PushDebugGroup {
-<a href=#1252 id=1252 data-nosnippet>1252</a>            color,
-<a href=#1253 id=1253 data-nosnippet>1253</a>            len: bytes.len(),
-<a href=#1254 id=1254 data-nosnippet>1254</a>        });
-<a href=#1255 id=1255 data-nosnippet>1255</a>
-<a href=#1256 id=1256 data-nosnippet>1256</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1257 id=1257 data-nosnippet>1257</a>    }
-<a href=#1258 id=1258 data-nosnippet>1258</a>
-<a href=#1259 id=1259 data-nosnippet>1259</a>    <span class="kw">pub fn </span>compute_pass_pop_debug_group(
-<a href=#1260 id=1260 data-nosnippet>1260</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1261 id=1261 data-nosnippet>1261</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1262 id=1262 data-nosnippet>1262</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1263 id=1263 data-nosnippet>1263</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, PassErrorScope::PopDebugGroup);
-<a href=#1264 id=1264 data-nosnippet>1264</a>
-<a href=#1265 id=1265 data-nosnippet>1265</a>        base.commands.push(ArcComputeCommand::PopDebugGroup);
-<a href=#1266 id=1266 data-nosnippet>1266</a>
-<a href=#1267 id=1267 data-nosnippet>1267</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1268 id=1268 data-nosnippet>1268</a>    }
-<a href=#1269 id=1269 data-nosnippet>1269</a>
-<a href=#1270 id=1270 data-nosnippet>1270</a>    <span class="kw">pub fn </span>compute_pass_insert_debug_marker(
-<a href=#1271 id=1271 data-nosnippet>1271</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1272 id=1272 data-nosnippet>1272</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1273 id=1273 data-nosnippet>1273</a>        label: <span class="kw-2">&amp;</span>str,
-<a href=#1274 id=1274 data-nosnippet>1274</a>        color: u32,
-<a href=#1275 id=1275 data-nosnippet>1275</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1276 id=1276 data-nosnippet>1276</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, PassErrorScope::InsertDebugMarker);
-<a href=#1277 id=1277 data-nosnippet>1277</a>
-<a href=#1278 id=1278 data-nosnippet>1278</a>        <span class="kw">let </span>bytes = label.as_bytes();
-<a href=#1279 id=1279 data-nosnippet>1279</a>        base.string_data.extend_from_slice(bytes);
-<a href=#1280 id=1280 data-nosnippet>1280</a>
-<a href=#1281 id=1281 data-nosnippet>1281</a>        base.commands.push(ArcComputeCommand::InsertDebugMarker {
-<a href=#1282 id=1282 data-nosnippet>1282</a>            color,
-<a href=#1283 id=1283 data-nosnippet>1283</a>            len: bytes.len(),
-<a href=#1284 id=1284 data-nosnippet>1284</a>        });
-<a href=#1285 id=1285 data-nosnippet>1285</a>
-<a href=#1286 id=1286 data-nosnippet>1286</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1287 id=1287 data-nosnippet>1287</a>    }
-<a href=#1288 id=1288 data-nosnippet>1288</a>
-<a href=#1289 id=1289 data-nosnippet>1289</a>    <span class="kw">pub fn </span>compute_pass_write_timestamp(
-<a href=#1290 id=1290 data-nosnippet>1290</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1291 id=1291 data-nosnippet>1291</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1292 id=1292 data-nosnippet>1292</a>        query_set_id: id::QuerySetId,
-<a href=#1293 id=1293 data-nosnippet>1293</a>        query_index: u32,
-<a href=#1294 id=1294 data-nosnippet>1294</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1295 id=1295 data-nosnippet>1295</a>        <span class="kw">let </span>scope = PassErrorScope::WriteTimestamp;
-<a href=#1296 id=1296 data-nosnippet>1296</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
-<a href=#1297 id=1297 data-nosnippet>1297</a>
-<a href=#1298 id=1298 data-nosnippet>1298</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-<a href=#1299 id=1299 data-nosnippet>1299</a>        <span class="kw">let </span>query_set = <span class="macro">pass_try!</span>(base, scope, hub.query_sets.get(query_set_id).get());
-<a href=#1300 id=1300 data-nosnippet>1300</a>
-<a href=#1301 id=1301 data-nosnippet>1301</a>        base.commands.push(ArcComputeCommand::WriteTimestamp {
-<a href=#1302 id=1302 data-nosnippet>1302</a>            query_set,
-<a href=#1303 id=1303 data-nosnippet>1303</a>            query_index,
-<a href=#1304 id=1304 data-nosnippet>1304</a>        });
-<a href=#1305 id=1305 data-nosnippet>1305</a>
-<a href=#1306 id=1306 data-nosnippet>1306</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1307 id=1307 data-nosnippet>1307</a>    }
-<a href=#1308 id=1308 data-nosnippet>1308</a>
-<a href=#1309 id=1309 data-nosnippet>1309</a>    <span class="kw">pub fn </span>compute_pass_begin_pipeline_statistics_query(
-<a href=#1310 id=1310 data-nosnippet>1310</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1311 id=1311 data-nosnippet>1311</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1312 id=1312 data-nosnippet>1312</a>        query_set_id: id::QuerySetId,
-<a href=#1313 id=1313 data-nosnippet>1313</a>        query_index: u32,
-<a href=#1314 id=1314 data-nosnippet>1314</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1315 id=1315 data-nosnippet>1315</a>        <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
-<a href=#1316 id=1316 data-nosnippet>1316</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
-<a href=#1317 id=1317 data-nosnippet>1317</a>
-<a href=#1318 id=1318 data-nosnippet>1318</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-<a href=#1319 id=1319 data-nosnippet>1319</a>        <span class="kw">let </span>query_set = <span class="macro">pass_try!</span>(base, scope, hub.query_sets.get(query_set_id).get());
-<a href=#1320 id=1320 data-nosnippet>1320</a>
-<a href=#1321 id=1321 data-nosnippet>1321</a>        base.commands
-<a href=#1322 id=1322 data-nosnippet>1322</a>            .push(ArcComputeCommand::BeginPipelineStatisticsQuery {
-<a href=#1323 id=1323 data-nosnippet>1323</a>                query_set,
-<a href=#1324 id=1324 data-nosnippet>1324</a>                query_index,
-<a href=#1325 id=1325 data-nosnippet>1325</a>            });
-<a href=#1326 id=1326 data-nosnippet>1326</a>
-<a href=#1327 id=1327 data-nosnippet>1327</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1328 id=1328 data-nosnippet>1328</a>    }
-<a href=#1329 id=1329 data-nosnippet>1329</a>
-<a href=#1330 id=1330 data-nosnippet>1330</a>    <span class="kw">pub fn </span>compute_pass_end_pipeline_statistics_query(
-<a href=#1331 id=1331 data-nosnippet>1331</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1332 id=1332 data-nosnippet>1332</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1333 id=1333 data-nosnippet>1333</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1334 id=1334 data-nosnippet>1334</a>        <span class="macro">pass_base!</span>(pass, PassErrorScope::EndPipelineStatisticsQuery)
-<a href=#1335 id=1335 data-nosnippet>1335</a>            .commands
-<a href=#1336 id=1336 data-nosnippet>1336</a>            .push(ArcComputeCommand::EndPipelineStatisticsQuery);
-<a href=#1337 id=1337 data-nosnippet>1337</a>
-<a href=#1338 id=1338 data-nosnippet>1338</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1339 id=1339 data-nosnippet>1339</a>    }
-<a href=#1340 id=1340 data-nosnippet>1340</a>}</code></pre></div></section></main></body></html>
+<a href=#494 id=494 data-nosnippet>494</a>        <span class="kw">if let </span><span class="prelude-val">Err</span>(ComputePassError {
+<a href=#495 id=495 data-nosnippet>495</a>            inner:
+<a href=#496 id=496 data-nosnippet>496</a>                ComputePassErrorInner::EncoderState(
+<a href=#497 id=497 data-nosnippet>497</a>                    err @ (EncoderStateError::Locked | EncoderStateError::Ended),
+<a href=#498 id=498 data-nosnippet>498</a>                ),
+<a href=#499 id=499 data-nosnippet>499</a>            scope: <span class="kw">_</span>,
+<a href=#500 id=500 data-nosnippet>500</a>        }) = base
+<a href=#501 id=501 data-nosnippet>501</a>        {
+<a href=#502 id=502 data-nosnippet>502</a>            <span class="comment">// Most encoding errors are detected and raised within `finish()`.
+<a href=#503 id=503 data-nosnippet>503</a>            //
+<a href=#504 id=504 data-nosnippet>504</a>            // However, we raise a validation error here if the pass was opened
+<a href=#505 id=505 data-nosnippet>505</a>            // within another pass, or on a finished encoder. The latter is
+<a href=#506 id=506 data-nosnippet>506</a>            // particularly important, because in that case reporting errors via
+<a href=#507 id=507 data-nosnippet>507</a>            // `CommandEncoder::finish` is not possible.
+<a href=#508 id=508 data-nosnippet>508</a>            </span><span class="kw">return </span><span class="prelude-val">Err</span>(err.clone());
+<a href=#509 id=509 data-nosnippet>509</a>        }
+<a href=#510 id=510 data-nosnippet>510</a>
+<a href=#511 id=511 data-nosnippet>511</a>        cmd_buf_data.push_with(|| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, ComputePassError&gt; {
+<a href=#512 id=512 data-nosnippet>512</a>            <span class="prelude-val">Ok</span>(ArcCommand::RunComputePass {
+<a href=#513 id=513 data-nosnippet>513</a>                pass: base<span class="question-mark">?</span>,
+<a href=#514 id=514 data-nosnippet>514</a>                timestamp_writes: pass.timestamp_writes.take(),
+<a href=#515 id=515 data-nosnippet>515</a>            })
+<a href=#516 id=516 data-nosnippet>516</a>        })
+<a href=#517 id=517 data-nosnippet>517</a>    }
+<a href=#518 id=518 data-nosnippet>518</a>}
+<a href=#519 id=519 data-nosnippet>519</a>
+<a href=#520 id=520 data-nosnippet>520</a><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>encode_compute_pass(
+<a href=#521 id=521 data-nosnippet>521</a>    parent_state: <span class="kw-2">&amp;mut </span>EncodingState&lt;InnerCommandEncoder&gt;,
+<a href=#522 id=522 data-nosnippet>522</a>    <span class="kw-2">mut </span>base: BasePass&lt;ArcComputeCommand, Infallible&gt;,
+<a href=#523 id=523 data-nosnippet>523</a>    <span class="kw-2">mut </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcPassTimestampWrites&gt;,
+<a href=#524 id=524 data-nosnippet>524</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
+<a href=#525 id=525 data-nosnippet>525</a>    <span class="kw">let </span>pass_scope = PassErrorScope::Pass;
+<a href=#526 id=526 data-nosnippet>526</a>
+<a href=#527 id=527 data-nosnippet>527</a>    <span class="kw">let </span>device = parent_state.device;
+<a href=#528 id=528 data-nosnippet>528</a>
+<a href=#529 id=529 data-nosnippet>529</a>    <span class="comment">// We automatically keep extending command buffers over time, and because
+<a href=#530 id=530 data-nosnippet>530</a>    // we want to insert a command buffer _before_ what we're about to record,
+<a href=#531 id=531 data-nosnippet>531</a>    // we need to make sure to close the previous one.
+<a href=#532 id=532 data-nosnippet>532</a>    </span>parent_state
+<a href=#533 id=533 data-nosnippet>533</a>        .raw_encoder
+<a href=#534 id=534 data-nosnippet>534</a>        .close_if_open()
+<a href=#535 id=535 data-nosnippet>535</a>        .map_pass_err(pass_scope)<span class="question-mark">?</span>;
+<a href=#536 id=536 data-nosnippet>536</a>    <span class="kw">let </span>raw_encoder = parent_state
+<a href=#537 id=537 data-nosnippet>537</a>        .raw_encoder
+<a href=#538 id=538 data-nosnippet>538</a>        .open_pass(base.label.as_deref())
+<a href=#539 id=539 data-nosnippet>539</a>        .map_pass_err(pass_scope)<span class="question-mark">?</span>;
+<a href=#540 id=540 data-nosnippet>540</a>
+<a href=#541 id=541 data-nosnippet>541</a>    <span class="kw">let </span><span class="kw-2">mut </span>debug_scope_depth = <span class="number">0</span>;
+<a href=#542 id=542 data-nosnippet>542</a>
+<a href=#543 id=543 data-nosnippet>543</a>    <span class="kw">let </span><span class="kw-2">mut </span>state = State {
+<a href=#544 id=544 data-nosnippet>544</a>        pipeline: <span class="prelude-val">None</span>,
+<a href=#545 id=545 data-nosnippet>545</a>
+<a href=#546 id=546 data-nosnippet>546</a>        pass: pass::PassState {
+<a href=#547 id=547 data-nosnippet>547</a>            base: EncodingState {
+<a href=#548 id=548 data-nosnippet>548</a>                device,
+<a href=#549 id=549 data-nosnippet>549</a>                raw_encoder,
+<a href=#550 id=550 data-nosnippet>550</a>                tracker: parent_state.tracker,
+<a href=#551 id=551 data-nosnippet>551</a>                buffer_memory_init_actions: parent_state.buffer_memory_init_actions,
+<a href=#552 id=552 data-nosnippet>552</a>                texture_memory_actions: parent_state.texture_memory_actions,
+<a href=#553 id=553 data-nosnippet>553</a>                as_actions: parent_state.as_actions,
+<a href=#554 id=554 data-nosnippet>554</a>                temp_resources: parent_state.temp_resources,
+<a href=#555 id=555 data-nosnippet>555</a>                indirect_draw_validation_resources: parent_state.indirect_draw_validation_resources,
+<a href=#556 id=556 data-nosnippet>556</a>                snatch_guard: parent_state.snatch_guard,
+<a href=#557 id=557 data-nosnippet>557</a>                debug_scope_depth: <span class="kw-2">&amp;mut </span>debug_scope_depth,
+<a href=#558 id=558 data-nosnippet>558</a>            },
+<a href=#559 id=559 data-nosnippet>559</a>            binder: Binder::new(),
+<a href=#560 id=560 data-nosnippet>560</a>            temp_offsets: Vec::new(),
+<a href=#561 id=561 data-nosnippet>561</a>            dynamic_offset_count: <span class="number">0</span>,
+<a href=#562 id=562 data-nosnippet>562</a>            pending_discard_init_fixups: SurfacesInDiscardState::new(),
+<a href=#563 id=563 data-nosnippet>563</a>            scope: device.new_usage_scope(),
+<a href=#564 id=564 data-nosnippet>564</a>            string_offset: <span class="number">0</span>,
+<a href=#565 id=565 data-nosnippet>565</a>        },
+<a href=#566 id=566 data-nosnippet>566</a>        active_query: <span class="prelude-val">None</span>,
+<a href=#567 id=567 data-nosnippet>567</a>
+<a href=#568 id=568 data-nosnippet>568</a>        push_constants: Vec::new(),
+<a href=#569 id=569 data-nosnippet>569</a>
+<a href=#570 id=570 data-nosnippet>570</a>        intermediate_trackers: Tracker::new(),
+<a href=#571 id=571 data-nosnippet>571</a>    };
+<a href=#572 id=572 data-nosnippet>572</a>
+<a href=#573 id=573 data-nosnippet>573</a>    <span class="kw">let </span>indices = <span class="kw-2">&amp;</span>device.tracker_indices;
+<a href=#574 id=574 data-nosnippet>574</a>    state
+<a href=#575 id=575 data-nosnippet>575</a>        .pass
+<a href=#576 id=576 data-nosnippet>576</a>        .base
+<a href=#577 id=577 data-nosnippet>577</a>        .tracker
+<a href=#578 id=578 data-nosnippet>578</a>        .buffers
+<a href=#579 id=579 data-nosnippet>579</a>        .set_size(indices.buffers.size());
+<a href=#580 id=580 data-nosnippet>580</a>    state
+<a href=#581 id=581 data-nosnippet>581</a>        .pass
+<a href=#582 id=582 data-nosnippet>582</a>        .base
+<a href=#583 id=583 data-nosnippet>583</a>        .tracker
+<a href=#584 id=584 data-nosnippet>584</a>        .textures
+<a href=#585 id=585 data-nosnippet>585</a>        .set_size(indices.textures.size());
+<a href=#586 id=586 data-nosnippet>586</a>
+<a href=#587 id=587 data-nosnippet>587</a>    <span class="kw">let </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;hal::PassTimestampWrites&lt;<span class="lifetime">'_</span>, <span class="kw">dyn </span>hal::DynQuerySet&gt;&gt; =
+<a href=#588 id=588 data-nosnippet>588</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = timestamp_writes.take() {
+<a href=#589 id=589 data-nosnippet>589</a>            tw.query_set.same_device(device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
+<a href=#590 id=590 data-nosnippet>590</a>
+<a href=#591 id=591 data-nosnippet>591</a>            <span class="kw">let </span>query_set = state
+<a href=#592 id=592 data-nosnippet>592</a>                .pass
+<a href=#593 id=593 data-nosnippet>593</a>                .base
+<a href=#594 id=594 data-nosnippet>594</a>                .tracker
+<a href=#595 id=595 data-nosnippet>595</a>                .query_sets
+<a href=#596 id=596 data-nosnippet>596</a>                .insert_single(tw.query_set);
+<a href=#597 id=597 data-nosnippet>597</a>
+<a href=#598 id=598 data-nosnippet>598</a>            <span class="comment">// Unlike in render passes we can't delay resetting the query sets since
+<a href=#599 id=599 data-nosnippet>599</a>            // there is no auxiliary pass.
+<a href=#600 id=600 data-nosnippet>600</a>            </span><span class="kw">let </span>range = <span class="kw">if let </span>(<span class="prelude-val">Some</span>(index_a), <span class="prelude-val">Some</span>(index_b)) =
+<a href=#601 id=601 data-nosnippet>601</a>                (tw.beginning_of_pass_write_index, tw.end_of_pass_write_index)
+<a href=#602 id=602 data-nosnippet>602</a>            {
+<a href=#603 id=603 data-nosnippet>603</a>                <span class="prelude-val">Some</span>(index_a.min(index_b)..index_a.max(index_b) + <span class="number">1</span>)
+<a href=#604 id=604 data-nosnippet>604</a>            } <span class="kw">else </span>{
+<a href=#605 id=605 data-nosnippet>605</a>                tw.beginning_of_pass_write_index
+<a href=#606 id=606 data-nosnippet>606</a>                    .or(tw.end_of_pass_write_index)
+<a href=#607 id=607 data-nosnippet>607</a>                    .map(|i| i..i + <span class="number">1</span>)
+<a href=#608 id=608 data-nosnippet>608</a>            };
+<a href=#609 id=609 data-nosnippet>609</a>            <span class="comment">// Range should always be Some, both values being None should lead to a validation error.
+<a href=#610 id=610 data-nosnippet>610</a>            // But no point in erroring over that nuance here!
+<a href=#611 id=611 data-nosnippet>611</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(range) = range {
+<a href=#612 id=612 data-nosnippet>612</a>                <span class="kw">unsafe </span>{
+<a href=#613 id=613 data-nosnippet>613</a>                    state
+<a href=#614 id=614 data-nosnippet>614</a>                        .pass
+<a href=#615 id=615 data-nosnippet>615</a>                        .base
+<a href=#616 id=616 data-nosnippet>616</a>                        .raw_encoder
+<a href=#617 id=617 data-nosnippet>617</a>                        .reset_queries(query_set.raw(), range);
+<a href=#618 id=618 data-nosnippet>618</a>                }
+<a href=#619 id=619 data-nosnippet>619</a>            }
+<a href=#620 id=620 data-nosnippet>620</a>
+<a href=#621 id=621 data-nosnippet>621</a>            <span class="prelude-val">Some</span>(hal::PassTimestampWrites {
+<a href=#622 id=622 data-nosnippet>622</a>                query_set: query_set.raw(),
+<a href=#623 id=623 data-nosnippet>623</a>                beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
+<a href=#624 id=624 data-nosnippet>624</a>                end_of_pass_write_index: tw.end_of_pass_write_index,
+<a href=#625 id=625 data-nosnippet>625</a>            })
+<a href=#626 id=626 data-nosnippet>626</a>        } <span class="kw">else </span>{
+<a href=#627 id=627 data-nosnippet>627</a>            <span class="prelude-val">None
+<a href=#628 id=628 data-nosnippet>628</a>        </span>};
+<a href=#629 id=629 data-nosnippet>629</a>
+<a href=#630 id=630 data-nosnippet>630</a>    <span class="kw">let </span>hal_desc = hal::ComputePassDescriptor {
+<a href=#631 id=631 data-nosnippet>631</a>        label: hal_label(base.label.as_deref(), device.instance_flags),
+<a href=#632 id=632 data-nosnippet>632</a>        timestamp_writes,
+<a href=#633 id=633 data-nosnippet>633</a>    };
+<a href=#634 id=634 data-nosnippet>634</a>
+<a href=#635 id=635 data-nosnippet>635</a>    <span class="kw">unsafe </span>{
+<a href=#636 id=636 data-nosnippet>636</a>        state.pass.base.raw_encoder.begin_compute_pass(<span class="kw-2">&amp;</span>hal_desc);
+<a href=#637 id=637 data-nosnippet>637</a>    }
+<a href=#638 id=638 data-nosnippet>638</a>
+<a href=#639 id=639 data-nosnippet>639</a>    <span class="kw">for </span>command <span class="kw">in </span>base.commands.drain(..) {
+<a href=#640 id=640 data-nosnippet>640</a>        <span class="kw">match </span>command {
+<a href=#641 id=641 data-nosnippet>641</a>            ArcComputeCommand::SetBindGroup {
+<a href=#642 id=642 data-nosnippet>642</a>                index,
+<a href=#643 id=643 data-nosnippet>643</a>                num_dynamic_offsets,
+<a href=#644 id=644 data-nosnippet>644</a>                bind_group,
+<a href=#645 id=645 data-nosnippet>645</a>            } =&gt; {
+<a href=#646 id=646 data-nosnippet>646</a>                <span class="kw">let </span>scope = PassErrorScope::SetBindGroup;
+<a href=#647 id=647 data-nosnippet>647</a>                pass::set_bind_group::&lt;ComputePassErrorInner&gt;(
+<a href=#648 id=648 data-nosnippet>648</a>                    <span class="kw-2">&amp;mut </span>state.pass,
+<a href=#649 id=649 data-nosnippet>649</a>                    device,
+<a href=#650 id=650 data-nosnippet>650</a>                    <span class="kw-2">&amp;</span>base.dynamic_offsets,
+<a href=#651 id=651 data-nosnippet>651</a>                    index,
+<a href=#652 id=652 data-nosnippet>652</a>                    num_dynamic_offsets,
+<a href=#653 id=653 data-nosnippet>653</a>                    bind_group,
+<a href=#654 id=654 data-nosnippet>654</a>                    <span class="bool-val">false</span>,
+<a href=#655 id=655 data-nosnippet>655</a>                )
+<a href=#656 id=656 data-nosnippet>656</a>                .map_pass_err(scope)<span class="question-mark">?</span>;
+<a href=#657 id=657 data-nosnippet>657</a>            }
+<a href=#658 id=658 data-nosnippet>658</a>            ArcComputeCommand::SetPipeline(pipeline) =&gt; {
+<a href=#659 id=659 data-nosnippet>659</a>                <span class="kw">let </span>scope = PassErrorScope::SetPipelineCompute;
+<a href=#660 id=660 data-nosnippet>660</a>                set_pipeline(<span class="kw-2">&amp;mut </span>state, device, pipeline).map_pass_err(scope)<span class="question-mark">?</span>;
+<a href=#661 id=661 data-nosnippet>661</a>            }
+<a href=#662 id=662 data-nosnippet>662</a>            ArcComputeCommand::SetPushConstant {
+<a href=#663 id=663 data-nosnippet>663</a>                offset,
+<a href=#664 id=664 data-nosnippet>664</a>                size_bytes,
+<a href=#665 id=665 data-nosnippet>665</a>                values_offset,
+<a href=#666 id=666 data-nosnippet>666</a>            } =&gt; {
+<a href=#667 id=667 data-nosnippet>667</a>                <span class="kw">let </span>scope = PassErrorScope::SetPushConstant;
+<a href=#668 id=668 data-nosnippet>668</a>                pass::set_push_constant::&lt;ComputePassErrorInner, <span class="kw">_</span>&gt;(
+<a href=#669 id=669 data-nosnippet>669</a>                    <span class="kw-2">&amp;mut </span>state.pass,
+<a href=#670 id=670 data-nosnippet>670</a>                    <span class="kw-2">&amp;</span>base.push_constant_data,
+<a href=#671 id=671 data-nosnippet>671</a>                    wgt::ShaderStages::COMPUTE,
+<a href=#672 id=672 data-nosnippet>672</a>                    offset,
+<a href=#673 id=673 data-nosnippet>673</a>                    size_bytes,
+<a href=#674 id=674 data-nosnippet>674</a>                    <span class="prelude-val">Some</span>(values_offset),
+<a href=#675 id=675 data-nosnippet>675</a>                    |data_slice| {
+<a href=#676 id=676 data-nosnippet>676</a>                        <span class="kw">let </span>offset_in_elements = (offset / wgt::PUSH_CONSTANT_ALIGNMENT) <span class="kw">as </span>usize;
+<a href=#677 id=677 data-nosnippet>677</a>                        <span class="kw">let </span>size_in_elements = (size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT) <span class="kw">as </span>usize;
+<a href=#678 id=678 data-nosnippet>678</a>                        state.push_constants[offset_in_elements..][..size_in_elements]
+<a href=#679 id=679 data-nosnippet>679</a>                            .copy_from_slice(data_slice);
+<a href=#680 id=680 data-nosnippet>680</a>                    },
+<a href=#681 id=681 data-nosnippet>681</a>                )
+<a href=#682 id=682 data-nosnippet>682</a>                .map_pass_err(scope)<span class="question-mark">?</span>;
+<a href=#683 id=683 data-nosnippet>683</a>            }
+<a href=#684 id=684 data-nosnippet>684</a>            ArcComputeCommand::Dispatch(groups) =&gt; {
+<a href=#685 id=685 data-nosnippet>685</a>                <span class="kw">let </span>scope = PassErrorScope::Dispatch { indirect: <span class="bool-val">false </span>};
+<a href=#686 id=686 data-nosnippet>686</a>                dispatch(<span class="kw-2">&amp;mut </span>state, groups).map_pass_err(scope)<span class="question-mark">?</span>;
+<a href=#687 id=687 data-nosnippet>687</a>            }
+<a href=#688 id=688 data-nosnippet>688</a>            ArcComputeCommand::DispatchIndirect { buffer, offset } =&gt; {
+<a href=#689 id=689 data-nosnippet>689</a>                <span class="kw">let </span>scope = PassErrorScope::Dispatch { indirect: <span class="bool-val">true </span>};
+<a href=#690 id=690 data-nosnippet>690</a>                dispatch_indirect(<span class="kw-2">&amp;mut </span>state, device, buffer, offset).map_pass_err(scope)<span class="question-mark">?</span>;
+<a href=#691 id=691 data-nosnippet>691</a>            }
+<a href=#692 id=692 data-nosnippet>692</a>            ArcComputeCommand::PushDebugGroup { color: <span class="kw">_</span>, len } =&gt; {
+<a href=#693 id=693 data-nosnippet>693</a>                pass::push_debug_group(<span class="kw-2">&amp;mut </span>state.pass, <span class="kw-2">&amp;</span>base.string_data, len);
+<a href=#694 id=694 data-nosnippet>694</a>            }
+<a href=#695 id=695 data-nosnippet>695</a>            ArcComputeCommand::PopDebugGroup =&gt; {
+<a href=#696 id=696 data-nosnippet>696</a>                <span class="kw">let </span>scope = PassErrorScope::PopDebugGroup;
+<a href=#697 id=697 data-nosnippet>697</a>                pass::pop_debug_group::&lt;ComputePassErrorInner&gt;(<span class="kw-2">&amp;mut </span>state.pass)
+<a href=#698 id=698 data-nosnippet>698</a>                    .map_pass_err(scope)<span class="question-mark">?</span>;
+<a href=#699 id=699 data-nosnippet>699</a>            }
+<a href=#700 id=700 data-nosnippet>700</a>            ArcComputeCommand::InsertDebugMarker { color: <span class="kw">_</span>, len } =&gt; {
+<a href=#701 id=701 data-nosnippet>701</a>                pass::insert_debug_marker(<span class="kw-2">&amp;mut </span>state.pass, <span class="kw-2">&amp;</span>base.string_data, len);
+<a href=#702 id=702 data-nosnippet>702</a>            }
+<a href=#703 id=703 data-nosnippet>703</a>            ArcComputeCommand::WriteTimestamp {
+<a href=#704 id=704 data-nosnippet>704</a>                query_set,
+<a href=#705 id=705 data-nosnippet>705</a>                query_index,
+<a href=#706 id=706 data-nosnippet>706</a>            } =&gt; {
+<a href=#707 id=707 data-nosnippet>707</a>                <span class="kw">let </span>scope = PassErrorScope::WriteTimestamp;
+<a href=#708 id=708 data-nosnippet>708</a>                pass::write_timestamp::&lt;ComputePassErrorInner&gt;(
+<a href=#709 id=709 data-nosnippet>709</a>                    <span class="kw-2">&amp;mut </span>state.pass,
+<a href=#710 id=710 data-nosnippet>710</a>                    device,
+<a href=#711 id=711 data-nosnippet>711</a>                    <span class="prelude-val">None</span>, <span class="comment">// compute passes do not attempt to coalesce query resets
+<a href=#712 id=712 data-nosnippet>712</a>                    </span>query_set,
+<a href=#713 id=713 data-nosnippet>713</a>                    query_index,
+<a href=#714 id=714 data-nosnippet>714</a>                )
+<a href=#715 id=715 data-nosnippet>715</a>                .map_pass_err(scope)<span class="question-mark">?</span>;
+<a href=#716 id=716 data-nosnippet>716</a>            }
+<a href=#717 id=717 data-nosnippet>717</a>            ArcComputeCommand::BeginPipelineStatisticsQuery {
+<a href=#718 id=718 data-nosnippet>718</a>                query_set,
+<a href=#719 id=719 data-nosnippet>719</a>                query_index,
+<a href=#720 id=720 data-nosnippet>720</a>            } =&gt; {
+<a href=#721 id=721 data-nosnippet>721</a>                <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
+<a href=#722 id=722 data-nosnippet>722</a>                validate_and_begin_pipeline_statistics_query(
+<a href=#723 id=723 data-nosnippet>723</a>                    query_set,
+<a href=#724 id=724 data-nosnippet>724</a>                    state.pass.base.raw_encoder,
+<a href=#725 id=725 data-nosnippet>725</a>                    <span class="kw-2">&amp;mut </span>state.pass.base.tracker.query_sets,
+<a href=#726 id=726 data-nosnippet>726</a>                    device,
+<a href=#727 id=727 data-nosnippet>727</a>                    query_index,
+<a href=#728 id=728 data-nosnippet>728</a>                    <span class="prelude-val">None</span>,
+<a href=#729 id=729 data-nosnippet>729</a>                    <span class="kw-2">&amp;mut </span>state.active_query,
+<a href=#730 id=730 data-nosnippet>730</a>                )
+<a href=#731 id=731 data-nosnippet>731</a>                .map_pass_err(scope)<span class="question-mark">?</span>;
+<a href=#732 id=732 data-nosnippet>732</a>            }
+<a href=#733 id=733 data-nosnippet>733</a>            ArcComputeCommand::EndPipelineStatisticsQuery =&gt; {
+<a href=#734 id=734 data-nosnippet>734</a>                <span class="kw">let </span>scope = PassErrorScope::EndPipelineStatisticsQuery;
+<a href=#735 id=735 data-nosnippet>735</a>                end_pipeline_statistics_query(state.pass.base.raw_encoder, <span class="kw-2">&amp;mut </span>state.active_query)
+<a href=#736 id=736 data-nosnippet>736</a>                    .map_pass_err(scope)<span class="question-mark">?</span>;
+<a href=#737 id=737 data-nosnippet>737</a>            }
+<a href=#738 id=738 data-nosnippet>738</a>        }
+<a href=#739 id=739 data-nosnippet>739</a>    }
+<a href=#740 id=740 data-nosnippet>740</a>
+<a href=#741 id=741 data-nosnippet>741</a>    <span class="kw">if </span><span class="kw-2">*</span>state.pass.base.debug_scope_depth &gt; <span class="number">0 </span>{
+<a href=#742 id=742 data-nosnippet>742</a>        <span class="prelude-val">Err</span>(
+<a href=#743 id=743 data-nosnippet>743</a>            ComputePassErrorInner::DebugGroupError(DebugGroupError::MissingPop)
+<a href=#744 id=744 data-nosnippet>744</a>                .map_pass_err(pass_scope),
+<a href=#745 id=745 data-nosnippet>745</a>        )<span class="question-mark">?</span>;
+<a href=#746 id=746 data-nosnippet>746</a>    }
+<a href=#747 id=747 data-nosnippet>747</a>
+<a href=#748 id=748 data-nosnippet>748</a>    <span class="kw">unsafe </span>{
+<a href=#749 id=749 data-nosnippet>749</a>        state.pass.base.raw_encoder.end_compute_pass();
+<a href=#750 id=750 data-nosnippet>750</a>    }
+<a href=#751 id=751 data-nosnippet>751</a>
+<a href=#752 id=752 data-nosnippet>752</a>    <span class="kw">let </span>State {
+<a href=#753 id=753 data-nosnippet>753</a>        pass: pass::PassState {
+<a href=#754 id=754 data-nosnippet>754</a>            pending_discard_init_fixups,
+<a href=#755 id=755 data-nosnippet>755</a>            ..
+<a href=#756 id=756 data-nosnippet>756</a>        },
+<a href=#757 id=757 data-nosnippet>757</a>        intermediate_trackers,
+<a href=#758 id=758 data-nosnippet>758</a>        ..
+<a href=#759 id=759 data-nosnippet>759</a>    } = state;
+<a href=#760 id=760 data-nosnippet>760</a>
+<a href=#761 id=761 data-nosnippet>761</a>    <span class="comment">// Stop the current command encoder.
+<a href=#762 id=762 data-nosnippet>762</a>    </span>parent_state.raw_encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+<a href=#763 id=763 data-nosnippet>763</a>
+<a href=#764 id=764 data-nosnippet>764</a>    <span class="comment">// Create a new command encoder, which we will insert _before_ the body of the compute pass.
+<a href=#765 id=765 data-nosnippet>765</a>    //
+<a href=#766 id=766 data-nosnippet>766</a>    // Use that buffer to insert barriers and clear discarded images.
+<a href=#767 id=767 data-nosnippet>767</a>    </span><span class="kw">let </span>transit = parent_state
+<a href=#768 id=768 data-nosnippet>768</a>        .raw_encoder
+<a href=#769 id=769 data-nosnippet>769</a>        .open_pass(hal_label(
+<a href=#770 id=770 data-nosnippet>770</a>            <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Pre Pass"</span>),
+<a href=#771 id=771 data-nosnippet>771</a>            device.instance_flags,
+<a href=#772 id=772 data-nosnippet>772</a>        ))
+<a href=#773 id=773 data-nosnippet>773</a>        .map_pass_err(pass_scope)<span class="question-mark">?</span>;
+<a href=#774 id=774 data-nosnippet>774</a>    fixup_discarded_surfaces(
+<a href=#775 id=775 data-nosnippet>775</a>        pending_discard_init_fixups.into_iter(),
+<a href=#776 id=776 data-nosnippet>776</a>        transit,
+<a href=#777 id=777 data-nosnippet>777</a>        <span class="kw-2">&amp;mut </span>parent_state.tracker.textures,
+<a href=#778 id=778 data-nosnippet>778</a>        device,
+<a href=#779 id=779 data-nosnippet>779</a>        parent_state.snatch_guard,
+<a href=#780 id=780 data-nosnippet>780</a>    );
+<a href=#781 id=781 data-nosnippet>781</a>    CommandEncoder::insert_barriers_from_tracker(
+<a href=#782 id=782 data-nosnippet>782</a>        transit,
+<a href=#783 id=783 data-nosnippet>783</a>        parent_state.tracker,
+<a href=#784 id=784 data-nosnippet>784</a>        <span class="kw-2">&amp;</span>intermediate_trackers,
+<a href=#785 id=785 data-nosnippet>785</a>        parent_state.snatch_guard,
+<a href=#786 id=786 data-nosnippet>786</a>    );
+<a href=#787 id=787 data-nosnippet>787</a>    <span class="comment">// Close the command encoder, and swap it with the previous.
+<a href=#788 id=788 data-nosnippet>788</a>    </span>parent_state
+<a href=#789 id=789 data-nosnippet>789</a>        .raw_encoder
+<a href=#790 id=790 data-nosnippet>790</a>        .close_and_swap()
+<a href=#791 id=791 data-nosnippet>791</a>        .map_pass_err(pass_scope)<span class="question-mark">?</span>;
+<a href=#792 id=792 data-nosnippet>792</a>
+<a href=#793 id=793 data-nosnippet>793</a>    <span class="prelude-val">Ok</span>(())
+<a href=#794 id=794 data-nosnippet>794</a>}
+<a href=#795 id=795 data-nosnippet>795</a>
+<a href=#796 id=796 data-nosnippet>796</a><span class="kw">fn </span>set_pipeline(
+<a href=#797 id=797 data-nosnippet>797</a>    state: <span class="kw-2">&amp;mut </span>State,
+<a href=#798 id=798 data-nosnippet>798</a>    device: <span class="kw-2">&amp;</span>Arc&lt;Device&gt;,
+<a href=#799 id=799 data-nosnippet>799</a>    pipeline: Arc&lt;ComputePipeline&gt;,
+<a href=#800 id=800 data-nosnippet>800</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassErrorInner&gt; {
+<a href=#801 id=801 data-nosnippet>801</a>    pipeline.same_device(device)<span class="question-mark">?</span>;
+<a href=#802 id=802 data-nosnippet>802</a>
+<a href=#803 id=803 data-nosnippet>803</a>    state.pipeline = <span class="prelude-val">Some</span>(pipeline.clone());
+<a href=#804 id=804 data-nosnippet>804</a>
+<a href=#805 id=805 data-nosnippet>805</a>    <span class="kw">let </span>pipeline = state
+<a href=#806 id=806 data-nosnippet>806</a>        .pass
+<a href=#807 id=807 data-nosnippet>807</a>        .base
+<a href=#808 id=808 data-nosnippet>808</a>        .tracker
+<a href=#809 id=809 data-nosnippet>809</a>        .compute_pipelines
+<a href=#810 id=810 data-nosnippet>810</a>        .insert_single(pipeline)
+<a href=#811 id=811 data-nosnippet>811</a>        .clone();
+<a href=#812 id=812 data-nosnippet>812</a>
+<a href=#813 id=813 data-nosnippet>813</a>    <span class="kw">unsafe </span>{
+<a href=#814 id=814 data-nosnippet>814</a>        state
+<a href=#815 id=815 data-nosnippet>815</a>            .pass
+<a href=#816 id=816 data-nosnippet>816</a>            .base
+<a href=#817 id=817 data-nosnippet>817</a>            .raw_encoder
+<a href=#818 id=818 data-nosnippet>818</a>            .set_compute_pipeline(pipeline.raw());
+<a href=#819 id=819 data-nosnippet>819</a>    }
+<a href=#820 id=820 data-nosnippet>820</a>
+<a href=#821 id=821 data-nosnippet>821</a>    <span class="comment">// Rebind resources
+<a href=#822 id=822 data-nosnippet>822</a>    </span>pass::change_pipeline_layout::&lt;ComputePassErrorInner, <span class="kw">_</span>&gt;(
+<a href=#823 id=823 data-nosnippet>823</a>        <span class="kw-2">&amp;mut </span>state.pass,
+<a href=#824 id=824 data-nosnippet>824</a>        <span class="kw-2">&amp;</span>pipeline.layout,
+<a href=#825 id=825 data-nosnippet>825</a>        <span class="kw-2">&amp;</span>pipeline.late_sized_buffer_groups,
+<a href=#826 id=826 data-nosnippet>826</a>        || {
+<a href=#827 id=827 data-nosnippet>827</a>            <span class="comment">// This only needs to be here for compute pipelines because they use push constants for
+<a href=#828 id=828 data-nosnippet>828</a>            // validating indirect draws.
+<a href=#829 id=829 data-nosnippet>829</a>            </span>state.push_constants.clear();
+<a href=#830 id=830 data-nosnippet>830</a>            <span class="comment">// Note that can only be one range for each stage. See the `MoreThanOnePushConstantRangePerStage` error.
+<a href=#831 id=831 data-nosnippet>831</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(push_constant_range) =
+<a href=#832 id=832 data-nosnippet>832</a>                pipeline.layout.push_constant_ranges.iter().find_map(|pcr| {
+<a href=#833 id=833 data-nosnippet>833</a>                    pcr.stages
+<a href=#834 id=834 data-nosnippet>834</a>                        .contains(wgt::ShaderStages::COMPUTE)
+<a href=#835 id=835 data-nosnippet>835</a>                        .then_some(pcr.range.clone())
+<a href=#836 id=836 data-nosnippet>836</a>                })
+<a href=#837 id=837 data-nosnippet>837</a>            {
+<a href=#838 id=838 data-nosnippet>838</a>                <span class="comment">// Note that non-0 range start doesn't work anyway https://github.com/gfx-rs/wgpu/issues/4502
+<a href=#839 id=839 data-nosnippet>839</a>                </span><span class="kw">let </span>len = push_constant_range.len() / wgt::PUSH_CONSTANT_ALIGNMENT <span class="kw">as </span>usize;
+<a href=#840 id=840 data-nosnippet>840</a>                state.push_constants.extend(core::iter::repeat_n(<span class="number">0</span>, len));
+<a href=#841 id=841 data-nosnippet>841</a>            }
+<a href=#842 id=842 data-nosnippet>842</a>        },
+<a href=#843 id=843 data-nosnippet>843</a>    )
+<a href=#844 id=844 data-nosnippet>844</a>}
+<a href=#845 id=845 data-nosnippet>845</a>
+<a href=#846 id=846 data-nosnippet>846</a><span class="kw">fn </span>dispatch(state: <span class="kw-2">&amp;mut </span>State, groups: [u32; <span class="number">3</span>]) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassErrorInner&gt; {
+<a href=#847 id=847 data-nosnippet>847</a>    <span class="macro">api_log!</span>(<span class="string">"ComputePass::dispatch {groups:?}"</span>);
+<a href=#848 id=848 data-nosnippet>848</a>
+<a href=#849 id=849 data-nosnippet>849</a>    state.is_ready()<span class="question-mark">?</span>;
+<a href=#850 id=850 data-nosnippet>850</a>
+<a href=#851 id=851 data-nosnippet>851</a>    state.flush_bindings(<span class="prelude-val">None</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+<a href=#852 id=852 data-nosnippet>852</a>
+<a href=#853 id=853 data-nosnippet>853</a>    <span class="kw">let </span>groups_size_limit = state
+<a href=#854 id=854 data-nosnippet>854</a>        .pass
+<a href=#855 id=855 data-nosnippet>855</a>        .base
+<a href=#856 id=856 data-nosnippet>856</a>        .device
+<a href=#857 id=857 data-nosnippet>857</a>        .limits
+<a href=#858 id=858 data-nosnippet>858</a>        .max_compute_workgroups_per_dimension;
+<a href=#859 id=859 data-nosnippet>859</a>
+<a href=#860 id=860 data-nosnippet>860</a>    <span class="kw">if </span>groups[<span class="number">0</span>] &gt; groups_size_limit
+<a href=#861 id=861 data-nosnippet>861</a>        || groups[<span class="number">1</span>] &gt; groups_size_limit
+<a href=#862 id=862 data-nosnippet>862</a>        || groups[<span class="number">2</span>] &gt; groups_size_limit
+<a href=#863 id=863 data-nosnippet>863</a>    {
+<a href=#864 id=864 data-nosnippet>864</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::Dispatch(
+<a href=#865 id=865 data-nosnippet>865</a>            DispatchError::InvalidGroupSize {
+<a href=#866 id=866 data-nosnippet>866</a>                current: groups,
+<a href=#867 id=867 data-nosnippet>867</a>                limit: groups_size_limit,
+<a href=#868 id=868 data-nosnippet>868</a>            },
+<a href=#869 id=869 data-nosnippet>869</a>        ));
+<a href=#870 id=870 data-nosnippet>870</a>    }
+<a href=#871 id=871 data-nosnippet>871</a>
+<a href=#872 id=872 data-nosnippet>872</a>    <span class="kw">unsafe </span>{
+<a href=#873 id=873 data-nosnippet>873</a>        state.pass.base.raw_encoder.dispatch(groups);
+<a href=#874 id=874 data-nosnippet>874</a>    }
+<a href=#875 id=875 data-nosnippet>875</a>    <span class="prelude-val">Ok</span>(())
+<a href=#876 id=876 data-nosnippet>876</a>}
+<a href=#877 id=877 data-nosnippet>877</a>
+<a href=#878 id=878 data-nosnippet>878</a><span class="kw">fn </span>dispatch_indirect(
+<a href=#879 id=879 data-nosnippet>879</a>    state: <span class="kw-2">&amp;mut </span>State,
+<a href=#880 id=880 data-nosnippet>880</a>    device: <span class="kw-2">&amp;</span>Arc&lt;Device&gt;,
+<a href=#881 id=881 data-nosnippet>881</a>    buffer: Arc&lt;Buffer&gt;,
+<a href=#882 id=882 data-nosnippet>882</a>    offset: u64,
+<a href=#883 id=883 data-nosnippet>883</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassErrorInner&gt; {
+<a href=#884 id=884 data-nosnippet>884</a>    <span class="macro">api_log!</span>(<span class="string">"ComputePass::dispatch_indirect"</span>);
+<a href=#885 id=885 data-nosnippet>885</a>
+<a href=#886 id=886 data-nosnippet>886</a>    buffer.same_device(device)<span class="question-mark">?</span>;
+<a href=#887 id=887 data-nosnippet>887</a>
+<a href=#888 id=888 data-nosnippet>888</a>    state.is_ready()<span class="question-mark">?</span>;
+<a href=#889 id=889 data-nosnippet>889</a>
+<a href=#890 id=890 data-nosnippet>890</a>    state
+<a href=#891 id=891 data-nosnippet>891</a>        .pass
+<a href=#892 id=892 data-nosnippet>892</a>        .base
+<a href=#893 id=893 data-nosnippet>893</a>        .device
+<a href=#894 id=894 data-nosnippet>894</a>        .require_downlevel_flags(wgt::DownlevelFlags::INDIRECT_EXECUTION)<span class="question-mark">?</span>;
+<a href=#895 id=895 data-nosnippet>895</a>
+<a href=#896 id=896 data-nosnippet>896</a>    buffer.check_usage(wgt::BufferUsages::INDIRECT)<span class="question-mark">?</span>;
+<a href=#897 id=897 data-nosnippet>897</a>    buffer.check_destroyed(state.pass.base.snatch_guard)<span class="question-mark">?</span>;
+<a href=#898 id=898 data-nosnippet>898</a>
+<a href=#899 id=899 data-nosnippet>899</a>    <span class="kw">if </span>offset % <span class="number">4 </span>!= <span class="number">0 </span>{
+<a href=#900 id=900 data-nosnippet>900</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::UnalignedIndirectBufferOffset(offset));
+<a href=#901 id=901 data-nosnippet>901</a>    }
+<a href=#902 id=902 data-nosnippet>902</a>
+<a href=#903 id=903 data-nosnippet>903</a>    <span class="kw">let </span>end_offset = offset + size_of::&lt;wgt::DispatchIndirectArgs&gt;() <span class="kw">as </span>u64;
+<a href=#904 id=904 data-nosnippet>904</a>    <span class="kw">if </span>end_offset &gt; buffer.size {
+<a href=#905 id=905 data-nosnippet>905</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::IndirectBufferOverrun {
+<a href=#906 id=906 data-nosnippet>906</a>            offset,
+<a href=#907 id=907 data-nosnippet>907</a>            end_offset,
+<a href=#908 id=908 data-nosnippet>908</a>            buffer_size: buffer.size,
+<a href=#909 id=909 data-nosnippet>909</a>        });
+<a href=#910 id=910 data-nosnippet>910</a>    }
+<a href=#911 id=911 data-nosnippet>911</a>
+<a href=#912 id=912 data-nosnippet>912</a>    <span class="kw">let </span>stride = <span class="number">3 </span>* <span class="number">4</span>; <span class="comment">// 3 integers, x/y/z group size
+<a href=#913 id=913 data-nosnippet>913</a>    </span>state.pass.base.buffer_memory_init_actions.extend(
+<a href=#914 id=914 data-nosnippet>914</a>        buffer.initialization_status.read().create_action(
+<a href=#915 id=915 data-nosnippet>915</a>            <span class="kw-2">&amp;</span>buffer,
+<a href=#916 id=916 data-nosnippet>916</a>            offset..(offset + stride),
+<a href=#917 id=917 data-nosnippet>917</a>            MemoryInitKind::NeedsInitializedMemory,
+<a href=#918 id=918 data-nosnippet>918</a>        ),
+<a href=#919 id=919 data-nosnippet>919</a>    );
+<a href=#920 id=920 data-nosnippet>920</a>
+<a href=#921 id=921 data-nosnippet>921</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>indirect_validation) = state.pass.base.device.indirect_validation {
+<a href=#922 id=922 data-nosnippet>922</a>        <span class="kw">let </span>params = indirect_validation.dispatch.params(
+<a href=#923 id=923 data-nosnippet>923</a>            <span class="kw-2">&amp;</span>state.pass.base.device.limits,
+<a href=#924 id=924 data-nosnippet>924</a>            offset,
+<a href=#925 id=925 data-nosnippet>925</a>            buffer.size,
+<a href=#926 id=926 data-nosnippet>926</a>        );
+<a href=#927 id=927 data-nosnippet>927</a>
+<a href=#928 id=928 data-nosnippet>928</a>        <span class="kw">unsafe </span>{
+<a href=#929 id=929 data-nosnippet>929</a>            state
+<a href=#930 id=930 data-nosnippet>930</a>                .pass
+<a href=#931 id=931 data-nosnippet>931</a>                .base
+<a href=#932 id=932 data-nosnippet>932</a>                .raw_encoder
+<a href=#933 id=933 data-nosnippet>933</a>                .set_compute_pipeline(params.pipeline);
+<a href=#934 id=934 data-nosnippet>934</a>        }
+<a href=#935 id=935 data-nosnippet>935</a>
+<a href=#936 id=936 data-nosnippet>936</a>        <span class="kw">unsafe </span>{
+<a href=#937 id=937 data-nosnippet>937</a>            state.pass.base.raw_encoder.set_push_constants(
+<a href=#938 id=938 data-nosnippet>938</a>                params.pipeline_layout,
+<a href=#939 id=939 data-nosnippet>939</a>                wgt::ShaderStages::COMPUTE,
+<a href=#940 id=940 data-nosnippet>940</a>                <span class="number">0</span>,
+<a href=#941 id=941 data-nosnippet>941</a>                <span class="kw-2">&amp;</span>[params.offset_remainder <span class="kw">as </span>u32 / <span class="number">4</span>],
+<a href=#942 id=942 data-nosnippet>942</a>            );
+<a href=#943 id=943 data-nosnippet>943</a>        }
+<a href=#944 id=944 data-nosnippet>944</a>
+<a href=#945 id=945 data-nosnippet>945</a>        <span class="kw">unsafe </span>{
+<a href=#946 id=946 data-nosnippet>946</a>            state.pass.base.raw_encoder.set_bind_group(
+<a href=#947 id=947 data-nosnippet>947</a>                params.pipeline_layout,
+<a href=#948 id=948 data-nosnippet>948</a>                <span class="number">0</span>,
+<a href=#949 id=949 data-nosnippet>949</a>                <span class="prelude-val">Some</span>(params.dst_bind_group),
+<a href=#950 id=950 data-nosnippet>950</a>                <span class="kw-2">&amp;</span>[],
+<a href=#951 id=951 data-nosnippet>951</a>            );
+<a href=#952 id=952 data-nosnippet>952</a>        }
+<a href=#953 id=953 data-nosnippet>953</a>        <span class="kw">unsafe </span>{
+<a href=#954 id=954 data-nosnippet>954</a>            state.pass.base.raw_encoder.set_bind_group(
+<a href=#955 id=955 data-nosnippet>955</a>                params.pipeline_layout,
+<a href=#956 id=956 data-nosnippet>956</a>                <span class="number">1</span>,
+<a href=#957 id=957 data-nosnippet>957</a>                <span class="prelude-val">Some</span>(
+<a href=#958 id=958 data-nosnippet>958</a>                    buffer
+<a href=#959 id=959 data-nosnippet>959</a>                        .indirect_validation_bind_groups
+<a href=#960 id=960 data-nosnippet>960</a>                        .get(state.pass.base.snatch_guard)
+<a href=#961 id=961 data-nosnippet>961</a>                        .unwrap()
+<a href=#962 id=962 data-nosnippet>962</a>                        .dispatch
+<a href=#963 id=963 data-nosnippet>963</a>                        .as_ref(),
+<a href=#964 id=964 data-nosnippet>964</a>                ),
+<a href=#965 id=965 data-nosnippet>965</a>                <span class="kw-2">&amp;</span>[params.aligned_offset <span class="kw">as </span>u32],
+<a href=#966 id=966 data-nosnippet>966</a>            );
+<a href=#967 id=967 data-nosnippet>967</a>        }
+<a href=#968 id=968 data-nosnippet>968</a>
+<a href=#969 id=969 data-nosnippet>969</a>        <span class="kw">let </span>src_transition = state
+<a href=#970 id=970 data-nosnippet>970</a>            .intermediate_trackers
+<a href=#971 id=971 data-nosnippet>971</a>            .buffers
+<a href=#972 id=972 data-nosnippet>972</a>            .set_single(<span class="kw-2">&amp;</span>buffer, wgt::BufferUses::STORAGE_READ_ONLY);
+<a href=#973 id=973 data-nosnippet>973</a>        <span class="kw">let </span>src_barrier = src_transition
+<a href=#974 id=974 data-nosnippet>974</a>            .map(|transition| transition.into_hal(<span class="kw-2">&amp;</span>buffer, state.pass.base.snatch_guard));
+<a href=#975 id=975 data-nosnippet>975</a>        <span class="kw">unsafe </span>{
+<a href=#976 id=976 data-nosnippet>976</a>            state
+<a href=#977 id=977 data-nosnippet>977</a>                .pass
+<a href=#978 id=978 data-nosnippet>978</a>                .base
+<a href=#979 id=979 data-nosnippet>979</a>                .raw_encoder
+<a href=#980 id=980 data-nosnippet>980</a>                .transition_buffers(src_barrier.as_slice());
+<a href=#981 id=981 data-nosnippet>981</a>        }
+<a href=#982 id=982 data-nosnippet>982</a>
+<a href=#983 id=983 data-nosnippet>983</a>        <span class="kw">unsafe </span>{
+<a href=#984 id=984 data-nosnippet>984</a>            state
+<a href=#985 id=985 data-nosnippet>985</a>                .pass
+<a href=#986 id=986 data-nosnippet>986</a>                .base
+<a href=#987 id=987 data-nosnippet>987</a>                .raw_encoder
+<a href=#988 id=988 data-nosnippet>988</a>                .transition_buffers(<span class="kw-2">&amp;</span>[hal::BufferBarrier {
+<a href=#989 id=989 data-nosnippet>989</a>                    buffer: params.dst_buffer,
+<a href=#990 id=990 data-nosnippet>990</a>                    usage: hal::StateTransition {
+<a href=#991 id=991 data-nosnippet>991</a>                        from: wgt::BufferUses::INDIRECT,
+<a href=#992 id=992 data-nosnippet>992</a>                        to: wgt::BufferUses::STORAGE_READ_WRITE,
+<a href=#993 id=993 data-nosnippet>993</a>                    },
+<a href=#994 id=994 data-nosnippet>994</a>                }]);
+<a href=#995 id=995 data-nosnippet>995</a>        }
+<a href=#996 id=996 data-nosnippet>996</a>
+<a href=#997 id=997 data-nosnippet>997</a>        <span class="kw">unsafe </span>{
+<a href=#998 id=998 data-nosnippet>998</a>            state.pass.base.raw_encoder.dispatch([<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>]);
+<a href=#999 id=999 data-nosnippet>999</a>        }
+<a href=#1000 id=1000 data-nosnippet>1000</a>
+<a href=#1001 id=1001 data-nosnippet>1001</a>        <span class="comment">// reset state
+<a href=#1002 id=1002 data-nosnippet>1002</a>        </span>{
+<a href=#1003 id=1003 data-nosnippet>1003</a>            <span class="kw">let </span>pipeline = state.pipeline.as_ref().unwrap();
+<a href=#1004 id=1004 data-nosnippet>1004</a>
+<a href=#1005 id=1005 data-nosnippet>1005</a>            <span class="kw">unsafe </span>{
+<a href=#1006 id=1006 data-nosnippet>1006</a>                state
+<a href=#1007 id=1007 data-nosnippet>1007</a>                    .pass
+<a href=#1008 id=1008 data-nosnippet>1008</a>                    .base
+<a href=#1009 id=1009 data-nosnippet>1009</a>                    .raw_encoder
+<a href=#1010 id=1010 data-nosnippet>1010</a>                    .set_compute_pipeline(pipeline.raw());
+<a href=#1011 id=1011 data-nosnippet>1011</a>            }
+<a href=#1012 id=1012 data-nosnippet>1012</a>
+<a href=#1013 id=1013 data-nosnippet>1013</a>            <span class="kw">if </span>!state.push_constants.is_empty() {
+<a href=#1014 id=1014 data-nosnippet>1014</a>                <span class="kw">unsafe </span>{
+<a href=#1015 id=1015 data-nosnippet>1015</a>                    state.pass.base.raw_encoder.set_push_constants(
+<a href=#1016 id=1016 data-nosnippet>1016</a>                        pipeline.layout.raw(),
+<a href=#1017 id=1017 data-nosnippet>1017</a>                        wgt::ShaderStages::COMPUTE,
+<a href=#1018 id=1018 data-nosnippet>1018</a>                        <span class="number">0</span>,
+<a href=#1019 id=1019 data-nosnippet>1019</a>                        <span class="kw-2">&amp;</span>state.push_constants,
+<a href=#1020 id=1020 data-nosnippet>1020</a>                    );
+<a href=#1021 id=1021 data-nosnippet>1021</a>                }
+<a href=#1022 id=1022 data-nosnippet>1022</a>            }
+<a href=#1023 id=1023 data-nosnippet>1023</a>
+<a href=#1024 id=1024 data-nosnippet>1024</a>            <span class="kw">for </span>(i, e) <span class="kw">in </span>state.pass.binder.list_valid() {
+<a href=#1025 id=1025 data-nosnippet>1025</a>                <span class="kw">let </span>group = e.group.as_ref().unwrap();
+<a href=#1026 id=1026 data-nosnippet>1026</a>                <span class="kw">let </span>raw_bg = group.try_raw(state.pass.base.snatch_guard)<span class="question-mark">?</span>;
+<a href=#1027 id=1027 data-nosnippet>1027</a>                <span class="kw">unsafe </span>{
+<a href=#1028 id=1028 data-nosnippet>1028</a>                    state.pass.base.raw_encoder.set_bind_group(
+<a href=#1029 id=1029 data-nosnippet>1029</a>                        pipeline.layout.raw(),
+<a href=#1030 id=1030 data-nosnippet>1030</a>                        i <span class="kw">as </span>u32,
+<a href=#1031 id=1031 data-nosnippet>1031</a>                        <span class="prelude-val">Some</span>(raw_bg),
+<a href=#1032 id=1032 data-nosnippet>1032</a>                        <span class="kw-2">&amp;</span>e.dynamic_offsets,
+<a href=#1033 id=1033 data-nosnippet>1033</a>                    );
+<a href=#1034 id=1034 data-nosnippet>1034</a>                }
+<a href=#1035 id=1035 data-nosnippet>1035</a>            }
+<a href=#1036 id=1036 data-nosnippet>1036</a>        }
+<a href=#1037 id=1037 data-nosnippet>1037</a>
+<a href=#1038 id=1038 data-nosnippet>1038</a>        <span class="kw">unsafe </span>{
+<a href=#1039 id=1039 data-nosnippet>1039</a>            state
+<a href=#1040 id=1040 data-nosnippet>1040</a>                .pass
+<a href=#1041 id=1041 data-nosnippet>1041</a>                .base
+<a href=#1042 id=1042 data-nosnippet>1042</a>                .raw_encoder
+<a href=#1043 id=1043 data-nosnippet>1043</a>                .transition_buffers(<span class="kw-2">&amp;</span>[hal::BufferBarrier {
+<a href=#1044 id=1044 data-nosnippet>1044</a>                    buffer: params.dst_buffer,
+<a href=#1045 id=1045 data-nosnippet>1045</a>                    usage: hal::StateTransition {
+<a href=#1046 id=1046 data-nosnippet>1046</a>                        from: wgt::BufferUses::STORAGE_READ_WRITE,
+<a href=#1047 id=1047 data-nosnippet>1047</a>                        to: wgt::BufferUses::INDIRECT,
+<a href=#1048 id=1048 data-nosnippet>1048</a>                    },
+<a href=#1049 id=1049 data-nosnippet>1049</a>                }]);
+<a href=#1050 id=1050 data-nosnippet>1050</a>        }
+<a href=#1051 id=1051 data-nosnippet>1051</a>
+<a href=#1052 id=1052 data-nosnippet>1052</a>        state.flush_bindings(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>buffer), <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+<a href=#1053 id=1053 data-nosnippet>1053</a>        <span class="kw">unsafe </span>{
+<a href=#1054 id=1054 data-nosnippet>1054</a>            state
+<a href=#1055 id=1055 data-nosnippet>1055</a>                .pass
+<a href=#1056 id=1056 data-nosnippet>1056</a>                .base
+<a href=#1057 id=1057 data-nosnippet>1057</a>                .raw_encoder
+<a href=#1058 id=1058 data-nosnippet>1058</a>                .dispatch_indirect(params.dst_buffer, <span class="number">0</span>);
+<a href=#1059 id=1059 data-nosnippet>1059</a>        }
+<a href=#1060 id=1060 data-nosnippet>1060</a>    } <span class="kw">else </span>{
+<a href=#1061 id=1061 data-nosnippet>1061</a>        state.flush_bindings(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>buffer), <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+<a href=#1062 id=1062 data-nosnippet>1062</a>
+<a href=#1063 id=1063 data-nosnippet>1063</a>        <span class="kw">let </span>buf_raw = buffer.try_raw(state.pass.base.snatch_guard)<span class="question-mark">?</span>;
+<a href=#1064 id=1064 data-nosnippet>1064</a>        <span class="kw">unsafe </span>{
+<a href=#1065 id=1065 data-nosnippet>1065</a>            state
+<a href=#1066 id=1066 data-nosnippet>1066</a>                .pass
+<a href=#1067 id=1067 data-nosnippet>1067</a>                .base
+<a href=#1068 id=1068 data-nosnippet>1068</a>                .raw_encoder
+<a href=#1069 id=1069 data-nosnippet>1069</a>                .dispatch_indirect(buf_raw, offset);
+<a href=#1070 id=1070 data-nosnippet>1070</a>        }
+<a href=#1071 id=1071 data-nosnippet>1071</a>    }
+<a href=#1072 id=1072 data-nosnippet>1072</a>
+<a href=#1073 id=1073 data-nosnippet>1073</a>    <span class="prelude-val">Ok</span>(())
+<a href=#1074 id=1074 data-nosnippet>1074</a>}
+<a href=#1075 id=1075 data-nosnippet>1075</a>
+<a href=#1076 id=1076 data-nosnippet>1076</a><span class="comment">// Recording a compute pass.
+<a href=#1077 id=1077 data-nosnippet>1077</a>//
+<a href=#1078 id=1078 data-nosnippet>1078</a>// The only error that should be returned from these methods is
+<a href=#1079 id=1079 data-nosnippet>1079</a>// `EncoderStateError::Ended`, when the pass has already ended and an immediate
+<a href=#1080 id=1080 data-nosnippet>1080</a>// validation error is raised.
+<a href=#1081 id=1081 data-nosnippet>1081</a>//
+<a href=#1082 id=1082 data-nosnippet>1082</a>// All other errors should be stored in the pass for later reporting when
+<a href=#1083 id=1083 data-nosnippet>1083</a>// `CommandEncoder.finish()` is called.
+<a href=#1084 id=1084 data-nosnippet>1084</a>//
+<a href=#1085 id=1085 data-nosnippet>1085</a>// The `pass_try!` macro should be used to handle errors appropriately. Note
+<a href=#1086 id=1086 data-nosnippet>1086</a>// that the `pass_try!` and `pass_base!` macros may return early from the
+<a href=#1087 id=1087 data-nosnippet>1087</a>// function that invokes them, like the `?` operator.
+<a href=#1088 id=1088 data-nosnippet>1088</a></span><span class="kw">impl </span>Global {
+<a href=#1089 id=1089 data-nosnippet>1089</a>    <span class="kw">pub fn </span>compute_pass_set_bind_group(
+<a href=#1090 id=1090 data-nosnippet>1090</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1091 id=1091 data-nosnippet>1091</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1092 id=1092 data-nosnippet>1092</a>        index: u32,
+<a href=#1093 id=1093 data-nosnippet>1093</a>        bind_group_id: <span class="prelude-ty">Option</span>&lt;id::BindGroupId&gt;,
+<a href=#1094 id=1094 data-nosnippet>1094</a>        offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
+<a href=#1095 id=1095 data-nosnippet>1095</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1096 id=1096 data-nosnippet>1096</a>        <span class="kw">let </span>scope = PassErrorScope::SetBindGroup;
+<a href=#1097 id=1097 data-nosnippet>1097</a>
+<a href=#1098 id=1098 data-nosnippet>1098</a>        <span class="comment">// This statement will return an error if the pass is ended. It's
+<a href=#1099 id=1099 data-nosnippet>1099</a>        // important the error check comes before the early-out for
+<a href=#1100 id=1100 data-nosnippet>1100</a>        // `set_and_check_redundant`.
+<a href=#1101 id=1101 data-nosnippet>1101</a>        </span><span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
+<a href=#1102 id=1102 data-nosnippet>1102</a>
+<a href=#1103 id=1103 data-nosnippet>1103</a>        <span class="kw">if </span>pass.current_bind_groups.set_and_check_redundant(
+<a href=#1104 id=1104 data-nosnippet>1104</a>            bind_group_id,
+<a href=#1105 id=1105 data-nosnippet>1105</a>            index,
+<a href=#1106 id=1106 data-nosnippet>1106</a>            <span class="kw-2">&amp;mut </span>base.dynamic_offsets,
+<a href=#1107 id=1107 data-nosnippet>1107</a>            offsets,
+<a href=#1108 id=1108 data-nosnippet>1108</a>        ) {
+<a href=#1109 id=1109 data-nosnippet>1109</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+<a href=#1110 id=1110 data-nosnippet>1110</a>        }
+<a href=#1111 id=1111 data-nosnippet>1111</a>
+<a href=#1112 id=1112 data-nosnippet>1112</a>        <span class="kw">let </span><span class="kw-2">mut </span>bind_group = <span class="prelude-val">None</span>;
+<a href=#1113 id=1113 data-nosnippet>1113</a>        <span class="kw">if </span>bind_group_id.is_some() {
+<a href=#1114 id=1114 data-nosnippet>1114</a>            <span class="kw">let </span>bind_group_id = bind_group_id.unwrap();
+<a href=#1115 id=1115 data-nosnippet>1115</a>
+<a href=#1116 id=1116 data-nosnippet>1116</a>            <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1117 id=1117 data-nosnippet>1117</a>            bind_group = <span class="prelude-val">Some</span>(<span class="macro">pass_try!</span>(
+<a href=#1118 id=1118 data-nosnippet>1118</a>                base,
+<a href=#1119 id=1119 data-nosnippet>1119</a>                scope,
+<a href=#1120 id=1120 data-nosnippet>1120</a>                hub.bind_groups.get(bind_group_id).get(),
+<a href=#1121 id=1121 data-nosnippet>1121</a>            ));
+<a href=#1122 id=1122 data-nosnippet>1122</a>        }
+<a href=#1123 id=1123 data-nosnippet>1123</a>
+<a href=#1124 id=1124 data-nosnippet>1124</a>        base.commands.push(ArcComputeCommand::SetBindGroup {
+<a href=#1125 id=1125 data-nosnippet>1125</a>            index,
+<a href=#1126 id=1126 data-nosnippet>1126</a>            num_dynamic_offsets: offsets.len(),
+<a href=#1127 id=1127 data-nosnippet>1127</a>            bind_group,
+<a href=#1128 id=1128 data-nosnippet>1128</a>        });
+<a href=#1129 id=1129 data-nosnippet>1129</a>
+<a href=#1130 id=1130 data-nosnippet>1130</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1131 id=1131 data-nosnippet>1131</a>    }
+<a href=#1132 id=1132 data-nosnippet>1132</a>
+<a href=#1133 id=1133 data-nosnippet>1133</a>    <span class="kw">pub fn </span>compute_pass_set_pipeline(
+<a href=#1134 id=1134 data-nosnippet>1134</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1135 id=1135 data-nosnippet>1135</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1136 id=1136 data-nosnippet>1136</a>        pipeline_id: id::ComputePipelineId,
+<a href=#1137 id=1137 data-nosnippet>1137</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1138 id=1138 data-nosnippet>1138</a>        <span class="kw">let </span>redundant = pass.current_pipeline.set_and_check_redundant(pipeline_id);
+<a href=#1139 id=1139 data-nosnippet>1139</a>
+<a href=#1140 id=1140 data-nosnippet>1140</a>        <span class="kw">let </span>scope = PassErrorScope::SetPipelineCompute;
+<a href=#1141 id=1141 data-nosnippet>1141</a>
+<a href=#1142 id=1142 data-nosnippet>1142</a>        <span class="comment">// This statement will return an error if the pass is ended.
+<a href=#1143 id=1143 data-nosnippet>1143</a>        // Its important the error check comes before the early-out for `redundant`.
+<a href=#1144 id=1144 data-nosnippet>1144</a>        </span><span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
+<a href=#1145 id=1145 data-nosnippet>1145</a>
+<a href=#1146 id=1146 data-nosnippet>1146</a>        <span class="kw">if </span>redundant {
+<a href=#1147 id=1147 data-nosnippet>1147</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+<a href=#1148 id=1148 data-nosnippet>1148</a>        }
+<a href=#1149 id=1149 data-nosnippet>1149</a>
+<a href=#1150 id=1150 data-nosnippet>1150</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1151 id=1151 data-nosnippet>1151</a>        <span class="kw">let </span>pipeline = <span class="macro">pass_try!</span>(base, scope, hub.compute_pipelines.get(pipeline_id).get());
+<a href=#1152 id=1152 data-nosnippet>1152</a>
+<a href=#1153 id=1153 data-nosnippet>1153</a>        base.commands.push(ArcComputeCommand::SetPipeline(pipeline));
+<a href=#1154 id=1154 data-nosnippet>1154</a>
+<a href=#1155 id=1155 data-nosnippet>1155</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1156 id=1156 data-nosnippet>1156</a>    }
+<a href=#1157 id=1157 data-nosnippet>1157</a>
+<a href=#1158 id=1158 data-nosnippet>1158</a>    <span class="kw">pub fn </span>compute_pass_set_push_constants(
+<a href=#1159 id=1159 data-nosnippet>1159</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1160 id=1160 data-nosnippet>1160</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1161 id=1161 data-nosnippet>1161</a>        offset: u32,
+<a href=#1162 id=1162 data-nosnippet>1162</a>        data: <span class="kw-2">&amp;</span>[u8],
+<a href=#1163 id=1163 data-nosnippet>1163</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1164 id=1164 data-nosnippet>1164</a>        <span class="kw">let </span>scope = PassErrorScope::SetPushConstant;
+<a href=#1165 id=1165 data-nosnippet>1165</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
+<a href=#1166 id=1166 data-nosnippet>1166</a>
+<a href=#1167 id=1167 data-nosnippet>1167</a>        <span class="kw">if </span>offset &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>) != <span class="number">0 </span>{
+<a href=#1168 id=1168 data-nosnippet>1168</a>            <span class="macro">pass_try!</span>(
+<a href=#1169 id=1169 data-nosnippet>1169</a>                base,
+<a href=#1170 id=1170 data-nosnippet>1170</a>                scope,
+<a href=#1171 id=1171 data-nosnippet>1171</a>                <span class="prelude-val">Err</span>(ComputePassErrorInner::PushConstantOffsetAlignment),
+<a href=#1172 id=1172 data-nosnippet>1172</a>            );
+<a href=#1173 id=1173 data-nosnippet>1173</a>        }
+<a href=#1174 id=1174 data-nosnippet>1174</a>
+<a href=#1175 id=1175 data-nosnippet>1175</a>        <span class="kw">if </span>data.len() <span class="kw">as </span>u32 &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>) != <span class="number">0 </span>{
+<a href=#1176 id=1176 data-nosnippet>1176</a>            <span class="macro">pass_try!</span>(
+<a href=#1177 id=1177 data-nosnippet>1177</a>                base,
+<a href=#1178 id=1178 data-nosnippet>1178</a>                scope,
+<a href=#1179 id=1179 data-nosnippet>1179</a>                <span class="prelude-val">Err</span>(ComputePassErrorInner::PushConstantSizeAlignment),
+<a href=#1180 id=1180 data-nosnippet>1180</a>            )
+<a href=#1181 id=1181 data-nosnippet>1181</a>        }
+<a href=#1182 id=1182 data-nosnippet>1182</a>        <span class="kw">let </span>value_offset = <span class="macro">pass_try!</span>(
+<a href=#1183 id=1183 data-nosnippet>1183</a>            base,
+<a href=#1184 id=1184 data-nosnippet>1184</a>            scope,
+<a href=#1185 id=1185 data-nosnippet>1185</a>            base.push_constant_data
+<a href=#1186 id=1186 data-nosnippet>1186</a>                .len()
+<a href=#1187 id=1187 data-nosnippet>1187</a>                .try_into()
+<a href=#1188 id=1188 data-nosnippet>1188</a>                .map_err(|<span class="kw">_</span>| ComputePassErrorInner::PushConstantOutOfMemory)
+<a href=#1189 id=1189 data-nosnippet>1189</a>        );
+<a href=#1190 id=1190 data-nosnippet>1190</a>
+<a href=#1191 id=1191 data-nosnippet>1191</a>        base.push_constant_data.extend(
+<a href=#1192 id=1192 data-nosnippet>1192</a>            data.chunks_exact(wgt::PUSH_CONSTANT_ALIGNMENT <span class="kw">as </span>usize)
+<a href=#1193 id=1193 data-nosnippet>1193</a>                .map(|arr| u32::from_ne_bytes([arr[<span class="number">0</span>], arr[<span class="number">1</span>], arr[<span class="number">2</span>], arr[<span class="number">3</span>]])),
+<a href=#1194 id=1194 data-nosnippet>1194</a>        );
+<a href=#1195 id=1195 data-nosnippet>1195</a>
+<a href=#1196 id=1196 data-nosnippet>1196</a>        base.commands.push(ArcComputeCommand::SetPushConstant {
+<a href=#1197 id=1197 data-nosnippet>1197</a>            offset,
+<a href=#1198 id=1198 data-nosnippet>1198</a>            size_bytes: data.len() <span class="kw">as </span>u32,
+<a href=#1199 id=1199 data-nosnippet>1199</a>            values_offset: value_offset,
+<a href=#1200 id=1200 data-nosnippet>1200</a>        });
+<a href=#1201 id=1201 data-nosnippet>1201</a>
+<a href=#1202 id=1202 data-nosnippet>1202</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1203 id=1203 data-nosnippet>1203</a>    }
+<a href=#1204 id=1204 data-nosnippet>1204</a>
+<a href=#1205 id=1205 data-nosnippet>1205</a>    <span class="kw">pub fn </span>compute_pass_dispatch_workgroups(
+<a href=#1206 id=1206 data-nosnippet>1206</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1207 id=1207 data-nosnippet>1207</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1208 id=1208 data-nosnippet>1208</a>        groups_x: u32,
+<a href=#1209 id=1209 data-nosnippet>1209</a>        groups_y: u32,
+<a href=#1210 id=1210 data-nosnippet>1210</a>        groups_z: u32,
+<a href=#1211 id=1211 data-nosnippet>1211</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1212 id=1212 data-nosnippet>1212</a>        <span class="kw">let </span>scope = PassErrorScope::Dispatch { indirect: <span class="bool-val">false </span>};
+<a href=#1213 id=1213 data-nosnippet>1213</a>
+<a href=#1214 id=1214 data-nosnippet>1214</a>        <span class="macro">pass_base!</span>(pass, scope)
+<a href=#1215 id=1215 data-nosnippet>1215</a>            .commands
+<a href=#1216 id=1216 data-nosnippet>1216</a>            .push(ArcComputeCommand::Dispatch([groups_x, groups_y, groups_z]));
+<a href=#1217 id=1217 data-nosnippet>1217</a>
+<a href=#1218 id=1218 data-nosnippet>1218</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1219 id=1219 data-nosnippet>1219</a>    }
+<a href=#1220 id=1220 data-nosnippet>1220</a>
+<a href=#1221 id=1221 data-nosnippet>1221</a>    <span class="kw">pub fn </span>compute_pass_dispatch_workgroups_indirect(
+<a href=#1222 id=1222 data-nosnippet>1222</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1223 id=1223 data-nosnippet>1223</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1224 id=1224 data-nosnippet>1224</a>        buffer_id: id::BufferId,
+<a href=#1225 id=1225 data-nosnippet>1225</a>        offset: BufferAddress,
+<a href=#1226 id=1226 data-nosnippet>1226</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1227 id=1227 data-nosnippet>1227</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1228 id=1228 data-nosnippet>1228</a>        <span class="kw">let </span>scope = PassErrorScope::Dispatch { indirect: <span class="bool-val">true </span>};
+<a href=#1229 id=1229 data-nosnippet>1229</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
+<a href=#1230 id=1230 data-nosnippet>1230</a>
+<a href=#1231 id=1231 data-nosnippet>1231</a>        <span class="kw">let </span>buffer = <span class="macro">pass_try!</span>(base, scope, hub.buffers.get(buffer_id).get());
+<a href=#1232 id=1232 data-nosnippet>1232</a>
+<a href=#1233 id=1233 data-nosnippet>1233</a>        base.commands
+<a href=#1234 id=1234 data-nosnippet>1234</a>            .push(ArcComputeCommand::DispatchIndirect { buffer, offset });
+<a href=#1235 id=1235 data-nosnippet>1235</a>
+<a href=#1236 id=1236 data-nosnippet>1236</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1237 id=1237 data-nosnippet>1237</a>    }
+<a href=#1238 id=1238 data-nosnippet>1238</a>
+<a href=#1239 id=1239 data-nosnippet>1239</a>    <span class="kw">pub fn </span>compute_pass_push_debug_group(
+<a href=#1240 id=1240 data-nosnippet>1240</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1241 id=1241 data-nosnippet>1241</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1242 id=1242 data-nosnippet>1242</a>        label: <span class="kw-2">&amp;</span>str,
+<a href=#1243 id=1243 data-nosnippet>1243</a>        color: u32,
+<a href=#1244 id=1244 data-nosnippet>1244</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1245 id=1245 data-nosnippet>1245</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, PassErrorScope::PushDebugGroup);
+<a href=#1246 id=1246 data-nosnippet>1246</a>
+<a href=#1247 id=1247 data-nosnippet>1247</a>        <span class="kw">let </span>bytes = label.as_bytes();
+<a href=#1248 id=1248 data-nosnippet>1248</a>        base.string_data.extend_from_slice(bytes);
+<a href=#1249 id=1249 data-nosnippet>1249</a>
+<a href=#1250 id=1250 data-nosnippet>1250</a>        base.commands.push(ArcComputeCommand::PushDebugGroup {
+<a href=#1251 id=1251 data-nosnippet>1251</a>            color,
+<a href=#1252 id=1252 data-nosnippet>1252</a>            len: bytes.len(),
+<a href=#1253 id=1253 data-nosnippet>1253</a>        });
+<a href=#1254 id=1254 data-nosnippet>1254</a>
+<a href=#1255 id=1255 data-nosnippet>1255</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1256 id=1256 data-nosnippet>1256</a>    }
+<a href=#1257 id=1257 data-nosnippet>1257</a>
+<a href=#1258 id=1258 data-nosnippet>1258</a>    <span class="kw">pub fn </span>compute_pass_pop_debug_group(
+<a href=#1259 id=1259 data-nosnippet>1259</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1260 id=1260 data-nosnippet>1260</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1261 id=1261 data-nosnippet>1261</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1262 id=1262 data-nosnippet>1262</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, PassErrorScope::PopDebugGroup);
+<a href=#1263 id=1263 data-nosnippet>1263</a>
+<a href=#1264 id=1264 data-nosnippet>1264</a>        base.commands.push(ArcComputeCommand::PopDebugGroup);
+<a href=#1265 id=1265 data-nosnippet>1265</a>
+<a href=#1266 id=1266 data-nosnippet>1266</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1267 id=1267 data-nosnippet>1267</a>    }
+<a href=#1268 id=1268 data-nosnippet>1268</a>
+<a href=#1269 id=1269 data-nosnippet>1269</a>    <span class="kw">pub fn </span>compute_pass_insert_debug_marker(
+<a href=#1270 id=1270 data-nosnippet>1270</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1271 id=1271 data-nosnippet>1271</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1272 id=1272 data-nosnippet>1272</a>        label: <span class="kw-2">&amp;</span>str,
+<a href=#1273 id=1273 data-nosnippet>1273</a>        color: u32,
+<a href=#1274 id=1274 data-nosnippet>1274</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1275 id=1275 data-nosnippet>1275</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, PassErrorScope::InsertDebugMarker);
+<a href=#1276 id=1276 data-nosnippet>1276</a>
+<a href=#1277 id=1277 data-nosnippet>1277</a>        <span class="kw">let </span>bytes = label.as_bytes();
+<a href=#1278 id=1278 data-nosnippet>1278</a>        base.string_data.extend_from_slice(bytes);
+<a href=#1279 id=1279 data-nosnippet>1279</a>
+<a href=#1280 id=1280 data-nosnippet>1280</a>        base.commands.push(ArcComputeCommand::InsertDebugMarker {
+<a href=#1281 id=1281 data-nosnippet>1281</a>            color,
+<a href=#1282 id=1282 data-nosnippet>1282</a>            len: bytes.len(),
+<a href=#1283 id=1283 data-nosnippet>1283</a>        });
+<a href=#1284 id=1284 data-nosnippet>1284</a>
+<a href=#1285 id=1285 data-nosnippet>1285</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1286 id=1286 data-nosnippet>1286</a>    }
+<a href=#1287 id=1287 data-nosnippet>1287</a>
+<a href=#1288 id=1288 data-nosnippet>1288</a>    <span class="kw">pub fn </span>compute_pass_write_timestamp(
+<a href=#1289 id=1289 data-nosnippet>1289</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1290 id=1290 data-nosnippet>1290</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1291 id=1291 data-nosnippet>1291</a>        query_set_id: id::QuerySetId,
+<a href=#1292 id=1292 data-nosnippet>1292</a>        query_index: u32,
+<a href=#1293 id=1293 data-nosnippet>1293</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1294 id=1294 data-nosnippet>1294</a>        <span class="kw">let </span>scope = PassErrorScope::WriteTimestamp;
+<a href=#1295 id=1295 data-nosnippet>1295</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
+<a href=#1296 id=1296 data-nosnippet>1296</a>
+<a href=#1297 id=1297 data-nosnippet>1297</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1298 id=1298 data-nosnippet>1298</a>        <span class="kw">let </span>query_set = <span class="macro">pass_try!</span>(base, scope, hub.query_sets.get(query_set_id).get());
+<a href=#1299 id=1299 data-nosnippet>1299</a>
+<a href=#1300 id=1300 data-nosnippet>1300</a>        base.commands.push(ArcComputeCommand::WriteTimestamp {
+<a href=#1301 id=1301 data-nosnippet>1301</a>            query_set,
+<a href=#1302 id=1302 data-nosnippet>1302</a>            query_index,
+<a href=#1303 id=1303 data-nosnippet>1303</a>        });
+<a href=#1304 id=1304 data-nosnippet>1304</a>
+<a href=#1305 id=1305 data-nosnippet>1305</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1306 id=1306 data-nosnippet>1306</a>    }
+<a href=#1307 id=1307 data-nosnippet>1307</a>
+<a href=#1308 id=1308 data-nosnippet>1308</a>    <span class="kw">pub fn </span>compute_pass_begin_pipeline_statistics_query(
+<a href=#1309 id=1309 data-nosnippet>1309</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1310 id=1310 data-nosnippet>1310</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1311 id=1311 data-nosnippet>1311</a>        query_set_id: id::QuerySetId,
+<a href=#1312 id=1312 data-nosnippet>1312</a>        query_index: u32,
+<a href=#1313 id=1313 data-nosnippet>1313</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1314 id=1314 data-nosnippet>1314</a>        <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
+<a href=#1315 id=1315 data-nosnippet>1315</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
+<a href=#1316 id=1316 data-nosnippet>1316</a>
+<a href=#1317 id=1317 data-nosnippet>1317</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1318 id=1318 data-nosnippet>1318</a>        <span class="kw">let </span>query_set = <span class="macro">pass_try!</span>(base, scope, hub.query_sets.get(query_set_id).get());
+<a href=#1319 id=1319 data-nosnippet>1319</a>
+<a href=#1320 id=1320 data-nosnippet>1320</a>        base.commands
+<a href=#1321 id=1321 data-nosnippet>1321</a>            .push(ArcComputeCommand::BeginPipelineStatisticsQuery {
+<a href=#1322 id=1322 data-nosnippet>1322</a>                query_set,
+<a href=#1323 id=1323 data-nosnippet>1323</a>                query_index,
+<a href=#1324 id=1324 data-nosnippet>1324</a>            });
+<a href=#1325 id=1325 data-nosnippet>1325</a>
+<a href=#1326 id=1326 data-nosnippet>1326</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1327 id=1327 data-nosnippet>1327</a>    }
+<a href=#1328 id=1328 data-nosnippet>1328</a>
+<a href=#1329 id=1329 data-nosnippet>1329</a>    <span class="kw">pub fn </span>compute_pass_end_pipeline_statistics_query(
+<a href=#1330 id=1330 data-nosnippet>1330</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1331 id=1331 data-nosnippet>1331</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1332 id=1332 data-nosnippet>1332</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1333 id=1333 data-nosnippet>1333</a>        <span class="macro">pass_base!</span>(pass, PassErrorScope::EndPipelineStatisticsQuery)
+<a href=#1334 id=1334 data-nosnippet>1334</a>            .commands
+<a href=#1335 id=1335 data-nosnippet>1335</a>            .push(ArcComputeCommand::EndPipelineStatisticsQuery);
+<a href=#1336 id=1336 data-nosnippet>1336</a>
+<a href=#1337 id=1337 data-nosnippet>1337</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1338 id=1338 data-nosnippet>1338</a>    }
+<a href=#1339 id=1339 data-nosnippet>1339</a>}</code></pre></div></section></main></body></html>
