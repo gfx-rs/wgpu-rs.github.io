@@ -79,270 +79,269 @@
 <a href=#79 id=79 data-nosnippet>79</a>    <span class="kw">type </span>Target = [u8];
 <a href=#80 id=80 data-nosnippet>80</a>
 <a href=#81 id=81 data-nosnippet>81</a>    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
-<a href=#82 id=82 data-nosnippet>82</a>        <span class="macro">log::warn!</span>(<span class="string">"Reading from a QueueWriteBufferView won't yield the contents of the buffer and may be slow."</span>);
-<a href=#83 id=83 data-nosnippet>83</a>        <span class="self">self</span>.inner.slice()
-<a href=#84 id=84 data-nosnippet>84</a>    }
-<a href=#85 id=85 data-nosnippet>85</a>}
-<a href=#86 id=86 data-nosnippet>86</a>
-<a href=#87 id=87 data-nosnippet>87</a><span class="kw">impl </span>DerefMut <span class="kw">for </span>QueueWriteBufferView {
-<a href=#88 id=88 data-nosnippet>88</a>    <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
-<a href=#89 id=89 data-nosnippet>89</a>        <span class="self">self</span>.inner.slice_mut()
-<a href=#90 id=90 data-nosnippet>90</a>    }
-<a href=#91 id=91 data-nosnippet>91</a>}
-<a href=#92 id=92 data-nosnippet>92</a>
-<a href=#93 id=93 data-nosnippet>93</a><span class="kw">impl </span>AsMut&lt;[u8]&gt; <span class="kw">for </span>QueueWriteBufferView {
-<a href=#94 id=94 data-nosnippet>94</a>    <span class="kw">fn </span>as_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
-<a href=#95 id=95 data-nosnippet>95</a>        <span class="self">self</span>.inner.slice_mut()
-<a href=#96 id=96 data-nosnippet>96</a>    }
-<a href=#97 id=97 data-nosnippet>97</a>}
-<a href=#98 id=98 data-nosnippet>98</a>
-<a href=#99 id=99 data-nosnippet>99</a><span class="kw">impl </span>Drop <span class="kw">for </span>QueueWriteBufferView {
-<a href=#100 id=100 data-nosnippet>100</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#101 id=101 data-nosnippet>101</a>        <span class="self">self</span>.queue
-<a href=#102 id=102 data-nosnippet>102</a>            .inner
-<a href=#103 id=103 data-nosnippet>103</a>            .write_staging_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.buffer.inner, <span class="self">self</span>.offset, <span class="kw-2">&amp;</span><span class="self">self</span>.inner);
-<a href=#104 id=104 data-nosnippet>104</a>    }
-<a href=#105 id=105 data-nosnippet>105</a>}
-<a href=#106 id=106 data-nosnippet>106</a>
-<a href=#107 id=107 data-nosnippet>107</a><span class="kw">impl </span>Queue {
-<a href=#108 id=108 data-nosnippet>108</a>    <span class="doccomment">/// Copies the bytes of `data` into `buffer` starting at `offset`.
-<a href=#109 id=109 data-nosnippet>109</a>    ///
-<a href=#110 id=110 data-nosnippet>110</a>    /// The data must be written fully in-bounds, that is, `offset + data.len() &lt;= buffer.len()`.
-<a href=#111 id=111 data-nosnippet>111</a>    ///
-<a href=#112 id=112 data-nosnippet>112</a>    /// # Performance considerations
-<a href=#113 id=113 data-nosnippet>113</a>    ///
-<a href=#114 id=114 data-nosnippet>114</a>    /// * Calls to `write_buffer()` do *not* submit the transfer to the GPU
-<a href=#115 id=115 data-nosnippet>115</a>    ///   immediately. They begin GPU execution only on the next call to
-<a href=#116 id=116 data-nosnippet>116</a>    ///   [`Queue::submit()`], just before the explicitly submitted commands.
-<a href=#117 id=117 data-nosnippet>117</a>    ///   To get a set of scheduled transfers started immediately,
-<a href=#118 id=118 data-nosnippet>118</a>    ///   it's fine to call `submit` with no command buffers at all:
-<a href=#119 id=119 data-nosnippet>119</a>    ///
-<a href=#120 id=120 data-nosnippet>120</a>    ///   ```no_run
-<a href=#121 id=121 data-nosnippet>121</a>    ///   # let queue: wgpu::Queue = todo!();
-<a href=#122 id=122 data-nosnippet>122</a>    ///   # let buffer: wgpu::Buffer = todo!();
-<a href=#123 id=123 data-nosnippet>123</a>    ///   # let data = [0u8];
-<a href=#124 id=124 data-nosnippet>124</a>    ///   queue.write_buffer(&amp;buffer, 0, &amp;data);
-<a href=#125 id=125 data-nosnippet>125</a>    ///   queue.submit([]);
-<a href=#126 id=126 data-nosnippet>126</a>    ///   ```
-<a href=#127 id=127 data-nosnippet>127</a>    ///
-<a href=#128 id=128 data-nosnippet>128</a>    ///   However, `data` will be immediately copied into staging memory, so the
-<a href=#129 id=129 data-nosnippet>129</a>    ///   caller may discard it any time after this call completes.
-<a href=#130 id=130 data-nosnippet>130</a>    ///
-<a href=#131 id=131 data-nosnippet>131</a>    /// * Consider using [`Queue::write_buffer_with()`] instead.
-<a href=#132 id=132 data-nosnippet>132</a>    ///   That method allows you to prepare your data directly within the staging
-<a href=#133 id=133 data-nosnippet>133</a>    ///   memory, rather than first placing it in a separate `[u8]` to be copied.
-<a href=#134 id=134 data-nosnippet>134</a>    ///   That is, `queue.write_buffer(b, offset, data)` is approximately equivalent
-<a href=#135 id=135 data-nosnippet>135</a>    ///   to `queue.write_buffer_with(b, offset, data.len()).copy_from_slice(data)`,
-<a href=#136 id=136 data-nosnippet>136</a>    ///   so use `write_buffer_with()` if you can do something smarter than that
-<a href=#137 id=137 data-nosnippet>137</a>    ///   [`copy_from_slice()`](slice::copy_from_slice). However, for small values
-<a href=#138 id=138 data-nosnippet>138</a>    ///   (e.g. a typical uniform buffer whose contents come from a `struct`),
-<a href=#139 id=139 data-nosnippet>139</a>    ///   there will likely be no difference, since the compiler will be able to
-<a href=#140 id=140 data-nosnippet>140</a>    ///   optimize out unnecessary copies regardless.
-<a href=#141 id=141 data-nosnippet>141</a>    ///
-<a href=#142 id=142 data-nosnippet>142</a>    /// * Currently on native platforms, for both of these methods, the staging
-<a href=#143 id=143 data-nosnippet>143</a>    ///   memory will be a new allocation. This will then be released after the
-<a href=#144 id=144 data-nosnippet>144</a>    ///   next submission finishes. To entirely avoid short-lived allocations, you might
-<a href=#145 id=145 data-nosnippet>145</a>    ///   be able to use [`StagingBelt`](crate::util::StagingBelt),
-<a href=#146 id=146 data-nosnippet>146</a>    ///   or buffers you explicitly create, map, and unmap yourself.
-<a href=#147 id=147 data-nosnippet>147</a>    </span><span class="kw">pub fn </span>write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Buffer, offset: BufferAddress, data: <span class="kw-2">&amp;</span>[u8]) {
-<a href=#148 id=148 data-nosnippet>148</a>        <span class="self">self</span>.inner.write_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, data);
-<a href=#149 id=149 data-nosnippet>149</a>    }
-<a href=#150 id=150 data-nosnippet>150</a>
-<a href=#151 id=151 data-nosnippet>151</a>    <span class="doccomment">/// Prepares to write data to a buffer via a mapped staging buffer.
-<a href=#152 id=152 data-nosnippet>152</a>    ///
-<a href=#153 id=153 data-nosnippet>153</a>    /// This operation allocates a temporary buffer and then returns a
-<a href=#154 id=154 data-nosnippet>154</a>    /// [`QueueWriteBufferView`], which
-<a href=#155 id=155 data-nosnippet>155</a>    ///
-<a href=#156 id=156 data-nosnippet>156</a>    /// * dereferences to a `[u8]` of length `size`, and
-<a href=#157 id=157 data-nosnippet>157</a>    /// * when dropped, schedules a copy of its contents into `buffer` at `offset`.
-<a href=#158 id=158 data-nosnippet>158</a>    ///
-<a href=#159 id=159 data-nosnippet>159</a>    /// Therefore, this obtains the same result as [`Queue::write_buffer()`], but may
-<a href=#160 id=160 data-nosnippet>160</a>    /// allow you to skip one allocation and one copy of your data, if you are able to
-<a href=#161 id=161 data-nosnippet>161</a>    /// assemble your data directly into the returned [`QueueWriteBufferView`] instead of
-<a href=#162 id=162 data-nosnippet>162</a>    /// into a separate allocation like a [`Vec`](alloc::vec::Vec) first.
-<a href=#163 id=163 data-nosnippet>163</a>    ///
-<a href=#164 id=164 data-nosnippet>164</a>    /// The data must be written fully in-bounds, that is, `offset + size &lt;= buffer.len()`.
-<a href=#165 id=165 data-nosnippet>165</a>    ///
-<a href=#166 id=166 data-nosnippet>166</a>    /// # Performance considerations
-<a href=#167 id=167 data-nosnippet>167</a>    ///
-<a href=#168 id=168 data-nosnippet>168</a>    /// * For small data not separately heap-allocated, there is no advantage of this
-<a href=#169 id=169 data-nosnippet>169</a>    ///   over [`Queue::write_buffer()`].
-<a href=#170 id=170 data-nosnippet>170</a>    ///
-<a href=#171 id=171 data-nosnippet>171</a>    /// * Reading from the returned view may be slow, and will not yield the current
-<a href=#172 id=172 data-nosnippet>172</a>    ///   contents of `buffer`. You should treat it as “write-only”.
-<a href=#173 id=173 data-nosnippet>173</a>    ///
-<a href=#174 id=174 data-nosnippet>174</a>    /// * Dropping the [`QueueWriteBufferView`] does *not* submit the
-<a href=#175 id=175 data-nosnippet>175</a>    ///   transfer to the GPU immediately. The transfer begins only on the next
-<a href=#176 id=176 data-nosnippet>176</a>    ///   call to [`Queue::submit()`] after the view is dropped, just before the
-<a href=#177 id=177 data-nosnippet>177</a>    ///   explicitly submitted commands. To get a set of scheduled transfers started
-<a href=#178 id=178 data-nosnippet>178</a>    ///   immediately, it's fine to call `queue.submit([])` with no command buffers at all.
-<a href=#179 id=179 data-nosnippet>179</a>    ///
-<a href=#180 id=180 data-nosnippet>180</a>    /// * Currently on native platforms, the staging memory will be a new allocation, which will
-<a href=#181 id=181 data-nosnippet>181</a>    ///   then be released after the next submission finishes. To entirely avoid short-lived
-<a href=#182 id=182 data-nosnippet>182</a>    ///   allocations, you might be able to use [`StagingBelt`](crate::util::StagingBelt),
-<a href=#183 id=183 data-nosnippet>183</a>    ///   or buffers you explicitly create, map, and unmap yourself.
-<a href=#184 id=184 data-nosnippet>184</a>    </span><span class="attr">#[must_use]
-<a href=#185 id=185 data-nosnippet>185</a>    </span><span class="kw">pub fn </span>write_buffer_with(
-<a href=#186 id=186 data-nosnippet>186</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#187 id=187 data-nosnippet>187</a>        buffer: <span class="kw-2">&amp;</span>Buffer,
-<a href=#188 id=188 data-nosnippet>188</a>        offset: BufferAddress,
-<a href=#189 id=189 data-nosnippet>189</a>        size: BufferSize,
-<a href=#190 id=190 data-nosnippet>190</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;QueueWriteBufferView&gt; {
-<a href=#191 id=191 data-nosnippet>191</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_buffer_with"</span>);
-<a href=#192 id=192 data-nosnippet>192</a>        <span class="self">self</span>.inner
-<a href=#193 id=193 data-nosnippet>193</a>            .validate_write_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, size)<span class="question-mark">?</span>;
-<a href=#194 id=194 data-nosnippet>194</a>        <span class="kw">let </span>staging_buffer = <span class="self">self</span>.inner.create_staging_buffer(size)<span class="question-mark">?</span>;
-<a href=#195 id=195 data-nosnippet>195</a>        <span class="prelude-val">Some</span>(QueueWriteBufferView {
-<a href=#196 id=196 data-nosnippet>196</a>            queue: <span class="self">self</span>.clone(),
-<a href=#197 id=197 data-nosnippet>197</a>            buffer: buffer.clone(),
-<a href=#198 id=198 data-nosnippet>198</a>            offset,
-<a href=#199 id=199 data-nosnippet>199</a>            inner: staging_buffer,
-<a href=#200 id=200 data-nosnippet>200</a>        })
-<a href=#201 id=201 data-nosnippet>201</a>    }
-<a href=#202 id=202 data-nosnippet>202</a>
-<a href=#203 id=203 data-nosnippet>203</a>    <span class="doccomment">/// Copies the bytes of `data` into into a texture.
-<a href=#204 id=204 data-nosnippet>204</a>    ///
-<a href=#205 id=205 data-nosnippet>205</a>    /// * `data` contains the texels to be written, which must be in
-<a href=#206 id=206 data-nosnippet>206</a>    ///   [the same format as the texture](TextureFormat).
-<a href=#207 id=207 data-nosnippet>207</a>    /// * `data_layout` describes the memory layout of `data`, which does not necessarily
-<a href=#208 id=208 data-nosnippet>208</a>    ///   have to have tightly packed rows.
-<a href=#209 id=209 data-nosnippet>209</a>    /// * `texture` specifies the texture to write into, and the location within the
-<a href=#210 id=210 data-nosnippet>210</a>    ///   texture (coordinate offset, mip level) that will be overwritten.
-<a href=#211 id=211 data-nosnippet>211</a>    /// * `size` is the size, in texels, of the region to be written.
-<a href=#212 id=212 data-nosnippet>212</a>    ///
-<a href=#213 id=213 data-nosnippet>213</a>    /// This method fails if `size` overruns the size of `texture`, or if `data` is too short.
-<a href=#214 id=214 data-nosnippet>214</a>    ///
-<a href=#215 id=215 data-nosnippet>215</a>    /// # Performance considerations
-<a href=#216 id=216 data-nosnippet>216</a>    ///
-<a href=#217 id=217 data-nosnippet>217</a>    /// This operation has the same performance considerations as [`Queue::write_buffer()`];
-<a href=#218 id=218 data-nosnippet>218</a>    /// see its documentation for details.
-<a href=#219 id=219 data-nosnippet>219</a>    ///
-<a href=#220 id=220 data-nosnippet>220</a>    /// However, since there is no “mapped texture” like a mapped buffer,
-<a href=#221 id=221 data-nosnippet>221</a>    /// alternate techniques for writing to textures will generally consist of first copying
-<a href=#222 id=222 data-nosnippet>222</a>    /// the data to a buffer, then using [`CommandEncoder::copy_buffer_to_texture()`], or in
-<a href=#223 id=223 data-nosnippet>223</a>    /// some cases a compute shader, to copy texels from that buffer to the texture.
-<a href=#224 id=224 data-nosnippet>224</a>    </span><span class="kw">pub fn </span>write_texture(
-<a href=#225 id=225 data-nosnippet>225</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#226 id=226 data-nosnippet>226</a>        texture: TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
-<a href=#227 id=227 data-nosnippet>227</a>        data: <span class="kw-2">&amp;</span>[u8],
-<a href=#228 id=228 data-nosnippet>228</a>        data_layout: TexelCopyBufferLayout,
-<a href=#229 id=229 data-nosnippet>229</a>        size: Extent3d,
-<a href=#230 id=230 data-nosnippet>230</a>    ) {
-<a href=#231 id=231 data-nosnippet>231</a>        <span class="self">self</span>.inner.write_texture(texture, data, data_layout, size);
-<a href=#232 id=232 data-nosnippet>232</a>    }
-<a href=#233 id=233 data-nosnippet>233</a>
-<a href=#234 id=234 data-nosnippet>234</a>    <span class="doccomment">/// Schedule a copy of data from `image` into `texture`.
-<a href=#235 id=235 data-nosnippet>235</a>    </span><span class="attr">#[cfg(web)]
-<a href=#236 id=236 data-nosnippet>236</a>    </span><span class="kw">pub fn </span>copy_external_image_to_texture(
-<a href=#237 id=237 data-nosnippet>237</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#238 id=238 data-nosnippet>238</a>        source: <span class="kw-2">&amp;</span>wgt::CopyExternalImageSourceInfo,
-<a href=#239 id=239 data-nosnippet>239</a>        dest: wgt::CopyExternalImageDestInfo&lt;<span class="kw-2">&amp;</span>api::Texture&gt;,
-<a href=#240 id=240 data-nosnippet>240</a>        size: Extent3d,
-<a href=#241 id=241 data-nosnippet>241</a>    ) {
-<a href=#242 id=242 data-nosnippet>242</a>        <span class="self">self</span>.inner
-<a href=#243 id=243 data-nosnippet>243</a>            .copy_external_image_to_texture(source, dest, size);
-<a href=#244 id=244 data-nosnippet>244</a>    }
-<a href=#245 id=245 data-nosnippet>245</a>
-<a href=#246 id=246 data-nosnippet>246</a>    <span class="doccomment">/// Submits a series of finished command buffers for execution.
-<a href=#247 id=247 data-nosnippet>247</a>    </span><span class="kw">pub fn </span>submit&lt;I: IntoIterator&lt;Item = CommandBuffer&gt;&gt;(
-<a href=#248 id=248 data-nosnippet>248</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#249 id=249 data-nosnippet>249</a>        command_buffers: I,
-<a href=#250 id=250 data-nosnippet>250</a>    ) -&gt; SubmissionIndex {
-<a href=#251 id=251 data-nosnippet>251</a>        <span class="comment">// As submit drains the iterator (even on error), collect deferred actions
-<a href=#252 id=252 data-nosnippet>252</a>        // from each CommandBuffer along the way.
-<a href=#253 id=253 data-nosnippet>253</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>actions = DeferredCommandBufferActions::default();
-<a href=#254 id=254 data-nosnippet>254</a>
-<a href=#255 id=255 data-nosnippet>255</a>        <span class="kw">let </span><span class="kw-2">mut </span>command_buffers = command_buffers.into_iter().map(|comb| {
-<a href=#256 id=256 data-nosnippet>256</a>            actions.append(<span class="kw-2">&amp;mut </span>comb.actions.lock());
-<a href=#257 id=257 data-nosnippet>257</a>            comb.buffer
-<a href=#258 id=258 data-nosnippet>258</a>        });
-<a href=#259 id=259 data-nosnippet>259</a>        <span class="kw">let </span>index = <span class="self">self</span>.inner.submit(<span class="kw-2">&amp;mut </span>command_buffers);
-<a href=#260 id=260 data-nosnippet>260</a>
-<a href=#261 id=261 data-nosnippet>261</a>        <span class="comment">// Execute all deferred actions after submit.
-<a href=#262 id=262 data-nosnippet>262</a>        </span>actions.execute(<span class="kw-2">&amp;</span><span class="self">self</span>.inner);
-<a href=#263 id=263 data-nosnippet>263</a>
-<a href=#264 id=264 data-nosnippet>264</a>        SubmissionIndex { index }
-<a href=#265 id=265 data-nosnippet>265</a>    }
-<a href=#266 id=266 data-nosnippet>266</a>
-<a href=#267 id=267 data-nosnippet>267</a>    <span class="doccomment">/// Gets the amount of nanoseconds each tick of a timestamp query represents.
-<a href=#268 id=268 data-nosnippet>268</a>    ///
-<a href=#269 id=269 data-nosnippet>269</a>    /// Returns zero if timestamp queries are unsupported.
-<a href=#270 id=270 data-nosnippet>270</a>    ///
-<a href=#271 id=271 data-nosnippet>271</a>    /// Timestamp values are represented in nanosecond values on WebGPU, see `&lt;https://gpuweb.github.io/gpuweb/#timestamp&gt;`
-<a href=#272 id=272 data-nosnippet>272</a>    /// Therefore, this is always 1.0 on the web, but on wgpu-core a manual conversion is required.
-<a href=#273 id=273 data-nosnippet>273</a>    </span><span class="kw">pub fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
-<a href=#274 id=274 data-nosnippet>274</a>        <span class="self">self</span>.inner.get_timestamp_period()
-<a href=#275 id=275 data-nosnippet>275</a>    }
-<a href=#276 id=276 data-nosnippet>276</a>
-<a href=#277 id=277 data-nosnippet>277</a>    <span class="doccomment">/// Registers a callback that is invoked when the previous [`Queue::submit`] finishes executing
-<a href=#278 id=278 data-nosnippet>278</a>    /// on the GPU. When this callback runs, all mapped-buffer callbacks registered for the same
-<a href=#279 id=279 data-nosnippet>279</a>    /// submission are guaranteed to have been called.
-<a href=#280 id=280 data-nosnippet>280</a>    ///
-<a href=#281 id=281 data-nosnippet>281</a>    /// For the callback to run, either [`queue.submit(..)`][q::s], [`instance.poll_all(..)`][i::p_a],
-<a href=#282 id=282 data-nosnippet>282</a>    /// or [`device.poll(..)`][d::p] must be called elsewhere in the runtime, possibly integrated into
-<a href=#283 id=283 data-nosnippet>283</a>    /// an event loop or run on a separate thread.
-<a href=#284 id=284 data-nosnippet>284</a>    ///
-<a href=#285 id=285 data-nosnippet>285</a>    /// The callback runs on the thread that first calls one of the above functions after the GPU work
-<a href=#286 id=286 data-nosnippet>286</a>    /// completes. There are no restrictions on the code you can run in the callback; however, on native
-<a href=#287 id=287 data-nosnippet>287</a>    /// the polling call will not return until the callback finishes, so keep callbacks short (set flags,
-<a href=#288 id=288 data-nosnippet>288</a>    /// send messages, etc.).
-<a href=#289 id=289 data-nosnippet>289</a>    ///
-<a href=#290 id=290 data-nosnippet>290</a>    /// [q::s]: Queue::submit
-<a href=#291 id=291 data-nosnippet>291</a>    /// [i::p_a]: Instance::poll_all
-<a href=#292 id=292 data-nosnippet>292</a>    /// [d::p]: Device::poll
-<a href=#293 id=293 data-nosnippet>293</a>    </span><span class="kw">pub fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: <span class="kw">impl </span>FnOnce() + Send + <span class="lifetime">'static</span>) {
-<a href=#294 id=294 data-nosnippet>294</a>        <span class="self">self</span>.inner.on_submitted_work_done(Box::new(callback));
-<a href=#295 id=295 data-nosnippet>295</a>    }
-<a href=#296 id=296 data-nosnippet>296</a>
-<a href=#297 id=297 data-nosnippet>297</a>    <span class="doccomment">/// Get the [`wgpu_hal`] device from this `Queue`.
-<a href=#298 id=298 data-nosnippet>298</a>    ///
-<a href=#299 id=299 data-nosnippet>299</a>    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
-<a href=#300 id=300 data-nosnippet>300</a>    /// and pass that struct to the to the `A` type parameter.
-<a href=#301 id=301 data-nosnippet>301</a>    ///
-<a href=#302 id=302 data-nosnippet>302</a>    /// Returns a guard that dereferences to the type of the hal backend
-<a href=#303 id=303 data-nosnippet>303</a>    /// which implements [`A::Queue`].
-<a href=#304 id=304 data-nosnippet>304</a>    ///
-<a href=#305 id=305 data-nosnippet>305</a>    /// # Types
-<a href=#306 id=306 data-nosnippet>306</a>    ///
-<a href=#307 id=307 data-nosnippet>307</a>    /// The returned type depends on the backend:
-<a href=#308 id=308 data-nosnippet>308</a>    ///
-<a href=#309 id=309 data-nosnippet>309</a>    </span><span class="attr">#[doc = <span class="macro">crate::hal_type_vulkan!</span>(<span class="string">"Queue"</span>)]
-<a href=#310 id=310 data-nosnippet>310</a>    #[doc = <span class="macro">crate::hal_type_metal!</span>(<span class="string">"Queue"</span>)]
-<a href=#311 id=311 data-nosnippet>311</a>    #[doc = <span class="macro">crate::hal_type_dx12!</span>(<span class="string">"Queue"</span>)]
-<a href=#312 id=312 data-nosnippet>312</a>    #[doc = <span class="macro">crate::hal_type_gles!</span>(<span class="string">"Queue"</span>)]
-<a href=#313 id=313 data-nosnippet>313</a>    </span><span class="doccomment">///
-<a href=#314 id=314 data-nosnippet>314</a>    /// # Errors
-<a href=#315 id=315 data-nosnippet>315</a>    ///
-<a href=#316 id=316 data-nosnippet>316</a>    /// This method will return None if:
-<a href=#317 id=317 data-nosnippet>317</a>    /// - The queue is not from the backend specified by `A`.
-<a href=#318 id=318 data-nosnippet>318</a>    /// - The queue is from the `webgpu` or `custom` backend.
-<a href=#319 id=319 data-nosnippet>319</a>    ///
-<a href=#320 id=320 data-nosnippet>320</a>    /// # Safety
-<a href=#321 id=321 data-nosnippet>321</a>    ///
-<a href=#322 id=322 data-nosnippet>322</a>    /// - The returned resource must not be destroyed unless the guard
-<a href=#323 id=323 data-nosnippet>323</a>    ///   is the last reference to it and it is not in use by the GPU.
-<a href=#324 id=324 data-nosnippet>324</a>    ///   The guard and handle may be dropped at any time however.
-<a href=#325 id=325 data-nosnippet>325</a>    /// - All the safety requirements of wgpu-hal must be upheld.
-<a href=#326 id=326 data-nosnippet>326</a>    ///
-<a href=#327 id=327 data-nosnippet>327</a>    /// [`A::Queue`]: hal::Api::Queue
-<a href=#328 id=328 data-nosnippet>328</a>    </span><span class="attr">#[cfg(wgpu_core)]
-<a href=#329 id=329 data-nosnippet>329</a>    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: hal::Api&gt;(
-<a href=#330 id=330 data-nosnippet>330</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#331 id=331 data-nosnippet>331</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Queue&gt; + WasmNotSendSync&gt; {
-<a href=#332 id=332 data-nosnippet>332</a>        <span class="kw">let </span>queue = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
-<a href=#333 id=333 data-nosnippet>333</a>        <span class="kw">unsafe </span>{ queue.context.queue_as_hal::&lt;A&gt;(queue) }
-<a href=#334 id=334 data-nosnippet>334</a>    }
-<a href=#335 id=335 data-nosnippet>335</a>
-<a href=#336 id=336 data-nosnippet>336</a>    <span class="doccomment">/// Compact a BLAS, it must have had [`Blas::prepare_compaction_async`] called on it and had the
-<a href=#337 id=337 data-nosnippet>337</a>    /// callback provided called.
-<a href=#338 id=338 data-nosnippet>338</a>    ///
-<a href=#339 id=339 data-nosnippet>339</a>    /// The returned BLAS is more restricted than a normal BLAS because it may not be rebuilt or
-<a href=#340 id=340 data-nosnippet>340</a>    /// compacted.
-<a href=#341 id=341 data-nosnippet>341</a>    </span><span class="kw">pub fn </span>compact_blas(<span class="kw-2">&amp;</span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Blas) -&gt; Blas {
-<a href=#342 id=342 data-nosnippet>342</a>        <span class="kw">let </span>(handle, dispatch) = <span class="self">self</span>.inner.compact_blas(<span class="kw-2">&amp;</span>blas.inner);
-<a href=#343 id=343 data-nosnippet>343</a>        Blas {
-<a href=#344 id=344 data-nosnippet>344</a>            handle,
-<a href=#345 id=345 data-nosnippet>345</a>            inner: dispatch,
-<a href=#346 id=346 data-nosnippet>346</a>        }
-<a href=#347 id=347 data-nosnippet>347</a>    }
-<a href=#348 id=348 data-nosnippet>348</a>}</code></pre></div></section></main></body></html>
+<a href=#82 id=82 data-nosnippet>82</a>        <span class="self">self</span>.inner.slice()
+<a href=#83 id=83 data-nosnippet>83</a>    }
+<a href=#84 id=84 data-nosnippet>84</a>}
+<a href=#85 id=85 data-nosnippet>85</a>
+<a href=#86 id=86 data-nosnippet>86</a><span class="kw">impl </span>DerefMut <span class="kw">for </span>QueueWriteBufferView {
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
+<a href=#88 id=88 data-nosnippet>88</a>        <span class="self">self</span>.inner.slice_mut()
+<a href=#89 id=89 data-nosnippet>89</a>    }
+<a href=#90 id=90 data-nosnippet>90</a>}
+<a href=#91 id=91 data-nosnippet>91</a>
+<a href=#92 id=92 data-nosnippet>92</a><span class="kw">impl </span>AsMut&lt;[u8]&gt; <span class="kw">for </span>QueueWriteBufferView {
+<a href=#93 id=93 data-nosnippet>93</a>    <span class="kw">fn </span>as_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
+<a href=#94 id=94 data-nosnippet>94</a>        <span class="self">self</span>.inner.slice_mut()
+<a href=#95 id=95 data-nosnippet>95</a>    }
+<a href=#96 id=96 data-nosnippet>96</a>}
+<a href=#97 id=97 data-nosnippet>97</a>
+<a href=#98 id=98 data-nosnippet>98</a><span class="kw">impl </span>Drop <span class="kw">for </span>QueueWriteBufferView {
+<a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#100 id=100 data-nosnippet>100</a>        <span class="self">self</span>.queue
+<a href=#101 id=101 data-nosnippet>101</a>            .inner
+<a href=#102 id=102 data-nosnippet>102</a>            .write_staging_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.buffer.inner, <span class="self">self</span>.offset, <span class="kw-2">&amp;</span><span class="self">self</span>.inner);
+<a href=#103 id=103 data-nosnippet>103</a>    }
+<a href=#104 id=104 data-nosnippet>104</a>}
+<a href=#105 id=105 data-nosnippet>105</a>
+<a href=#106 id=106 data-nosnippet>106</a><span class="kw">impl </span>Queue {
+<a href=#107 id=107 data-nosnippet>107</a>    <span class="doccomment">/// Copies the bytes of `data` into `buffer` starting at `offset`.
+<a href=#108 id=108 data-nosnippet>108</a>    ///
+<a href=#109 id=109 data-nosnippet>109</a>    /// The data must be written fully in-bounds, that is, `offset + data.len() &lt;= buffer.len()`.
+<a href=#110 id=110 data-nosnippet>110</a>    ///
+<a href=#111 id=111 data-nosnippet>111</a>    /// # Performance considerations
+<a href=#112 id=112 data-nosnippet>112</a>    ///
+<a href=#113 id=113 data-nosnippet>113</a>    /// * Calls to `write_buffer()` do *not* submit the transfer to the GPU
+<a href=#114 id=114 data-nosnippet>114</a>    ///   immediately. They begin GPU execution only on the next call to
+<a href=#115 id=115 data-nosnippet>115</a>    ///   [`Queue::submit()`], just before the explicitly submitted commands.
+<a href=#116 id=116 data-nosnippet>116</a>    ///   To get a set of scheduled transfers started immediately,
+<a href=#117 id=117 data-nosnippet>117</a>    ///   it's fine to call `submit` with no command buffers at all:
+<a href=#118 id=118 data-nosnippet>118</a>    ///
+<a href=#119 id=119 data-nosnippet>119</a>    ///   ```no_run
+<a href=#120 id=120 data-nosnippet>120</a>    ///   # let queue: wgpu::Queue = todo!();
+<a href=#121 id=121 data-nosnippet>121</a>    ///   # let buffer: wgpu::Buffer = todo!();
+<a href=#122 id=122 data-nosnippet>122</a>    ///   # let data = [0u8];
+<a href=#123 id=123 data-nosnippet>123</a>    ///   queue.write_buffer(&amp;buffer, 0, &amp;data);
+<a href=#124 id=124 data-nosnippet>124</a>    ///   queue.submit([]);
+<a href=#125 id=125 data-nosnippet>125</a>    ///   ```
+<a href=#126 id=126 data-nosnippet>126</a>    ///
+<a href=#127 id=127 data-nosnippet>127</a>    ///   However, `data` will be immediately copied into staging memory, so the
+<a href=#128 id=128 data-nosnippet>128</a>    ///   caller may discard it any time after this call completes.
+<a href=#129 id=129 data-nosnippet>129</a>    ///
+<a href=#130 id=130 data-nosnippet>130</a>    /// * Consider using [`Queue::write_buffer_with()`] instead.
+<a href=#131 id=131 data-nosnippet>131</a>    ///   That method allows you to prepare your data directly within the staging
+<a href=#132 id=132 data-nosnippet>132</a>    ///   memory, rather than first placing it in a separate `[u8]` to be copied.
+<a href=#133 id=133 data-nosnippet>133</a>    ///   That is, `queue.write_buffer(b, offset, data)` is approximately equivalent
+<a href=#134 id=134 data-nosnippet>134</a>    ///   to `queue.write_buffer_with(b, offset, data.len()).copy_from_slice(data)`,
+<a href=#135 id=135 data-nosnippet>135</a>    ///   so use `write_buffer_with()` if you can do something smarter than that
+<a href=#136 id=136 data-nosnippet>136</a>    ///   [`copy_from_slice()`](slice::copy_from_slice). However, for small values
+<a href=#137 id=137 data-nosnippet>137</a>    ///   (e.g. a typical uniform buffer whose contents come from a `struct`),
+<a href=#138 id=138 data-nosnippet>138</a>    ///   there will likely be no difference, since the compiler will be able to
+<a href=#139 id=139 data-nosnippet>139</a>    ///   optimize out unnecessary copies regardless.
+<a href=#140 id=140 data-nosnippet>140</a>    ///
+<a href=#141 id=141 data-nosnippet>141</a>    /// * Currently on native platforms, for both of these methods, the staging
+<a href=#142 id=142 data-nosnippet>142</a>    ///   memory will be a new allocation. This will then be released after the
+<a href=#143 id=143 data-nosnippet>143</a>    ///   next submission finishes. To entirely avoid short-lived allocations, you might
+<a href=#144 id=144 data-nosnippet>144</a>    ///   be able to use [`StagingBelt`](crate::util::StagingBelt),
+<a href=#145 id=145 data-nosnippet>145</a>    ///   or buffers you explicitly create, map, and unmap yourself.
+<a href=#146 id=146 data-nosnippet>146</a>    </span><span class="kw">pub fn </span>write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Buffer, offset: BufferAddress, data: <span class="kw-2">&amp;</span>[u8]) {
+<a href=#147 id=147 data-nosnippet>147</a>        <span class="self">self</span>.inner.write_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, data);
+<a href=#148 id=148 data-nosnippet>148</a>    }
+<a href=#149 id=149 data-nosnippet>149</a>
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="doccomment">/// Prepares to write data to a buffer via a mapped staging buffer.
+<a href=#151 id=151 data-nosnippet>151</a>    ///
+<a href=#152 id=152 data-nosnippet>152</a>    /// This operation allocates a temporary buffer and then returns a
+<a href=#153 id=153 data-nosnippet>153</a>    /// [`QueueWriteBufferView`], which
+<a href=#154 id=154 data-nosnippet>154</a>    ///
+<a href=#155 id=155 data-nosnippet>155</a>    /// * dereferences to a `[u8]` of length `size`, and
+<a href=#156 id=156 data-nosnippet>156</a>    /// * when dropped, schedules a copy of its contents into `buffer` at `offset`.
+<a href=#157 id=157 data-nosnippet>157</a>    ///
+<a href=#158 id=158 data-nosnippet>158</a>    /// Therefore, this obtains the same result as [`Queue::write_buffer()`], but may
+<a href=#159 id=159 data-nosnippet>159</a>    /// allow you to skip one allocation and one copy of your data, if you are able to
+<a href=#160 id=160 data-nosnippet>160</a>    /// assemble your data directly into the returned [`QueueWriteBufferView`] instead of
+<a href=#161 id=161 data-nosnippet>161</a>    /// into a separate allocation like a [`Vec`](alloc::vec::Vec) first.
+<a href=#162 id=162 data-nosnippet>162</a>    ///
+<a href=#163 id=163 data-nosnippet>163</a>    /// The data must be written fully in-bounds, that is, `offset + size &lt;= buffer.len()`.
+<a href=#164 id=164 data-nosnippet>164</a>    ///
+<a href=#165 id=165 data-nosnippet>165</a>    /// # Performance considerations
+<a href=#166 id=166 data-nosnippet>166</a>    ///
+<a href=#167 id=167 data-nosnippet>167</a>    /// * For small data not separately heap-allocated, there is no advantage of this
+<a href=#168 id=168 data-nosnippet>168</a>    ///   over [`Queue::write_buffer()`].
+<a href=#169 id=169 data-nosnippet>169</a>    ///
+<a href=#170 id=170 data-nosnippet>170</a>    /// * Reading from the returned view may be slow, and will not yield the current
+<a href=#171 id=171 data-nosnippet>171</a>    ///   contents of `buffer`. You should treat it as “write-only”.
+<a href=#172 id=172 data-nosnippet>172</a>    ///
+<a href=#173 id=173 data-nosnippet>173</a>    /// * Dropping the [`QueueWriteBufferView`] does *not* submit the
+<a href=#174 id=174 data-nosnippet>174</a>    ///   transfer to the GPU immediately. The transfer begins only on the next
+<a href=#175 id=175 data-nosnippet>175</a>    ///   call to [`Queue::submit()`] after the view is dropped, just before the
+<a href=#176 id=176 data-nosnippet>176</a>    ///   explicitly submitted commands. To get a set of scheduled transfers started
+<a href=#177 id=177 data-nosnippet>177</a>    ///   immediately, it's fine to call `queue.submit([])` with no command buffers at all.
+<a href=#178 id=178 data-nosnippet>178</a>    ///
+<a href=#179 id=179 data-nosnippet>179</a>    /// * Currently on native platforms, the staging memory will be a new allocation, which will
+<a href=#180 id=180 data-nosnippet>180</a>    ///   then be released after the next submission finishes. To entirely avoid short-lived
+<a href=#181 id=181 data-nosnippet>181</a>    ///   allocations, you might be able to use [`StagingBelt`](crate::util::StagingBelt),
+<a href=#182 id=182 data-nosnippet>182</a>    ///   or buffers you explicitly create, map, and unmap yourself.
+<a href=#183 id=183 data-nosnippet>183</a>    </span><span class="attr">#[must_use]
+<a href=#184 id=184 data-nosnippet>184</a>    </span><span class="kw">pub fn </span>write_buffer_with(
+<a href=#185 id=185 data-nosnippet>185</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#186 id=186 data-nosnippet>186</a>        buffer: <span class="kw-2">&amp;</span>Buffer,
+<a href=#187 id=187 data-nosnippet>187</a>        offset: BufferAddress,
+<a href=#188 id=188 data-nosnippet>188</a>        size: BufferSize,
+<a href=#189 id=189 data-nosnippet>189</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;QueueWriteBufferView&gt; {
+<a href=#190 id=190 data-nosnippet>190</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_buffer_with"</span>);
+<a href=#191 id=191 data-nosnippet>191</a>        <span class="self">self</span>.inner
+<a href=#192 id=192 data-nosnippet>192</a>            .validate_write_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, size)<span class="question-mark">?</span>;
+<a href=#193 id=193 data-nosnippet>193</a>        <span class="kw">let </span>staging_buffer = <span class="self">self</span>.inner.create_staging_buffer(size)<span class="question-mark">?</span>;
+<a href=#194 id=194 data-nosnippet>194</a>        <span class="prelude-val">Some</span>(QueueWriteBufferView {
+<a href=#195 id=195 data-nosnippet>195</a>            queue: <span class="self">self</span>.clone(),
+<a href=#196 id=196 data-nosnippet>196</a>            buffer: buffer.clone(),
+<a href=#197 id=197 data-nosnippet>197</a>            offset,
+<a href=#198 id=198 data-nosnippet>198</a>            inner: staging_buffer,
+<a href=#199 id=199 data-nosnippet>199</a>        })
+<a href=#200 id=200 data-nosnippet>200</a>    }
+<a href=#201 id=201 data-nosnippet>201</a>
+<a href=#202 id=202 data-nosnippet>202</a>    <span class="doccomment">/// Copies the bytes of `data` into into a texture.
+<a href=#203 id=203 data-nosnippet>203</a>    ///
+<a href=#204 id=204 data-nosnippet>204</a>    /// * `data` contains the texels to be written, which must be in
+<a href=#205 id=205 data-nosnippet>205</a>    ///   [the same format as the texture](TextureFormat).
+<a href=#206 id=206 data-nosnippet>206</a>    /// * `data_layout` describes the memory layout of `data`, which does not necessarily
+<a href=#207 id=207 data-nosnippet>207</a>    ///   have to have tightly packed rows.
+<a href=#208 id=208 data-nosnippet>208</a>    /// * `texture` specifies the texture to write into, and the location within the
+<a href=#209 id=209 data-nosnippet>209</a>    ///   texture (coordinate offset, mip level) that will be overwritten.
+<a href=#210 id=210 data-nosnippet>210</a>    /// * `size` is the size, in texels, of the region to be written.
+<a href=#211 id=211 data-nosnippet>211</a>    ///
+<a href=#212 id=212 data-nosnippet>212</a>    /// This method fails if `size` overruns the size of `texture`, or if `data` is too short.
+<a href=#213 id=213 data-nosnippet>213</a>    ///
+<a href=#214 id=214 data-nosnippet>214</a>    /// # Performance considerations
+<a href=#215 id=215 data-nosnippet>215</a>    ///
+<a href=#216 id=216 data-nosnippet>216</a>    /// This operation has the same performance considerations as [`Queue::write_buffer()`];
+<a href=#217 id=217 data-nosnippet>217</a>    /// see its documentation for details.
+<a href=#218 id=218 data-nosnippet>218</a>    ///
+<a href=#219 id=219 data-nosnippet>219</a>    /// However, since there is no “mapped texture” like a mapped buffer,
+<a href=#220 id=220 data-nosnippet>220</a>    /// alternate techniques for writing to textures will generally consist of first copying
+<a href=#221 id=221 data-nosnippet>221</a>    /// the data to a buffer, then using [`CommandEncoder::copy_buffer_to_texture()`], or in
+<a href=#222 id=222 data-nosnippet>222</a>    /// some cases a compute shader, to copy texels from that buffer to the texture.
+<a href=#223 id=223 data-nosnippet>223</a>    </span><span class="kw">pub fn </span>write_texture(
+<a href=#224 id=224 data-nosnippet>224</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#225 id=225 data-nosnippet>225</a>        texture: TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#226 id=226 data-nosnippet>226</a>        data: <span class="kw-2">&amp;</span>[u8],
+<a href=#227 id=227 data-nosnippet>227</a>        data_layout: TexelCopyBufferLayout,
+<a href=#228 id=228 data-nosnippet>228</a>        size: Extent3d,
+<a href=#229 id=229 data-nosnippet>229</a>    ) {
+<a href=#230 id=230 data-nosnippet>230</a>        <span class="self">self</span>.inner.write_texture(texture, data, data_layout, size);
+<a href=#231 id=231 data-nosnippet>231</a>    }
+<a href=#232 id=232 data-nosnippet>232</a>
+<a href=#233 id=233 data-nosnippet>233</a>    <span class="doccomment">/// Schedule a copy of data from `image` into `texture`.
+<a href=#234 id=234 data-nosnippet>234</a>    </span><span class="attr">#[cfg(web)]
+<a href=#235 id=235 data-nosnippet>235</a>    </span><span class="kw">pub fn </span>copy_external_image_to_texture(
+<a href=#236 id=236 data-nosnippet>236</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#237 id=237 data-nosnippet>237</a>        source: <span class="kw-2">&amp;</span>wgt::CopyExternalImageSourceInfo,
+<a href=#238 id=238 data-nosnippet>238</a>        dest: wgt::CopyExternalImageDestInfo&lt;<span class="kw-2">&amp;</span>api::Texture&gt;,
+<a href=#239 id=239 data-nosnippet>239</a>        size: Extent3d,
+<a href=#240 id=240 data-nosnippet>240</a>    ) {
+<a href=#241 id=241 data-nosnippet>241</a>        <span class="self">self</span>.inner
+<a href=#242 id=242 data-nosnippet>242</a>            .copy_external_image_to_texture(source, dest, size);
+<a href=#243 id=243 data-nosnippet>243</a>    }
+<a href=#244 id=244 data-nosnippet>244</a>
+<a href=#245 id=245 data-nosnippet>245</a>    <span class="doccomment">/// Submits a series of finished command buffers for execution.
+<a href=#246 id=246 data-nosnippet>246</a>    </span><span class="kw">pub fn </span>submit&lt;I: IntoIterator&lt;Item = CommandBuffer&gt;&gt;(
+<a href=#247 id=247 data-nosnippet>247</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#248 id=248 data-nosnippet>248</a>        command_buffers: I,
+<a href=#249 id=249 data-nosnippet>249</a>    ) -&gt; SubmissionIndex {
+<a href=#250 id=250 data-nosnippet>250</a>        <span class="comment">// As submit drains the iterator (even on error), collect deferred actions
+<a href=#251 id=251 data-nosnippet>251</a>        // from each CommandBuffer along the way.
+<a href=#252 id=252 data-nosnippet>252</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>actions = DeferredCommandBufferActions::default();
+<a href=#253 id=253 data-nosnippet>253</a>
+<a href=#254 id=254 data-nosnippet>254</a>        <span class="kw">let </span><span class="kw-2">mut </span>command_buffers = command_buffers.into_iter().map(|comb| {
+<a href=#255 id=255 data-nosnippet>255</a>            actions.append(<span class="kw-2">&amp;mut </span>comb.actions.lock());
+<a href=#256 id=256 data-nosnippet>256</a>            comb.buffer
+<a href=#257 id=257 data-nosnippet>257</a>        });
+<a href=#258 id=258 data-nosnippet>258</a>        <span class="kw">let </span>index = <span class="self">self</span>.inner.submit(<span class="kw-2">&amp;mut </span>command_buffers);
+<a href=#259 id=259 data-nosnippet>259</a>
+<a href=#260 id=260 data-nosnippet>260</a>        <span class="comment">// Execute all deferred actions after submit.
+<a href=#261 id=261 data-nosnippet>261</a>        </span>actions.execute(<span class="kw-2">&amp;</span><span class="self">self</span>.inner);
+<a href=#262 id=262 data-nosnippet>262</a>
+<a href=#263 id=263 data-nosnippet>263</a>        SubmissionIndex { index }
+<a href=#264 id=264 data-nosnippet>264</a>    }
+<a href=#265 id=265 data-nosnippet>265</a>
+<a href=#266 id=266 data-nosnippet>266</a>    <span class="doccomment">/// Gets the amount of nanoseconds each tick of a timestamp query represents.
+<a href=#267 id=267 data-nosnippet>267</a>    ///
+<a href=#268 id=268 data-nosnippet>268</a>    /// Returns zero if timestamp queries are unsupported.
+<a href=#269 id=269 data-nosnippet>269</a>    ///
+<a href=#270 id=270 data-nosnippet>270</a>    /// Timestamp values are represented in nanosecond values on WebGPU, see `&lt;https://gpuweb.github.io/gpuweb/#timestamp&gt;`
+<a href=#271 id=271 data-nosnippet>271</a>    /// Therefore, this is always 1.0 on the web, but on wgpu-core a manual conversion is required.
+<a href=#272 id=272 data-nosnippet>272</a>    </span><span class="kw">pub fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
+<a href=#273 id=273 data-nosnippet>273</a>        <span class="self">self</span>.inner.get_timestamp_period()
+<a href=#274 id=274 data-nosnippet>274</a>    }
+<a href=#275 id=275 data-nosnippet>275</a>
+<a href=#276 id=276 data-nosnippet>276</a>    <span class="doccomment">/// Registers a callback that is invoked when the previous [`Queue::submit`] finishes executing
+<a href=#277 id=277 data-nosnippet>277</a>    /// on the GPU. When this callback runs, all mapped-buffer callbacks registered for the same
+<a href=#278 id=278 data-nosnippet>278</a>    /// submission are guaranteed to have been called.
+<a href=#279 id=279 data-nosnippet>279</a>    ///
+<a href=#280 id=280 data-nosnippet>280</a>    /// For the callback to run, either [`queue.submit(..)`][q::s], [`instance.poll_all(..)`][i::p_a],
+<a href=#281 id=281 data-nosnippet>281</a>    /// or [`device.poll(..)`][d::p] must be called elsewhere in the runtime, possibly integrated into
+<a href=#282 id=282 data-nosnippet>282</a>    /// an event loop or run on a separate thread.
+<a href=#283 id=283 data-nosnippet>283</a>    ///
+<a href=#284 id=284 data-nosnippet>284</a>    /// The callback runs on the thread that first calls one of the above functions after the GPU work
+<a href=#285 id=285 data-nosnippet>285</a>    /// completes. There are no restrictions on the code you can run in the callback; however, on native
+<a href=#286 id=286 data-nosnippet>286</a>    /// the polling call will not return until the callback finishes, so keep callbacks short (set flags,
+<a href=#287 id=287 data-nosnippet>287</a>    /// send messages, etc.).
+<a href=#288 id=288 data-nosnippet>288</a>    ///
+<a href=#289 id=289 data-nosnippet>289</a>    /// [q::s]: Queue::submit
+<a href=#290 id=290 data-nosnippet>290</a>    /// [i::p_a]: Instance::poll_all
+<a href=#291 id=291 data-nosnippet>291</a>    /// [d::p]: Device::poll
+<a href=#292 id=292 data-nosnippet>292</a>    </span><span class="kw">pub fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: <span class="kw">impl </span>FnOnce() + Send + <span class="lifetime">'static</span>) {
+<a href=#293 id=293 data-nosnippet>293</a>        <span class="self">self</span>.inner.on_submitted_work_done(Box::new(callback));
+<a href=#294 id=294 data-nosnippet>294</a>    }
+<a href=#295 id=295 data-nosnippet>295</a>
+<a href=#296 id=296 data-nosnippet>296</a>    <span class="doccomment">/// Get the [`wgpu_hal`] device from this `Queue`.
+<a href=#297 id=297 data-nosnippet>297</a>    ///
+<a href=#298 id=298 data-nosnippet>298</a>    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+<a href=#299 id=299 data-nosnippet>299</a>    /// and pass that struct to the to the `A` type parameter.
+<a href=#300 id=300 data-nosnippet>300</a>    ///
+<a href=#301 id=301 data-nosnippet>301</a>    /// Returns a guard that dereferences to the type of the hal backend
+<a href=#302 id=302 data-nosnippet>302</a>    /// which implements [`A::Queue`].
+<a href=#303 id=303 data-nosnippet>303</a>    ///
+<a href=#304 id=304 data-nosnippet>304</a>    /// # Types
+<a href=#305 id=305 data-nosnippet>305</a>    ///
+<a href=#306 id=306 data-nosnippet>306</a>    /// The returned type depends on the backend:
+<a href=#307 id=307 data-nosnippet>307</a>    ///
+<a href=#308 id=308 data-nosnippet>308</a>    </span><span class="attr">#[doc = <span class="macro">crate::hal_type_vulkan!</span>(<span class="string">"Queue"</span>)]
+<a href=#309 id=309 data-nosnippet>309</a>    #[doc = <span class="macro">crate::hal_type_metal!</span>(<span class="string">"Queue"</span>)]
+<a href=#310 id=310 data-nosnippet>310</a>    #[doc = <span class="macro">crate::hal_type_dx12!</span>(<span class="string">"Queue"</span>)]
+<a href=#311 id=311 data-nosnippet>311</a>    #[doc = <span class="macro">crate::hal_type_gles!</span>(<span class="string">"Queue"</span>)]
+<a href=#312 id=312 data-nosnippet>312</a>    </span><span class="doccomment">///
+<a href=#313 id=313 data-nosnippet>313</a>    /// # Errors
+<a href=#314 id=314 data-nosnippet>314</a>    ///
+<a href=#315 id=315 data-nosnippet>315</a>    /// This method will return None if:
+<a href=#316 id=316 data-nosnippet>316</a>    /// - The queue is not from the backend specified by `A`.
+<a href=#317 id=317 data-nosnippet>317</a>    /// - The queue is from the `webgpu` or `custom` backend.
+<a href=#318 id=318 data-nosnippet>318</a>    ///
+<a href=#319 id=319 data-nosnippet>319</a>    /// # Safety
+<a href=#320 id=320 data-nosnippet>320</a>    ///
+<a href=#321 id=321 data-nosnippet>321</a>    /// - The returned resource must not be destroyed unless the guard
+<a href=#322 id=322 data-nosnippet>322</a>    ///   is the last reference to it and it is not in use by the GPU.
+<a href=#323 id=323 data-nosnippet>323</a>    ///   The guard and handle may be dropped at any time however.
+<a href=#324 id=324 data-nosnippet>324</a>    /// - All the safety requirements of wgpu-hal must be upheld.
+<a href=#325 id=325 data-nosnippet>325</a>    ///
+<a href=#326 id=326 data-nosnippet>326</a>    /// [`A::Queue`]: hal::Api::Queue
+<a href=#327 id=327 data-nosnippet>327</a>    </span><span class="attr">#[cfg(wgpu_core)]
+<a href=#328 id=328 data-nosnippet>328</a>    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: hal::Api&gt;(
+<a href=#329 id=329 data-nosnippet>329</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#330 id=330 data-nosnippet>330</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::Queue&gt; + WasmNotSendSync&gt; {
+<a href=#331 id=331 data-nosnippet>331</a>        <span class="kw">let </span>queue = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
+<a href=#332 id=332 data-nosnippet>332</a>        <span class="kw">unsafe </span>{ queue.context.queue_as_hal::&lt;A&gt;(queue) }
+<a href=#333 id=333 data-nosnippet>333</a>    }
+<a href=#334 id=334 data-nosnippet>334</a>
+<a href=#335 id=335 data-nosnippet>335</a>    <span class="doccomment">/// Compact a BLAS, it must have had [`Blas::prepare_compaction_async`] called on it and had the
+<a href=#336 id=336 data-nosnippet>336</a>    /// callback provided called.
+<a href=#337 id=337 data-nosnippet>337</a>    ///
+<a href=#338 id=338 data-nosnippet>338</a>    /// The returned BLAS is more restricted than a normal BLAS because it may not be rebuilt or
+<a href=#339 id=339 data-nosnippet>339</a>    /// compacted.
+<a href=#340 id=340 data-nosnippet>340</a>    </span><span class="kw">pub fn </span>compact_blas(<span class="kw-2">&amp;</span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Blas) -&gt; Blas {
+<a href=#341 id=341 data-nosnippet>341</a>        <span class="kw">let </span>(handle, dispatch) = <span class="self">self</span>.inner.compact_blas(<span class="kw-2">&amp;</span>blas.inner);
+<a href=#342 id=342 data-nosnippet>342</a>        Blas {
+<a href=#343 id=343 data-nosnippet>343</a>            handle,
+<a href=#344 id=344 data-nosnippet>344</a>            inner: dispatch,
+<a href=#345 id=345 data-nosnippet>345</a>        }
+<a href=#346 id=346 data-nosnippet>346</a>    }
+<a href=#347 id=347 data-nosnippet>347</a>}</code></pre></div></section></main></body></html>

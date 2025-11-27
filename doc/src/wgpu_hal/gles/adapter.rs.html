@@ -327,7 +327,7 @@
 <a href=#327 id=327 data-nosnippet>327</a>                // Windows doesn't recognize `GL_MAX_VERTEX_ATTRIB_STRIDE`.
 <a href=#328 id=328 data-nosnippet>328</a>                </span><span class="kw">let </span>new = (<span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_COMPUTE_SHADER_STORAGE_BLOCKS) }
 <a href=#329 id=329 data-nosnippet>329</a>                    <span class="kw">as </span>u32);
-<a href=#330 id=330 data-nosnippet>330</a>                <span class="macro">log::warn!</span>(<span class="string">"Max vertex shader storage blocks is zero, but GL_ARB_shader_storage_buffer_object is specified. Assuming the compute value {new}"</span>);
+<a href=#330 id=330 data-nosnippet>330</a>                <span class="macro">log::debug!</span>(<span class="string">"Max vertex shader storage blocks is zero, but GL_ARB_shader_storage_buffer_object is specified. Assuming the compute value {new}"</span>);
 <a href=#331 id=331 data-nosnippet>331</a>                new
 <a href=#332 id=332 data-nosnippet>332</a>            } <span class="kw">else </span>{
 <a href=#333 id=333 data-nosnippet>333</a>                value
@@ -366,7 +366,7 @@
 <a href=#366 id=366 data-nosnippet>366</a>            vertex_shader_storage_blocks == <span class="number">0 </span>&amp;&amp; vertex_shader_storage_textures != <span class="number">0</span>;
 <a href=#367 id=367 data-nosnippet>367</a>        <span class="kw">if </span>vertex_ssbo_false_zero {
 <a href=#368 id=368 data-nosnippet>368</a>            <span class="comment">// We only care about fragment here as the 0 is a lie.
-<a href=#369 id=369 data-nosnippet>369</a>            </span><span class="macro">log::warn!</span>(<span class="string">"Max vertex shader SSBO == 0 and SSTO != 0. Interpreting as false zero."</span>);
+<a href=#369 id=369 data-nosnippet>369</a>            </span><span class="macro">log::debug!</span>(<span class="string">"Max vertex shader SSBO == 0 and SSTO != 0. Interpreting as false zero."</span>);
 <a href=#370 id=370 data-nosnippet>370</a>        }
 <a href=#371 id=371 data-nosnippet>371</a>
 <a href=#372 id=372 data-nosnippet>372</a>        <span class="kw">let </span>max_storage_buffers_per_shader_stage = <span class="kw">if </span>vertex_shader_storage_blocks == <span class="number">0 </span>{
@@ -736,13 +736,13 @@
 <a href=#736 id=736 data-nosnippet>736</a>                            <span class="comment">// This should be at least 2048, but the driver for AMD Radeon HD 5870 on
 <a href=#737 id=737 data-nosnippet>737</a>                            // Windows doesn't recognize `GL_MAX_VERTEX_ATTRIB_STRIDE`.
 <a href=#738 id=738 data-nosnippet>738</a>
-<a href=#739 id=739 data-nosnippet>739</a>                            </span><span class="macro">log::warn!</span>(<span class="string">"Max vertex attribute stride is 0. Assuming it is 2048"</span>);
+<a href=#739 id=739 data-nosnippet>739</a>                            </span><span class="macro">log::debug!</span>(<span class="string">"Max vertex attribute stride is 0. Assuming it is the OpenGL minimum spec 2048"</span>);
 <a href=#740 id=740 data-nosnippet>740</a>                            <span class="number">2048
 <a href=#741 id=741 data-nosnippet>741</a>                        </span>} <span class="kw">else </span>{
 <a href=#742 id=742 data-nosnippet>742</a>                            value
 <a href=#743 id=743 data-nosnippet>743</a>                        }
 <a href=#744 id=744 data-nosnippet>744</a>                    } <span class="kw">else </span>{
-<a href=#745 id=745 data-nosnippet>745</a>                        <span class="macro">log::warn!</span>(<span class="string">"Max vertex attribute stride unknown. Assuming it is 2048"</span>);
+<a href=#745 id=745 data-nosnippet>745</a>                        <span class="macro">log::debug!</span>(<span class="string">"Max vertex attribute stride unknown. Assuming it is the OpenGL minimum spec 2048"</span>);
 <a href=#746 id=746 data-nosnippet>746</a>                        <span class="number">2048
 <a href=#747 id=747 data-nosnippet>747</a>                    </span>}
 <a href=#748 id=748 data-nosnippet>748</a>                } <span class="kw">else </span>{
@@ -832,7 +832,7 @@
 <a href=#832 id=832 data-nosnippet>832</a>            &amp;&amp; r.split(<span class="kw-2">&amp;</span>[<span class="string">' '</span>, <span class="string">'('</span>, <span class="string">')'</span>][..])
 <a href=#833 id=833 data-nosnippet>833</a>                .any(|substr| substr.len() == <span class="number">3 </span>&amp;&amp; substr.chars().nth(<span class="number">2</span>) == <span class="prelude-val">Some</span>(<span class="string">'l'</span>))
 <a href=#834 id=834 data-nosnippet>834</a>        {
-<a href=#835 id=835 data-nosnippet>835</a>            <span class="macro">log::warn!</span>(
+<a href=#835 id=835 data-nosnippet>835</a>            <span class="macro">log::debug!</span>(
 <a href=#836 id=836 data-nosnippet>836</a>                <span class="string">"Detected skylake derivative running on mesa i915. Clears to srgb textures will \
 <a href=#837 id=837 data-nosnippet>837</a>                use manual shader clears."
 <a href=#838 id=838 data-nosnippet>838</a>            </span>);
@@ -955,7 +955,7 @@
 <a href=#955 id=955 data-nosnippet>955</a>        <span class="kw">let </span>linked_ok = <span class="kw">unsafe </span>{ gl.get_program_link_status(program) };
 <a href=#956 id=956 data-nosnippet>956</a>        <span class="kw">let </span>msg = <span class="kw">unsafe </span>{ gl.get_program_info_log(program) };
 <a href=#957 id=957 data-nosnippet>957</a>        <span class="kw">if </span>!msg.is_empty() {
-<a href=#958 id=958 data-nosnippet>958</a>            <span class="macro">log::warn!</span>(<span class="string">"Shader link error: {msg}"</span>);
+<a href=#958 id=958 data-nosnippet>958</a>            <span class="macro">log::error!</span>(<span class="string">"Shader link error: {msg}"</span>);
 <a href=#959 id=959 data-nosnippet>959</a>        }
 <a href=#960 id=960 data-nosnippet>960</a>        <span class="kw">if </span>!linked_ok {
 <a href=#961 id=961 data-nosnippet>961</a>            <span class="kw">return </span><span class="prelude-val">None</span>;
