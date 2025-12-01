@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["change_pipeline_layout","flush_bindings_helper","insert_debug_marker","pop_debug_group","push_debug_group","set_bind_group","set_push_constant","write_timestamp"],"struct":["BindGroupIndexOutOfRange","InvalidValuesOffset","MissingPipeline","PassState"]};
+window.SIDEBAR_ITEMS = {"fn":["change_pipeline_layout","flush_bindings_helper","insert_debug_marker","pop_debug_group","push_debug_group","set_bind_group","set_immediates","write_timestamp"],"struct":["BindGroupIndexOutOfRange","InvalidValuesOffset","MissingPipeline","PassState"]};

@@ -96,7 +96,7 @@
 <a href=#96 id=96 data-nosnippet>96</a><span class="doccomment">/// cbindgen:ignore
 <a href=#97 id=97 data-nosnippet>97</a></span><span class="kw">pub type </span>CopyExternalImageDestInfo = ffi::CopyExternalImageDestInfo;
 <a href=#98 id=98 data-nosnippet>98</a>
-<a href=#99 id=99 data-nosnippet>99</a><span class="kw">const </span>PUSH_CONSTANT_CLEAR_ARRAY: <span class="kw-2">&amp;</span>[u32] = <span class="kw-2">&amp;</span>[<span class="number">0_u32</span>; <span class="number">64</span>];
+<a href=#99 id=99 data-nosnippet>99</a><span class="kw">const </span>IMMEDIATES_CLEAR_ARRAY: <span class="kw-2">&amp;</span>[u32] = <span class="kw-2">&amp;</span>[<span class="number">0_u32</span>; <span class="number">64</span>];
 <a href=#100 id=100 data-nosnippet>100</a>
 <a href=#101 id=101 data-nosnippet>101</a><span class="doccomment">/// The current state of a command or pass encoder.
 <a href=#102 id=102 data-nosnippet>102</a>///
@@ -1282,11 +1282,11 @@
 <a href=#1282 id=1282 data-nosnippet>1282</a>    /// instruction consumes the next `len` bytes from this vector.
 <a href=#1283 id=1283 data-nosnippet>1283</a>    </span><span class="kw">pub </span>string_data: Vec&lt;u8&gt;,
 <a href=#1284 id=1284 data-nosnippet>1284</a>
-<a href=#1285 id=1285 data-nosnippet>1285</a>    <span class="doccomment">/// Data used by `SetPushConstant` instructions.
+<a href=#1285 id=1285 data-nosnippet>1285</a>    <span class="doccomment">/// Data used by `SetImmediate` instructions.
 <a href=#1286 id=1286 data-nosnippet>1286</a>    ///
-<a href=#1287 id=1287 data-nosnippet>1287</a>    /// See the documentation for [`RenderCommand::SetPushConstant`]
-<a href=#1288 id=1288 data-nosnippet>1288</a>    /// and [`ComputeCommand::SetPushConstant`] for details.
-<a href=#1289 id=1289 data-nosnippet>1289</a>    </span><span class="kw">pub </span>push_constant_data: Vec&lt;u32&gt;,
+<a href=#1287 id=1287 data-nosnippet>1287</a>    /// See the documentation for [`RenderCommand::SetImmediate`]
+<a href=#1288 id=1288 data-nosnippet>1288</a>    /// and [`ComputeCommand::SetImmediate`] for details.
+<a href=#1289 id=1289 data-nosnippet>1289</a>    </span><span class="kw">pub </span>immediates_data: Vec&lt;u32&gt;,
 <a href=#1290 id=1290 data-nosnippet>1290</a>}
 <a href=#1291 id=1291 data-nosnippet>1291</a>
 <a href=#1292 id=1292 data-nosnippet>1292</a><span class="kw">impl</span>&lt;C: Clone, E: Clone&gt; BasePass&lt;C, E&gt; {
@@ -1297,7 +1297,7 @@
 <a href=#1297 id=1297 data-nosnippet>1297</a>            commands: Vec::new(),
 <a href=#1298 id=1298 data-nosnippet>1298</a>            dynamic_offsets: Vec::new(),
 <a href=#1299 id=1299 data-nosnippet>1299</a>            string_data: Vec::new(),
-<a href=#1300 id=1300 data-nosnippet>1300</a>            push_constant_data: Vec::new(),
+<a href=#1300 id=1300 data-nosnippet>1300</a>            immediates_data: Vec::new(),
 <a href=#1301 id=1301 data-nosnippet>1301</a>        }
 <a href=#1302 id=1302 data-nosnippet>1302</a>    }
 <a href=#1303 id=1303 data-nosnippet>1303</a>
@@ -1308,7 +1308,7 @@
 <a href=#1308 id=1308 data-nosnippet>1308</a>            commands: Vec::new(),
 <a href=#1309 id=1309 data-nosnippet>1309</a>            dynamic_offsets: Vec::new(),
 <a href=#1310 id=1310 data-nosnippet>1310</a>            string_data: Vec::new(),
-<a href=#1311 id=1311 data-nosnippet>1311</a>            push_constant_data: Vec::new(),
+<a href=#1311 id=1311 data-nosnippet>1311</a>            immediates_data: Vec::new(),
 <a href=#1312 id=1312 data-nosnippet>1312</a>        }
 <a href=#1313 id=1313 data-nosnippet>1313</a>    }
 <a href=#1314 id=1314 data-nosnippet>1314</a>
@@ -1327,7 +1327,7 @@
 <a href=#1327 id=1327 data-nosnippet>1327</a>                commands: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.commands),
 <a href=#1328 id=1328 data-nosnippet>1328</a>                dynamic_offsets: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dynamic_offsets),
 <a href=#1329 id=1329 data-nosnippet>1329</a>                string_data: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.string_data),
-<a href=#1330 id=1330 data-nosnippet>1330</a>                push_constant_data: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.push_constant_data),
+<a href=#1330 id=1330 data-nosnippet>1330</a>                immediates_data: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.immediates_data),
 <a href=#1331 id=1331 data-nosnippet>1331</a>            }),
 <a href=#1332 id=1332 data-nosnippet>1332</a>        }
 <a href=#1333 id=1333 data-nosnippet>1333</a>    }
@@ -1771,20 +1771,20 @@
 <a href=#1771 id=1771 data-nosnippet>1771</a>    <span class="prelude-val">Ok</span>(())
 <a href=#1772 id=1772 data-nosnippet>1772</a>}
 <a href=#1773 id=1773 data-nosnippet>1773</a>
-<a href=#1774 id=1774 data-nosnippet>1774</a><span class="kw">fn </span>push_constant_clear&lt;PushFn&gt;(offset: u32, size_bytes: u32, <span class="kw-2">mut </span>push_fn: PushFn)
+<a href=#1774 id=1774 data-nosnippet>1774</a><span class="kw">fn </span>immediates_clear&lt;PushFn&gt;(offset: u32, size_bytes: u32, <span class="kw-2">mut </span>push_fn: PushFn)
 <a href=#1775 id=1775 data-nosnippet>1775</a><span class="kw">where
 <a href=#1776 id=1776 data-nosnippet>1776</a>    </span>PushFn: FnMut(u32, <span class="kw-2">&amp;</span>[u32]),
 <a href=#1777 id=1777 data-nosnippet>1777</a>{
 <a href=#1778 id=1778 data-nosnippet>1778</a>    <span class="kw">let </span><span class="kw-2">mut </span>count_words = <span class="number">0_u32</span>;
-<a href=#1779 id=1779 data-nosnippet>1779</a>    <span class="kw">let </span>size_words = size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT;
+<a href=#1779 id=1779 data-nosnippet>1779</a>    <span class="kw">let </span>size_words = size_bytes / wgt::IMMEDIATES_ALIGNMENT;
 <a href=#1780 id=1780 data-nosnippet>1780</a>    <span class="kw">while </span>count_words &lt; size_words {
-<a href=#1781 id=1781 data-nosnippet>1781</a>        <span class="kw">let </span>count_bytes = count_words * wgt::PUSH_CONSTANT_ALIGNMENT;
+<a href=#1781 id=1781 data-nosnippet>1781</a>        <span class="kw">let </span>count_bytes = count_words * wgt::IMMEDIATES_ALIGNMENT;
 <a href=#1782 id=1782 data-nosnippet>1782</a>        <span class="kw">let </span>size_to_write_words =
-<a href=#1783 id=1783 data-nosnippet>1783</a>            (size_words - count_words).min(PUSH_CONSTANT_CLEAR_ARRAY.len() <span class="kw">as </span>u32);
+<a href=#1783 id=1783 data-nosnippet>1783</a>            (size_words - count_words).min(IMMEDIATES_CLEAR_ARRAY.len() <span class="kw">as </span>u32);
 <a href=#1784 id=1784 data-nosnippet>1784</a>
 <a href=#1785 id=1785 data-nosnippet>1785</a>        push_fn(
 <a href=#1786 id=1786 data-nosnippet>1786</a>            offset + count_bytes,
-<a href=#1787 id=1787 data-nosnippet>1787</a>            <span class="kw-2">&amp;</span>PUSH_CONSTANT_CLEAR_ARRAY[<span class="number">0</span>..size_to_write_words <span class="kw">as </span>usize],
+<a href=#1787 id=1787 data-nosnippet>1787</a>            <span class="kw-2">&amp;</span>IMMEDIATES_CLEAR_ARRAY[<span class="number">0</span>..size_to_write_words <span class="kw">as </span>usize],
 <a href=#1788 id=1788 data-nosnippet>1788</a>        );
 <a href=#1789 id=1789 data-nosnippet>1789</a>
 <a href=#1790 id=1790 data-nosnippet>1790</a>        count_words += size_to_write_words;
@@ -1927,8 +1927,8 @@
 <a href=#1927 id=1927 data-nosnippet>1927</a>    </span>SetPipelineRender,
 <a href=#1928 id=1928 data-nosnippet>1928</a>    <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
 <a href=#1929 id=1929 data-nosnippet>1929</a>    </span>SetPipelineCompute,
-<a href=#1930 id=1930 data-nosnippet>1930</a>    <span class="attr">#[error(<span class="string">"In a set_push_constant command"</span>)]
-<a href=#1931 id=1931 data-nosnippet>1931</a>    </span>SetPushConstant,
+<a href=#1930 id=1930 data-nosnippet>1930</a>    <span class="attr">#[error(<span class="string">"In a set_immediates command"</span>)]
+<a href=#1931 id=1931 data-nosnippet>1931</a>    </span>SetImmediate,
 <a href=#1932 id=1932 data-nosnippet>1932</a>    <span class="attr">#[error(<span class="string">"In a set_vertex_buffer command"</span>)]
 <a href=#1933 id=1933 data-nosnippet>1933</a>    </span>SetVertexBuffer,
 <a href=#1934 id=1934 data-nosnippet>1934</a>    <span class="attr">#[error(<span class="string">"In a set_index_buffer command"</span>)]

@@ -174,10 +174,10 @@
 <a href=#174 id=174 data-nosnippet>174</a><span class="attr">#[deprecated(note = <span class="string">"Use `VERTEX_ALIGNMENT` instead"</span>, since = <span class="string">"27.0.0"</span>)]
 <a href=#175 id=175 data-nosnippet>175</a></span><span class="kw">pub const </span>VERTEX_STRIDE_ALIGNMENT: BufferAddress = <span class="number">4</span>;
 <a href=#176 id=176 data-nosnippet>176</a>
-<a href=#177 id=177 data-nosnippet>177</a><span class="doccomment">/// Ranges of [writes to push constant storage] must be at least this aligned.
+<a href=#177 id=177 data-nosnippet>177</a><span class="doccomment">/// Ranges of [writes to immediate data] must be at least this aligned.
 <a href=#178 id=178 data-nosnippet>178</a>///
-<a href=#179 id=179 data-nosnippet>179</a></span><span class="attr">#[doc = <span class="macro">link_to_wgpu_docs!</span>([<span class="string">"writes to push constant storage"</span>]</span>: <span class="string">"struct.RenderPass.html#method.set_push_constants"</span>)]
-<a href=#180 id=180 data-nosnippet>180</a><span class="kw">pub const </span>PUSH_CONSTANT_ALIGNMENT: u32 = <span class="number">4</span>;
+<a href=#179 id=179 data-nosnippet>179</a></span><span class="attr">#[doc = <span class="macro">link_to_wgpu_docs!</span>([<span class="string">"writes to immediate data"</span>]</span>: <span class="string">"struct.RenderPass.html#method.set_immediates"</span>)]
+<a href=#180 id=180 data-nosnippet>180</a><span class="kw">pub const </span>IMMEDIATES_ALIGNMENT: u32 = <span class="number">4</span>;
 <a href=#181 id=181 data-nosnippet>181</a>
 <a href=#182 id=182 data-nosnippet>182</a><span class="doccomment">/// Maximum queries in a [`QuerySetDescriptor`].
 <a href=#183 id=183 data-nosnippet>183</a></span><span class="kw">pub const </span>QUERY_SET_MAX_QUERIES: u32 = <span class="number">4096</span>;
@@ -573,7 +573,7 @@
 <a href=#573 id=573 data-nosnippet>573</a>        <span class="macro-nonterminal">$</span><span class="macro">macro_name!</span>(<span class="macro-nonterminal">min_subgroup_size</span>, Ordering::Greater);
 <a href=#574 id=574 data-nosnippet>574</a>        <span class="macro-nonterminal">$</span><span class="macro">macro_name!</span>(<span class="macro-nonterminal">max_subgroup_size</span>, Ordering::Less);
 <a href=#575 id=575 data-nosnippet>575</a>
-<a href=#576 id=576 data-nosnippet>576</a>        <span class="macro-nonterminal">$</span><span class="macro">macro_name!</span>(<span class="macro-nonterminal">max_push_constant_size</span>, Ordering::Less);
+<a href=#576 id=576 data-nosnippet>576</a>        <span class="macro-nonterminal">$</span><span class="macro">macro_name!</span>(<span class="macro-nonterminal">max_immediate_size</span>, Ordering::Less);
 <a href=#577 id=577 data-nosnippet>577</a>        <span class="macro-nonterminal">$</span><span class="macro">macro_name!</span>(<span class="macro-nonterminal">max_non_sampler_bindings</span>, Ordering::Less);
 <a href=#578 id=578 data-nosnippet>578</a>
 <a href=#579 id=579 data-nosnippet>579</a>        <span class="macro-nonterminal">$</span><span class="macro">macro_name!</span>(<span class="macro-nonterminal">max_task_workgroup_total_count</span>, Ordering::Less);
@@ -732,16 +732,16 @@
 <a href=#732 id=732 data-nosnippet>732</a>    </span><span class="kw">pub </span>min_subgroup_size: u32,
 <a href=#733 id=733 data-nosnippet>733</a>    <span class="doccomment">/// Maximal number of invocations in a subgroup. Higher is "better".
 <a href=#734 id=734 data-nosnippet>734</a>    </span><span class="kw">pub </span>max_subgroup_size: u32,
-<a href=#735 id=735 data-nosnippet>735</a>    <span class="doccomment">/// Amount of storage available for push constants in bytes. Defaults to 0. Higher is "better".
-<a href=#736 id=736 data-nosnippet>736</a>    /// Requesting more than 0 during device creation requires [`Features::PUSH_CONSTANTS`] to be enabled.
+<a href=#735 id=735 data-nosnippet>735</a>    <span class="doccomment">/// Amount of storage available for immediates in bytes. Defaults to 0. Higher is "better".
+<a href=#736 id=736 data-nosnippet>736</a>    /// Requesting more than 0 during device creation requires [`Features::IMMEDIATES`] to be enabled.
 <a href=#737 id=737 data-nosnippet>737</a>    ///
 <a href=#738 id=738 data-nosnippet>738</a>    /// Expect the size to be:
 <a href=#739 id=739 data-nosnippet>739</a>    /// - Vulkan: 128-256 bytes
 <a href=#740 id=740 data-nosnippet>740</a>    /// - DX12: 256 bytes
 <a href=#741 id=741 data-nosnippet>741</a>    /// - Metal: 4096 bytes
-<a href=#742 id=742 data-nosnippet>742</a>    /// - OpenGL doesn't natively support push constants, and are emulated with uniforms,
+<a href=#742 id=742 data-nosnippet>742</a>    /// - OpenGL doesn't natively support immediates, and are emulated with uniforms,
 <a href=#743 id=743 data-nosnippet>743</a>    ///   so this number is less useful but likely 256.
-<a href=#744 id=744 data-nosnippet>744</a>    </span><span class="kw">pub </span>max_push_constant_size: u32,
+<a href=#744 id=744 data-nosnippet>744</a>    </span><span class="kw">pub </span>max_immediate_size: u32,
 <a href=#745 id=745 data-nosnippet>745</a>    <span class="doccomment">/// Maximum number of live non-sampler bindings.
 <a href=#746 id=746 data-nosnippet>746</a>    ///
 <a href=#747 id=747 data-nosnippet>747</a>    /// &lt;div class="warning"&gt;
@@ -832,7 +832,7 @@
 <a href=#832 id=832 data-nosnippet>832</a>    ///     max_compute_workgroups_per_dimension: 65535,
 <a href=#833 id=833 data-nosnippet>833</a>    ///     min_subgroup_size: 0,
 <a href=#834 id=834 data-nosnippet>834</a>    ///     max_subgroup_size: 0,
-<a href=#835 id=835 data-nosnippet>835</a>    ///     max_push_constant_size: 0,
+<a href=#835 id=835 data-nosnippet>835</a>    ///     max_immediate_size: 0,
 <a href=#836 id=836 data-nosnippet>836</a>    ///     max_non_sampler_bindings: 1_000_000,
 <a href=#837 id=837 data-nosnippet>837</a>    ///     max_task_workgroup_total_count: 0,
 <a href=#838 id=838 data-nosnippet>838</a>    ///     max_task_workgroups_per_dimension: 0,
@@ -885,7 +885,7 @@
 <a href=#885 id=885 data-nosnippet>885</a>            max_compute_workgroups_per_dimension: <span class="number">65535</span>,
 <a href=#886 id=886 data-nosnippet>886</a>            min_subgroup_size: <span class="number">0</span>,
 <a href=#887 id=887 data-nosnippet>887</a>            max_subgroup_size: <span class="number">0</span>,
-<a href=#888 id=888 data-nosnippet>888</a>            max_push_constant_size: <span class="number">0</span>,
+<a href=#888 id=888 data-nosnippet>888</a>            max_immediate_size: <span class="number">0</span>,
 <a href=#889 id=889 data-nosnippet>889</a>            max_non_sampler_bindings: <span class="number">1_000_000</span>,
 <a href=#890 id=890 data-nosnippet>890</a>
 <a href=#891 id=891 data-nosnippet>891</a>            max_task_workgroup_total_count: <span class="number">0</span>,
@@ -930,7 +930,7 @@
 <a href=#930 id=930 data-nosnippet>930</a>    ///     max_vertex_buffer_array_stride: 2048,
 <a href=#931 id=931 data-nosnippet>931</a>    ///     min_subgroup_size: 0,
 <a href=#932 id=932 data-nosnippet>932</a>    ///     max_subgroup_size: 0,
-<a href=#933 id=933 data-nosnippet>933</a>    ///     max_push_constant_size: 0,
+<a href=#933 id=933 data-nosnippet>933</a>    ///     max_immediate_size: 0,
 <a href=#934 id=934 data-nosnippet>934</a>    ///     min_uniform_buffer_offset_alignment: 256,
 <a href=#935 id=935 data-nosnippet>935</a>    ///     min_storage_buffer_offset_alignment: 256,
 <a href=#936 id=936 data-nosnippet>936</a>    ///     max_inter_stage_shader_components: 60,
@@ -1007,7 +1007,7 @@
 <a href=#1007 id=1007 data-nosnippet>1007</a>    ///     max_vertex_buffer_array_stride: 255, // +
 <a href=#1008 id=1008 data-nosnippet>1008</a>    ///     min_subgroup_size: 0,
 <a href=#1009 id=1009 data-nosnippet>1009</a>    ///     max_subgroup_size: 0,
-<a href=#1010 id=1010 data-nosnippet>1010</a>    ///     max_push_constant_size: 0,
+<a href=#1010 id=1010 data-nosnippet>1010</a>    ///     max_immediate_size: 0,
 <a href=#1011 id=1011 data-nosnippet>1011</a>    ///     min_uniform_buffer_offset_alignment: 256,
 <a href=#1012 id=1012 data-nosnippet>1012</a>    ///     min_storage_buffer_offset_alignment: 256,
 <a href=#1013 id=1013 data-nosnippet>1013</a>    ///     max_inter_stage_shader_components: 31,
@@ -6904,14 +6904,14 @@
 <a href=#6904 id=6904 data-nosnippet>6904</a>    </span>Linear = <span class="number">1</span>,
 <a href=#6905 id=6905 data-nosnippet>6905</a>}
 <a href=#6906 id=6906 data-nosnippet>6906</a>
-<a href=#6907 id=6907 data-nosnippet>6907</a><span class="doccomment">/// A range of push constant memory to pass to a shader stage.
+<a href=#6907 id=6907 data-nosnippet>6907</a><span class="doccomment">/// A range of immediate data memory to pass to a shader stage.
 <a href=#6908 id=6908 data-nosnippet>6908</a></span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 <a href=#6909 id=6909 data-nosnippet>6909</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#6910 id=6910 data-nosnippet>6910</a></span><span class="kw">pub struct </span>PushConstantRange {
-<a href=#6911 id=6911 data-nosnippet>6911</a>    <span class="doccomment">/// Stage push constant range is visible from. Each stage can only be served by at most one range.
+<a href=#6910 id=6910 data-nosnippet>6910</a></span><span class="kw">pub struct </span>ImmediateRange {
+<a href=#6911 id=6911 data-nosnippet>6911</a>    <span class="doccomment">/// Stage immediate data range is visible from. Each stage can only be served by at most one range.
 <a href=#6912 id=6912 data-nosnippet>6912</a>    /// One range can serve multiple stages however.
 <a href=#6913 id=6913 data-nosnippet>6913</a>    </span><span class="kw">pub </span>stages: ShaderStages,
-<a href=#6914 id=6914 data-nosnippet>6914</a>    <span class="doccomment">/// Range in push constant memory to use for the stage. Must be less than [`Limits::max_push_constant_size`].
+<a href=#6914 id=6914 data-nosnippet>6914</a>    <span class="doccomment">/// Range in immediate data memory to use for the stage. Must be less than [`Limits::max_immediate_size`].
 <a href=#6915 id=6915 data-nosnippet>6915</a>    /// Start and end must be aligned to the 4s.
 <a href=#6916 id=6916 data-nosnippet>6916</a>    </span><span class="kw">pub </span>range: Range&lt;u32&gt;,
 <a href=#6917 id=6917 data-nosnippet>6917</a>}

@@ -202,7 +202,7 @@
 <a href=#202 id=202 data-nosnippet>202</a>                <span class="kw">let </span>resolved_desc = wgc::binding_model::ResolvedPipelineLayoutDescriptor {
 <a href=#203 id=203 data-nosnippet>203</a>                    label: desc.label.clone(),
 <a href=#204 id=204 data-nosnippet>204</a>                    bind_group_layouts: Cow::from(<span class="kw-2">&amp;</span>bind_group_layouts),
-<a href=#205 id=205 data-nosnippet>205</a>                    push_constant_ranges: Cow::Borrowed(<span class="kw-2">&amp;*</span>desc.push_constant_ranges),
+<a href=#205 id=205 data-nosnippet>205</a>                    immediates_ranges: Cow::Borrowed(<span class="kw-2">&amp;*</span>desc.immediates_ranges),
 <a href=#206 id=206 data-nosnippet>206</a>                };
 <a href=#207 id=207 data-nosnippet>207</a>
 <a href=#208 id=208 data-nosnippet>208</a>                <span class="kw">let </span>pipeline_layout = device
@@ -913,7 +913,7 @@
 <a href=#913 id=913 data-nosnippet>913</a>            error,
 <a href=#914 id=914 data-nosnippet>914</a>            commands,
 <a href=#915 id=915 data-nosnippet>915</a>            dynamic_offsets,
-<a href=#916 id=916 data-nosnippet>916</a>            push_constant_data,
+<a href=#916 id=916 data-nosnippet>916</a>            immediates_data,
 <a href=#917 id=917 data-nosnippet>917</a>            string_data,
 <a href=#918 id=918 data-nosnippet>918</a>        } = pass;
 <a href=#919 id=919 data-nosnippet>919</a>
@@ -925,7 +925,7 @@
 <a href=#925 id=925 data-nosnippet>925</a>                .map(|cmd| <span class="self">self</span>.resolve_compute_command(cmd))
 <a href=#926 id=926 data-nosnippet>926</a>                .collect(),
 <a href=#927 id=927 data-nosnippet>927</a>            dynamic_offsets,
-<a href=#928 id=928 data-nosnippet>928</a>            push_constant_data,
+<a href=#928 id=928 data-nosnippet>928</a>            immediates_data,
 <a href=#929 id=929 data-nosnippet>929</a>            string_data,
 <a href=#930 id=930 data-nosnippet>930</a>        }
 <a href=#931 id=931 data-nosnippet>931</a>    }
@@ -939,7 +939,7 @@
 <a href=#939 id=939 data-nosnippet>939</a>            error,
 <a href=#940 id=940 data-nosnippet>940</a>            commands,
 <a href=#941 id=941 data-nosnippet>941</a>            dynamic_offsets,
-<a href=#942 id=942 data-nosnippet>942</a>            push_constant_data,
+<a href=#942 id=942 data-nosnippet>942</a>            immediates_data,
 <a href=#943 id=943 data-nosnippet>943</a>            string_data,
 <a href=#944 id=944 data-nosnippet>944</a>        } = pass;
 <a href=#945 id=945 data-nosnippet>945</a>
@@ -951,7 +951,7 @@
 <a href=#951 id=951 data-nosnippet>951</a>                .map(|cmd| <span class="self">self</span>.resolve_render_command(cmd))
 <a href=#952 id=952 data-nosnippet>952</a>                .collect(),
 <a href=#953 id=953 data-nosnippet>953</a>            dynamic_offsets,
-<a href=#954 id=954 data-nosnippet>954</a>            push_constant_data,
+<a href=#954 id=954 data-nosnippet>954</a>            immediates_data,
 <a href=#955 id=955 data-nosnippet>955</a>            string_data,
 <a href=#956 id=956 data-nosnippet>956</a>        }
 <a href=#957 id=957 data-nosnippet>957</a>    }
@@ -972,11 +972,11 @@
 <a href=#972 id=972 data-nosnippet>972</a>                bind_group: bind_group.map(|bg| <span class="self">self</span>.resolve_bind_group_id(bg)),
 <a href=#973 id=973 data-nosnippet>973</a>            },
 <a href=#974 id=974 data-nosnippet>974</a>            C::SetPipeline(id) =&gt; C::SetPipeline(<span class="self">self</span>.resolve_compute_pipeline_id(id)),
-<a href=#975 id=975 data-nosnippet>975</a>            C::SetPushConstant {
+<a href=#975 id=975 data-nosnippet>975</a>            C::SetImmediate {
 <a href=#976 id=976 data-nosnippet>976</a>                offset,
 <a href=#977 id=977 data-nosnippet>977</a>                size_bytes,
 <a href=#978 id=978 data-nosnippet>978</a>                values_offset,
-<a href=#979 id=979 data-nosnippet>979</a>            } =&gt; C::SetPushConstant {
+<a href=#979 id=979 data-nosnippet>979</a>            } =&gt; C::SetImmediate {
 <a href=#980 id=980 data-nosnippet>980</a>                offset,
 <a href=#981 id=981 data-nosnippet>981</a>                size_bytes,
 <a href=#982 id=982 data-nosnippet>982</a>                values_offset,
@@ -1057,12 +1057,12 @@
 <a href=#1057 id=1057 data-nosnippet>1057</a>                depth_max,
 <a href=#1058 id=1058 data-nosnippet>1058</a>            },
 <a href=#1059 id=1059 data-nosnippet>1059</a>            C::SetScissor(rect) =&gt; C::SetScissor(rect),
-<a href=#1060 id=1060 data-nosnippet>1060</a>            C::SetPushConstant {
+<a href=#1060 id=1060 data-nosnippet>1060</a>            C::SetImmediate {
 <a href=#1061 id=1061 data-nosnippet>1061</a>                stages,
 <a href=#1062 id=1062 data-nosnippet>1062</a>                offset,
 <a href=#1063 id=1063 data-nosnippet>1063</a>                size_bytes,
 <a href=#1064 id=1064 data-nosnippet>1064</a>                values_offset,
-<a href=#1065 id=1065 data-nosnippet>1065</a>            } =&gt; C::SetPushConstant {
+<a href=#1065 id=1065 data-nosnippet>1065</a>            } =&gt; C::SetImmediate {
 <a href=#1066 id=1066 data-nosnippet>1066</a>                stages,
 <a href=#1067 id=1067 data-nosnippet>1067</a>                offset,
 <a href=#1068 id=1068 data-nosnippet>1068</a>                size_bytes,

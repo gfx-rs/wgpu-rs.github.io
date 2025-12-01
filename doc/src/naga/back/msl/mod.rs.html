@@ -155,7 +155,7 @@
 <a href=#155 id=155 data-nosnippet>155</a>    )]
 <a href=#156 id=156 data-nosnippet>156</a>    </span><span class="kw">pub </span>resources: BindingMap,
 <a href=#157 id=157 data-nosnippet>157</a>
-<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">pub </span>push_constant_buffer: <span class="prelude-ty">Option</span>&lt;Slot&gt;,
+<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">pub </span>immediates_buffer: <span class="prelude-ty">Option</span>&lt;Slot&gt;,
 <a href=#159 id=159 data-nosnippet>159</a>
 <a href=#160 id=160 data-nosnippet>160</a>    <span class="doccomment">/// The slot of a buffer that contains an array of `u32`,
 <a href=#161 id=161 data-nosnippet>161</a>    /// one for the size of each bound buffer that contains a runtime array,
@@ -247,8 +247,8 @@
 <a href=#247 id=247 data-nosnippet>247</a>    </span>MissingBinding(String),
 <a href=#248 id=248 data-nosnippet>248</a>    <span class="attr">#[error(<span class="string">"mapping of {0:?} is missing"</span>)]
 <a href=#249 id=249 data-nosnippet>249</a>    </span>MissingBindTarget(<span class="kw">crate</span>::ResourceBinding),
-<a href=#250 id=250 data-nosnippet>250</a>    <span class="attr">#[error(<span class="string">"mapping for push constants is missing"</span>)]
-<a href=#251 id=251 data-nosnippet>251</a>    </span>MissingPushConstants,
+<a href=#250 id=250 data-nosnippet>250</a>    <span class="attr">#[error(<span class="string">"mapping for immediates is missing"</span>)]
+<a href=#251 id=251 data-nosnippet>251</a>    </span>MissingImmediateData,
 <a href=#252 id=252 data-nosnippet>252</a>    <span class="attr">#[error(<span class="string">"mapping for sizes buffer is missing"</span>)]
 <a href=#253 id=253 data-nosnippet>253</a>    </span>MissingSizesBuffer,
 <a href=#254 id=254 data-nosnippet>254</a>}
@@ -618,13 +618,13 @@
 <a href=#618 id=618 data-nosnippet>618</a>        }
 <a href=#619 id=619 data-nosnippet>619</a>    }
 <a href=#620 id=620 data-nosnippet>620</a>
-<a href=#621 id=621 data-nosnippet>621</a>    <span class="kw">fn </span>resolve_push_constants(
+<a href=#621 id=621 data-nosnippet>621</a>    <span class="kw">fn </span>resolve_immediates(
 <a href=#622 id=622 data-nosnippet>622</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#623 id=623 data-nosnippet>623</a>        ep: <span class="kw-2">&amp;</span><span class="kw">crate</span>::EntryPoint,
 <a href=#624 id=624 data-nosnippet>624</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;ResolvedBinding, EntryPointError&gt; {
 <a href=#625 id=625 data-nosnippet>625</a>        <span class="kw">let </span>slot = <span class="self">self
 <a href=#626 id=626 data-nosnippet>626</a>            </span>.get_entry_point_resources(ep)
-<a href=#627 id=627 data-nosnippet>627</a>            .and_then(|res| res.push_constant_buffer);
+<a href=#627 id=627 data-nosnippet>627</a>            .and_then(|res| res.immediates_buffer);
 <a href=#628 id=628 data-nosnippet>628</a>        <span class="kw">match </span>slot {
 <a href=#629 id=629 data-nosnippet>629</a>            <span class="prelude-val">Some</span>(slot) =&gt; <span class="prelude-val">Ok</span>(ResolvedBinding::Resource(BindTarget {
 <a href=#630 id=630 data-nosnippet>630</a>                buffer: <span class="prelude-val">Some</span>(slot),
@@ -635,7 +635,7 @@
 <a href=#635 id=635 data-nosnippet>635</a>                index: <span class="number">0</span>,
 <a href=#636 id=636 data-nosnippet>636</a>                interpolation: <span class="prelude-val">None</span>,
 <a href=#637 id=637 data-nosnippet>637</a>            }),
-<a href=#638 id=638 data-nosnippet>638</a>            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(EntryPointError::MissingPushConstants),
+<a href=#638 id=638 data-nosnippet>638</a>            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(EntryPointError::MissingImmediateData),
 <a href=#639 id=639 data-nosnippet>639</a>        }
 <a href=#640 id=640 data-nosnippet>640</a>    }
 <a href=#641 id=641 data-nosnippet>641</a>

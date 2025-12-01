@@ -71,17 +71,17 @@
 <a href=#71 id=71 data-nosnippet>71</a>        indirect_offset: BufferAddress,
 <a href=#72 id=72 data-nosnippet>72</a>    );
 <a href=#73 id=73 data-nosnippet>73</a>
-<a href=#74 id=74 data-nosnippet>74</a>    <span class="doccomment">/// [`wgt::Features::PUSH_CONSTANTS`] must be enabled on the device in order to call this function.
+<a href=#74 id=74 data-nosnippet>74</a>    <span class="doccomment">/// [`wgt::Features::IMMEDIATES`] must be enabled on the device in order to call this function.
 <a href=#75 id=75 data-nosnippet>75</a>    ///
-<a href=#76 id=76 data-nosnippet>76</a>    /// Set push constant data.
+<a href=#76 id=76 data-nosnippet>76</a>    /// Set immediate data data.
 <a href=#77 id=77 data-nosnippet>77</a>    ///
-<a href=#78 id=78 data-nosnippet>78</a>    /// Offset is measured in bytes, but must be a multiple of [`wgt::PUSH_CONSTANT_ALIGNMENT`].
+<a href=#78 id=78 data-nosnippet>78</a>    /// Offset is measured in bytes, but must be a multiple of [`wgt::IMMEDIATES_ALIGNMENT`].
 <a href=#79 id=79 data-nosnippet>79</a>    ///
 <a href=#80 id=80 data-nosnippet>80</a>    /// Data size must be a multiple of 4 and must be aligned to the 4s, so we take an array of u32.
 <a href=#81 id=81 data-nosnippet>81</a>    /// For example, with an offset of 4 and an array of `[u32; 3]`, that will write to the range
 <a href=#82 id=82 data-nosnippet>82</a>    /// of 4..16.
 <a href=#83 id=83 data-nosnippet>83</a>    ///
-<a href=#84 id=84 data-nosnippet>84</a>    /// For each byte in the range of push constant data written, the union of the stages of all push constant
+<a href=#84 id=84 data-nosnippet>84</a>    /// For each byte in the range of immediate data data written, the union of the stages of all immediate data
 <a href=#85 id=85 data-nosnippet>85</a>    /// ranges that covers that byte must be exactly `stages`. There's no good way of explaining this simply,
 <a href=#86 id=86 data-nosnippet>86</a>    /// so here are some examples:
 <a href=#87 id=87 data-nosnippet>87</a>    ///
@@ -91,7 +91,7 @@
 <a href=#91 id=91 data-nosnippet>91</a>    /// - 4..8 Fragment
 <a href=#92 id=92 data-nosnippet>92</a>    /// ```
 <a href=#93 id=93 data-nosnippet>93</a>    ///
-<a href=#94 id=94 data-nosnippet>94</a>    /// You would need to upload this in two `set_push_constants` calls. First for the `Vertex` range, second for the `Fragment` range.
+<a href=#94 id=94 data-nosnippet>94</a>    /// You would need to upload this in two `set_immediates` calls. First for the `Vertex` range, second for the `Fragment` range.
 <a href=#95 id=95 data-nosnippet>95</a>    ///
 <a href=#96 id=96 data-nosnippet>96</a>    /// ```text
 <a href=#97 id=97 data-nosnippet>97</a>    /// For the given ranges:
@@ -99,9 +99,9 @@
 <a href=#99 id=99 data-nosnippet>99</a>    /// - 4..12 Fragment
 <a href=#100 id=100 data-nosnippet>100</a>    /// ```
 <a href=#101 id=101 data-nosnippet>101</a>    ///
-<a href=#102 id=102 data-nosnippet>102</a>    /// You would need to upload this in three `set_push_constants` calls. First for the `Vertex` only range 0..4, second
+<a href=#102 id=102 data-nosnippet>102</a>    /// You would need to upload this in three `set_immediates` calls. First for the `Vertex` only range 0..4, second
 <a href=#103 id=103 data-nosnippet>103</a>    /// for the `Vertex | Fragment` range 4..8, third for the `Fragment` range 8..12.
-<a href=#104 id=104 data-nosnippet>104</a>    </span><span class="kw">fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgt::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]);
+<a href=#104 id=104 data-nosnippet>104</a>    </span><span class="kw">fn </span>set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgt::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]);
 <a href=#105 id=105 data-nosnippet>105</a>}
 <a href=#106 id=106 data-nosnippet>106</a>
 <a href=#107 id=107 data-nosnippet>107</a><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RenderEncoder&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>RenderPass&lt;<span class="lifetime">'a</span>&gt; {
@@ -155,8 +155,8 @@
 <a href=#155 id=155 data-nosnippet>155</a>    }
 <a href=#156 id=156 data-nosnippet>156</a>
 <a href=#157 id=157 data-nosnippet>157</a>    <span class="attr">#[inline(always)]
-<a href=#158 id=158 data-nosnippet>158</a>    </span><span class="kw">fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgt::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
-<a href=#159 id=159 data-nosnippet>159</a>        <span class="self">Self</span>::set_push_constants(<span class="self">self</span>, stages, offset, data);
+<a href=#158 id=158 data-nosnippet>158</a>    </span><span class="kw">fn </span>set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgt::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
+<a href=#159 id=159 data-nosnippet>159</a>        <span class="self">Self</span>::set_immediates(<span class="self">self</span>, stages, offset, data);
 <a href=#160 id=160 data-nosnippet>160</a>    }
 <a href=#161 id=161 data-nosnippet>161</a>}
 <a href=#162 id=162 data-nosnippet>162</a>
@@ -211,7 +211,7 @@
 <a href=#211 id=211 data-nosnippet>211</a>    }
 <a href=#212 id=212 data-nosnippet>212</a>
 <a href=#213 id=213 data-nosnippet>213</a>    <span class="attr">#[inline(always)]
-<a href=#214 id=214 data-nosnippet>214</a>    </span><span class="kw">fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgt::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
-<a href=#215 id=215 data-nosnippet>215</a>        <span class="self">Self</span>::set_push_constants(<span class="self">self</span>, stages, offset, data);
+<a href=#214 id=214 data-nosnippet>214</a>    </span><span class="kw">fn </span>set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgt::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
+<a href=#215 id=215 data-nosnippet>215</a>        <span class="self">Self</span>::set_immediates(<span class="self">self</span>, stages, offset, data);
 <a href=#216 id=216 data-nosnippet>216</a>    }
 <a href=#217 id=217 data-nosnippet>217</a>}</code></pre></div></section></main></body></html>

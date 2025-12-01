@@ -4,7 +4,7 @@
 <a href=#4 id=4 data-nosnippet>4</a>
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use super</span>::{
 <a href=#6 id=6 data-nosnippet>6</a>    analyzer::{FunctionInfo, GlobalUse},
-<a href=#7 id=7 data-nosnippet>7</a>    Capabilities, Disalignment, FunctionError, ModuleInfo, PushConstantError,
+<a href=#7 id=7 data-nosnippet>7</a>    Capabilities, Disalignment, FunctionError, ImmediateError, ModuleInfo,
 <a href=#8 id=8 data-nosnippet>8</a>};
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span><span class="kw">crate</span>::arena::{Handle, UniqueArena};
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span><span class="kw">crate</span>::span::{AddSpan <span class="kw">as _</span>, MapErrWithSpan <span class="kw">as _</span>, SpanProvider <span class="kw">as _</span>, WithSpan};
@@ -41,8 +41,8 @@
 <a href=#41 id=41 data-nosnippet>41</a>    </span>InitializerNotAllowed(<span class="kw">crate</span>::AddressSpace),
 <a href=#42 id=42 data-nosnippet>42</a>    <span class="attr">#[error(<span class="string">"Storage address space doesn't support write-only access"</span>)]
 <a href=#43 id=43 data-nosnippet>43</a>    </span>StorageAddressSpaceWriteOnlyNotSupported,
-<a href=#44 id=44 data-nosnippet>44</a>    <span class="attr">#[error(<span class="string">"Type is not valid for use as a push constant"</span>)]
-<a href=#45 id=45 data-nosnippet>45</a>    </span>InvalidPushConstantType(<span class="attr">#[source] </span>PushConstantError),
+<a href=#44 id=44 data-nosnippet>44</a>    <span class="attr">#[error(<span class="string">"Type is not valid for use as a immediate data"</span>)]
+<a href=#45 id=45 data-nosnippet>45</a>    </span>InvalidImmediateType(<span class="attr">#[source] </span>ImmediateError),
 <a href=#46 id=46 data-nosnippet>46</a>    <span class="attr">#[error(<span class="string">"Task payload must not be zero-sized"</span>)]
 <a href=#47 id=47 data-nosnippet>47</a>    </span>ZeroSizedTaskPayload,
 <a href=#48 id=48 data-nosnippet>48</a>}
@@ -117,8 +117,8 @@
 <a href=#117 id=117 data-nosnippet>117</a>    </span>ForbiddenStageOperations,
 <a href=#118 id=118 data-nosnippet>118</a>    <span class="attr">#[error(<span class="string">"Global variable {0:?} is used incorrectly as {1:?}"</span>)]
 <a href=#119 id=119 data-nosnippet>119</a>    </span>InvalidGlobalUsage(Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;, GlobalUse),
-<a href=#120 id=120 data-nosnippet>120</a>    <span class="attr">#[error(<span class="string">"More than 1 push constant variable is used"</span>)]
-<a href=#121 id=121 data-nosnippet>121</a>    </span>MoreThanOnePushConstantUsed,
+<a href=#120 id=120 data-nosnippet>120</a>    <span class="attr">#[error(<span class="string">"More than 1 immediate data variable is used"</span>)]
+<a href=#121 id=121 data-nosnippet>121</a>    </span>MoreThanOneImmediateUsed,
 <a href=#122 id=122 data-nosnippet>122</a>    <span class="attr">#[error(<span class="string">"Bindings for {0:?} conflict with other resource"</span>)]
 <a href=#123 id=123 data-nosnippet>123</a>    </span>BindingCollision(Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;),
 <a href=#124 id=124 data-nosnippet>124</a>    <span class="attr">#[error(<span class="string">"Argument {0} varying error"</span>)]
@@ -740,14 +740,14 @@
 <a href=#740 id=740 data-nosnippet>740</a>                }
 <a href=#741 id=741 data-nosnippet>741</a>                (TypeFlags::DATA | TypeFlags::SIZED, <span class="bool-val">false</span>)
 <a href=#742 id=742 data-nosnippet>742</a>            }
-<a href=#743 id=743 data-nosnippet>743</a>            <span class="kw">crate</span>::AddressSpace::PushConstant =&gt; {
-<a href=#744 id=744 data-nosnippet>744</a>                <span class="kw">if </span>!<span class="self">self</span>.capabilities.contains(Capabilities::PUSH_CONSTANT) {
+<a href=#743 id=743 data-nosnippet>743</a>            <span class="kw">crate</span>::AddressSpace::Immediate =&gt; {
+<a href=#744 id=744 data-nosnippet>744</a>                <span class="kw">if </span>!<span class="self">self</span>.capabilities.contains(Capabilities::IMMEDIATES) {
 <a href=#745 id=745 data-nosnippet>745</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(GlobalVariableError::UnsupportedCapability(
-<a href=#746 id=746 data-nosnippet>746</a>                        Capabilities::PUSH_CONSTANT,
+<a href=#746 id=746 data-nosnippet>746</a>                        Capabilities::IMMEDIATES,
 <a href=#747 id=747 data-nosnippet>747</a>                    ));
 <a href=#748 id=748 data-nosnippet>748</a>                }
-<a href=#749 id=749 data-nosnippet>749</a>                <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = type_info.push_constant_compatibility {
-<a href=#750 id=750 data-nosnippet>750</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(GlobalVariableError::InvalidPushConstantType(err.clone()));
+<a href=#749 id=749 data-nosnippet>749</a>                <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = type_info.immediates_compatibility {
+<a href=#750 id=750 data-nosnippet>750</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(GlobalVariableError::InvalidImmediateType(err.clone()));
 <a href=#751 id=751 data-nosnippet>751</a>                }
 <a href=#752 id=752 data-nosnippet>752</a>                (
 <a href=#753 id=753 data-nosnippet>753</a>                    TypeFlags::DATA
@@ -1031,16 +1031,16 @@
 <a href=#1031 id=1031 data-nosnippet>1031</a>        }
 <a href=#1032 id=1032 data-nosnippet>1032</a>
 <a href=#1033 id=1033 data-nosnippet>1033</a>        {
-<a href=#1034 id=1034 data-nosnippet>1034</a>            <span class="kw">let </span><span class="kw-2">mut </span>used_push_constants = module
+<a href=#1034 id=1034 data-nosnippet>1034</a>            <span class="kw">let </span><span class="kw-2">mut </span>used_immediates = module
 <a href=#1035 id=1035 data-nosnippet>1035</a>                .global_variables
 <a href=#1036 id=1036 data-nosnippet>1036</a>                .iter()
-<a href=#1037 id=1037 data-nosnippet>1037</a>                .filter(|<span class="kw-2">&amp;</span>(<span class="kw">_</span>, var)| var.space == <span class="kw">crate</span>::AddressSpace::PushConstant)
+<a href=#1037 id=1037 data-nosnippet>1037</a>                .filter(|<span class="kw-2">&amp;</span>(<span class="kw">_</span>, var)| var.space == <span class="kw">crate</span>::AddressSpace::Immediate)
 <a href=#1038 id=1038 data-nosnippet>1038</a>                .map(|(handle, <span class="kw">_</span>)| handle)
 <a href=#1039 id=1039 data-nosnippet>1039</a>                .filter(|<span class="kw-2">&amp;</span>handle| !info[handle].is_empty());
-<a href=#1040 id=1040 data-nosnippet>1040</a>            <span class="comment">// Check if there is more than one push constant, and error if so.
+<a href=#1040 id=1040 data-nosnippet>1040</a>            <span class="comment">// Check if there is more than one immediate data, and error if so.
 <a href=#1041 id=1041 data-nosnippet>1041</a>            // Use a loop for when returning multiple errors is supported.
-<a href=#1042 id=1042 data-nosnippet>1042</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(handle) = used_push_constants.nth(<span class="number">1</span>) {
-<a href=#1043 id=1043 data-nosnippet>1043</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(EntryPointError::MoreThanOnePushConstantUsed
+<a href=#1042 id=1042 data-nosnippet>1042</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(handle) = used_immediates.nth(<span class="number">1</span>) {
+<a href=#1043 id=1043 data-nosnippet>1043</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(EntryPointError::MoreThanOneImmediateUsed
 <a href=#1044 id=1044 data-nosnippet>1044</a>                    .with_span_handle(handle, <span class="kw-2">&amp;</span>module.global_variables));
 <a href=#1045 id=1045 data-nosnippet>1045</a>            }
 <a href=#1046 id=1046 data-nosnippet>1046</a>        }
@@ -1094,7 +1094,7 @@
 <a href=#1094 id=1094 data-nosnippet>1094</a>                            GlobalUse::empty()
 <a href=#1095 id=1095 data-nosnippet>1095</a>                        }
 <a href=#1096 id=1096 data-nosnippet>1096</a>                }
-<a href=#1097 id=1097 data-nosnippet>1097</a>                <span class="kw">crate</span>::AddressSpace::PushConstant =&gt; GlobalUse::READ,
+<a href=#1097 id=1097 data-nosnippet>1097</a>                <span class="kw">crate</span>::AddressSpace::Immediate =&gt; GlobalUse::READ,
 <a href=#1098 id=1098 data-nosnippet>1098</a>            };
 <a href=#1099 id=1099 data-nosnippet>1099</a>            <span class="kw">if </span>!allowed_usage.contains(usage) {
 <a href=#1100 id=1100 data-nosnippet>1100</a>                <span class="macro">log::warn!</span>(<span class="string">"\tUsage error for: {var:?}"</span>);

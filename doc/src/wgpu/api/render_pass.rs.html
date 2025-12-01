@@ -505,34 +505,34 @@
 <a href=#505 id=505 data-nosnippet>505</a>    }
 <a href=#506 id=506 data-nosnippet>506</a>}
 <a href=#507 id=507 data-nosnippet>507</a>
-<a href=#508 id=508 data-nosnippet>508</a><span class="doccomment">/// [`Features::PUSH_CONSTANTS`] must be enabled on the device in order to call these functions.
+<a href=#508 id=508 data-nosnippet>508</a><span class="doccomment">/// [`Features::IMMEDIATES`] must be enabled on the device in order to call these functions.
 <a href=#509 id=509 data-nosnippet>509</a></span><span class="kw">impl </span>RenderPass&lt;<span class="lifetime">'_</span>&gt; {
-<a href=#510 id=510 data-nosnippet>510</a>    <span class="doccomment">/// Set push constant data for subsequent draw calls.
+<a href=#510 id=510 data-nosnippet>510</a>    <span class="doccomment">/// Set immediate data data for subsequent draw calls.
 <a href=#511 id=511 data-nosnippet>511</a>    ///
-<a href=#512 id=512 data-nosnippet>512</a>    /// Write the bytes in `data` at offset `offset` within push constant
+<a href=#512 id=512 data-nosnippet>512</a>    /// Write the bytes in `data` at offset `offset` within immediate data
 <a href=#513 id=513 data-nosnippet>513</a>    /// storage, all of which are accessible by all the pipeline stages in
 <a href=#514 id=514 data-nosnippet>514</a>    /// `stages`, and no others.  Both `offset` and the length of `data` must be
-<a href=#515 id=515 data-nosnippet>515</a>    /// multiples of [`PUSH_CONSTANT_ALIGNMENT`], which is always 4.
+<a href=#515 id=515 data-nosnippet>515</a>    /// multiples of [`IMMEDIATES_ALIGNMENT`], which is always 4.
 <a href=#516 id=516 data-nosnippet>516</a>    ///
 <a href=#517 id=517 data-nosnippet>517</a>    /// For example, if `offset` is `4` and `data` is eight bytes long, this
-<a href=#518 id=518 data-nosnippet>518</a>    /// call will write `data` to bytes `4..12` of push constant storage.
+<a href=#518 id=518 data-nosnippet>518</a>    /// call will write `data` to bytes `4..12` of immediate data storage.
 <a href=#519 id=519 data-nosnippet>519</a>    ///
 <a href=#520 id=520 data-nosnippet>520</a>    /// # Stage matching
 <a href=#521 id=521 data-nosnippet>521</a>    ///
-<a href=#522 id=522 data-nosnippet>522</a>    /// Every byte in the affected range of push constant storage must be
+<a href=#522 id=522 data-nosnippet>522</a>    /// Every byte in the affected range of immediate data storage must be
 <a href=#523 id=523 data-nosnippet>523</a>    /// accessible to exactly the same set of pipeline stages, which must match
 <a href=#524 id=524 data-nosnippet>524</a>    /// `stages`. If there are two bytes of storage that are accessible by
 <a href=#525 id=525 data-nosnippet>525</a>    /// different sets of pipeline stages - say, one is accessible by fragment
 <a href=#526 id=526 data-nosnippet>526</a>    /// shaders, and the other is accessible by both fragment shaders and vertex
-<a href=#527 id=527 data-nosnippet>527</a>    /// shaders - then no single `set_push_constants` call may affect both of
+<a href=#527 id=527 data-nosnippet>527</a>    /// shaders - then no single `set_immediates` call may affect both of
 <a href=#528 id=528 data-nosnippet>528</a>    /// them; to write both, you must make multiple calls, each with the
 <a href=#529 id=529 data-nosnippet>529</a>    /// appropriate `stages` value.
 <a href=#530 id=530 data-nosnippet>530</a>    ///
 <a href=#531 id=531 data-nosnippet>531</a>    /// Which pipeline stages may access a given byte is determined by the
-<a href=#532 id=532 data-nosnippet>532</a>    /// pipeline's [`PushConstant`] global variable and (if it is a struct) its
+<a href=#532 id=532 data-nosnippet>532</a>    /// pipeline's [`Immediate`] global variable and (if it is a struct) its
 <a href=#533 id=533 data-nosnippet>533</a>    /// members' offsets.
 <a href=#534 id=534 data-nosnippet>534</a>    ///
-<a href=#535 id=535 data-nosnippet>535</a>    /// For example, suppose you have twelve bytes of push constant storage,
+<a href=#535 id=535 data-nosnippet>535</a>    /// For example, suppose you have twelve bytes of immediate data storage,
 <a href=#536 id=536 data-nosnippet>536</a>    /// where bytes `0..8` are accessed by the vertex shader, and bytes `4..12`
 <a href=#537 id=537 data-nosnippet>537</a>    /// are accessed by the fragment shader. This means there are three byte
 <a href=#538 id=538 data-nosnippet>538</a>    /// ranges each accessed by a different set of stages:
@@ -543,12 +543,12 @@
 <a href=#543 id=543 data-nosnippet>543</a>    ///
 <a href=#544 id=544 data-nosnippet>544</a>    /// - Bytes `8..12` are accessed only by the vertex shader.
 <a href=#545 id=545 data-nosnippet>545</a>    ///
-<a href=#546 id=546 data-nosnippet>546</a>    /// To write all twelve bytes requires three `set_push_constants` calls, one
+<a href=#546 id=546 data-nosnippet>546</a>    /// To write all twelve bytes requires three `set_immediates` calls, one
 <a href=#547 id=547 data-nosnippet>547</a>    /// for each range, each passing the matching `stages` mask.
 <a href=#548 id=548 data-nosnippet>548</a>    ///
-<a href=#549 id=549 data-nosnippet>549</a>    /// [`PushConstant`]: https://docs.rs/naga/latest/naga/enum.StorageClass.html#variant.PushConstant
-<a href=#550 id=550 data-nosnippet>550</a>    </span><span class="kw">pub fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
-<a href=#551 id=551 data-nosnippet>551</a>        <span class="self">self</span>.inner.set_push_constants(stages, offset, data);
+<a href=#549 id=549 data-nosnippet>549</a>    /// [`Immediate`]: https://docs.rs/naga/latest/naga/enum.StorageClass.html#variant.Immediate
+<a href=#550 id=550 data-nosnippet>550</a>    </span><span class="kw">pub fn </span>set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
+<a href=#551 id=551 data-nosnippet>551</a>        <span class="self">self</span>.inner.set_immediates(stages, offset, data);
 <a href=#552 id=552 data-nosnippet>552</a>    }
 <a href=#553 id=553 data-nosnippet>553</a>}
 <a href=#554 id=554 data-nosnippet>554</a>

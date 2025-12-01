@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/pass.rs`."><title>pass.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>pass.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Generic pass functions that both compute and render passes need.
 <a href=#2 id=2 data-nosnippet>2</a>
-<a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span><span class="kw">crate</span>::binding_model::{BindError, BindGroup, PushConstantUploadError};
+<a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span><span class="kw">crate</span>::binding_model::{BindError, BindGroup, ImmediateUploadError};
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::command::bind::Binder;
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span><span class="kw">crate</span>::command::encoder::EncodingState;
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span><span class="kw">crate</span>::command::memory_init::SurfacesInDiscardState;
@@ -217,14 +217,14 @@
 <a href=#217 id=217 data-nosnippet>217</a>        f();
 <a href=#218 id=218 data-nosnippet>218</a>
 <a href=#219 id=219 data-nosnippet>219</a>        <span class="kw">let </span>non_overlapping =
-<a href=#220 id=220 data-nosnippet>220</a>            <span class="kw">super</span>::bind::compute_nonoverlapping_ranges(<span class="kw-2">&amp;</span>pipeline_layout.push_constant_ranges);
+<a href=#220 id=220 data-nosnippet>220</a>            <span class="kw">super</span>::bind::compute_nonoverlapping_ranges(<span class="kw-2">&amp;</span>pipeline_layout.immediates_ranges);
 <a href=#221 id=221 data-nosnippet>221</a>
-<a href=#222 id=222 data-nosnippet>222</a>        <span class="comment">// Clear push constant ranges
+<a href=#222 id=222 data-nosnippet>222</a>        <span class="comment">// Clear immediate data ranges
 <a href=#223 id=223 data-nosnippet>223</a>        </span><span class="kw">for </span>range <span class="kw">in </span>non_overlapping {
 <a href=#224 id=224 data-nosnippet>224</a>            <span class="kw">let </span>offset = range.range.start;
 <a href=#225 id=225 data-nosnippet>225</a>            <span class="kw">let </span>size_bytes = range.range.end - offset;
-<a href=#226 id=226 data-nosnippet>226</a>            <span class="kw">super</span>::push_constant_clear(offset, size_bytes, |clear_offset, clear_data| <span class="kw">unsafe </span>{
-<a href=#227 id=227 data-nosnippet>227</a>                state.base.raw_encoder.set_push_constants(
+<a href=#226 id=226 data-nosnippet>226</a>            <span class="kw">super</span>::immediates_clear(offset, size_bytes, |clear_offset, clear_data| <span class="kw">unsafe </span>{
+<a href=#227 id=227 data-nosnippet>227</a>                state.base.raw_encoder.set_immediates(
 <a href=#228 id=228 data-nosnippet>228</a>                    pipeline_layout.raw(),
 <a href=#229 id=229 data-nosnippet>229</a>                    range.stages,
 <a href=#230 id=230 data-nosnippet>230</a>                    clear_offset,
@@ -236,9 +236,9 @@
 <a href=#236 id=236 data-nosnippet>236</a>    <span class="prelude-val">Ok</span>(())
 <a href=#237 id=237 data-nosnippet>237</a>}
 <a href=#238 id=238 data-nosnippet>238</a>
-<a href=#239 id=239 data-nosnippet>239</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_push_constant&lt;E, F: FnOnce(<span class="kw-2">&amp;</span>[u32])&gt;(
+<a href=#239 id=239 data-nosnippet>239</a><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_immediates&lt;E, F: FnOnce(<span class="kw-2">&amp;</span>[u32])&gt;(
 <a href=#240 id=240 data-nosnippet>240</a>    state: <span class="kw-2">&amp;mut </span>PassState,
-<a href=#241 id=241 data-nosnippet>241</a>    push_constant_data: <span class="kw-2">&amp;</span>[u32],
+<a href=#241 id=241 data-nosnippet>241</a>    immediates_data: <span class="kw-2">&amp;</span>[u32],
 <a href=#242 id=242 data-nosnippet>242</a>    stages: wgt::ShaderStages,
 <a href=#243 id=243 data-nosnippet>243</a>    offset: u32,
 <a href=#244 id=244 data-nosnippet>244</a>    size_bytes: u32,
@@ -246,15 +246,15 @@
 <a href=#246 id=246 data-nosnippet>246</a>    f: F,
 <a href=#247 id=247 data-nosnippet>247</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt;
 <a href=#248 id=248 data-nosnippet>248</a><span class="kw">where
-<a href=#249 id=249 data-nosnippet>249</a>    </span>E: From&lt;PushConstantUploadError&gt; + From&lt;InvalidValuesOffset&gt; + From&lt;MissingPipeline&gt;,
+<a href=#249 id=249 data-nosnippet>249</a>    </span>E: From&lt;ImmediateUploadError&gt; + From&lt;InvalidValuesOffset&gt; + From&lt;MissingPipeline&gt;,
 <a href=#250 id=250 data-nosnippet>250</a>{
-<a href=#251 id=251 data-nosnippet>251</a>    <span class="macro">api_log!</span>(<span class="string">"Pass::set_push_constants"</span>);
+<a href=#251 id=251 data-nosnippet>251</a>    <span class="macro">api_log!</span>(<span class="string">"Pass::set_immediates"</span>);
 <a href=#252 id=252 data-nosnippet>252</a>
 <a href=#253 id=253 data-nosnippet>253</a>    <span class="kw">let </span>values_offset = values_offset.ok_or(InvalidValuesOffset)<span class="question-mark">?</span>;
 <a href=#254 id=254 data-nosnippet>254</a>
 <a href=#255 id=255 data-nosnippet>255</a>    <span class="kw">let </span>end_offset_bytes = offset + size_bytes;
-<a href=#256 id=256 data-nosnippet>256</a>    <span class="kw">let </span>values_end_offset = (values_offset + size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT) <span class="kw">as </span>usize;
-<a href=#257 id=257 data-nosnippet>257</a>    <span class="kw">let </span>data_slice = <span class="kw-2">&amp;</span>push_constant_data[(values_offset <span class="kw">as </span>usize)..values_end_offset];
+<a href=#256 id=256 data-nosnippet>256</a>    <span class="kw">let </span>values_end_offset = (values_offset + size_bytes / wgt::IMMEDIATES_ALIGNMENT) <span class="kw">as </span>usize;
+<a href=#257 id=257 data-nosnippet>257</a>    <span class="kw">let </span>data_slice = <span class="kw-2">&amp;</span>immediates_data[(values_offset <span class="kw">as </span>usize)..values_end_offset];
 <a href=#258 id=258 data-nosnippet>258</a>
 <a href=#259 id=259 data-nosnippet>259</a>    <span class="kw">let </span>pipeline_layout = state
 <a href=#260 id=260 data-nosnippet>260</a>        .binder
@@ -262,7 +262,7 @@
 <a href=#262 id=262 data-nosnippet>262</a>        .as_ref()
 <a href=#263 id=263 data-nosnippet>263</a>        .ok_or(MissingPipeline)<span class="question-mark">?</span>;
 <a href=#264 id=264 data-nosnippet>264</a>
-<a href=#265 id=265 data-nosnippet>265</a>    pipeline_layout.validate_push_constant_ranges(stages, offset, end_offset_bytes)<span class="question-mark">?</span>;
+<a href=#265 id=265 data-nosnippet>265</a>    pipeline_layout.validate_immediates_ranges(stages, offset, end_offset_bytes)<span class="question-mark">?</span>;
 <a href=#266 id=266 data-nosnippet>266</a>
 <a href=#267 id=267 data-nosnippet>267</a>    f(data_slice);
 <a href=#268 id=268 data-nosnippet>268</a>
@@ -270,7 +270,7 @@
 <a href=#270 id=270 data-nosnippet>270</a>        state
 <a href=#271 id=271 data-nosnippet>271</a>            .base
 <a href=#272 id=272 data-nosnippet>272</a>            .raw_encoder
-<a href=#273 id=273 data-nosnippet>273</a>            .set_push_constants(pipeline_layout.raw(), stages, offset, data_slice)
+<a href=#273 id=273 data-nosnippet>273</a>            .set_immediates(pipeline_layout.raw(), stages, offset, data_slice)
 <a href=#274 id=274 data-nosnippet>274</a>    }
 <a href=#275 id=275 data-nosnippet>275</a>    <span class="prelude-val">Ok</span>(())
 <a href=#276 id=276 data-nosnippet>276</a>}

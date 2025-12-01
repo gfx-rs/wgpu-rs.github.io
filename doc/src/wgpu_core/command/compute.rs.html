@@ -14,7 +14,7 @@
 <a href=#14 id=14 data-nosnippet>14</a>    resource::{RawResourceAccess, Trackable},
 <a href=#15 id=15 data-nosnippet>15</a>};
 <a href=#16 id=16 data-nosnippet>16</a><span class="kw">use crate</span>::{
-<a href=#17 id=17 data-nosnippet>17</a>    binding_model::{LateMinBufferBindingSizeMismatch, PushConstantUploadError},
+<a href=#17 id=17 data-nosnippet>17</a>    binding_model::{ImmediateUploadError, LateMinBufferBindingSizeMismatch},
 <a href=#18 id=18 data-nosnippet>18</a>    command::{
 <a href=#19 id=19 data-nosnippet>19</a>        bind::{Binder, BinderError},
 <a href=#20 id=20 data-nosnippet>20</a>        compute_command::ArcComputeCommand,
@@ -177,13 +177,13 @@
 <a href=#177 id=177 data-nosnippet>177</a>    <span class="attr">#[error(transparent)]
 <a href=#178 id=178 data-nosnippet>178</a>    </span>Bind(<span class="attr">#[from] </span>BindError),
 <a href=#179 id=179 data-nosnippet>179</a>    <span class="attr">#[error(transparent)]
-<a href=#180 id=180 data-nosnippet>180</a>    </span>PushConstants(<span class="attr">#[from] </span>PushConstantUploadError),
-<a href=#181 id=181 data-nosnippet>181</a>    <span class="attr">#[error(<span class="string">"Push constant offset must be aligned to 4 bytes"</span>)]
-<a href=#182 id=182 data-nosnippet>182</a>    </span>PushConstantOffsetAlignment,
-<a href=#183 id=183 data-nosnippet>183</a>    <span class="attr">#[error(<span class="string">"Push constant size must be aligned to 4 bytes"</span>)]
-<a href=#184 id=184 data-nosnippet>184</a>    </span>PushConstantSizeAlignment,
-<a href=#185 id=185 data-nosnippet>185</a>    <span class="attr">#[error(<span class="string">"Ran out of push constant space. Don't set 4gb of push constants per ComputePass."</span>)]
-<a href=#186 id=186 data-nosnippet>186</a>    </span>PushConstantOutOfMemory,
+<a href=#180 id=180 data-nosnippet>180</a>    </span>ImmediateData(<span class="attr">#[from] </span>ImmediateUploadError),
+<a href=#181 id=181 data-nosnippet>181</a>    <span class="attr">#[error(<span class="string">"Immediate data offset must be aligned to 4 bytes"</span>)]
+<a href=#182 id=182 data-nosnippet>182</a>    </span>ImmediateOffsetAlignment,
+<a href=#183 id=183 data-nosnippet>183</a>    <span class="attr">#[error(<span class="string">"Immediate data size must be aligned to 4 bytes"</span>)]
+<a href=#184 id=184 data-nosnippet>184</a>    </span>ImmediateDataizeAlignment,
+<a href=#185 id=185 data-nosnippet>185</a>    <span class="attr">#[error(<span class="string">"Ran out of immediate data space. Don't set 4gb of immediates per ComputePass."</span>)]
+<a href=#186 id=186 data-nosnippet>186</a>    </span>ImmediateOutOfMemory,
 <a href=#187 id=187 data-nosnippet>187</a>    <span class="attr">#[error(transparent)]
 <a href=#188 id=188 data-nosnippet>188</a>    </span>QueryUse(<span class="attr">#[from] </span>QueryUseError),
 <a href=#189 id=189 data-nosnippet>189</a>    <span class="attr">#[error(transparent)]
@@ -241,7 +241,7 @@
 <a href=#241 id=241 data-nosnippet>241</a>            ComputePassErrorInner::MissingBufferUsage(e) =&gt; e,
 <a href=#242 id=242 data-nosnippet>242</a>            ComputePassErrorInner::Dispatch(e) =&gt; e,
 <a href=#243 id=243 data-nosnippet>243</a>            ComputePassErrorInner::Bind(e) =&gt; e,
-<a href=#244 id=244 data-nosnippet>244</a>            ComputePassErrorInner::PushConstants(e) =&gt; e,
+<a href=#244 id=244 data-nosnippet>244</a>            ComputePassErrorInner::ImmediateData(e) =&gt; e,
 <a href=#245 id=245 data-nosnippet>245</a>            ComputePassErrorInner::QueryUse(e) =&gt; e,
 <a href=#246 id=246 data-nosnippet>246</a>            ComputePassErrorInner::MissingFeatures(e) =&gt; e,
 <a href=#247 id=247 data-nosnippet>247</a>            ComputePassErrorInner::MissingDownlevelFlags(e) =&gt; e,
@@ -253,9 +253,9 @@
 <a href=#253 id=253 data-nosnippet>253</a>            | ComputePassErrorInner::BindGroupIndexOutOfRange { .. }
 <a href=#254 id=254 data-nosnippet>254</a>            | ComputePassErrorInner::UnalignedIndirectBufferOffset(<span class="kw">_</span>)
 <a href=#255 id=255 data-nosnippet>255</a>            | ComputePassErrorInner::IndirectBufferOverrun { .. }
-<a href=#256 id=256 data-nosnippet>256</a>            | ComputePassErrorInner::PushConstantOffsetAlignment
-<a href=#257 id=257 data-nosnippet>257</a>            | ComputePassErrorInner::PushConstantSizeAlignment
-<a href=#258 id=258 data-nosnippet>258</a>            | ComputePassErrorInner::PushConstantOutOfMemory
+<a href=#256 id=256 data-nosnippet>256</a>            | ComputePassErrorInner::ImmediateOffsetAlignment
+<a href=#257 id=257 data-nosnippet>257</a>            | ComputePassErrorInner::ImmediateDataizeAlignment
+<a href=#258 id=258 data-nosnippet>258</a>            | ComputePassErrorInner::ImmediateOutOfMemory
 <a href=#259 id=259 data-nosnippet>259</a>            | ComputePassErrorInner::PassEnded =&gt; <span class="kw">return </span>ErrorType::Validation,
 <a href=#260 id=260 data-nosnippet>260</a>        };
 <a href=#261 id=261 data-nosnippet>261</a>        e.webgpu_error_type()
@@ -269,7 +269,7 @@
 <a href=#269 id=269 data-nosnippet>269</a>
 <a href=#270 id=270 data-nosnippet>270</a>    active_query: <span class="prelude-ty">Option</span>&lt;(Arc&lt;resource::QuerySet&gt;, u32)&gt;,
 <a href=#271 id=271 data-nosnippet>271</a>
-<a href=#272 id=272 data-nosnippet>272</a>    push_constants: Vec&lt;u32&gt;,
+<a href=#272 id=272 data-nosnippet>272</a>    immediates: Vec&lt;u32&gt;,
 <a href=#273 id=273 data-nosnippet>273</a>
 <a href=#274 id=274 data-nosnippet>274</a>    intermediate_trackers: Tracker,
 <a href=#275 id=275 data-nosnippet>275</a>}
@@ -565,7 +565,7 @@
 <a href=#565 id=565 data-nosnippet>565</a>        },
 <a href=#566 id=566 data-nosnippet>566</a>        active_query: <span class="prelude-val">None</span>,
 <a href=#567 id=567 data-nosnippet>567</a>
-<a href=#568 id=568 data-nosnippet>568</a>        push_constants: Vec::new(),
+<a href=#568 id=568 data-nosnippet>568</a>        immediates: Vec::new(),
 <a href=#569 id=569 data-nosnippet>569</a>
 <a href=#570 id=570 data-nosnippet>570</a>        intermediate_trackers: Tracker::new(),
 <a href=#571 id=571 data-nosnippet>571</a>    };
@@ -659,23 +659,23 @@
 <a href=#659 id=659 data-nosnippet>659</a>                <span class="kw">let </span>scope = PassErrorScope::SetPipelineCompute;
 <a href=#660 id=660 data-nosnippet>660</a>                set_pipeline(<span class="kw-2">&amp;mut </span>state, device, pipeline).map_pass_err(scope)<span class="question-mark">?</span>;
 <a href=#661 id=661 data-nosnippet>661</a>            }
-<a href=#662 id=662 data-nosnippet>662</a>            ArcComputeCommand::SetPushConstant {
+<a href=#662 id=662 data-nosnippet>662</a>            ArcComputeCommand::SetImmediate {
 <a href=#663 id=663 data-nosnippet>663</a>                offset,
 <a href=#664 id=664 data-nosnippet>664</a>                size_bytes,
 <a href=#665 id=665 data-nosnippet>665</a>                values_offset,
 <a href=#666 id=666 data-nosnippet>666</a>            } =&gt; {
-<a href=#667 id=667 data-nosnippet>667</a>                <span class="kw">let </span>scope = PassErrorScope::SetPushConstant;
-<a href=#668 id=668 data-nosnippet>668</a>                pass::set_push_constant::&lt;ComputePassErrorInner, <span class="kw">_</span>&gt;(
+<a href=#667 id=667 data-nosnippet>667</a>                <span class="kw">let </span>scope = PassErrorScope::SetImmediate;
+<a href=#668 id=668 data-nosnippet>668</a>                pass::set_immediates::&lt;ComputePassErrorInner, <span class="kw">_</span>&gt;(
 <a href=#669 id=669 data-nosnippet>669</a>                    <span class="kw-2">&amp;mut </span>state.pass,
-<a href=#670 id=670 data-nosnippet>670</a>                    <span class="kw-2">&amp;</span>base.push_constant_data,
+<a href=#670 id=670 data-nosnippet>670</a>                    <span class="kw-2">&amp;</span>base.immediates_data,
 <a href=#671 id=671 data-nosnippet>671</a>                    wgt::ShaderStages::COMPUTE,
 <a href=#672 id=672 data-nosnippet>672</a>                    offset,
 <a href=#673 id=673 data-nosnippet>673</a>                    size_bytes,
 <a href=#674 id=674 data-nosnippet>674</a>                    <span class="prelude-val">Some</span>(values_offset),
 <a href=#675 id=675 data-nosnippet>675</a>                    |data_slice| {
-<a href=#676 id=676 data-nosnippet>676</a>                        <span class="kw">let </span>offset_in_elements = (offset / wgt::PUSH_CONSTANT_ALIGNMENT) <span class="kw">as </span>usize;
-<a href=#677 id=677 data-nosnippet>677</a>                        <span class="kw">let </span>size_in_elements = (size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT) <span class="kw">as </span>usize;
-<a href=#678 id=678 data-nosnippet>678</a>                        state.push_constants[offset_in_elements..][..size_in_elements]
+<a href=#676 id=676 data-nosnippet>676</a>                        <span class="kw">let </span>offset_in_elements = (offset / wgt::IMMEDIATES_ALIGNMENT) <span class="kw">as </span>usize;
+<a href=#677 id=677 data-nosnippet>677</a>                        <span class="kw">let </span>size_in_elements = (size_bytes / wgt::IMMEDIATES_ALIGNMENT) <span class="kw">as </span>usize;
+<a href=#678 id=678 data-nosnippet>678</a>                        state.immediates[offset_in_elements..][..size_in_elements]
 <a href=#679 id=679 data-nosnippet>679</a>                            .copy_from_slice(data_slice);
 <a href=#680 id=680 data-nosnippet>680</a>                    },
 <a href=#681 id=681 data-nosnippet>681</a>                )
@@ -824,20 +824,20 @@
 <a href=#824 id=824 data-nosnippet>824</a>        <span class="kw-2">&amp;</span>pipeline.layout,
 <a href=#825 id=825 data-nosnippet>825</a>        <span class="kw-2">&amp;</span>pipeline.late_sized_buffer_groups,
 <a href=#826 id=826 data-nosnippet>826</a>        || {
-<a href=#827 id=827 data-nosnippet>827</a>            <span class="comment">// This only needs to be here for compute pipelines because they use push constants for
+<a href=#827 id=827 data-nosnippet>827</a>            <span class="comment">// This only needs to be here for compute pipelines because they use immediates for
 <a href=#828 id=828 data-nosnippet>828</a>            // validating indirect draws.
-<a href=#829 id=829 data-nosnippet>829</a>            </span>state.push_constants.clear();
-<a href=#830 id=830 data-nosnippet>830</a>            <span class="comment">// Note that can only be one range for each stage. See the `MoreThanOnePushConstantRangePerStage` error.
-<a href=#831 id=831 data-nosnippet>831</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(push_constant_range) =
-<a href=#832 id=832 data-nosnippet>832</a>                pipeline.layout.push_constant_ranges.iter().find_map(|pcr| {
+<a href=#829 id=829 data-nosnippet>829</a>            </span>state.immediates.clear();
+<a href=#830 id=830 data-nosnippet>830</a>            <span class="comment">// Note that can only be one range for each stage. See the `MoreThanOneImmediateRangePerStage` error.
+<a href=#831 id=831 data-nosnippet>831</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(immediates_range) =
+<a href=#832 id=832 data-nosnippet>832</a>                pipeline.layout.immediates_ranges.iter().find_map(|pcr| {
 <a href=#833 id=833 data-nosnippet>833</a>                    pcr.stages
 <a href=#834 id=834 data-nosnippet>834</a>                        .contains(wgt::ShaderStages::COMPUTE)
 <a href=#835 id=835 data-nosnippet>835</a>                        .then_some(pcr.range.clone())
 <a href=#836 id=836 data-nosnippet>836</a>                })
 <a href=#837 id=837 data-nosnippet>837</a>            {
 <a href=#838 id=838 data-nosnippet>838</a>                <span class="comment">// Note that non-0 range start doesn't work anyway https://github.com/gfx-rs/wgpu/issues/4502
-<a href=#839 id=839 data-nosnippet>839</a>                </span><span class="kw">let </span>len = push_constant_range.len() / wgt::PUSH_CONSTANT_ALIGNMENT <span class="kw">as </span>usize;
-<a href=#840 id=840 data-nosnippet>840</a>                state.push_constants.extend(core::iter::repeat_n(<span class="number">0</span>, len));
+<a href=#839 id=839 data-nosnippet>839</a>                </span><span class="kw">let </span>len = immediates_range.len() / wgt::IMMEDIATES_ALIGNMENT <span class="kw">as </span>usize;
+<a href=#840 id=840 data-nosnippet>840</a>                state.immediates.extend(core::iter::repeat_n(<span class="number">0</span>, len));
 <a href=#841 id=841 data-nosnippet>841</a>            }
 <a href=#842 id=842 data-nosnippet>842</a>        },
 <a href=#843 id=843 data-nosnippet>843</a>    )
@@ -934,7 +934,7 @@
 <a href=#934 id=934 data-nosnippet>934</a>        }
 <a href=#935 id=935 data-nosnippet>935</a>
 <a href=#936 id=936 data-nosnippet>936</a>        <span class="kw">unsafe </span>{
-<a href=#937 id=937 data-nosnippet>937</a>            state.pass.base.raw_encoder.set_push_constants(
+<a href=#937 id=937 data-nosnippet>937</a>            state.pass.base.raw_encoder.set_immediates(
 <a href=#938 id=938 data-nosnippet>938</a>                params.pipeline_layout,
 <a href=#939 id=939 data-nosnippet>939</a>                wgt::ShaderStages::COMPUTE,
 <a href=#940 id=940 data-nosnippet>940</a>                <span class="number">0</span>,
@@ -1010,13 +1010,13 @@
 <a href=#1010 id=1010 data-nosnippet>1010</a>                    .set_compute_pipeline(pipeline.raw());
 <a href=#1011 id=1011 data-nosnippet>1011</a>            }
 <a href=#1012 id=1012 data-nosnippet>1012</a>
-<a href=#1013 id=1013 data-nosnippet>1013</a>            <span class="kw">if </span>!state.push_constants.is_empty() {
+<a href=#1013 id=1013 data-nosnippet>1013</a>            <span class="kw">if </span>!state.immediates.is_empty() {
 <a href=#1014 id=1014 data-nosnippet>1014</a>                <span class="kw">unsafe </span>{
-<a href=#1015 id=1015 data-nosnippet>1015</a>                    state.pass.base.raw_encoder.set_push_constants(
+<a href=#1015 id=1015 data-nosnippet>1015</a>                    state.pass.base.raw_encoder.set_immediates(
 <a href=#1016 id=1016 data-nosnippet>1016</a>                        pipeline.layout.raw(),
 <a href=#1017 id=1017 data-nosnippet>1017</a>                        wgt::ShaderStages::COMPUTE,
 <a href=#1018 id=1018 data-nosnippet>1018</a>                        <span class="number">0</span>,
-<a href=#1019 id=1019 data-nosnippet>1019</a>                        <span class="kw-2">&amp;</span>state.push_constants,
+<a href=#1019 id=1019 data-nosnippet>1019</a>                        <span class="kw-2">&amp;</span>state.immediates,
 <a href=#1020 id=1020 data-nosnippet>1020</a>                    );
 <a href=#1021 id=1021 data-nosnippet>1021</a>                }
 <a href=#1022 id=1022 data-nosnippet>1022</a>            }
@@ -1155,45 +1155,45 @@
 <a href=#1155 id=1155 data-nosnippet>1155</a>        <span class="prelude-val">Ok</span>(())
 <a href=#1156 id=1156 data-nosnippet>1156</a>    }
 <a href=#1157 id=1157 data-nosnippet>1157</a>
-<a href=#1158 id=1158 data-nosnippet>1158</a>    <span class="kw">pub fn </span>compute_pass_set_push_constants(
+<a href=#1158 id=1158 data-nosnippet>1158</a>    <span class="kw">pub fn </span>compute_pass_set_immediates(
 <a href=#1159 id=1159 data-nosnippet>1159</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#1160 id=1160 data-nosnippet>1160</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
 <a href=#1161 id=1161 data-nosnippet>1161</a>        offset: u32,
 <a href=#1162 id=1162 data-nosnippet>1162</a>        data: <span class="kw-2">&amp;</span>[u8],
 <a href=#1163 id=1163 data-nosnippet>1163</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1164 id=1164 data-nosnippet>1164</a>        <span class="kw">let </span>scope = PassErrorScope::SetPushConstant;
+<a href=#1164 id=1164 data-nosnippet>1164</a>        <span class="kw">let </span>scope = PassErrorScope::SetImmediate;
 <a href=#1165 id=1165 data-nosnippet>1165</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
 <a href=#1166 id=1166 data-nosnippet>1166</a>
-<a href=#1167 id=1167 data-nosnippet>1167</a>        <span class="kw">if </span>offset &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>) != <span class="number">0 </span>{
+<a href=#1167 id=1167 data-nosnippet>1167</a>        <span class="kw">if </span>offset &amp; (wgt::IMMEDIATES_ALIGNMENT - <span class="number">1</span>) != <span class="number">0 </span>{
 <a href=#1168 id=1168 data-nosnippet>1168</a>            <span class="macro">pass_try!</span>(
 <a href=#1169 id=1169 data-nosnippet>1169</a>                base,
 <a href=#1170 id=1170 data-nosnippet>1170</a>                scope,
-<a href=#1171 id=1171 data-nosnippet>1171</a>                <span class="prelude-val">Err</span>(ComputePassErrorInner::PushConstantOffsetAlignment),
+<a href=#1171 id=1171 data-nosnippet>1171</a>                <span class="prelude-val">Err</span>(ComputePassErrorInner::ImmediateOffsetAlignment),
 <a href=#1172 id=1172 data-nosnippet>1172</a>            );
 <a href=#1173 id=1173 data-nosnippet>1173</a>        }
 <a href=#1174 id=1174 data-nosnippet>1174</a>
-<a href=#1175 id=1175 data-nosnippet>1175</a>        <span class="kw">if </span>data.len() <span class="kw">as </span>u32 &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>) != <span class="number">0 </span>{
+<a href=#1175 id=1175 data-nosnippet>1175</a>        <span class="kw">if </span>data.len() <span class="kw">as </span>u32 &amp; (wgt::IMMEDIATES_ALIGNMENT - <span class="number">1</span>) != <span class="number">0 </span>{
 <a href=#1176 id=1176 data-nosnippet>1176</a>            <span class="macro">pass_try!</span>(
 <a href=#1177 id=1177 data-nosnippet>1177</a>                base,
 <a href=#1178 id=1178 data-nosnippet>1178</a>                scope,
-<a href=#1179 id=1179 data-nosnippet>1179</a>                <span class="prelude-val">Err</span>(ComputePassErrorInner::PushConstantSizeAlignment),
+<a href=#1179 id=1179 data-nosnippet>1179</a>                <span class="prelude-val">Err</span>(ComputePassErrorInner::ImmediateDataizeAlignment),
 <a href=#1180 id=1180 data-nosnippet>1180</a>            )
 <a href=#1181 id=1181 data-nosnippet>1181</a>        }
 <a href=#1182 id=1182 data-nosnippet>1182</a>        <span class="kw">let </span>value_offset = <span class="macro">pass_try!</span>(
 <a href=#1183 id=1183 data-nosnippet>1183</a>            base,
 <a href=#1184 id=1184 data-nosnippet>1184</a>            scope,
-<a href=#1185 id=1185 data-nosnippet>1185</a>            base.push_constant_data
+<a href=#1185 id=1185 data-nosnippet>1185</a>            base.immediates_data
 <a href=#1186 id=1186 data-nosnippet>1186</a>                .len()
 <a href=#1187 id=1187 data-nosnippet>1187</a>                .try_into()
-<a href=#1188 id=1188 data-nosnippet>1188</a>                .map_err(|<span class="kw">_</span>| ComputePassErrorInner::PushConstantOutOfMemory)
+<a href=#1188 id=1188 data-nosnippet>1188</a>                .map_err(|<span class="kw">_</span>| ComputePassErrorInner::ImmediateOutOfMemory)
 <a href=#1189 id=1189 data-nosnippet>1189</a>        );
 <a href=#1190 id=1190 data-nosnippet>1190</a>
-<a href=#1191 id=1191 data-nosnippet>1191</a>        base.push_constant_data.extend(
-<a href=#1192 id=1192 data-nosnippet>1192</a>            data.chunks_exact(wgt::PUSH_CONSTANT_ALIGNMENT <span class="kw">as </span>usize)
+<a href=#1191 id=1191 data-nosnippet>1191</a>        base.immediates_data.extend(
+<a href=#1192 id=1192 data-nosnippet>1192</a>            data.chunks_exact(wgt::IMMEDIATES_ALIGNMENT <span class="kw">as </span>usize)
 <a href=#1193 id=1193 data-nosnippet>1193</a>                .map(|arr| u32::from_ne_bytes([arr[<span class="number">0</span>], arr[<span class="number">1</span>], arr[<span class="number">2</span>], arr[<span class="number">3</span>]])),
 <a href=#1194 id=1194 data-nosnippet>1194</a>        );
 <a href=#1195 id=1195 data-nosnippet>1195</a>
-<a href=#1196 id=1196 data-nosnippet>1196</a>        base.commands.push(ArcComputeCommand::SetPushConstant {
+<a href=#1196 id=1196 data-nosnippet>1196</a>        base.commands.push(ArcComputeCommand::SetImmediate {
 <a href=#1197 id=1197 data-nosnippet>1197</a>            offset,
 <a href=#1198 id=1198 data-nosnippet>1198</a>            size_bytes: data.len() <span class="kw">as </span>u32,
 <a href=#1199 id=1199 data-nosnippet>1199</a>            values_offset: value_offset,

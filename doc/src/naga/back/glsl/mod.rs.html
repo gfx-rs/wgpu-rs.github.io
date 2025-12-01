@@ -139,7 +139,7 @@
 <a href=#139 id=139 data-nosnippet>139</a>            | <span class="kw">crate</span>::AddressSpace::Uniform
 <a href=#140 id=140 data-nosnippet>140</a>            | <span class="kw">crate</span>::AddressSpace::Storage { .. }
 <a href=#141 id=141 data-nosnippet>141</a>            | <span class="kw">crate</span>::AddressSpace::Handle
-<a href=#142 id=142 data-nosnippet>142</a>            | <span class="kw">crate</span>::AddressSpace::PushConstant
+<a href=#142 id=142 data-nosnippet>142</a>            | <span class="kw">crate</span>::AddressSpace::Immediate
 <a href=#143 id=143 data-nosnippet>143</a>            | <span class="kw">crate</span>::AddressSpace::TaskPayload =&gt; <span class="bool-val">false</span>,
 <a href=#144 id=144 data-nosnippet>144</a>        }
 <a href=#145 id=145 data-nosnippet>145</a>    }
@@ -376,8 +376,8 @@
 <a href=#376 id=376 data-nosnippet>376</a>    </span><span class="kw">pub </span>uniforms: <span class="kw">crate</span>::FastHashMap&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;, String&gt;,
 <a href=#377 id=377 data-nosnippet>377</a>    <span class="doccomment">/// Mapping between names and attribute locations.
 <a href=#378 id=378 data-nosnippet>378</a>    </span><span class="kw">pub </span>varying: <span class="kw">crate</span>::FastHashMap&lt;String, VaryingLocation&gt;,
-<a href=#379 id=379 data-nosnippet>379</a>    <span class="doccomment">/// List of push constant items in the shader.
-<a href=#380 id=380 data-nosnippet>380</a>    </span><span class="kw">pub </span>push_constant_items: Vec&lt;PushConstantItem&gt;,
+<a href=#379 id=379 data-nosnippet>379</a>    <span class="doccomment">/// List of immediate data items in the shader.
+<a href=#380 id=380 data-nosnippet>380</a>    </span><span class="kw">pub </span>immediates_items: Vec&lt;ImmediateItem&gt;,
 <a href=#381 id=381 data-nosnippet>381</a>    <span class="doccomment">/// Number of user-defined clip planes. Only applicable to vertex shaders.
 <a href=#382 id=382 data-nosnippet>382</a>    </span><span class="kw">pub </span>clip_distance_count: u32,
 <a href=#383 id=383 data-nosnippet>383</a>}
@@ -401,14 +401,14 @@
 <a href=#401 id=401 data-nosnippet>401</a>
 <a href=#402 id=402 data-nosnippet>402</a><span class="doccomment">/// All information to bind a single uniform value to the shader.
 <a href=#403 id=403 data-nosnippet>403</a>///
-<a href=#404 id=404 data-nosnippet>404</a>/// Push constants are emulated using traditional uniforms in OpenGL.
+<a href=#404 id=404 data-nosnippet>404</a>/// Immediates are emulated using traditional uniforms in OpenGL.
 <a href=#405 id=405 data-nosnippet>405</a>///
 <a href=#406 id=406 data-nosnippet>406</a>/// These are composed of a set of primitives (scalar, vector, matrix) that
 <a href=#407 id=407 data-nosnippet>407</a>/// are given names. Because they are not backed by the concept of a buffer,
 <a href=#408 id=408 data-nosnippet>408</a>/// we must do the work of calculating the offset of each primitive in the
-<a href=#409 id=409 data-nosnippet>409</a>/// push constant block.
+<a href=#409 id=409 data-nosnippet>409</a>/// immediate data block.
 <a href=#410 id=410 data-nosnippet>410</a></span><span class="attr">#[derive(Debug, Clone)]
-<a href=#411 id=411 data-nosnippet>411</a></span><span class="kw">pub struct </span>PushConstantItem {
+<a href=#411 id=411 data-nosnippet>411</a></span><span class="kw">pub struct </span>ImmediateItem {
 <a href=#412 id=412 data-nosnippet>412</a>    <span class="doccomment">/// GL uniform name for the item. This name is the same as if you were
 <a href=#413 id=413 data-nosnippet>413</a>    /// to access it directly from a GLSL shader.
 <a href=#414 id=414 data-nosnippet>414</a>    ///
@@ -420,24 +420,24 @@
 <a href=#420 id=420 data-nosnippet>420</a>    ///     value: f32,
 <a href=#421 id=421 data-nosnippet>421</a>    /// }
 <a href=#422 id=422 data-nosnippet>422</a>    ///
-<a href=#423 id=423 data-nosnippet>423</a>    /// struct PushConstant {
+<a href=#423 id=423 data-nosnippet>423</a>    /// struct ImmediateData {
 <a href=#424 id=424 data-nosnippet>424</a>    ///     InnerStruct inner;
 <a href=#425 id=425 data-nosnippet>425</a>    ///     vec4 array[2];
 <a href=#426 id=426 data-nosnippet>426</a>    /// }
 <a href=#427 id=427 data-nosnippet>427</a>    ///
-<a href=#428 id=428 data-nosnippet>428</a>    /// uniform PushConstants _push_constant_binding_cs;
+<a href=#428 id=428 data-nosnippet>428</a>    /// uniform ImmediateData _immediates_binding_cs;
 <a href=#429 id=429 data-nosnippet>429</a>    /// ```
 <a href=#430 id=430 data-nosnippet>430</a>    ///
 <a href=#431 id=431 data-nosnippet>431</a>    /// ```text
-<a href=#432 id=432 data-nosnippet>432</a>    /// - _push_constant_binding_cs.inner.value
-<a href=#433 id=433 data-nosnippet>433</a>    /// - _push_constant_binding_cs.array[0]
-<a href=#434 id=434 data-nosnippet>434</a>    /// - _push_constant_binding_cs.array[1]
+<a href=#432 id=432 data-nosnippet>432</a>    /// - _immediates_binding_cs.inner.value
+<a href=#433 id=433 data-nosnippet>433</a>    /// - _immediates_binding_cs.array[0]
+<a href=#434 id=434 data-nosnippet>434</a>    /// - _immediates_binding_cs.array[1]
 <a href=#435 id=435 data-nosnippet>435</a>    /// ```
 <a href=#436 id=436 data-nosnippet>436</a>    ///
 <a href=#437 id=437 data-nosnippet>437</a>    </span><span class="kw">pub </span>access_path: String,
 <a href=#438 id=438 data-nosnippet>438</a>    <span class="doccomment">/// Type of the uniform. This will only ever be a scalar, vector, or matrix.
 <a href=#439 id=439 data-nosnippet>439</a>    </span><span class="kw">pub </span>ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
-<a href=#440 id=440 data-nosnippet>440</a>    <span class="doccomment">/// The offset in the push constant memory block this uniform maps to.
+<a href=#440 id=440 data-nosnippet>440</a>    <span class="doccomment">/// The offset in the immediate data memory block this uniform maps to.
 <a href=#441 id=441 data-nosnippet>441</a>    ///
 <a href=#442 id=442 data-nosnippet>442</a>    /// The size of the uniform can be derived from the type.
 <a href=#443 id=443 data-nosnippet>443</a>    </span><span class="kw">pub </span>offset: u32,
@@ -540,10 +540,10 @@
 <a href=#540 id=540 data-nosnippet>540</a>    /// Contains the missing [`Features`].
 <a href=#541 id=541 data-nosnippet>541</a>    </span><span class="attr">#[error(<span class="string">"The selected version doesn't support {0:?}"</span>)]
 <a href=#542 id=542 data-nosnippet>542</a>    </span>MissingFeatures(Features),
-<a href=#543 id=543 data-nosnippet>543</a>    <span class="doccomment">/// [`AddressSpace::PushConstant`](crate::AddressSpace::PushConstant) was used more than
+<a href=#543 id=543 data-nosnippet>543</a>    <span class="doccomment">/// [`AddressSpace::Immediate`](crate::AddressSpace::Immediate) was used more than
 <a href=#544 id=544 data-nosnippet>544</a>    /// once in the entry point, which isn't supported.
-<a href=#545 id=545 data-nosnippet>545</a>    </span><span class="attr">#[error(<span class="string">"Multiple push constants aren't supported"</span>)]
-<a href=#546 id=546 data-nosnippet>546</a>    </span>MultiplePushConstants,
+<a href=#545 id=545 data-nosnippet>545</a>    </span><span class="attr">#[error(<span class="string">"Multiple immediates aren't supported"</span>)]
+<a href=#546 id=546 data-nosnippet>546</a>    </span>MultipleImmediateData,
 <a href=#547 id=547 data-nosnippet>547</a>    <span class="doccomment">/// The specified [`Version`] isn't supported.
 <a href=#548 id=548 data-nosnippet>548</a>    </span><span class="attr">#[error(<span class="string">"The specified version isn't supported"</span>)]
 <a href=#549 id=549 data-nosnippet>549</a>    </span>VersionNotSupported,
@@ -666,9 +666,9 @@
 <a href=#666 id=666 data-nosnippet>666</a>            <span class="kw-2">&amp;</span>keywords::RESERVED_KEYWORD_SET,
 <a href=#667 id=667 data-nosnippet>667</a>            proc::CaseInsensitiveKeywordSet::empty(),
 <a href=#668 id=668 data-nosnippet>668</a>            <span class="kw-2">&amp;</span>[
-<a href=#669 id=669 data-nosnippet>669</a>                <span class="string">"gl_"</span>,                     <span class="comment">// all GL built-in variables
-<a href=#670 id=670 data-nosnippet>670</a>                </span><span class="string">"_group"</span>,                  <span class="comment">// all normal bindings
-<a href=#671 id=671 data-nosnippet>671</a>                </span><span class="string">"_push_constant_binding_"</span>, <span class="comment">// all push constant bindings
+<a href=#669 id=669 data-nosnippet>669</a>                <span class="string">"gl_"</span>,                  <span class="comment">// all GL built-in variables
+<a href=#670 id=670 data-nosnippet>670</a>                </span><span class="string">"_group"</span>,               <span class="comment">// all normal bindings
+<a href=#671 id=671 data-nosnippet>671</a>                </span><span class="string">"_immediates_binding_"</span>, <span class="comment">// all immediate data bindings
 <a href=#672 id=672 data-nosnippet>672</a>            </span>],
 <a href=#673 id=673 data-nosnippet>673</a>            <span class="kw-2">&amp;mut </span>names,
 <a href=#674 id=674 data-nosnippet>674</a>        );
@@ -1292,7 +1292,7 @@
 <a href=#1292 id=1292 data-nosnippet>1292</a>            <span class="kw">crate</span>::AddressSpace::WorkGroup =&gt; {
 <a href=#1293 id=1293 data-nosnippet>1293</a>                <span class="self">self</span>.write_simple_global(handle, global)<span class="question-mark">?</span>;
 <a href=#1294 id=1294 data-nosnippet>1294</a>            }
-<a href=#1295 id=1295 data-nosnippet>1295</a>            <span class="kw">crate</span>::AddressSpace::PushConstant =&gt; {
+<a href=#1295 id=1295 data-nosnippet>1295</a>            <span class="kw">crate</span>::AddressSpace::Immediate =&gt; {
 <a href=#1296 id=1296 data-nosnippet>1296</a>                <span class="self">self</span>.write_simple_global(handle, global)<span class="question-mark">?</span>;
 <a href=#1297 id=1297 data-nosnippet>1297</a>            }
 <a href=#1298 id=1298 data-nosnippet>1298</a>            <span class="kw">crate</span>::AddressSpace::Uniform =&gt; {
@@ -1338,7 +1338,7 @@
 <a href=#1338 id=1338 data-nosnippet>1338</a>
 <a href=#1339 id=1339 data-nosnippet>1339</a>        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
 <a href=#1340 id=1340 data-nosnippet>1340</a>
-<a href=#1341 id=1341 data-nosnippet>1341</a>        <span class="kw">if let </span><span class="kw">crate</span>::AddressSpace::PushConstant = global.space {
+<a href=#1341 id=1341 data-nosnippet>1341</a>        <span class="kw">if let </span><span class="kw">crate</span>::AddressSpace::Immediate = global.space {
 <a href=#1342 id=1342 data-nosnippet>1342</a>            <span class="kw">let </span>global_name = <span class="self">self</span>.get_global_name(handle, global);
 <a href=#1343 id=1343 data-nosnippet>1343</a>            <span class="self">self</span>.reflection_names_globals.insert(handle, global_name);
 <a href=#1344 id=1344 data-nosnippet>1344</a>        }
@@ -1528,8 +1528,8 @@
 <a href=#1528 id=1528 data-nosnippet>1528</a>                    <span class="self">self</span>.entry_point.stage.to_str()
 <a href=#1529 id=1529 data-nosnippet>1529</a>                )
 <a href=#1530 id=1530 data-nosnippet>1530</a>            }
-<a href=#1531 id=1531 data-nosnippet>1531</a>            (<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="kw">crate</span>::AddressSpace::PushConstant) =&gt; {
-<a href=#1532 id=1532 data-nosnippet>1532</a>                <span class="macro">format!</span>(<span class="string">"_push_constant_binding_{}"</span>, <span class="self">self</span>.entry_point.stage.to_str())
+<a href=#1531 id=1531 data-nosnippet>1531</a>            (<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="kw">crate</span>::AddressSpace::Immediate) =&gt; {
+<a href=#1532 id=1532 data-nosnippet>1532</a>                <span class="macro">format!</span>(<span class="string">"_immediates_binding_{}"</span>, <span class="self">self</span>.entry_point.stage.to_str())
 <a href=#1533 id=1533 data-nosnippet>1533</a>            }
 <a href=#1534 id=1534 data-nosnippet>1534</a>            (<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="kw">_</span>) =&gt; <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(handle)].clone(),
 <a href=#1535 id=1535 data-nosnippet>1535</a>        }
@@ -1549,9 +1549,9 @@
 <a href=#1549 id=1549 data-nosnippet>1549</a>                br.binding,
 <a href=#1550 id=1550 data-nosnippet>1550</a>                <span class="self">self</span>.entry_point.stage.to_str()
 <a href=#1551 id=1551 data-nosnippet>1551</a>            )<span class="question-mark">?</span>,
-<a href=#1552 id=1552 data-nosnippet>1552</a>            (<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="kw">crate</span>::AddressSpace::PushConstant) =&gt; <span class="macro">write!</span>(
+<a href=#1552 id=1552 data-nosnippet>1552</a>            (<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="kw">crate</span>::AddressSpace::Immediate) =&gt; <span class="macro">write!</span>(
 <a href=#1553 id=1553 data-nosnippet>1553</a>                <span class="self">self</span>.out,
-<a href=#1554 id=1554 data-nosnippet>1554</a>                <span class="string">"_push_constant_binding_{}"</span>,
+<a href=#1554 id=1554 data-nosnippet>1554</a>                <span class="string">"_immediates_binding_{}"</span>,
 <a href=#1555 id=1555 data-nosnippet>1555</a>                <span class="self">self</span>.entry_point.stage.to_str()
 <a href=#1556 id=1556 data-nosnippet>1556</a>            )<span class="question-mark">?</span>,
 <a href=#1557 id=1557 data-nosnippet>1557</a>            (<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="kw">_</span>) =&gt; <span class="macro">write!</span>(
@@ -5022,7 +5022,7 @@
 <a href=#5022 id=5022 data-nosnippet>5022</a>            }
 <a href=#5023 id=5023 data-nosnippet>5023</a>        }
 <a href=#5024 id=5024 data-nosnippet>5024</a>
-<a href=#5025 id=5025 data-nosnippet>5025</a>        <span class="kw">let </span><span class="kw-2">mut </span>push_constant_info = <span class="prelude-val">None</span>;
+<a href=#5025 id=5025 data-nosnippet>5025</a>        <span class="kw">let </span><span class="kw-2">mut </span>immediates_info = <span class="prelude-val">None</span>;
 <a href=#5026 id=5026 data-nosnippet>5026</a>        <span class="kw">for </span>(handle, var) <span class="kw">in </span><span class="self">self</span>.module.global_variables.iter() {
 <a href=#5027 id=5027 data-nosnippet>5027</a>            <span class="kw">if </span>info[handle].is_empty() {
 <a href=#5028 id=5028 data-nosnippet>5028</a>                <span class="kw">continue</span>;
@@ -5047,19 +5047,19 @@
 <a href=#5047 id=5047 data-nosnippet>5047</a>                        <span class="kw">let </span>name = <span class="self">self</span>.reflection_names_globals[<span class="kw-2">&amp;</span>handle].clone();
 <a href=#5048 id=5048 data-nosnippet>5048</a>                        uniforms.insert(handle, name);
 <a href=#5049 id=5049 data-nosnippet>5049</a>                    }
-<a href=#5050 id=5050 data-nosnippet>5050</a>                    <span class="kw">crate</span>::AddressSpace::PushConstant =&gt; {
+<a href=#5050 id=5050 data-nosnippet>5050</a>                    <span class="kw">crate</span>::AddressSpace::Immediate =&gt; {
 <a href=#5051 id=5051 data-nosnippet>5051</a>                        <span class="kw">let </span>name = <span class="self">self</span>.reflection_names_globals[<span class="kw-2">&amp;</span>handle].clone();
-<a href=#5052 id=5052 data-nosnippet>5052</a>                        push_constant_info = <span class="prelude-val">Some</span>((name, var.ty));
+<a href=#5052 id=5052 data-nosnippet>5052</a>                        immediates_info = <span class="prelude-val">Some</span>((name, var.ty));
 <a href=#5053 id=5053 data-nosnippet>5053</a>                    }
 <a href=#5054 id=5054 data-nosnippet>5054</a>                    <span class="kw">_ </span>=&gt; (),
 <a href=#5055 id=5055 data-nosnippet>5055</a>                },
 <a href=#5056 id=5056 data-nosnippet>5056</a>            }
 <a href=#5057 id=5057 data-nosnippet>5057</a>        }
 <a href=#5058 id=5058 data-nosnippet>5058</a>
-<a href=#5059 id=5059 data-nosnippet>5059</a>        <span class="kw">let </span><span class="kw-2">mut </span>push_constant_segments = Vec::new();
-<a href=#5060 id=5060 data-nosnippet>5060</a>        <span class="kw">let </span><span class="kw-2">mut </span>push_constant_items = <span class="macro">vec!</span>[];
+<a href=#5059 id=5059 data-nosnippet>5059</a>        <span class="kw">let </span><span class="kw-2">mut </span>immediates_segments = Vec::new();
+<a href=#5060 id=5060 data-nosnippet>5060</a>        <span class="kw">let </span><span class="kw-2">mut </span>immediates_items = <span class="macro">vec!</span>[];
 <a href=#5061 id=5061 data-nosnippet>5061</a>
-<a href=#5062 id=5062 data-nosnippet>5062</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>((name, ty)) = push_constant_info {
+<a href=#5062 id=5062 data-nosnippet>5062</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>((name, ty)) = immediates_info {
 <a href=#5063 id=5063 data-nosnippet>5063</a>            <span class="comment">// We don't have a layouter available to us, so we need to create one.
 <a href=#5064 id=5064 data-nosnippet>5064</a>            //
 <a href=#5065 id=5065 data-nosnippet>5065</a>            // This is potentially a bit wasteful, but the set of types in the program
@@ -5068,15 +5068,15 @@
 <a href=#5068 id=5068 data-nosnippet>5068</a>            layouter.update(<span class="self">self</span>.module.to_ctx()).unwrap();
 <a href=#5069 id=5069 data-nosnippet>5069</a>
 <a href=#5070 id=5070 data-nosnippet>5070</a>            <span class="comment">// We start with the name of the binding itself.
-<a href=#5071 id=5071 data-nosnippet>5071</a>            </span>push_constant_segments.push(name);
+<a href=#5071 id=5071 data-nosnippet>5071</a>            </span>immediates_segments.push(name);
 <a href=#5072 id=5072 data-nosnippet>5072</a>
-<a href=#5073 id=5073 data-nosnippet>5073</a>            <span class="comment">// We then recursively collect all the uniform fields of the push constant.
-<a href=#5074 id=5074 data-nosnippet>5074</a>            </span><span class="self">self</span>.collect_push_constant_items(
+<a href=#5073 id=5073 data-nosnippet>5073</a>            <span class="comment">// We then recursively collect all the uniform fields of the immediate data.
+<a href=#5074 id=5074 data-nosnippet>5074</a>            </span><span class="self">self</span>.collect_immediates_items(
 <a href=#5075 id=5075 data-nosnippet>5075</a>                ty,
-<a href=#5076 id=5076 data-nosnippet>5076</a>                <span class="kw-2">&amp;mut </span>push_constant_segments,
+<a href=#5076 id=5076 data-nosnippet>5076</a>                <span class="kw-2">&amp;mut </span>immediates_segments,
 <a href=#5077 id=5077 data-nosnippet>5077</a>                <span class="kw-2">&amp;</span>layouter,
 <a href=#5078 id=5078 data-nosnippet>5078</a>                <span class="kw-2">&amp;mut </span><span class="number">0</span>,
-<a href=#5079 id=5079 data-nosnippet>5079</a>                <span class="kw-2">&amp;mut </span>push_constant_items,
+<a href=#5079 id=5079 data-nosnippet>5079</a>                <span class="kw-2">&amp;mut </span>immediates_items,
 <a href=#5080 id=5080 data-nosnippet>5080</a>            );
 <a href=#5081 id=5081 data-nosnippet>5081</a>        }
 <a href=#5082 id=5082 data-nosnippet>5082</a>
@@ -5084,18 +5084,18 @@
 <a href=#5084 id=5084 data-nosnippet>5084</a>            texture_mapping,
 <a href=#5085 id=5085 data-nosnippet>5085</a>            uniforms,
 <a href=#5086 id=5086 data-nosnippet>5086</a>            varying: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.varying),
-<a href=#5087 id=5087 data-nosnippet>5087</a>            push_constant_items,
+<a href=#5087 id=5087 data-nosnippet>5087</a>            immediates_items,
 <a href=#5088 id=5088 data-nosnippet>5088</a>            clip_distance_count: <span class="self">self</span>.clip_distance_count,
 <a href=#5089 id=5089 data-nosnippet>5089</a>        })
 <a href=#5090 id=5090 data-nosnippet>5090</a>    }
 <a href=#5091 id=5091 data-nosnippet>5091</a>
-<a href=#5092 id=5092 data-nosnippet>5092</a>    <span class="kw">fn </span>collect_push_constant_items(
+<a href=#5092 id=5092 data-nosnippet>5092</a>    <span class="kw">fn </span>collect_immediates_items(
 <a href=#5093 id=5093 data-nosnippet>5093</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#5094 id=5094 data-nosnippet>5094</a>        ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
 <a href=#5095 id=5095 data-nosnippet>5095</a>        segments: <span class="kw-2">&amp;mut </span>Vec&lt;String&gt;,
 <a href=#5096 id=5096 data-nosnippet>5096</a>        layouter: <span class="kw-2">&amp;</span>proc::Layouter,
 <a href=#5097 id=5097 data-nosnippet>5097</a>        offset: <span class="kw-2">&amp;mut </span>u32,
-<a href=#5098 id=5098 data-nosnippet>5098</a>        items: <span class="kw-2">&amp;mut </span>Vec&lt;PushConstantItem&gt;,
+<a href=#5098 id=5098 data-nosnippet>5098</a>        items: <span class="kw-2">&amp;mut </span>Vec&lt;ImmediateItem&gt;,
 <a href=#5099 id=5099 data-nosnippet>5099</a>    ) {
 <a href=#5100 id=5100 data-nosnippet>5100</a>        <span class="comment">// At this point in the recursion, `segments` contains the path
 <a href=#5101 id=5101 data-nosnippet>5101</a>        // needed to access `ty` from the root.
@@ -5107,7 +5107,7 @@
 <a href=#5107 id=5107 data-nosnippet>5107</a>            </span>TypeInner::Scalar { .. } | TypeInner::Vector { .. } | TypeInner::Matrix { .. } =&gt; {
 <a href=#5108 id=5108 data-nosnippet>5108</a>                <span class="comment">// Build the full name, by combining all current segments.
 <a href=#5109 id=5109 data-nosnippet>5109</a>                </span><span class="kw">let </span>name: String = segments.iter().map(String::as_str).collect();
-<a href=#5110 id=5110 data-nosnippet>5110</a>                items.push(PushConstantItem {
+<a href=#5110 id=5110 data-nosnippet>5110</a>                items.push(ImmediateItem {
 <a href=#5111 id=5111 data-nosnippet>5111</a>                    access_path: name,
 <a href=#5112 id=5112 data-nosnippet>5112</a>                    offset: <span class="kw-2">*</span>offset,
 <a href=#5113 id=5113 data-nosnippet>5113</a>                    ty,
@@ -5117,13 +5117,13 @@
 <a href=#5117 id=5117 data-nosnippet>5117</a>            <span class="comment">// Arrays are recursed into.
 <a href=#5118 id=5118 data-nosnippet>5118</a>            </span>TypeInner::Array { base, size, .. } =&gt; {
 <a href=#5119 id=5119 data-nosnippet>5119</a>                <span class="kw">let </span><span class="kw">crate</span>::ArraySize::Constant(count) = size <span class="kw">else </span>{
-<a href=#5120 id=5120 data-nosnippet>5120</a>                    <span class="macro">unreachable!</span>(<span class="string">"Cannot have dynamic arrays in push constants"</span>);
+<a href=#5120 id=5120 data-nosnippet>5120</a>                    <span class="macro">unreachable!</span>(<span class="string">"Cannot have dynamic arrays in immediates"</span>);
 <a href=#5121 id=5121 data-nosnippet>5121</a>                };
 <a href=#5122 id=5122 data-nosnippet>5122</a>
 <a href=#5123 id=5123 data-nosnippet>5123</a>                <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..count.get() {
 <a href=#5124 id=5124 data-nosnippet>5124</a>                    <span class="comment">// Add the array accessor and recurse.
 <a href=#5125 id=5125 data-nosnippet>5125</a>                    </span>segments.push(<span class="macro">format!</span>(<span class="string">"[{i}]"</span>));
-<a href=#5126 id=5126 data-nosnippet>5126</a>                    <span class="self">self</span>.collect_push_constant_items(base, segments, layouter, offset, items);
+<a href=#5126 id=5126 data-nosnippet>5126</a>                    <span class="self">self</span>.collect_immediates_items(base, segments, layouter, offset, items);
 <a href=#5127 id=5127 data-nosnippet>5127</a>                    segments.pop();
 <a href=#5128 id=5128 data-nosnippet>5128</a>                }
 <a href=#5129 id=5129 data-nosnippet>5129</a>
@@ -5137,7 +5137,7 @@
 <a href=#5137 id=5137 data-nosnippet>5137</a>                        <span class="string">".{}"</span>,
 <a href=#5138 id=5138 data-nosnippet>5138</a>                        <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::StructMember(ty, index <span class="kw">as </span>u32)]
 <a href=#5139 id=5139 data-nosnippet>5139</a>                    ));
-<a href=#5140 id=5140 data-nosnippet>5140</a>                    <span class="self">self</span>.collect_push_constant_items(member.ty, segments, layouter, offset, items);
+<a href=#5140 id=5140 data-nosnippet>5140</a>                    <span class="self">self</span>.collect_immediates_items(member.ty, segments, layouter, offset, items);
 <a href=#5141 id=5141 data-nosnippet>5141</a>                    segments.pop();
 <a href=#5142 id=5142 data-nosnippet>5142</a>                }
 <a href=#5143 id=5143 data-nosnippet>5143</a>
@@ -5286,7 +5286,7 @@
 <a href=#5286 id=5286 data-nosnippet>5286</a>        As::Uniform =&gt; <span class="prelude-val">Some</span>(<span class="string">"uniform"</span>),
 <a href=#5287 id=5287 data-nosnippet>5287</a>        As::Handle =&gt; <span class="prelude-val">Some</span>(<span class="string">"uniform"</span>),
 <a href=#5288 id=5288 data-nosnippet>5288</a>        As::WorkGroup =&gt; <span class="prelude-val">Some</span>(<span class="string">"shared"</span>),
-<a href=#5289 id=5289 data-nosnippet>5289</a>        As::PushConstant =&gt; <span class="prelude-val">Some</span>(<span class="string">"uniform"</span>),
+<a href=#5289 id=5289 data-nosnippet>5289</a>        As::Immediate =&gt; <span class="prelude-val">Some</span>(<span class="string">"uniform"</span>),
 <a href=#5290 id=5290 data-nosnippet>5290</a>        As::TaskPayload =&gt; <span class="macro">unreachable!</span>(),
 <a href=#5291 id=5291 data-nosnippet>5291</a>    }
 <a href=#5292 id=5292 data-nosnippet>5292</a>}

@@ -12,7 +12,7 @@
 <a href=#12 id=12 data-nosnippet>12</a>/// - max_dynamic_storage_buffers_per_pipeline_layout: 1,
 <a href=#13 id=13 data-nosnippet>13</a>/// - max_storage_buffers_per_shader_stage: 2,
 <a href=#14 id=14 data-nosnippet>14</a>/// - max_storage_buffer_binding_size: 3 * min_storage_buffer_offset_alignment,
-<a href=#15 id=15 data-nosnippet>15</a>/// - max_push_constant_size: 4,
+<a href=#15 id=15 data-nosnippet>15</a>/// - max_immediate_size: 4,
 <a href=#16 id=16 data-nosnippet>16</a>/// - max_compute_invocations_per_workgroup 1
 <a href=#17 id=17 data-nosnippet>17</a>///
 <a href=#18 id=18 data-nosnippet>18</a>/// These are all indirectly satisfied by `DownlevelFlags::INDIRECT_EXECUTION`, which is also
@@ -53,7 +53,7 @@
 <a href=#53 id=53 data-nosnippet>53</a>            struct OffsetPc {{
 <a href=#54 id=54 data-nosnippet>54</a>                inner: u32,
 <a href=#55 id=55 data-nosnippet>55</a>            }}
-<a href=#56 id=56 data-nosnippet>56</a>            var&lt;push_constant&gt; offset: OffsetPc;
+<a href=#56 id=56 data-nosnippet>56</a>            var&lt;immediate&gt; offset: OffsetPc;
 <a href=#57 id=57 data-nosnippet>57</a>
 <a href=#58 id=58 data-nosnippet>58</a>            @compute @workgroup_size(1)
 <a href=#59 id=59 data-nosnippet>59</a>            fn main() {{
@@ -96,7 +96,7 @@
 <a href=#96 id=96 data-nosnippet>96</a>        </span><span class="kw">let </span>module = <span class="macro">panic!</span>(<span class="string">"Indirect validation requires the wgsl feature flag to be enabled!"</span>);
 <a href=#97 id=97 data-nosnippet>97</a>
 <a href=#98 id=98 data-nosnippet>98</a>        <span class="kw">let </span>info = <span class="kw">crate</span>::device::create_validator(
-<a href=#99 id=99 data-nosnippet>99</a>            wgt::Features::PUSH_CONSTANTS,
+<a href=#99 id=99 data-nosnippet>99</a>            wgt::Features::IMMEDIATES,
 <a href=#100 id=100 data-nosnippet>100</a>            wgt::DownlevelFlags::empty(),
 <a href=#101 id=101 data-nosnippet>101</a>            naga::valid::ValidationFlags::all(),
 <a href=#102 id=102 data-nosnippet>102</a>        )
@@ -177,7 +177,7 @@
 <a href=#177 id=177 data-nosnippet>177</a>                dst_bind_group_layout.as_ref(),
 <a href=#178 id=178 data-nosnippet>178</a>                src_bind_group_layout.as_ref(),
 <a href=#179 id=179 data-nosnippet>179</a>            ],
-<a href=#180 id=180 data-nosnippet>180</a>            push_constant_ranges: <span class="kw-2">&amp;</span>[wgt::PushConstantRange {
+<a href=#180 id=180 data-nosnippet>180</a>            immediates_ranges: <span class="kw-2">&amp;</span>[wgt::ImmediateRange {
 <a href=#181 id=181 data-nosnippet>181</a>                stages: wgt::ShaderStages::COMPUTE,
 <a href=#182 id=182 data-nosnippet>182</a>                range: <span class="number">0</span>..<span class="number">4</span>,
 <a href=#183 id=183 data-nosnippet>183</a>            }],
@@ -302,10 +302,10 @@
 <a href=#302 id=302 data-nosnippet>302</a>        // min_storage_buffer_offset_alignment (256 bytes by default).
 <a href=#303 id=303 data-nosnippet>303</a>        //
 <a href=#304 id=304 data-nosnippet>304</a>        // So, we work around this limitation by calculating an aligned offset
-<a href=#305 id=305 data-nosnippet>305</a>        // and pass the remainder through a push constant.
+<a href=#305 id=305 data-nosnippet>305</a>        // and pass the remainder through a immediate data.
 <a href=#306 id=306 data-nosnippet>306</a>        //
 <a href=#307 id=307 data-nosnippet>307</a>        // We could bind the whole buffer and only have to pass the offset
-<a href=#308 id=308 data-nosnippet>308</a>        // through a push constant but we might run into the
+<a href=#308 id=308 data-nosnippet>308</a>        // through a immediate data but we might run into the
 <a href=#309 id=309 data-nosnippet>309</a>        // max_storage_buffer_binding_size limit.
 <a href=#310 id=310 data-nosnippet>310</a>        //
 <a href=#311 id=311 data-nosnippet>311</a>        // See the inner docs of `calculate_src_buffer_binding_size` to

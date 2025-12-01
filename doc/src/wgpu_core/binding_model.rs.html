@@ -777,20 +777,20 @@
 <a href=#777 id=777 data-nosnippet>777</a>    <span class="attr">#[error(transparent)]
 <a href=#778 id=778 data-nosnippet>778</a>    </span>Device(<span class="attr">#[from] </span>DeviceError),
 <a href=#779 id=779 data-nosnippet>779</a>    <span class="attr">#[error(
-<a href=#780 id=780 data-nosnippet>780</a>        <span class="string">"Push constant at index {index} has range bound {bound} not aligned to {}"</span>,
-<a href=#781 id=781 data-nosnippet>781</a>        wgt::PUSH_CONSTANT_ALIGNMENT
+<a href=#780 id=780 data-nosnippet>780</a>        <span class="string">"Immediate data at index {index} has range bound {bound} not aligned to {}"</span>,
+<a href=#781 id=781 data-nosnippet>781</a>        wgt::IMMEDIATES_ALIGNMENT
 <a href=#782 id=782 data-nosnippet>782</a>    )]
-<a href=#783 id=783 data-nosnippet>783</a>    </span>MisalignedPushConstantRange { index: usize, bound: u32 },
+<a href=#783 id=783 data-nosnippet>783</a>    </span>MisalignedImmediateRange { index: usize, bound: u32 },
 <a href=#784 id=784 data-nosnippet>784</a>    <span class="attr">#[error(transparent)]
 <a href=#785 id=785 data-nosnippet>785</a>    </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
-<a href=#786 id=786 data-nosnippet>786</a>    <span class="attr">#[error(<span class="string">"Push constant range (index {index}) provides for stage(s) {provided:?} but there exists another range that provides stage(s) {intersected:?}. Each stage may only be provided by one range"</span>)]
-<a href=#787 id=787 data-nosnippet>787</a>    </span>MoreThanOnePushConstantRangePerStage {
+<a href=#786 id=786 data-nosnippet>786</a>    <span class="attr">#[error(<span class="string">"Immediate data range (index {index}) provides for stage(s) {provided:?} but there exists another range that provides stage(s) {intersected:?}. Each stage may only be provided by one range"</span>)]
+<a href=#787 id=787 data-nosnippet>787</a>    </span>MoreThanOneImmediateRangePerStage {
 <a href=#788 id=788 data-nosnippet>788</a>        index: usize,
 <a href=#789 id=789 data-nosnippet>789</a>        provided: wgt::ShaderStages,
 <a href=#790 id=790 data-nosnippet>790</a>        intersected: wgt::ShaderStages,
 <a href=#791 id=791 data-nosnippet>791</a>    },
-<a href=#792 id=792 data-nosnippet>792</a>    <span class="attr">#[error(<span class="string">"Push constant at index {index} has range {}..{} which exceeds device push constant size limit 0..{max}"</span>, range.start, range.end)]
-<a href=#793 id=793 data-nosnippet>793</a>    </span>PushConstantRangeTooLarge {
+<a href=#792 id=792 data-nosnippet>792</a>    <span class="attr">#[error(<span class="string">"Immediate data at index {index} has range {}..{} which exceeds device immediate data size limit 0..{max}"</span>, range.start, range.end)]
+<a href=#793 id=793 data-nosnippet>793</a>    </span>ImmediateRangeTooLarge {
 <a href=#794 id=794 data-nosnippet>794</a>        index: usize,
 <a href=#795 id=795 data-nosnippet>795</a>        range: Range&lt;u32&gt;,
 <a href=#796 id=796 data-nosnippet>796</a>        max: u32,
@@ -810,9 +810,9 @@
 <a href=#810 id=810 data-nosnippet>810</a>            <span class="self">Self</span>::MissingFeatures(e) =&gt; e,
 <a href=#811 id=811 data-nosnippet>811</a>            <span class="self">Self</span>::InvalidResource(e) =&gt; e,
 <a href=#812 id=812 data-nosnippet>812</a>            <span class="self">Self</span>::TooManyBindings(e) =&gt; e,
-<a href=#813 id=813 data-nosnippet>813</a>            <span class="self">Self</span>::MisalignedPushConstantRange { .. }
-<a href=#814 id=814 data-nosnippet>814</a>            | <span class="self">Self</span>::MoreThanOnePushConstantRangePerStage { .. }
-<a href=#815 id=815 data-nosnippet>815</a>            | <span class="self">Self</span>::PushConstantRangeTooLarge { .. }
+<a href=#813 id=813 data-nosnippet>813</a>            <span class="self">Self</span>::MisalignedImmediateRange { .. }
+<a href=#814 id=814 data-nosnippet>814</a>            | <span class="self">Self</span>::MoreThanOneImmediateRangePerStage { .. }
+<a href=#815 id=815 data-nosnippet>815</a>            | <span class="self">Self</span>::ImmediateRangeTooLarge { .. }
 <a href=#816 id=816 data-nosnippet>816</a>            | <span class="self">Self</span>::TooManyGroups { .. } =&gt; <span class="kw">return </span>ErrorType::Validation,
 <a href=#817 id=817 data-nosnippet>817</a>        };
 <a href=#818 id=818 data-nosnippet>818</a>        e.webgpu_error_type()
@@ -821,36 +821,36 @@
 <a href=#821 id=821 data-nosnippet>821</a>
 <a href=#822 id=822 data-nosnippet>822</a><span class="attr">#[derive(Clone, Debug, Error)]
 <a href=#823 id=823 data-nosnippet>823</a>#[non_exhaustive]
-<a href=#824 id=824 data-nosnippet>824</a></span><span class="kw">pub enum </span>PushConstantUploadError {
-<a href=#825 id=825 data-nosnippet>825</a>    <span class="attr">#[error(<span class="string">"Provided push constant with indices {offset}..{end_offset} overruns matching push constant range at index {idx}, with stage(s) {:?} and indices {:?}"</span>, range.stages, range.range)]
+<a href=#824 id=824 data-nosnippet>824</a></span><span class="kw">pub enum </span>ImmediateUploadError {
+<a href=#825 id=825 data-nosnippet>825</a>    <span class="attr">#[error(<span class="string">"Provided immediate data with indices {offset}..{end_offset} overruns matching immediate data range at index {idx}, with stage(s) {:?} and indices {:?}"</span>, range.stages, range.range)]
 <a href=#826 id=826 data-nosnippet>826</a>    </span>TooLarge {
 <a href=#827 id=827 data-nosnippet>827</a>        offset: u32,
 <a href=#828 id=828 data-nosnippet>828</a>        end_offset: u32,
 <a href=#829 id=829 data-nosnippet>829</a>        idx: usize,
-<a href=#830 id=830 data-nosnippet>830</a>        range: wgt::PushConstantRange,
+<a href=#830 id=830 data-nosnippet>830</a>        range: wgt::ImmediateRange,
 <a href=#831 id=831 data-nosnippet>831</a>    },
-<a href=#832 id=832 data-nosnippet>832</a>    <span class="attr">#[error(<span class="string">"Provided push constant is for stage(s) {actual:?}, stage with a partial match found at index {idx} with stage(s) {matched:?}, however push constants must be complete matches"</span>)]
+<a href=#832 id=832 data-nosnippet>832</a>    <span class="attr">#[error(<span class="string">"Provided immediate data is for stage(s) {actual:?}, stage with a partial match found at index {idx} with stage(s) {matched:?}, however immediates must be complete matches"</span>)]
 <a href=#833 id=833 data-nosnippet>833</a>    </span>PartialRangeMatch {
 <a href=#834 id=834 data-nosnippet>834</a>        actual: wgt::ShaderStages,
 <a href=#835 id=835 data-nosnippet>835</a>        idx: usize,
 <a href=#836 id=836 data-nosnippet>836</a>        matched: wgt::ShaderStages,
 <a href=#837 id=837 data-nosnippet>837</a>    },
-<a href=#838 id=838 data-nosnippet>838</a>    <span class="attr">#[error(<span class="string">"Provided push constant is for stage(s) {actual:?}, but intersects a push constant range (at index {idx}) with stage(s) {missing:?}. Push constants must provide the stages for all ranges they intersect"</span>)]
+<a href=#838 id=838 data-nosnippet>838</a>    <span class="attr">#[error(<span class="string">"Provided immediate data is for stage(s) {actual:?}, but intersects a immediate data range (at index {idx}) with stage(s) {missing:?}. Immediates must provide the stages for all ranges they intersect"</span>)]
 <a href=#839 id=839 data-nosnippet>839</a>    </span>MissingStages {
 <a href=#840 id=840 data-nosnippet>840</a>        actual: wgt::ShaderStages,
 <a href=#841 id=841 data-nosnippet>841</a>        idx: usize,
 <a href=#842 id=842 data-nosnippet>842</a>        missing: wgt::ShaderStages,
 <a href=#843 id=843 data-nosnippet>843</a>    },
-<a href=#844 id=844 data-nosnippet>844</a>    <span class="attr">#[error(<span class="string">"Provided push constant is for stage(s) {actual:?}, however the pipeline layout has no push constant range for the stage(s) {unmatched:?}"</span>)]
+<a href=#844 id=844 data-nosnippet>844</a>    <span class="attr">#[error(<span class="string">"Provided immediate data is for stage(s) {actual:?}, however the pipeline layout has no immediate data range for the stage(s) {unmatched:?}"</span>)]
 <a href=#845 id=845 data-nosnippet>845</a>    </span>UnmatchedStages {
 <a href=#846 id=846 data-nosnippet>846</a>        actual: wgt::ShaderStages,
 <a href=#847 id=847 data-nosnippet>847</a>        unmatched: wgt::ShaderStages,
 <a href=#848 id=848 data-nosnippet>848</a>    },
-<a href=#849 id=849 data-nosnippet>849</a>    <span class="attr">#[error(<span class="string">"Provided push constant offset {0} does not respect `PUSH_CONSTANT_ALIGNMENT`"</span>)]
+<a href=#849 id=849 data-nosnippet>849</a>    <span class="attr">#[error(<span class="string">"Provided immediate data offset {0} does not respect `IMMEDIATES_ALIGNMENT`"</span>)]
 <a href=#850 id=850 data-nosnippet>850</a>    </span>Unaligned(u32),
 <a href=#851 id=851 data-nosnippet>851</a>}
 <a href=#852 id=852 data-nosnippet>852</a>
-<a href=#853 id=853 data-nosnippet>853</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>PushConstantUploadError {
+<a href=#853 id=853 data-nosnippet>853</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>ImmediateUploadError {
 <a href=#854 id=854 data-nosnippet>854</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
 <a href=#855 id=855 data-nosnippet>855</a>        ErrorType::Validation
 <a href=#856 id=856 data-nosnippet>856</a>    }
@@ -878,14 +878,14 @@
 <a href=#878 id=878 data-nosnippet>878</a>        serde(bound(deserialize = <span class="string">"&lt;[BGL] as ToOwned&gt;::Owned: Deserialize&lt;'de&gt;"</span>))
 <a href=#879 id=879 data-nosnippet>879</a>    )]
 <a href=#880 id=880 data-nosnippet>880</a>    </span><span class="kw">pub </span>bind_group_layouts: Cow&lt;<span class="lifetime">'a</span>, [BGL]&gt;,
-<a href=#881 id=881 data-nosnippet>881</a>    <span class="doccomment">/// Set of push constant ranges this pipeline uses. Each shader stage that
-<a href=#882 id=882 data-nosnippet>882</a>    /// uses push constants must define the range in push constant memory that
-<a href=#883 id=883 data-nosnippet>883</a>    /// corresponds to its single `layout(push_constant)` uniform block.
+<a href=#881 id=881 data-nosnippet>881</a>    <span class="doccomment">/// Set of immediate data ranges this pipeline uses. Each shader stage that
+<a href=#882 id=882 data-nosnippet>882</a>    /// uses immediates must define the range in immediate data memory that
+<a href=#883 id=883 data-nosnippet>883</a>    /// corresponds to its single `layout(immediates)` uniform block.
 <a href=#884 id=884 data-nosnippet>884</a>    ///
 <a href=#885 id=885 data-nosnippet>885</a>    /// If this array is non-empty, the
-<a href=#886 id=886 data-nosnippet>886</a>    /// [`Features::PUSH_CONSTANTS`](wgt::Features::PUSH_CONSTANTS) feature must
+<a href=#886 id=886 data-nosnippet>886</a>    /// [`Features::IMMEDIATES`](wgt::Features::IMMEDIATES) feature must
 <a href=#887 id=887 data-nosnippet>887</a>    /// be enabled.
-<a href=#888 id=888 data-nosnippet>888</a>    </span><span class="kw">pub </span>push_constant_ranges: Cow&lt;<span class="lifetime">'a</span>, [wgt::PushConstantRange]&gt;,
+<a href=#888 id=888 data-nosnippet>888</a>    </span><span class="kw">pub </span>immediates_ranges: Cow&lt;<span class="lifetime">'a</span>, [wgt::ImmediateRange]&gt;,
 <a href=#889 id=889 data-nosnippet>889</a>}
 <a href=#890 id=890 data-nosnippet>890</a>
 <a href=#891 id=891 data-nosnippet>891</a><span class="doccomment">/// cbindgen:ignore
@@ -899,7 +899,7 @@
 <a href=#899 id=899 data-nosnippet>899</a>    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
 <a href=#900 id=900 data-nosnippet>900</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
 <a href=#901 id=901 data-nosnippet>901</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_group_layouts: ArrayVec&lt;Arc&lt;BindGroupLayout&gt;, { hal::MAX_BIND_GROUPS }&gt;,
-<a href=#902 id=902 data-nosnippet>902</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) push_constant_ranges: ArrayVec&lt;wgt::PushConstantRange, { SHADER_STAGE_COUNT }&gt;,
+<a href=#902 id=902 data-nosnippet>902</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) immediates_ranges: ArrayVec&lt;wgt::ImmediateRange, { SHADER_STAGE_COUNT }&gt;,
 <a href=#903 id=903 data-nosnippet>903</a>}
 <a href=#904 id=904 data-nosnippet>904</a>
 <a href=#905 id=905 data-nosnippet>905</a><span class="kw">impl </span>Drop <span class="kw">for </span>PipelineLayout {
@@ -925,46 +925,46 @@
 <a href=#925 id=925 data-nosnippet>925</a>            .collect()
 <a href=#926 id=926 data-nosnippet>926</a>    }
 <a href=#927 id=927 data-nosnippet>927</a>
-<a href=#928 id=928 data-nosnippet>928</a>    <span class="doccomment">/// Validate push constants match up with expected ranges.
-<a href=#929 id=929 data-nosnippet>929</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_push_constant_ranges(
+<a href=#928 id=928 data-nosnippet>928</a>    <span class="doccomment">/// Validate immediates match up with expected ranges.
+<a href=#929 id=929 data-nosnippet>929</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_immediates_ranges(
 <a href=#930 id=930 data-nosnippet>930</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#931 id=931 data-nosnippet>931</a>        stages: wgt::ShaderStages,
 <a href=#932 id=932 data-nosnippet>932</a>        offset: u32,
 <a href=#933 id=933 data-nosnippet>933</a>        end_offset: u32,
-<a href=#934 id=934 data-nosnippet>934</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PushConstantUploadError&gt; {
-<a href=#935 id=935 data-nosnippet>935</a>        <span class="comment">// Don't need to validate size against the push constant size limit here,
-<a href=#936 id=936 data-nosnippet>936</a>        // as push constant ranges are already validated to be within bounds,
+<a href=#934 id=934 data-nosnippet>934</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ImmediateUploadError&gt; {
+<a href=#935 id=935 data-nosnippet>935</a>        <span class="comment">// Don't need to validate size against the immediate data size limit here,
+<a href=#936 id=936 data-nosnippet>936</a>        // as immediate data ranges are already validated to be within bounds,
 <a href=#937 id=937 data-nosnippet>937</a>        // and we validate that they are within the ranges.
 <a href=#938 id=938 data-nosnippet>938</a>
-<a href=#939 id=939 data-nosnippet>939</a>        </span><span class="kw">if </span>offset % wgt::PUSH_CONSTANT_ALIGNMENT != <span class="number">0 </span>{
-<a href=#940 id=940 data-nosnippet>940</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(PushConstantUploadError::Unaligned(offset));
+<a href=#939 id=939 data-nosnippet>939</a>        </span><span class="kw">if </span>offset % wgt::IMMEDIATES_ALIGNMENT != <span class="number">0 </span>{
+<a href=#940 id=940 data-nosnippet>940</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ImmediateUploadError::Unaligned(offset));
 <a href=#941 id=941 data-nosnippet>941</a>        }
 <a href=#942 id=942 data-nosnippet>942</a>
-<a href=#943 id=943 data-nosnippet>943</a>        <span class="comment">// Push constant validation looks very complicated on the surface, but
+<a href=#943 id=943 data-nosnippet>943</a>        <span class="comment">// Immediate data validation looks very complicated on the surface, but
 <a href=#944 id=944 data-nosnippet>944</a>        // the problem can be range-reduced pretty well.
 <a href=#945 id=945 data-nosnippet>945</a>        //
-<a href=#946 id=946 data-nosnippet>946</a>        // Push constants require (summarized from the vulkan spec):
+<a href=#946 id=946 data-nosnippet>946</a>        // Immediates require (summarized from the vulkan spec):
 <a href=#947 id=947 data-nosnippet>947</a>        // 1. For each byte in the range and for each shader stage in stageFlags,
-<a href=#948 id=948 data-nosnippet>948</a>        //    there must be a push constant range in the layout that includes that
+<a href=#948 id=948 data-nosnippet>948</a>        //    there must be a immediate data range in the layout that includes that
 <a href=#949 id=949 data-nosnippet>949</a>        //    byte and that stage.
-<a href=#950 id=950 data-nosnippet>950</a>        // 2. For each byte in the range and for each push constant range that overlaps that byte,
-<a href=#951 id=951 data-nosnippet>951</a>        //    `stage` must include all stages in that push constant range’s `stage`.
+<a href=#950 id=950 data-nosnippet>950</a>        // 2. For each byte in the range and for each immediate data range that overlaps that byte,
+<a href=#951 id=951 data-nosnippet>951</a>        //    `stage` must include all stages in that immediate data range’s `stage`.
 <a href=#952 id=952 data-nosnippet>952</a>        //
 <a href=#953 id=953 data-nosnippet>953</a>        // However there are some additional constraints that help us:
-<a href=#954 id=954 data-nosnippet>954</a>        // 3. All push constant ranges are the only range that can access that stage.
+<a href=#954 id=954 data-nosnippet>954</a>        // 3. All immediate data ranges are the only range that can access that stage.
 <a href=#955 id=955 data-nosnippet>955</a>        //    i.e. if one range has VERTEX, no other range has VERTEX
 <a href=#956 id=956 data-nosnippet>956</a>        //
 <a href=#957 id=957 data-nosnippet>957</a>        // Therefore we can simplify the checks in the following ways:
-<a href=#958 id=958 data-nosnippet>958</a>        // - Because 3 guarantees that the push constant range has a unique stage,
+<a href=#958 id=958 data-nosnippet>958</a>        // - Because 3 guarantees that the immediate data range has a unique stage,
 <a href=#959 id=959 data-nosnippet>959</a>        //   when we check for 1, we can simply check that our entire updated range
-<a href=#960 id=960 data-nosnippet>960</a>        //   is within a push constant range. i.e. our range for a specific stage cannot
-<a href=#961 id=961 data-nosnippet>961</a>        //   intersect more than one push constant range.
+<a href=#960 id=960 data-nosnippet>960</a>        //   is within a immediate data range. i.e. our range for a specific stage cannot
+<a href=#961 id=961 data-nosnippet>961</a>        //   intersect more than one immediate data range.
 <a href=#962 id=962 data-nosnippet>962</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>used_stages = wgt::ShaderStages::NONE;
-<a href=#963 id=963 data-nosnippet>963</a>        <span class="kw">for </span>(idx, range) <span class="kw">in </span><span class="self">self</span>.push_constant_ranges.iter().enumerate() {
+<a href=#963 id=963 data-nosnippet>963</a>        <span class="kw">for </span>(idx, range) <span class="kw">in </span><span class="self">self</span>.immediates_ranges.iter().enumerate() {
 <a href=#964 id=964 data-nosnippet>964</a>            <span class="comment">// contains not intersects due to 2
 <a href=#965 id=965 data-nosnippet>965</a>            </span><span class="kw">if </span>stages.contains(range.stages) {
 <a href=#966 id=966 data-nosnippet>966</a>                <span class="kw">if </span>!(range.range.start &lt;= offset &amp;&amp; end_offset &lt;= range.range.end) {
-<a href=#967 id=967 data-nosnippet>967</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(PushConstantUploadError::TooLarge {
+<a href=#967 id=967 data-nosnippet>967</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(ImmediateUploadError::TooLarge {
 <a href=#968 id=968 data-nosnippet>968</a>                        offset,
 <a href=#969 id=969 data-nosnippet>969</a>                        end_offset,
 <a href=#970 id=970 data-nosnippet>970</a>                        idx,
@@ -975,18 +975,18 @@
 <a href=#975 id=975 data-nosnippet>975</a>            } <span class="kw">else if </span>stages.intersects(range.stages) {
 <a href=#976 id=976 data-nosnippet>976</a>                <span class="comment">// Will be caught by used stages check below, but we can do this because of 1
 <a href=#977 id=977 data-nosnippet>977</a>                // and is more helpful to the user.
-<a href=#978 id=978 data-nosnippet>978</a>                </span><span class="kw">return </span><span class="prelude-val">Err</span>(PushConstantUploadError::PartialRangeMatch {
+<a href=#978 id=978 data-nosnippet>978</a>                </span><span class="kw">return </span><span class="prelude-val">Err</span>(ImmediateUploadError::PartialRangeMatch {
 <a href=#979 id=979 data-nosnippet>979</a>                    actual: stages,
 <a href=#980 id=980 data-nosnippet>980</a>                    idx,
 <a href=#981 id=981 data-nosnippet>981</a>                    matched: range.stages,
 <a href=#982 id=982 data-nosnippet>982</a>                });
 <a href=#983 id=983 data-nosnippet>983</a>            }
 <a href=#984 id=984 data-nosnippet>984</a>
-<a href=#985 id=985 data-nosnippet>985</a>            <span class="comment">// The push constant range intersects range we are uploading
+<a href=#985 id=985 data-nosnippet>985</a>            <span class="comment">// The immediate data range intersects range we are uploading
 <a href=#986 id=986 data-nosnippet>986</a>            </span><span class="kw">if </span>offset &lt; range.range.end &amp;&amp; range.range.start &lt; end_offset {
 <a href=#987 id=987 data-nosnippet>987</a>                <span class="comment">// But requires stages we don't provide
 <a href=#988 id=988 data-nosnippet>988</a>                </span><span class="kw">if </span>!stages.contains(range.stages) {
-<a href=#989 id=989 data-nosnippet>989</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(PushConstantUploadError::MissingStages {
+<a href=#989 id=989 data-nosnippet>989</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(ImmediateUploadError::MissingStages {
 <a href=#990 id=990 data-nosnippet>990</a>                        actual: stages,
 <a href=#991 id=991 data-nosnippet>991</a>                        idx,
 <a href=#992 id=992 data-nosnippet>992</a>                        missing: stages,
@@ -995,7 +995,7 @@
 <a href=#995 id=995 data-nosnippet>995</a>            }
 <a href=#996 id=996 data-nosnippet>996</a>        }
 <a href=#997 id=997 data-nosnippet>997</a>        <span class="kw">if </span>used_stages != stages {
-<a href=#998 id=998 data-nosnippet>998</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(PushConstantUploadError::UnmatchedStages {
+<a href=#998 id=998 data-nosnippet>998</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ImmediateUploadError::UnmatchedStages {
 <a href=#999 id=999 data-nosnippet>999</a>                actual: stages,
 <a href=#1000 id=1000 data-nosnippet>1000</a>                unmatched: stages - used_stages,
 <a href=#1001 id=1001 data-nosnippet>1001</a>            });

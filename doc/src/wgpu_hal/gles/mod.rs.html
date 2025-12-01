@@ -136,9 +136,9 @@
 <a href=#136 id=136 data-nosnippet>136</a><span class="kw">const </span>MAX_SAMPLERS: usize = <span class="number">16</span>;
 <a href=#137 id=137 data-nosnippet>137</a><span class="kw">const </span>MAX_VERTEX_ATTRIBUTES: usize = <span class="number">16</span>;
 <a href=#138 id=138 data-nosnippet>138</a><span class="kw">const </span>ZERO_BUFFER_SIZE: usize = <span class="number">256 </span>&lt;&lt; <span class="number">10</span>;
-<a href=#139 id=139 data-nosnippet>139</a><span class="kw">const </span>MAX_PUSH_CONSTANTS: usize = <span class="number">64</span>;
-<a href=#140 id=140 data-nosnippet>140</a><span class="comment">// We have to account for each push constant may need to be set for every shader.
-<a href=#141 id=141 data-nosnippet>141</a></span><span class="kw">const </span>MAX_PUSH_CONSTANT_COMMANDS: usize = MAX_PUSH_CONSTANTS * <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES;
+<a href=#139 id=139 data-nosnippet>139</a><span class="kw">const </span>MAX_IMMEDIATES: usize = <span class="number">64</span>;
+<a href=#140 id=140 data-nosnippet>140</a><span class="comment">// We have to account for each immediate data may need to be set for every shader.
+<a href=#141 id=141 data-nosnippet>141</a></span><span class="kw">const </span>MAX_IMMEDIATES_COMMANDS: usize = MAX_IMMEDIATES * <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES;
 <a href=#142 id=142 data-nosnippet>142</a>
 <a href=#143 id=143 data-nosnippet>143</a><span class="kw">impl </span><span class="kw">crate</span>::Api <span class="kw">for </span>Api {
 <a href=#144 id=144 data-nosnippet>144</a>    <span class="kw">const </span>VARIANT: wgt::Backend = wgt::Backend::Gl;
@@ -653,7 +653,7 @@
 <a href=#653 id=653 data-nosnippet>653</a>}
 <a href=#654 id=654 data-nosnippet>654</a>
 <a href=#655 id=655 data-nosnippet>655</a><span class="attr">#[derive(Clone, Debug)]
-<a href=#656 id=656 data-nosnippet>656</a></span><span class="kw">struct </span>PushConstantDesc {
+<a href=#656 id=656 data-nosnippet>656</a></span><span class="kw">struct </span>ImmediateDesc {
 <a href=#657 id=657 data-nosnippet>657</a>    location: glow::UniformLocation,
 <a href=#658 id=658 data-nosnippet>658</a>    ty: naga::TypeInner,
 <a href=#659 id=659 data-nosnippet>659</a>    offset: u32,
@@ -661,9 +661,9 @@
 <a href=#661 id=661 data-nosnippet>661</a>}
 <a href=#662 id=662 data-nosnippet>662</a>
 <a href=#663 id=663 data-nosnippet>663</a><span class="attr">#[cfg(send_sync)]
-<a href=#664 id=664 data-nosnippet>664</a></span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>PushConstantDesc {}
+<a href=#664 id=664 data-nosnippet>664</a></span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>ImmediateDesc {}
 <a href=#665 id=665 data-nosnippet>665</a><span class="attr">#[cfg(send_sync)]
-<a href=#666 id=666 data-nosnippet>666</a></span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>PushConstantDesc {}
+<a href=#666 id=666 data-nosnippet>666</a></span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>ImmediateDesc {}
 <a href=#667 id=667 data-nosnippet>667</a>
 <a href=#668 id=668 data-nosnippet>668</a><span class="doccomment">/// For each texture in the pipeline layout, store the index of the only
 <a href=#669 id=669 data-nosnippet>669</a>/// sampler (in this layout) that the texture is used with.
@@ -674,7 +674,7 @@
 <a href=#674 id=674 data-nosnippet>674</a>    program: glow::Program,
 <a href=#675 id=675 data-nosnippet>675</a>    sampler_map: SamplerBindMap,
 <a href=#676 id=676 data-nosnippet>676</a>    first_instance_location: <span class="prelude-ty">Option</span>&lt;glow::UniformLocation&gt;,
-<a href=#677 id=677 data-nosnippet>677</a>    push_constant_descs: ArrayVec&lt;PushConstantDesc, MAX_PUSH_CONSTANT_COMMANDS&gt;,
+<a href=#677 id=677 data-nosnippet>677</a>    immediates_descs: ArrayVec&lt;ImmediateDesc, MAX_IMMEDIATES_COMMANDS&gt;,
 <a href=#678 id=678 data-nosnippet>678</a>    clip_distance_count: u32,
 <a href=#679 id=679 data-nosnippet>679</a>}
 <a href=#680 id=680 data-nosnippet>680</a>
@@ -1008,8 +1008,8 @@
 <a href=#1008 id=1008 data-nosnippet>1008</a>    InsertDebugMarker(Range&lt;u32&gt;),
 <a href=#1009 id=1009 data-nosnippet>1009</a>    PushDebugGroup(Range&lt;u32&gt;),
 <a href=#1010 id=1010 data-nosnippet>1010</a>    PopDebugGroup,
-<a href=#1011 id=1011 data-nosnippet>1011</a>    SetPushConstants {
-<a href=#1012 id=1012 data-nosnippet>1012</a>        uniform: PushConstantDesc,
+<a href=#1011 id=1011 data-nosnippet>1011</a>    SetImmediates {
+<a href=#1012 id=1012 data-nosnippet>1012</a>        uniform: ImmediateDesc,
 <a href=#1013 id=1013 data-nosnippet>1013</a>        <span class="doccomment">/// Offset from the start of the `data_bytes`
 <a href=#1014 id=1014 data-nosnippet>1014</a>        </span>offset: u32,
 <a href=#1015 id=1015 data-nosnippet>1015</a>    },
