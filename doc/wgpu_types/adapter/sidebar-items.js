@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DeviceType","PowerPreference","RequestAdapterError"],"struct":["AdapterInfo","RequestAdapterOptions"]};

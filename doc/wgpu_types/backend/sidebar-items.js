@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Backend","Dx12Compiler","Dx12SwapchainKind","Dx12UseFrameLatencyWaitableObject","DxcShaderModel","GlFenceBehavior","Gles3MinorVersion"],"struct":["BackendOptions","Backends","Dx12BackendOptions","GlBackendOptions","NoopBackendOptions"]};

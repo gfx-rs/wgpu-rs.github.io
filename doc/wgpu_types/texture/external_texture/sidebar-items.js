@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ExternalTextureFormat"],"struct":["ExternalTextureDescriptor","ExternalTextureTransferFunction"]};

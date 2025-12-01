@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["default_depth"],"struct":["Extent3d","Origin2d","Origin3d"]};

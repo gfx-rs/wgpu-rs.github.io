@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CompositeAlphaMode","PresentMode","SurfaceStatus"],"struct":["PresentationTimestamp","SurfaceCapabilities","SurfaceConfiguration"]};
