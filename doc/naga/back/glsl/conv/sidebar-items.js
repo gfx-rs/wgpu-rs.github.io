@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["glsl_built_in","glsl_dimension","glsl_interpolation","glsl_sampling","glsl_scalar","glsl_storage_format","glsl_storage_qualifier"],"struct":["ScalarString"]};
