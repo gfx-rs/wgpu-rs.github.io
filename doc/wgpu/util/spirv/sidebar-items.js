@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["SPIRV_MAGIC_NUMBER"],"fn":["assert_has_spirv_magic_number_and_length","make_spirv_raw"]};
