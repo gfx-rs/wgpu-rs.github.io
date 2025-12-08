@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ExperimentalFeatures"]};
+window.SIDEBAR_ITEMS = {"struct":["ExperimentalFeatures","LoadOpDontCare"]};
