@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["create_vertices","main","vertex"],"struct":["ErrorFuture","Example","Uniforms","Vertex"]};
+window.SIDEBAR_ITEMS = {"fn":["create_vertices","main","vertex"],"struct":["Example","Uniforms","Vertex"]};
