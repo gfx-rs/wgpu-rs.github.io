@@ -1411,17 +1411,17 @@
 <a href=#1411 id=1411 data-nosnippet>1411</a>    }
 <a href=#1412 id=1412 data-nosnippet>1412</a>}
 <a href=#1413 id=1413 data-nosnippet>1413</a>
-<a href=#1414 id=1414 data-nosnippet>1414</a><span class="comment">// https://gpuweb.github.io/gpuweb/#abstract-opdef-calculating-color-attachment-bytes-per-sample
-<a href=#1415 id=1415 data-nosnippet>1415</a></span><span class="kw">pub fn </span>validate_color_attachment_bytes_per_sample(
-<a href=#1416 id=1416 data-nosnippet>1416</a>    attachment_formats: <span class="kw">impl </span>Iterator&lt;Item = <span class="prelude-ty">Option</span>&lt;wgt::TextureFormat&gt;&gt;,
-<a href=#1417 id=1417 data-nosnippet>1417</a>    limit: u32,
-<a href=#1418 id=1418 data-nosnippet>1418</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), u32&gt; {
-<a href=#1419 id=1419 data-nosnippet>1419</a>    <span class="kw">let </span><span class="kw-2">mut </span>total_bytes_per_sample: u32 = <span class="number">0</span>;
-<a href=#1420 id=1420 data-nosnippet>1420</a>    <span class="kw">for </span>format <span class="kw">in </span>attachment_formats {
-<a href=#1421 id=1421 data-nosnippet>1421</a>        <span class="kw">let </span><span class="prelude-val">Some</span>(format) = format <span class="kw">else </span>{
-<a href=#1422 id=1422 data-nosnippet>1422</a>            <span class="kw">continue</span>;
-<a href=#1423 id=1423 data-nosnippet>1423</a>        };
-<a href=#1424 id=1424 data-nosnippet>1424</a>
+<a href=#1414 id=1414 data-nosnippet>1414</a><span class="doccomment">/// Validate a list of color attachment formats against `maxColorAttachmentBytesPerSample`.
+<a href=#1415 id=1415 data-nosnippet>1415</a>///
+<a href=#1416 id=1416 data-nosnippet>1416</a>/// The color attachments can be from a render pass descriptor or a pipeline descriptor.
+<a href=#1417 id=1417 data-nosnippet>1417</a>///
+<a href=#1418 id=1418 data-nosnippet>1418</a>/// Implements &lt;https://gpuweb.github.io/gpuweb/#abstract-opdef-calculating-color-attachment-bytes-per-sample&gt;.
+<a href=#1419 id=1419 data-nosnippet>1419</a></span><span class="kw">pub fn </span>validate_color_attachment_bytes_per_sample(
+<a href=#1420 id=1420 data-nosnippet>1420</a>    attachment_formats: <span class="kw">impl </span>IntoIterator&lt;Item = wgt::TextureFormat&gt;,
+<a href=#1421 id=1421 data-nosnippet>1421</a>    limit: u32,
+<a href=#1422 id=1422 data-nosnippet>1422</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::command::ColorAttachmentError&gt; {
+<a href=#1423 id=1423 data-nosnippet>1423</a>    <span class="kw">let </span><span class="kw-2">mut </span>total_bytes_per_sample: u32 = <span class="number">0</span>;
+<a href=#1424 id=1424 data-nosnippet>1424</a>    <span class="kw">for </span>format <span class="kw">in </span>attachment_formats {
 <a href=#1425 id=1425 data-nosnippet>1425</a>        <span class="kw">let </span>byte_cost = format.target_pixel_byte_cost().unwrap();
 <a href=#1426 id=1426 data-nosnippet>1426</a>        <span class="kw">let </span>alignment = format.target_component_alignment().unwrap();
 <a href=#1427 id=1427 data-nosnippet>1427</a>
@@ -1430,8 +1430,13 @@
 <a href=#1430 id=1430 data-nosnippet>1430</a>    }
 <a href=#1431 id=1431 data-nosnippet>1431</a>
 <a href=#1432 id=1432 data-nosnippet>1432</a>    <span class="kw">if </span>total_bytes_per_sample &gt; limit {
-<a href=#1433 id=1433 data-nosnippet>1433</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(total_bytes_per_sample);
-<a href=#1434 id=1434 data-nosnippet>1434</a>    }
-<a href=#1435 id=1435 data-nosnippet>1435</a>
-<a href=#1436 id=1436 data-nosnippet>1436</a>    <span class="prelude-val">Ok</span>(())
-<a href=#1437 id=1437 data-nosnippet>1437</a>}</code></pre></div></section></main></body></html>
+<a href=#1433 id=1433 data-nosnippet>1433</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(
+<a href=#1434 id=1434 data-nosnippet>1434</a>            <span class="kw">crate</span>::command::ColorAttachmentError::TooManyBytesPerSample {
+<a href=#1435 id=1435 data-nosnippet>1435</a>                total: total_bytes_per_sample,
+<a href=#1436 id=1436 data-nosnippet>1436</a>                limit,
+<a href=#1437 id=1437 data-nosnippet>1437</a>            },
+<a href=#1438 id=1438 data-nosnippet>1438</a>        );
+<a href=#1439 id=1439 data-nosnippet>1439</a>    }
+<a href=#1440 id=1440 data-nosnippet>1440</a>
+<a href=#1441 id=1441 data-nosnippet>1441</a>    <span class="prelude-val">Ok</span>(())
+<a href=#1442 id=1442 data-nosnippet>1442</a>}</code></pre></div></section></main></body></html>
