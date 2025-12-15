@@ -1781,124 +1781,224 @@
 <a href=#1781 id=1781 data-nosnippet>1781</a>
 <a href=#1782 id=1782 data-nosnippet>1782</a>        func_id
 <a href=#1783 id=1783 data-nosnippet>1783</a>    }
-<a href=#1784 id=1784 data-nosnippet>1784</a>}
-<a href=#1785 id=1785 data-nosnippet>1785</a>
-<a href=#1786 id=1786 data-nosnippet>1786</a><span class="kw">impl </span>BlockContext&lt;<span class="lifetime">'_</span>&gt; {
-<a href=#1787 id=1787 data-nosnippet>1787</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_ray_query_function(
-<a href=#1788 id=1788 data-nosnippet>1788</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#1789 id=1789 data-nosnippet>1789</a>        query: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-<a href=#1790 id=1790 data-nosnippet>1790</a>        function: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RayQueryFunction,
-<a href=#1791 id=1791 data-nosnippet>1791</a>        block: <span class="kw-2">&amp;mut </span>Block,
-<a href=#1792 id=1792 data-nosnippet>1792</a>    ) {
-<a href=#1793 id=1793 data-nosnippet>1793</a>        <span class="kw">let </span>query_id = <span class="self">self</span>.cached[query];
-<a href=#1794 id=1794 data-nosnippet>1794</a>        <span class="kw">let </span>tracker_ids = <span class="kw-2">*</span><span class="self">self
-<a href=#1795 id=1795 data-nosnippet>1795</a>            </span>.ray_query_tracker_expr
-<a href=#1796 id=1796 data-nosnippet>1796</a>            .get(<span class="kw-2">&amp;</span>query)
-<a href=#1797 id=1797 data-nosnippet>1797</a>            .expect(<span class="string">"not a cached ray query"</span>);
-<a href=#1798 id=1798 data-nosnippet>1798</a>
-<a href=#1799 id=1799 data-nosnippet>1799</a>        <span class="kw">match </span><span class="kw-2">*</span>function {
-<a href=#1800 id=1800 data-nosnippet>1800</a>            <span class="kw">crate</span>::RayQueryFunction::Initialize {
-<a href=#1801 id=1801 data-nosnippet>1801</a>                acceleration_structure,
-<a href=#1802 id=1802 data-nosnippet>1802</a>                descriptor,
-<a href=#1803 id=1803 data-nosnippet>1803</a>            } =&gt; {
-<a href=#1804 id=1804 data-nosnippet>1804</a>                <span class="kw">let </span>desc_id = <span class="self">self</span>.cached[descriptor];
-<a href=#1805 id=1805 data-nosnippet>1805</a>                <span class="kw">let </span>acc_struct_id = <span class="self">self</span>.get_handle_id(acceleration_structure);
-<a href=#1806 id=1806 data-nosnippet>1806</a>
-<a href=#1807 id=1807 data-nosnippet>1807</a>                <span class="kw">let </span>func = <span class="self">self</span>.writer.write_ray_query_initialize(<span class="self">self</span>.ir_module);
+<a href=#1784 id=1784 data-nosnippet>1784</a>
+<a href=#1785 id=1785 data-nosnippet>1785</a>    <span class="kw">fn </span>write_ray_query_terminate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; spirv::Word {
+<a href=#1786 id=1786 data-nosnippet>1786</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>word) = <span class="self">self
+<a href=#1787 id=1787 data-nosnippet>1787</a>            </span>.ray_query_functions
+<a href=#1788 id=1788 data-nosnippet>1788</a>            .get(<span class="kw-2">&amp;</span>LookupRayQueryFunction::Terminate)
+<a href=#1789 id=1789 data-nosnippet>1789</a>        {
+<a href=#1790 id=1790 data-nosnippet>1790</a>            <span class="kw">return </span>word;
+<a href=#1791 id=1791 data-nosnippet>1791</a>        }
+<a href=#1792 id=1792 data-nosnippet>1792</a>
+<a href=#1793 id=1793 data-nosnippet>1793</a>        <span class="kw">let </span>ray_query_type_id = <span class="self">self</span>.get_ray_query_pointer_id();
+<a href=#1794 id=1794 data-nosnippet>1794</a>
+<a href=#1795 id=1795 data-nosnippet>1795</a>        <span class="kw">let </span>u32_ty = <span class="self">self</span>.get_u32_type_id();
+<a href=#1796 id=1796 data-nosnippet>1796</a>        <span class="kw">let </span>u32_ptr_ty = <span class="self">self</span>.get_pointer_type_id(u32_ty, spirv::StorageClass::Function);
+<a href=#1797 id=1797 data-nosnippet>1797</a>
+<a href=#1798 id=1798 data-nosnippet>1798</a>        <span class="kw">let </span>bool_type_id = <span class="self">self</span>.get_bool_type_id();
+<a href=#1799 id=1799 data-nosnippet>1799</a>
+<a href=#1800 id=1800 data-nosnippet>1800</a>        <span class="kw">let </span>(func_id, <span class="kw-2">mut </span>function, arg_ids) =
+<a href=#1801 id=1801 data-nosnippet>1801</a>            <span class="self">self</span>.write_function_signature(<span class="kw-2">&amp;</span>[ray_query_type_id, u32_ptr_ty], <span class="self">self</span>.void_type);
+<a href=#1802 id=1802 data-nosnippet>1802</a>
+<a href=#1803 id=1803 data-nosnippet>1803</a>        <span class="kw">let </span>query_id = arg_ids[<span class="number">0</span>];
+<a href=#1804 id=1804 data-nosnippet>1804</a>        <span class="kw">let </span>init_tracker_id = arg_ids[<span class="number">1</span>];
+<a href=#1805 id=1805 data-nosnippet>1805</a>
+<a href=#1806 id=1806 data-nosnippet>1806</a>        <span class="kw">let </span>block_id = <span class="self">self</span>.id_gen.next();
+<a href=#1807 id=1807 data-nosnippet>1807</a>        <span class="kw">let </span><span class="kw-2">mut </span>block = Block::new(block_id);
 <a href=#1808 id=1808 data-nosnippet>1808</a>
-<a href=#1809 id=1809 data-nosnippet>1809</a>                <span class="kw">let </span>func_id = <span class="self">self</span>.gen_id();
-<a href=#1810 id=1810 data-nosnippet>1810</a>                block.body.push(Instruction::function_call(
-<a href=#1811 id=1811 data-nosnippet>1811</a>                    <span class="self">self</span>.writer.void_type,
-<a href=#1812 id=1812 data-nosnippet>1812</a>                    func_id,
-<a href=#1813 id=1813 data-nosnippet>1813</a>                    func,
-<a href=#1814 id=1814 data-nosnippet>1814</a>                    <span class="kw-2">&amp;</span>[
-<a href=#1815 id=1815 data-nosnippet>1815</a>                        query_id,
-<a href=#1816 id=1816 data-nosnippet>1816</a>                        acc_struct_id,
-<a href=#1817 id=1817 data-nosnippet>1817</a>                        desc_id,
-<a href=#1818 id=1818 data-nosnippet>1818</a>                        tracker_ids.initialized_tracker,
-<a href=#1819 id=1819 data-nosnippet>1819</a>                        tracker_ids.t_max_tracker,
-<a href=#1820 id=1820 data-nosnippet>1820</a>                    ],
-<a href=#1821 id=1821 data-nosnippet>1821</a>                ));
-<a href=#1822 id=1822 data-nosnippet>1822</a>            }
-<a href=#1823 id=1823 data-nosnippet>1823</a>            <span class="kw">crate</span>::RayQueryFunction::Proceed { result } =&gt; {
-<a href=#1824 id=1824 data-nosnippet>1824</a>                <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
-<a href=#1825 id=1825 data-nosnippet>1825</a>                <span class="self">self</span>.cached[result] = id;
-<a href=#1826 id=1826 data-nosnippet>1826</a>
-<a href=#1827 id=1827 data-nosnippet>1827</a>                <span class="kw">let </span>bool_ty = <span class="self">self</span>.writer.get_bool_type_id();
-<a href=#1828 id=1828 data-nosnippet>1828</a>
-<a href=#1829 id=1829 data-nosnippet>1829</a>                <span class="kw">let </span>func_id = <span class="self">self</span>.writer.write_ray_query_proceed();
-<a href=#1830 id=1830 data-nosnippet>1830</a>                block.body.push(Instruction::function_call(
-<a href=#1831 id=1831 data-nosnippet>1831</a>                    bool_ty,
-<a href=#1832 id=1832 data-nosnippet>1832</a>                    id,
-<a href=#1833 id=1833 data-nosnippet>1833</a>                    func_id,
-<a href=#1834 id=1834 data-nosnippet>1834</a>                    <span class="kw-2">&amp;</span>[query_id, tracker_ids.initialized_tracker],
-<a href=#1835 id=1835 data-nosnippet>1835</a>                ));
-<a href=#1836 id=1836 data-nosnippet>1836</a>            }
-<a href=#1837 id=1837 data-nosnippet>1837</a>            <span class="kw">crate</span>::RayQueryFunction::GenerateIntersection { hit_t } =&gt; {
-<a href=#1838 id=1838 data-nosnippet>1838</a>                <span class="kw">let </span>hit_id = <span class="self">self</span>.cached[hit_t];
-<a href=#1839 id=1839 data-nosnippet>1839</a>
-<a href=#1840 id=1840 data-nosnippet>1840</a>                <span class="kw">let </span>func_id = <span class="self">self</span>.writer.write_ray_query_generate_intersection();
-<a href=#1841 id=1841 data-nosnippet>1841</a>
-<a href=#1842 id=1842 data-nosnippet>1842</a>                <span class="kw">let </span>func_call_id = <span class="self">self</span>.gen_id();
-<a href=#1843 id=1843 data-nosnippet>1843</a>                block.body.push(Instruction::function_call(
-<a href=#1844 id=1844 data-nosnippet>1844</a>                    <span class="self">self</span>.writer.void_type,
-<a href=#1845 id=1845 data-nosnippet>1845</a>                    func_call_id,
-<a href=#1846 id=1846 data-nosnippet>1846</a>                    func_id,
-<a href=#1847 id=1847 data-nosnippet>1847</a>                    <span class="kw-2">&amp;</span>[
-<a href=#1848 id=1848 data-nosnippet>1848</a>                        query_id,
-<a href=#1849 id=1849 data-nosnippet>1849</a>                        tracker_ids.initialized_tracker,
-<a href=#1850 id=1850 data-nosnippet>1850</a>                        hit_id,
-<a href=#1851 id=1851 data-nosnippet>1851</a>                        tracker_ids.t_max_tracker,
-<a href=#1852 id=1852 data-nosnippet>1852</a>                    ],
-<a href=#1853 id=1853 data-nosnippet>1853</a>                ));
-<a href=#1854 id=1854 data-nosnippet>1854</a>            }
-<a href=#1855 id=1855 data-nosnippet>1855</a>            <span class="kw">crate</span>::RayQueryFunction::ConfirmIntersection =&gt; {
-<a href=#1856 id=1856 data-nosnippet>1856</a>                <span class="kw">let </span>func_id = <span class="self">self</span>.writer.write_ray_query_confirm_intersection();
+<a href=#1809 id=1809 data-nosnippet>1809</a>        <span class="kw">let </span>initialized_tracker_id = <span class="self">self</span>.id_gen.next();
+<a href=#1810 id=1810 data-nosnippet>1810</a>        block.body.push(Instruction::load(
+<a href=#1811 id=1811 data-nosnippet>1811</a>            u32_ty,
+<a href=#1812 id=1812 data-nosnippet>1812</a>            initialized_tracker_id,
+<a href=#1813 id=1813 data-nosnippet>1813</a>            init_tracker_id,
+<a href=#1814 id=1814 data-nosnippet>1814</a>            <span class="prelude-val">None</span>,
+<a href=#1815 id=1815 data-nosnippet>1815</a>        ));
+<a href=#1816 id=1816 data-nosnippet>1816</a>
+<a href=#1817 id=1817 data-nosnippet>1817</a>        <span class="kw">let </span>merge_id = <span class="self">self</span>.id_gen.next();
+<a href=#1818 id=1818 data-nosnippet>1818</a>        <span class="kw">let </span>merge_block = Block::new(merge_id);
+<a href=#1819 id=1819 data-nosnippet>1819</a>
+<a href=#1820 id=1820 data-nosnippet>1820</a>        <span class="kw">let </span>valid_block_id = <span class="self">self</span>.id_gen.next();
+<a href=#1821 id=1821 data-nosnippet>1821</a>        <span class="kw">let </span><span class="kw-2">mut </span>valid_block = Block::new(valid_block_id);
+<a href=#1822 id=1822 data-nosnippet>1822</a>
+<a href=#1823 id=1823 data-nosnippet>1823</a>        <span class="kw">let </span>instruction = <span class="kw">if </span><span class="self">self</span>.ray_query_initialization_tracking {
+<a href=#1824 id=1824 data-nosnippet>1824</a>            <span class="kw">let </span>has_proceeded = write_ray_flags_contains_flags(
+<a href=#1825 id=1825 data-nosnippet>1825</a>                <span class="self">self</span>,
+<a href=#1826 id=1826 data-nosnippet>1826</a>                <span class="kw-2">&amp;mut </span>block,
+<a href=#1827 id=1827 data-nosnippet>1827</a>                initialized_tracker_id,
+<a href=#1828 id=1828 data-nosnippet>1828</a>                <span class="kw">super</span>::RayQueryPoint::PROCEED.bits(),
+<a href=#1829 id=1829 data-nosnippet>1829</a>            );
+<a href=#1830 id=1830 data-nosnippet>1830</a>
+<a href=#1831 id=1831 data-nosnippet>1831</a>            <span class="kw">let </span>finished_proceed_id = write_ray_flags_contains_flags(
+<a href=#1832 id=1832 data-nosnippet>1832</a>                <span class="self">self</span>,
+<a href=#1833 id=1833 data-nosnippet>1833</a>                <span class="kw-2">&amp;mut </span>block,
+<a href=#1834 id=1834 data-nosnippet>1834</a>                initialized_tracker_id,
+<a href=#1835 id=1835 data-nosnippet>1835</a>                <span class="kw">super</span>::RayQueryPoint::FINISHED_TRAVERSAL.bits(),
+<a href=#1836 id=1836 data-nosnippet>1836</a>            );
+<a href=#1837 id=1837 data-nosnippet>1837</a>
+<a href=#1838 id=1838 data-nosnippet>1838</a>            <span class="kw">let </span>not_finished_id = <span class="self">self</span>.id_gen.next();
+<a href=#1839 id=1839 data-nosnippet>1839</a>            block.body.push(Instruction::unary(
+<a href=#1840 id=1840 data-nosnippet>1840</a>                spirv::Op::LogicalNot,
+<a href=#1841 id=1841 data-nosnippet>1841</a>                bool_type_id,
+<a href=#1842 id=1842 data-nosnippet>1842</a>                not_finished_id,
+<a href=#1843 id=1843 data-nosnippet>1843</a>                finished_proceed_id,
+<a href=#1844 id=1844 data-nosnippet>1844</a>            ));
+<a href=#1845 id=1845 data-nosnippet>1845</a>
+<a href=#1846 id=1846 data-nosnippet>1846</a>            <span class="kw">let </span>valid_call = <span class="self">self</span>.write_logical_and(<span class="kw-2">&amp;mut </span>block, not_finished_id, has_proceeded);
+<a href=#1847 id=1847 data-nosnippet>1847</a>
+<a href=#1848 id=1848 data-nosnippet>1848</a>            block.body.push(Instruction::selection_merge(
+<a href=#1849 id=1849 data-nosnippet>1849</a>                merge_id,
+<a href=#1850 id=1850 data-nosnippet>1850</a>                spirv::SelectionControl::NONE,
+<a href=#1851 id=1851 data-nosnippet>1851</a>            ));
+<a href=#1852 id=1852 data-nosnippet>1852</a>
+<a href=#1853 id=1853 data-nosnippet>1853</a>            Instruction::branch_conditional(valid_call, valid_block_id, merge_id)
+<a href=#1854 id=1854 data-nosnippet>1854</a>        } <span class="kw">else </span>{
+<a href=#1855 id=1855 data-nosnippet>1855</a>            Instruction::branch(valid_block_id)
+<a href=#1856 id=1856 data-nosnippet>1856</a>        };
 <a href=#1857 id=1857 data-nosnippet>1857</a>
-<a href=#1858 id=1858 data-nosnippet>1858</a>                <span class="kw">let </span>func_call_id = <span class="self">self</span>.gen_id();
-<a href=#1859 id=1859 data-nosnippet>1859</a>                block.body.push(Instruction::function_call(
-<a href=#1860 id=1860 data-nosnippet>1860</a>                    <span class="self">self</span>.writer.void_type,
-<a href=#1861 id=1861 data-nosnippet>1861</a>                    func_call_id,
-<a href=#1862 id=1862 data-nosnippet>1862</a>                    func_id,
-<a href=#1863 id=1863 data-nosnippet>1863</a>                    <span class="kw-2">&amp;</span>[query_id, tracker_ids.initialized_tracker],
-<a href=#1864 id=1864 data-nosnippet>1864</a>                ));
-<a href=#1865 id=1865 data-nosnippet>1865</a>            }
-<a href=#1866 id=1866 data-nosnippet>1866</a>            <span class="kw">crate</span>::RayQueryFunction::Terminate =&gt; {}
-<a href=#1867 id=1867 data-nosnippet>1867</a>        }
-<a href=#1868 id=1868 data-nosnippet>1868</a>    }
+<a href=#1858 id=1858 data-nosnippet>1858</a>        function.consume(block, instruction);
+<a href=#1859 id=1859 data-nosnippet>1859</a>
+<a href=#1860 id=1860 data-nosnippet>1860</a>        valid_block
+<a href=#1861 id=1861 data-nosnippet>1861</a>            .body
+<a href=#1862 id=1862 data-nosnippet>1862</a>            .push(Instruction::ray_query_terminate(query_id));
+<a href=#1863 id=1863 data-nosnippet>1863</a>
+<a href=#1864 id=1864 data-nosnippet>1864</a>        function.consume(valid_block, Instruction::branch(merge_id));
+<a href=#1865 id=1865 data-nosnippet>1865</a>
+<a href=#1866 id=1866 data-nosnippet>1866</a>        function.consume(merge_block, Instruction::return_void());
+<a href=#1867 id=1867 data-nosnippet>1867</a>
+<a href=#1868 id=1868 data-nosnippet>1868</a>        function.to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.function_definitions);
 <a href=#1869 id=1869 data-nosnippet>1869</a>
-<a href=#1870 id=1870 data-nosnippet>1870</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_ray_query_return_vertex_position(
-<a href=#1871 id=1871 data-nosnippet>1871</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#1872 id=1872 data-nosnippet>1872</a>        query: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-<a href=#1873 id=1873 data-nosnippet>1873</a>        block: <span class="kw-2">&amp;mut </span>Block,
-<a href=#1874 id=1874 data-nosnippet>1874</a>        is_committed: bool,
-<a href=#1875 id=1875 data-nosnippet>1875</a>    ) -&gt; spirv::Word {
-<a href=#1876 id=1876 data-nosnippet>1876</a>        <span class="kw">let </span>fn_id = <span class="self">self
-<a href=#1877 id=1877 data-nosnippet>1877</a>            </span>.writer
-<a href=#1878 id=1878 data-nosnippet>1878</a>            .write_ray_query_get_vertex_positions(is_committed, <span class="self">self</span>.ir_module);
-<a href=#1879 id=1879 data-nosnippet>1879</a>
-<a href=#1880 id=1880 data-nosnippet>1880</a>        <span class="kw">let </span>query_id = <span class="self">self</span>.cached[query];
-<a href=#1881 id=1881 data-nosnippet>1881</a>        <span class="kw">let </span>tracker_id = <span class="kw-2">*</span><span class="self">self
-<a href=#1882 id=1882 data-nosnippet>1882</a>            </span>.ray_query_tracker_expr
-<a href=#1883 id=1883 data-nosnippet>1883</a>            .get(<span class="kw-2">&amp;</span>query)
-<a href=#1884 id=1884 data-nosnippet>1884</a>            .expect(<span class="string">"not a cached ray query"</span>);
-<a href=#1885 id=1885 data-nosnippet>1885</a>
-<a href=#1886 id=1886 data-nosnippet>1886</a>        <span class="kw">let </span>rq_get_vertex_positions_ty_id = <span class="self">self</span>.get_handle_type_id(
-<a href=#1887 id=1887 data-nosnippet>1887</a>            <span class="kw-2">*</span><span class="self">self
-<a href=#1888 id=1888 data-nosnippet>1888</a>                </span>.ir_module
-<a href=#1889 id=1889 data-nosnippet>1889</a>                .special_types
-<a href=#1890 id=1890 data-nosnippet>1890</a>                .ray_vertex_return
-<a href=#1891 id=1891 data-nosnippet>1891</a>                .as_ref()
-<a href=#1892 id=1892 data-nosnippet>1892</a>                .expect(<span class="string">"must be generated when reading in get vertex position"</span>),
-<a href=#1893 id=1893 data-nosnippet>1893</a>        );
-<a href=#1894 id=1894 data-nosnippet>1894</a>
-<a href=#1895 id=1895 data-nosnippet>1895</a>        <span class="kw">let </span>func_call_id = <span class="self">self</span>.gen_id();
-<a href=#1896 id=1896 data-nosnippet>1896</a>        block.body.push(Instruction::function_call(
-<a href=#1897 id=1897 data-nosnippet>1897</a>            rq_get_vertex_positions_ty_id,
-<a href=#1898 id=1898 data-nosnippet>1898</a>            func_call_id,
-<a href=#1899 id=1899 data-nosnippet>1899</a>            fn_id,
-<a href=#1900 id=1900 data-nosnippet>1900</a>            <span class="kw-2">&amp;</span>[query_id, tracker_id.initialized_tracker],
-<a href=#1901 id=1901 data-nosnippet>1901</a>        ));
-<a href=#1902 id=1902 data-nosnippet>1902</a>        func_call_id
-<a href=#1903 id=1903 data-nosnippet>1903</a>    }
-<a href=#1904 id=1904 data-nosnippet>1904</a>}</code></pre></div></section></main></body></html>
+<a href=#1870 id=1870 data-nosnippet>1870</a>        <span class="self">self</span>.ray_query_functions
+<a href=#1871 id=1871 data-nosnippet>1871</a>            .insert(LookupRayQueryFunction::Proceed, func_id);
+<a href=#1872 id=1872 data-nosnippet>1872</a>        func_id
+<a href=#1873 id=1873 data-nosnippet>1873</a>    }
+<a href=#1874 id=1874 data-nosnippet>1874</a>}
+<a href=#1875 id=1875 data-nosnippet>1875</a>
+<a href=#1876 id=1876 data-nosnippet>1876</a><span class="kw">impl </span>BlockContext&lt;<span class="lifetime">'_</span>&gt; {
+<a href=#1877 id=1877 data-nosnippet>1877</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_ray_query_function(
+<a href=#1878 id=1878 data-nosnippet>1878</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#1879 id=1879 data-nosnippet>1879</a>        query: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+<a href=#1880 id=1880 data-nosnippet>1880</a>        function: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RayQueryFunction,
+<a href=#1881 id=1881 data-nosnippet>1881</a>        block: <span class="kw-2">&amp;mut </span>Block,
+<a href=#1882 id=1882 data-nosnippet>1882</a>    ) {
+<a href=#1883 id=1883 data-nosnippet>1883</a>        <span class="kw">let </span>query_id = <span class="self">self</span>.cached[query];
+<a href=#1884 id=1884 data-nosnippet>1884</a>        <span class="kw">let </span>tracker_ids = <span class="kw-2">*</span><span class="self">self
+<a href=#1885 id=1885 data-nosnippet>1885</a>            </span>.ray_query_tracker_expr
+<a href=#1886 id=1886 data-nosnippet>1886</a>            .get(<span class="kw-2">&amp;</span>query)
+<a href=#1887 id=1887 data-nosnippet>1887</a>            .expect(<span class="string">"not a cached ray query"</span>);
+<a href=#1888 id=1888 data-nosnippet>1888</a>
+<a href=#1889 id=1889 data-nosnippet>1889</a>        <span class="kw">match </span><span class="kw-2">*</span>function {
+<a href=#1890 id=1890 data-nosnippet>1890</a>            <span class="kw">crate</span>::RayQueryFunction::Initialize {
+<a href=#1891 id=1891 data-nosnippet>1891</a>                acceleration_structure,
+<a href=#1892 id=1892 data-nosnippet>1892</a>                descriptor,
+<a href=#1893 id=1893 data-nosnippet>1893</a>            } =&gt; {
+<a href=#1894 id=1894 data-nosnippet>1894</a>                <span class="kw">let </span>desc_id = <span class="self">self</span>.cached[descriptor];
+<a href=#1895 id=1895 data-nosnippet>1895</a>                <span class="kw">let </span>acc_struct_id = <span class="self">self</span>.get_handle_id(acceleration_structure);
+<a href=#1896 id=1896 data-nosnippet>1896</a>
+<a href=#1897 id=1897 data-nosnippet>1897</a>                <span class="kw">let </span>func = <span class="self">self</span>.writer.write_ray_query_initialize(<span class="self">self</span>.ir_module);
+<a href=#1898 id=1898 data-nosnippet>1898</a>
+<a href=#1899 id=1899 data-nosnippet>1899</a>                <span class="kw">let </span>func_id = <span class="self">self</span>.gen_id();
+<a href=#1900 id=1900 data-nosnippet>1900</a>                block.body.push(Instruction::function_call(
+<a href=#1901 id=1901 data-nosnippet>1901</a>                    <span class="self">self</span>.writer.void_type,
+<a href=#1902 id=1902 data-nosnippet>1902</a>                    func_id,
+<a href=#1903 id=1903 data-nosnippet>1903</a>                    func,
+<a href=#1904 id=1904 data-nosnippet>1904</a>                    <span class="kw-2">&amp;</span>[
+<a href=#1905 id=1905 data-nosnippet>1905</a>                        query_id,
+<a href=#1906 id=1906 data-nosnippet>1906</a>                        acc_struct_id,
+<a href=#1907 id=1907 data-nosnippet>1907</a>                        desc_id,
+<a href=#1908 id=1908 data-nosnippet>1908</a>                        tracker_ids.initialized_tracker,
+<a href=#1909 id=1909 data-nosnippet>1909</a>                        tracker_ids.t_max_tracker,
+<a href=#1910 id=1910 data-nosnippet>1910</a>                    ],
+<a href=#1911 id=1911 data-nosnippet>1911</a>                ));
+<a href=#1912 id=1912 data-nosnippet>1912</a>            }
+<a href=#1913 id=1913 data-nosnippet>1913</a>            <span class="kw">crate</span>::RayQueryFunction::Proceed { result } =&gt; {
+<a href=#1914 id=1914 data-nosnippet>1914</a>                <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
+<a href=#1915 id=1915 data-nosnippet>1915</a>                <span class="self">self</span>.cached[result] = id;
+<a href=#1916 id=1916 data-nosnippet>1916</a>
+<a href=#1917 id=1917 data-nosnippet>1917</a>                <span class="kw">let </span>bool_ty = <span class="self">self</span>.writer.get_bool_type_id();
+<a href=#1918 id=1918 data-nosnippet>1918</a>
+<a href=#1919 id=1919 data-nosnippet>1919</a>                <span class="kw">let </span>func_id = <span class="self">self</span>.writer.write_ray_query_proceed();
+<a href=#1920 id=1920 data-nosnippet>1920</a>                block.body.push(Instruction::function_call(
+<a href=#1921 id=1921 data-nosnippet>1921</a>                    bool_ty,
+<a href=#1922 id=1922 data-nosnippet>1922</a>                    id,
+<a href=#1923 id=1923 data-nosnippet>1923</a>                    func_id,
+<a href=#1924 id=1924 data-nosnippet>1924</a>                    <span class="kw-2">&amp;</span>[query_id, tracker_ids.initialized_tracker],
+<a href=#1925 id=1925 data-nosnippet>1925</a>                ));
+<a href=#1926 id=1926 data-nosnippet>1926</a>            }
+<a href=#1927 id=1927 data-nosnippet>1927</a>            <span class="kw">crate</span>::RayQueryFunction::GenerateIntersection { hit_t } =&gt; {
+<a href=#1928 id=1928 data-nosnippet>1928</a>                <span class="kw">let </span>hit_id = <span class="self">self</span>.cached[hit_t];
+<a href=#1929 id=1929 data-nosnippet>1929</a>
+<a href=#1930 id=1930 data-nosnippet>1930</a>                <span class="kw">let </span>func_id = <span class="self">self</span>.writer.write_ray_query_generate_intersection();
+<a href=#1931 id=1931 data-nosnippet>1931</a>
+<a href=#1932 id=1932 data-nosnippet>1932</a>                <span class="kw">let </span>func_call_id = <span class="self">self</span>.gen_id();
+<a href=#1933 id=1933 data-nosnippet>1933</a>                block.body.push(Instruction::function_call(
+<a href=#1934 id=1934 data-nosnippet>1934</a>                    <span class="self">self</span>.writer.void_type,
+<a href=#1935 id=1935 data-nosnippet>1935</a>                    func_call_id,
+<a href=#1936 id=1936 data-nosnippet>1936</a>                    func_id,
+<a href=#1937 id=1937 data-nosnippet>1937</a>                    <span class="kw-2">&amp;</span>[
+<a href=#1938 id=1938 data-nosnippet>1938</a>                        query_id,
+<a href=#1939 id=1939 data-nosnippet>1939</a>                        tracker_ids.initialized_tracker,
+<a href=#1940 id=1940 data-nosnippet>1940</a>                        hit_id,
+<a href=#1941 id=1941 data-nosnippet>1941</a>                        tracker_ids.t_max_tracker,
+<a href=#1942 id=1942 data-nosnippet>1942</a>                    ],
+<a href=#1943 id=1943 data-nosnippet>1943</a>                ));
+<a href=#1944 id=1944 data-nosnippet>1944</a>            }
+<a href=#1945 id=1945 data-nosnippet>1945</a>            <span class="kw">crate</span>::RayQueryFunction::ConfirmIntersection =&gt; {
+<a href=#1946 id=1946 data-nosnippet>1946</a>                <span class="kw">let </span>func_id = <span class="self">self</span>.writer.write_ray_query_confirm_intersection();
+<a href=#1947 id=1947 data-nosnippet>1947</a>
+<a href=#1948 id=1948 data-nosnippet>1948</a>                <span class="kw">let </span>func_call_id = <span class="self">self</span>.gen_id();
+<a href=#1949 id=1949 data-nosnippet>1949</a>                block.body.push(Instruction::function_call(
+<a href=#1950 id=1950 data-nosnippet>1950</a>                    <span class="self">self</span>.writer.void_type,
+<a href=#1951 id=1951 data-nosnippet>1951</a>                    func_call_id,
+<a href=#1952 id=1952 data-nosnippet>1952</a>                    func_id,
+<a href=#1953 id=1953 data-nosnippet>1953</a>                    <span class="kw-2">&amp;</span>[query_id, tracker_ids.initialized_tracker],
+<a href=#1954 id=1954 data-nosnippet>1954</a>                ));
+<a href=#1955 id=1955 data-nosnippet>1955</a>            }
+<a href=#1956 id=1956 data-nosnippet>1956</a>            <span class="kw">crate</span>::RayQueryFunction::Terminate =&gt; {
+<a href=#1957 id=1957 data-nosnippet>1957</a>                <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
+<a href=#1958 id=1958 data-nosnippet>1958</a>
+<a href=#1959 id=1959 data-nosnippet>1959</a>                <span class="kw">let </span>func_id = <span class="self">self</span>.writer.write_ray_query_terminate();
+<a href=#1960 id=1960 data-nosnippet>1960</a>                block.body.push(Instruction::function_call(
+<a href=#1961 id=1961 data-nosnippet>1961</a>                    <span class="self">self</span>.writer.void_type,
+<a href=#1962 id=1962 data-nosnippet>1962</a>                    id,
+<a href=#1963 id=1963 data-nosnippet>1963</a>                    func_id,
+<a href=#1964 id=1964 data-nosnippet>1964</a>                    <span class="kw-2">&amp;</span>[query_id, tracker_ids.initialized_tracker],
+<a href=#1965 id=1965 data-nosnippet>1965</a>                ));
+<a href=#1966 id=1966 data-nosnippet>1966</a>            }
+<a href=#1967 id=1967 data-nosnippet>1967</a>        }
+<a href=#1968 id=1968 data-nosnippet>1968</a>    }
+<a href=#1969 id=1969 data-nosnippet>1969</a>
+<a href=#1970 id=1970 data-nosnippet>1970</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_ray_query_return_vertex_position(
+<a href=#1971 id=1971 data-nosnippet>1971</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#1972 id=1972 data-nosnippet>1972</a>        query: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+<a href=#1973 id=1973 data-nosnippet>1973</a>        block: <span class="kw-2">&amp;mut </span>Block,
+<a href=#1974 id=1974 data-nosnippet>1974</a>        is_committed: bool,
+<a href=#1975 id=1975 data-nosnippet>1975</a>    ) -&gt; spirv::Word {
+<a href=#1976 id=1976 data-nosnippet>1976</a>        <span class="kw">let </span>fn_id = <span class="self">self
+<a href=#1977 id=1977 data-nosnippet>1977</a>            </span>.writer
+<a href=#1978 id=1978 data-nosnippet>1978</a>            .write_ray_query_get_vertex_positions(is_committed, <span class="self">self</span>.ir_module);
+<a href=#1979 id=1979 data-nosnippet>1979</a>
+<a href=#1980 id=1980 data-nosnippet>1980</a>        <span class="kw">let </span>query_id = <span class="self">self</span>.cached[query];
+<a href=#1981 id=1981 data-nosnippet>1981</a>        <span class="kw">let </span>tracker_id = <span class="kw-2">*</span><span class="self">self
+<a href=#1982 id=1982 data-nosnippet>1982</a>            </span>.ray_query_tracker_expr
+<a href=#1983 id=1983 data-nosnippet>1983</a>            .get(<span class="kw-2">&amp;</span>query)
+<a href=#1984 id=1984 data-nosnippet>1984</a>            .expect(<span class="string">"not a cached ray query"</span>);
+<a href=#1985 id=1985 data-nosnippet>1985</a>
+<a href=#1986 id=1986 data-nosnippet>1986</a>        <span class="kw">let </span>rq_get_vertex_positions_ty_id = <span class="self">self</span>.get_handle_type_id(
+<a href=#1987 id=1987 data-nosnippet>1987</a>            <span class="kw-2">*</span><span class="self">self
+<a href=#1988 id=1988 data-nosnippet>1988</a>                </span>.ir_module
+<a href=#1989 id=1989 data-nosnippet>1989</a>                .special_types
+<a href=#1990 id=1990 data-nosnippet>1990</a>                .ray_vertex_return
+<a href=#1991 id=1991 data-nosnippet>1991</a>                .as_ref()
+<a href=#1992 id=1992 data-nosnippet>1992</a>                .expect(<span class="string">"must be generated when reading in get vertex position"</span>),
+<a href=#1993 id=1993 data-nosnippet>1993</a>        );
+<a href=#1994 id=1994 data-nosnippet>1994</a>
+<a href=#1995 id=1995 data-nosnippet>1995</a>        <span class="kw">let </span>func_call_id = <span class="self">self</span>.gen_id();
+<a href=#1996 id=1996 data-nosnippet>1996</a>        block.body.push(Instruction::function_call(
+<a href=#1997 id=1997 data-nosnippet>1997</a>            rq_get_vertex_positions_ty_id,
+<a href=#1998 id=1998 data-nosnippet>1998</a>            func_call_id,
+<a href=#1999 id=1999 data-nosnippet>1999</a>            fn_id,
+<a href=#2000 id=2000 data-nosnippet>2000</a>            <span class="kw-2">&amp;</span>[query_id, tracker_id.initialized_tracker],
+<a href=#2001 id=2001 data-nosnippet>2001</a>        ));
+<a href=#2002 id=2002 data-nosnippet>2002</a>        func_call_id
+<a href=#2003 id=2003 data-nosnippet>2003</a>    }
+<a href=#2004 id=2004 data-nosnippet>2004</a>}</code></pre></div></section></main></body></html>
