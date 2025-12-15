@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["MAX_I32_BINDING_SIZE"],"fn":["map_naga_stage"],"mod":["db","renderdoc"]};
+window.SIDEBAR_ITEMS = {"constant":["MAX_I32_BINDING_SIZE"],"fn":["apply_hal_limits","map_naga_stage"],"mod":["db","renderdoc"]};
