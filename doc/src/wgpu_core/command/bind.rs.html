@@ -7,7 +7,7 @@
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use crate</span>::{
 <a href=#8 id=8 data-nosnippet>8</a>    binding_model::{BindGroup, LateMinBufferBindingSizeMismatch, PipelineLayout},
 <a href=#9 id=9 data-nosnippet>9</a>    pipeline::LateSizedBufferGroup,
-<a href=#10 id=10 data-nosnippet>10</a>    resource::{Labeled, ResourceErrorIdent},
+<a href=#10 id=10 data-nosnippet>10</a>    resource::{Labeled, ParentDevice, ResourceErrorIdent},
 <a href=#11 id=11 data-nosnippet>11</a>};
 <a href=#12 id=12 data-nosnippet>12</a>
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">mod </span>compat {
@@ -336,163 +336,173 @@
 <a href=#336 id=336 data-nosnippet>336</a>        }
 <a href=#337 id=337 data-nosnippet>337</a>    }
 <a href=#338 id=338 data-nosnippet>338</a>
-<a href=#339 id=339 data-nosnippet>339</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>change_pipeline_layout&lt;<span class="lifetime">'a</span>&gt;(
-<a href=#340 id=340 data-nosnippet>340</a>        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>,
-<a href=#341 id=341 data-nosnippet>341</a>        new: <span class="kw-2">&amp;</span>Arc&lt;PipelineLayout&gt;,
-<a href=#342 id=342 data-nosnippet>342</a>        late_sized_buffer_groups: <span class="kw-2">&amp;</span>[LateSizedBufferGroup],
-<a href=#343 id=343 data-nosnippet>343</a>    ) {
-<a href=#344 id=344 data-nosnippet>344</a>        <span class="kw">let </span>old_id_opt = <span class="self">self</span>.pipeline_layout.replace(new.clone());
-<a href=#345 id=345 data-nosnippet>345</a>
-<a href=#346 id=346 data-nosnippet>346</a>        <span class="self">self</span>.manager.update_expectations(<span class="kw-2">&amp;</span>new.bind_group_layouts);
-<a href=#347 id=347 data-nosnippet>347</a>
-<a href=#348 id=348 data-nosnippet>348</a>        <span class="comment">// Update the buffer binding sizes that are required by shaders.
-<a href=#349 id=349 data-nosnippet>349</a>
-<a href=#350 id=350 data-nosnippet>350</a>        </span><span class="kw">for </span>(payload, late_group) <span class="kw">in </span><span class="self">self</span>.payloads.iter_mut().zip(late_sized_buffer_groups) {
-<a href=#351 id=351 data-nosnippet>351</a>            payload.late_bindings_effective_count = late_group.shader_sizes.len();
-<a href=#352 id=352 data-nosnippet>352</a>            <span class="comment">// Update entries that already exist as the bind group was bound before the pipeline
-<a href=#353 id=353 data-nosnippet>353</a>            // was bound.
-<a href=#354 id=354 data-nosnippet>354</a>            </span><span class="kw">for </span>(late_binding, <span class="kw-2">&amp;</span>shader_expect_size) <span class="kw">in </span>payload
-<a href=#355 id=355 data-nosnippet>355</a>                .late_buffer_bindings
-<a href=#356 id=356 data-nosnippet>356</a>                .iter_mut()
-<a href=#357 id=357 data-nosnippet>357</a>                .zip(late_group.shader_sizes.iter())
-<a href=#358 id=358 data-nosnippet>358</a>            {
-<a href=#359 id=359 data-nosnippet>359</a>                late_binding.shader_expect_size = shader_expect_size;
-<a href=#360 id=360 data-nosnippet>360</a>            }
-<a href=#361 id=361 data-nosnippet>361</a>            <span class="comment">// Add new entries for the bindings that were not known when the bind group was bound.
-<a href=#362 id=362 data-nosnippet>362</a>            </span><span class="kw">if </span>late_group.shader_sizes.len() &gt; payload.late_buffer_bindings.len() {
-<a href=#363 id=363 data-nosnippet>363</a>                <span class="kw">for </span><span class="kw-2">&amp;</span>shader_expect_size <span class="kw">in
-<a href=#364 id=364 data-nosnippet>364</a>                    </span>late_group.shader_sizes[payload.late_buffer_bindings.len()..].iter()
-<a href=#365 id=365 data-nosnippet>365</a>                {
-<a href=#366 id=366 data-nosnippet>366</a>                    payload.late_buffer_bindings.push(LateBufferBinding {
-<a href=#367 id=367 data-nosnippet>367</a>                        binding_index: <span class="number">0</span>,
-<a href=#368 id=368 data-nosnippet>368</a>                        shader_expect_size,
-<a href=#369 id=369 data-nosnippet>369</a>                        bound_size: <span class="number">0</span>,
-<a href=#370 id=370 data-nosnippet>370</a>                    });
-<a href=#371 id=371 data-nosnippet>371</a>                }
-<a href=#372 id=372 data-nosnippet>372</a>            }
-<a href=#373 id=373 data-nosnippet>373</a>        }
-<a href=#374 id=374 data-nosnippet>374</a>
-<a href=#375 id=375 data-nosnippet>375</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = old_id_opt {
-<a href=#376 id=376 data-nosnippet>376</a>            <span class="comment">// root constants are the base compatibility property
-<a href=#377 id=377 data-nosnippet>377</a>            </span><span class="kw">if </span>old.immediate_size != new.immediate_size {
-<a href=#378 id=378 data-nosnippet>378</a>                <span class="self">self</span>.manager.update_start_index(<span class="number">0</span>);
-<a href=#379 id=379 data-nosnippet>379</a>            }
-<a href=#380 id=380 data-nosnippet>380</a>        }
-<a href=#381 id=381 data-nosnippet>381</a>    }
+<a href=#339 id=339 data-nosnippet>339</a>    <span class="doccomment">/// Returns `true` if the pipeline layout has been changed, i.e. if the
+<a href=#340 id=340 data-nosnippet>340</a>    /// new PL was not the same as the old PL.
+<a href=#341 id=341 data-nosnippet>341</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>change_pipeline_layout&lt;<span class="lifetime">'a</span>&gt;(
+<a href=#342 id=342 data-nosnippet>342</a>        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>,
+<a href=#343 id=343 data-nosnippet>343</a>        new: <span class="kw-2">&amp;</span>Arc&lt;PipelineLayout&gt;,
+<a href=#344 id=344 data-nosnippet>344</a>        late_sized_buffer_groups: <span class="kw-2">&amp;</span>[LateSizedBufferGroup],
+<a href=#345 id=345 data-nosnippet>345</a>    ) -&gt; bool {
+<a href=#346 id=346 data-nosnippet>346</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = <span class="self">self</span>.pipeline_layout.as_ref() {
+<a href=#347 id=347 data-nosnippet>347</a>            <span class="kw">if </span>old.is_equal(new) {
+<a href=#348 id=348 data-nosnippet>348</a>                <span class="kw">return </span><span class="bool-val">false</span>;
+<a href=#349 id=349 data-nosnippet>349</a>            }
+<a href=#350 id=350 data-nosnippet>350</a>        }
+<a href=#351 id=351 data-nosnippet>351</a>
+<a href=#352 id=352 data-nosnippet>352</a>        <span class="kw">let </span>old = <span class="self">self</span>.pipeline_layout.replace(new.clone());
+<a href=#353 id=353 data-nosnippet>353</a>
+<a href=#354 id=354 data-nosnippet>354</a>        <span class="self">self</span>.manager.update_expectations(<span class="kw-2">&amp;</span>new.bind_group_layouts);
+<a href=#355 id=355 data-nosnippet>355</a>
+<a href=#356 id=356 data-nosnippet>356</a>        <span class="comment">// Update the buffer binding sizes that are required by shaders.
+<a href=#357 id=357 data-nosnippet>357</a>
+<a href=#358 id=358 data-nosnippet>358</a>        </span><span class="kw">for </span>(payload, late_group) <span class="kw">in </span><span class="self">self</span>.payloads.iter_mut().zip(late_sized_buffer_groups) {
+<a href=#359 id=359 data-nosnippet>359</a>            payload.late_bindings_effective_count = late_group.shader_sizes.len();
+<a href=#360 id=360 data-nosnippet>360</a>            <span class="comment">// Update entries that already exist as the bind group was bound before the pipeline
+<a href=#361 id=361 data-nosnippet>361</a>            // was bound.
+<a href=#362 id=362 data-nosnippet>362</a>            </span><span class="kw">for </span>(late_binding, <span class="kw-2">&amp;</span>shader_expect_size) <span class="kw">in </span>payload
+<a href=#363 id=363 data-nosnippet>363</a>                .late_buffer_bindings
+<a href=#364 id=364 data-nosnippet>364</a>                .iter_mut()
+<a href=#365 id=365 data-nosnippet>365</a>                .zip(late_group.shader_sizes.iter())
+<a href=#366 id=366 data-nosnippet>366</a>            {
+<a href=#367 id=367 data-nosnippet>367</a>                late_binding.shader_expect_size = shader_expect_size;
+<a href=#368 id=368 data-nosnippet>368</a>            }
+<a href=#369 id=369 data-nosnippet>369</a>            <span class="comment">// Add new entries for the bindings that were not known when the bind group was bound.
+<a href=#370 id=370 data-nosnippet>370</a>            </span><span class="kw">if </span>late_group.shader_sizes.len() &gt; payload.late_buffer_bindings.len() {
+<a href=#371 id=371 data-nosnippet>371</a>                <span class="kw">for </span><span class="kw-2">&amp;</span>shader_expect_size <span class="kw">in
+<a href=#372 id=372 data-nosnippet>372</a>                    </span>late_group.shader_sizes[payload.late_buffer_bindings.len()..].iter()
+<a href=#373 id=373 data-nosnippet>373</a>                {
+<a href=#374 id=374 data-nosnippet>374</a>                    payload.late_buffer_bindings.push(LateBufferBinding {
+<a href=#375 id=375 data-nosnippet>375</a>                        binding_index: <span class="number">0</span>,
+<a href=#376 id=376 data-nosnippet>376</a>                        shader_expect_size,
+<a href=#377 id=377 data-nosnippet>377</a>                        bound_size: <span class="number">0</span>,
+<a href=#378 id=378 data-nosnippet>378</a>                    });
+<a href=#379 id=379 data-nosnippet>379</a>                }
+<a href=#380 id=380 data-nosnippet>380</a>            }
+<a href=#381 id=381 data-nosnippet>381</a>        }
 <a href=#382 id=382 data-nosnippet>382</a>
-<a href=#383 id=383 data-nosnippet>383</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>assign_group&lt;<span class="lifetime">'a</span>&gt;(
-<a href=#384 id=384 data-nosnippet>384</a>        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>,
-<a href=#385 id=385 data-nosnippet>385</a>        index: usize,
-<a href=#386 id=386 data-nosnippet>386</a>        bind_group: <span class="kw-2">&amp;</span>Arc&lt;BindGroup&gt;,
-<a href=#387 id=387 data-nosnippet>387</a>        offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
-<a href=#388 id=388 data-nosnippet>388</a>    ) {
-<a href=#389 id=389 data-nosnippet>389</a>        <span class="kw">let </span>payload = <span class="kw-2">&amp;mut </span><span class="self">self</span>.payloads[index];
-<a href=#390 id=390 data-nosnippet>390</a>        payload.group = <span class="prelude-val">Some</span>(bind_group.clone());
-<a href=#391 id=391 data-nosnippet>391</a>        payload.dynamic_offsets.clear();
-<a href=#392 id=392 data-nosnippet>392</a>        payload.dynamic_offsets.extend_from_slice(offsets);
-<a href=#393 id=393 data-nosnippet>393</a>
-<a href=#394 id=394 data-nosnippet>394</a>        <span class="comment">// Fill out the actual binding sizes for buffers,
-<a href=#395 id=395 data-nosnippet>395</a>        // whose layout doesn't specify `min_binding_size`.
-<a href=#396 id=396 data-nosnippet>396</a>
-<a href=#397 id=397 data-nosnippet>397</a>        // Update entries that already exist as the pipeline was bound before the group
-<a href=#398 id=398 data-nosnippet>398</a>        // was bound.
-<a href=#399 id=399 data-nosnippet>399</a>        </span><span class="kw">for </span>(late_binding, late_info) <span class="kw">in </span>payload
-<a href=#400 id=400 data-nosnippet>400</a>            .late_buffer_bindings
-<a href=#401 id=401 data-nosnippet>401</a>            .iter_mut()
-<a href=#402 id=402 data-nosnippet>402</a>            .zip(bind_group.late_buffer_binding_infos.iter())
-<a href=#403 id=403 data-nosnippet>403</a>        {
-<a href=#404 id=404 data-nosnippet>404</a>            late_binding.binding_index = late_info.binding_index;
-<a href=#405 id=405 data-nosnippet>405</a>            late_binding.bound_size = late_info.size.get();
-<a href=#406 id=406 data-nosnippet>406</a>        }
-<a href=#407 id=407 data-nosnippet>407</a>
-<a href=#408 id=408 data-nosnippet>408</a>        <span class="comment">// Add new entries for the bindings that were not known when the pipeline was bound.
-<a href=#409 id=409 data-nosnippet>409</a>        </span><span class="kw">if </span>bind_group.late_buffer_binding_infos.len() &gt; payload.late_buffer_bindings.len() {
-<a href=#410 id=410 data-nosnippet>410</a>            <span class="kw">for </span>late_info <span class="kw">in
-<a href=#411 id=411 data-nosnippet>411</a>                </span>bind_group.late_buffer_binding_infos[payload.late_buffer_bindings.len()..].iter()
-<a href=#412 id=412 data-nosnippet>412</a>            {
-<a href=#413 id=413 data-nosnippet>413</a>                payload.late_buffer_bindings.push(LateBufferBinding {
-<a href=#414 id=414 data-nosnippet>414</a>                    binding_index: late_info.binding_index,
-<a href=#415 id=415 data-nosnippet>415</a>                    shader_expect_size: <span class="number">0</span>,
-<a href=#416 id=416 data-nosnippet>416</a>                    bound_size: late_info.size.get(),
-<a href=#417 id=417 data-nosnippet>417</a>                });
-<a href=#418 id=418 data-nosnippet>418</a>            }
-<a href=#419 id=419 data-nosnippet>419</a>        }
-<a href=#420 id=420 data-nosnippet>420</a>
-<a href=#421 id=421 data-nosnippet>421</a>        <span class="self">self</span>.manager.assign(index, bind_group.layout.clone());
-<a href=#422 id=422 data-nosnippet>422</a>    }
-<a href=#423 id=423 data-nosnippet>423</a>
-<a href=#424 id=424 data-nosnippet>424</a>    <span class="doccomment">/// Get the range of entries that needs to be rebound, and clears it.
-<a href=#425 id=425 data-nosnippet>425</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>take_rebind_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Range&lt;usize&gt; {
-<a href=#426 id=426 data-nosnippet>426</a>        <span class="self">self</span>.manager.take_rebind_range()
-<a href=#427 id=427 data-nosnippet>427</a>    }
-<a href=#428 id=428 data-nosnippet>428</a>
-<a href=#429 id=429 data-nosnippet>429</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>entries(
-<a href=#430 id=430 data-nosnippet>430</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#431 id=431 data-nosnippet>431</a>        range: Range&lt;usize&gt;,
-<a href=#432 id=432 data-nosnippet>432</a>    ) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = (usize, <span class="kw-2">&amp;</span><span class="lifetime">'_ </span>EntryPayload)&gt; + Clone + <span class="lifetime">'_ </span>{
-<a href=#433 id=433 data-nosnippet>433</a>        <span class="kw">let </span>payloads = <span class="kw-2">&amp;</span><span class="self">self</span>.payloads[range.clone()];
-<a href=#434 id=434 data-nosnippet>434</a>        zip(range, payloads)
-<a href=#435 id=435 data-nosnippet>435</a>    }
-<a href=#436 id=436 data-nosnippet>436</a>
-<a href=#437 id=437 data-nosnippet>437</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>list_active&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;BindGroup&gt;&gt; + <span class="lifetime">'a </span>{
-<a href=#438 id=438 data-nosnippet>438</a>        <span class="kw">let </span>payloads = <span class="kw-2">&amp;</span><span class="self">self</span>.payloads;
-<a href=#439 id=439 data-nosnippet>439</a>        <span class="self">self</span>.manager
-<a href=#440 id=440 data-nosnippet>440</a>            .list_active()
-<a href=#441 id=441 data-nosnippet>441</a>            .map(<span class="kw">move </span>|index| payloads[index].group.as_ref().unwrap())
-<a href=#442 id=442 data-nosnippet>442</a>    }
-<a href=#443 id=443 data-nosnippet>443</a>
-<a href=#444 id=444 data-nosnippet>444</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>list_valid&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (usize, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>EntryPayload)&gt; + <span class="lifetime">'a </span>{
-<a href=#445 id=445 data-nosnippet>445</a>        <span class="self">self</span>.payloads
-<a href=#446 id=446 data-nosnippet>446</a>            .iter()
-<a href=#447 id=447 data-nosnippet>447</a>            .take(<span class="self">self</span>.manager.num_valid_entries())
-<a href=#448 id=448 data-nosnippet>448</a>            .enumerate()
-<a href=#449 id=449 data-nosnippet>449</a>    }
-<a href=#450 id=450 data-nosnippet>450</a>
-<a href=#451 id=451 data-nosnippet>451</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>check_compatibility&lt;T: Labeled&gt;(
-<a href=#452 id=452 data-nosnippet>452</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#453 id=453 data-nosnippet>453</a>        pipeline: <span class="kw-2">&amp;</span>T,
-<a href=#454 id=454 data-nosnippet>454</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Box&lt;BinderError&gt;&gt; {
-<a href=#455 id=455 data-nosnippet>455</a>        <span class="self">self</span>.manager.get_invalid().map_err(|(index, error)| {
-<a href=#456 id=456 data-nosnippet>456</a>            Box::new(<span class="kw">match </span>error {
-<a href=#457 id=457 data-nosnippet>457</a>                compat::Error::Incompatible {
-<a href=#458 id=458 data-nosnippet>458</a>                    expected_bgl,
-<a href=#459 id=459 data-nosnippet>459</a>                    assigned_bgl,
-<a href=#460 id=460 data-nosnippet>460</a>                    inner,
-<a href=#461 id=461 data-nosnippet>461</a>                } =&gt; BinderError::IncompatibleBindGroup {
-<a href=#462 id=462 data-nosnippet>462</a>                    expected_bgl,
-<a href=#463 id=463 data-nosnippet>463</a>                    assigned_bgl,
-<a href=#464 id=464 data-nosnippet>464</a>                    assigned_bg: <span class="self">self</span>.payloads[index].group.as_ref().unwrap().error_ident(),
-<a href=#465 id=465 data-nosnippet>465</a>                    index,
-<a href=#466 id=466 data-nosnippet>466</a>                    pipeline: pipeline.error_ident(),
-<a href=#467 id=467 data-nosnippet>467</a>                    inner,
-<a href=#468 id=468 data-nosnippet>468</a>                },
-<a href=#469 id=469 data-nosnippet>469</a>                compat::Error::Missing =&gt; BinderError::MissingBindGroup {
-<a href=#470 id=470 data-nosnippet>470</a>                    index,
-<a href=#471 id=471 data-nosnippet>471</a>                    pipeline: pipeline.error_ident(),
-<a href=#472 id=472 data-nosnippet>472</a>                },
-<a href=#473 id=473 data-nosnippet>473</a>            })
-<a href=#474 id=474 data-nosnippet>474</a>        })
-<a href=#475 id=475 data-nosnippet>475</a>    }
-<a href=#476 id=476 data-nosnippet>476</a>
-<a href=#477 id=477 data-nosnippet>477</a>    <span class="doccomment">/// Scan active buffer bindings corresponding to layouts without `min_binding_size` specified.
-<a href=#478 id=478 data-nosnippet>478</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>check_late_buffer_bindings(
-<a href=#479 id=479 data-nosnippet>479</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#480 id=480 data-nosnippet>480</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), LateMinBufferBindingSizeMismatch&gt; {
-<a href=#481 id=481 data-nosnippet>481</a>        <span class="kw">for </span>group_index <span class="kw">in </span><span class="self">self</span>.manager.list_active() {
-<a href=#482 id=482 data-nosnippet>482</a>            <span class="kw">let </span>payload = <span class="kw-2">&amp;</span><span class="self">self</span>.payloads[group_index];
-<a href=#483 id=483 data-nosnippet>483</a>            <span class="kw">for </span>late_binding <span class="kw">in
-<a href=#484 id=484 data-nosnippet>484</a>                </span><span class="kw-2">&amp;</span>payload.late_buffer_bindings[..payload.late_bindings_effective_count]
-<a href=#485 id=485 data-nosnippet>485</a>            {
-<a href=#486 id=486 data-nosnippet>486</a>                <span class="kw">if </span>late_binding.bound_size &lt; late_binding.shader_expect_size {
-<a href=#487 id=487 data-nosnippet>487</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(LateMinBufferBindingSizeMismatch {
-<a href=#488 id=488 data-nosnippet>488</a>                        group_index: group_index <span class="kw">as </span>u32,
-<a href=#489 id=489 data-nosnippet>489</a>                        binding_index: late_binding.binding_index,
-<a href=#490 id=490 data-nosnippet>490</a>                        shader_size: late_binding.shader_expect_size,
-<a href=#491 id=491 data-nosnippet>491</a>                        bound_size: late_binding.bound_size,
-<a href=#492 id=492 data-nosnippet>492</a>                    });
-<a href=#493 id=493 data-nosnippet>493</a>                }
-<a href=#494 id=494 data-nosnippet>494</a>            }
-<a href=#495 id=495 data-nosnippet>495</a>        }
-<a href=#496 id=496 data-nosnippet>496</a>        <span class="prelude-val">Ok</span>(())
-<a href=#497 id=497 data-nosnippet>497</a>    }
-<a href=#498 id=498 data-nosnippet>498</a>}</code></pre></div></section></main></body></html>
+<a href=#383 id=383 data-nosnippet>383</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = old {
+<a href=#384 id=384 data-nosnippet>384</a>            <span class="comment">// root constants are the base compatibility property
+<a href=#385 id=385 data-nosnippet>385</a>            </span><span class="kw">if </span>old.immediate_size != new.immediate_size {
+<a href=#386 id=386 data-nosnippet>386</a>                <span class="self">self</span>.manager.update_start_index(<span class="number">0</span>);
+<a href=#387 id=387 data-nosnippet>387</a>            }
+<a href=#388 id=388 data-nosnippet>388</a>        }
+<a href=#389 id=389 data-nosnippet>389</a>
+<a href=#390 id=390 data-nosnippet>390</a>        <span class="bool-val">true
+<a href=#391 id=391 data-nosnippet>391</a>    </span>}
+<a href=#392 id=392 data-nosnippet>392</a>
+<a href=#393 id=393 data-nosnippet>393</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>assign_group&lt;<span class="lifetime">'a</span>&gt;(
+<a href=#394 id=394 data-nosnippet>394</a>        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>,
+<a href=#395 id=395 data-nosnippet>395</a>        index: usize,
+<a href=#396 id=396 data-nosnippet>396</a>        bind_group: <span class="kw-2">&amp;</span>Arc&lt;BindGroup&gt;,
+<a href=#397 id=397 data-nosnippet>397</a>        offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
+<a href=#398 id=398 data-nosnippet>398</a>    ) {
+<a href=#399 id=399 data-nosnippet>399</a>        <span class="kw">let </span>payload = <span class="kw-2">&amp;mut </span><span class="self">self</span>.payloads[index];
+<a href=#400 id=400 data-nosnippet>400</a>        payload.group = <span class="prelude-val">Some</span>(bind_group.clone());
+<a href=#401 id=401 data-nosnippet>401</a>        payload.dynamic_offsets.clear();
+<a href=#402 id=402 data-nosnippet>402</a>        payload.dynamic_offsets.extend_from_slice(offsets);
+<a href=#403 id=403 data-nosnippet>403</a>
+<a href=#404 id=404 data-nosnippet>404</a>        <span class="comment">// Fill out the actual binding sizes for buffers,
+<a href=#405 id=405 data-nosnippet>405</a>        // whose layout doesn't specify `min_binding_size`.
+<a href=#406 id=406 data-nosnippet>406</a>
+<a href=#407 id=407 data-nosnippet>407</a>        // Update entries that already exist as the pipeline was bound before the group
+<a href=#408 id=408 data-nosnippet>408</a>        // was bound.
+<a href=#409 id=409 data-nosnippet>409</a>        </span><span class="kw">for </span>(late_binding, late_info) <span class="kw">in </span>payload
+<a href=#410 id=410 data-nosnippet>410</a>            .late_buffer_bindings
+<a href=#411 id=411 data-nosnippet>411</a>            .iter_mut()
+<a href=#412 id=412 data-nosnippet>412</a>            .zip(bind_group.late_buffer_binding_infos.iter())
+<a href=#413 id=413 data-nosnippet>413</a>        {
+<a href=#414 id=414 data-nosnippet>414</a>            late_binding.binding_index = late_info.binding_index;
+<a href=#415 id=415 data-nosnippet>415</a>            late_binding.bound_size = late_info.size.get();
+<a href=#416 id=416 data-nosnippet>416</a>        }
+<a href=#417 id=417 data-nosnippet>417</a>
+<a href=#418 id=418 data-nosnippet>418</a>        <span class="comment">// Add new entries for the bindings that were not known when the pipeline was bound.
+<a href=#419 id=419 data-nosnippet>419</a>        </span><span class="kw">if </span>bind_group.late_buffer_binding_infos.len() &gt; payload.late_buffer_bindings.len() {
+<a href=#420 id=420 data-nosnippet>420</a>            <span class="kw">for </span>late_info <span class="kw">in
+<a href=#421 id=421 data-nosnippet>421</a>                </span>bind_group.late_buffer_binding_infos[payload.late_buffer_bindings.len()..].iter()
+<a href=#422 id=422 data-nosnippet>422</a>            {
+<a href=#423 id=423 data-nosnippet>423</a>                payload.late_buffer_bindings.push(LateBufferBinding {
+<a href=#424 id=424 data-nosnippet>424</a>                    binding_index: late_info.binding_index,
+<a href=#425 id=425 data-nosnippet>425</a>                    shader_expect_size: <span class="number">0</span>,
+<a href=#426 id=426 data-nosnippet>426</a>                    bound_size: late_info.size.get(),
+<a href=#427 id=427 data-nosnippet>427</a>                });
+<a href=#428 id=428 data-nosnippet>428</a>            }
+<a href=#429 id=429 data-nosnippet>429</a>        }
+<a href=#430 id=430 data-nosnippet>430</a>
+<a href=#431 id=431 data-nosnippet>431</a>        <span class="self">self</span>.manager.assign(index, bind_group.layout.clone());
+<a href=#432 id=432 data-nosnippet>432</a>    }
+<a href=#433 id=433 data-nosnippet>433</a>
+<a href=#434 id=434 data-nosnippet>434</a>    <span class="doccomment">/// Get the range of entries that needs to be rebound, and clears it.
+<a href=#435 id=435 data-nosnippet>435</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>take_rebind_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Range&lt;usize&gt; {
+<a href=#436 id=436 data-nosnippet>436</a>        <span class="self">self</span>.manager.take_rebind_range()
+<a href=#437 id=437 data-nosnippet>437</a>    }
+<a href=#438 id=438 data-nosnippet>438</a>
+<a href=#439 id=439 data-nosnippet>439</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>entries(
+<a href=#440 id=440 data-nosnippet>440</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#441 id=441 data-nosnippet>441</a>        range: Range&lt;usize&gt;,
+<a href=#442 id=442 data-nosnippet>442</a>    ) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = (usize, <span class="kw-2">&amp;</span><span class="lifetime">'_ </span>EntryPayload)&gt; + Clone + <span class="lifetime">'_ </span>{
+<a href=#443 id=443 data-nosnippet>443</a>        <span class="kw">let </span>payloads = <span class="kw-2">&amp;</span><span class="self">self</span>.payloads[range.clone()];
+<a href=#444 id=444 data-nosnippet>444</a>        zip(range, payloads)
+<a href=#445 id=445 data-nosnippet>445</a>    }
+<a href=#446 id=446 data-nosnippet>446</a>
+<a href=#447 id=447 data-nosnippet>447</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>list_active&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;BindGroup&gt;&gt; + <span class="lifetime">'a </span>{
+<a href=#448 id=448 data-nosnippet>448</a>        <span class="kw">let </span>payloads = <span class="kw-2">&amp;</span><span class="self">self</span>.payloads;
+<a href=#449 id=449 data-nosnippet>449</a>        <span class="self">self</span>.manager
+<a href=#450 id=450 data-nosnippet>450</a>            .list_active()
+<a href=#451 id=451 data-nosnippet>451</a>            .map(<span class="kw">move </span>|index| payloads[index].group.as_ref().unwrap())
+<a href=#452 id=452 data-nosnippet>452</a>    }
+<a href=#453 id=453 data-nosnippet>453</a>
+<a href=#454 id=454 data-nosnippet>454</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>list_valid&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (usize, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>EntryPayload)&gt; + <span class="lifetime">'a </span>{
+<a href=#455 id=455 data-nosnippet>455</a>        <span class="self">self</span>.payloads
+<a href=#456 id=456 data-nosnippet>456</a>            .iter()
+<a href=#457 id=457 data-nosnippet>457</a>            .take(<span class="self">self</span>.manager.num_valid_entries())
+<a href=#458 id=458 data-nosnippet>458</a>            .enumerate()
+<a href=#459 id=459 data-nosnippet>459</a>    }
+<a href=#460 id=460 data-nosnippet>460</a>
+<a href=#461 id=461 data-nosnippet>461</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>check_compatibility&lt;T: Labeled&gt;(
+<a href=#462 id=462 data-nosnippet>462</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#463 id=463 data-nosnippet>463</a>        pipeline: <span class="kw-2">&amp;</span>T,
+<a href=#464 id=464 data-nosnippet>464</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Box&lt;BinderError&gt;&gt; {
+<a href=#465 id=465 data-nosnippet>465</a>        <span class="self">self</span>.manager.get_invalid().map_err(|(index, error)| {
+<a href=#466 id=466 data-nosnippet>466</a>            Box::new(<span class="kw">match </span>error {
+<a href=#467 id=467 data-nosnippet>467</a>                compat::Error::Incompatible {
+<a href=#468 id=468 data-nosnippet>468</a>                    expected_bgl,
+<a href=#469 id=469 data-nosnippet>469</a>                    assigned_bgl,
+<a href=#470 id=470 data-nosnippet>470</a>                    inner,
+<a href=#471 id=471 data-nosnippet>471</a>                } =&gt; BinderError::IncompatibleBindGroup {
+<a href=#472 id=472 data-nosnippet>472</a>                    expected_bgl,
+<a href=#473 id=473 data-nosnippet>473</a>                    assigned_bgl,
+<a href=#474 id=474 data-nosnippet>474</a>                    assigned_bg: <span class="self">self</span>.payloads[index].group.as_ref().unwrap().error_ident(),
+<a href=#475 id=475 data-nosnippet>475</a>                    index,
+<a href=#476 id=476 data-nosnippet>476</a>                    pipeline: pipeline.error_ident(),
+<a href=#477 id=477 data-nosnippet>477</a>                    inner,
+<a href=#478 id=478 data-nosnippet>478</a>                },
+<a href=#479 id=479 data-nosnippet>479</a>                compat::Error::Missing =&gt; BinderError::MissingBindGroup {
+<a href=#480 id=480 data-nosnippet>480</a>                    index,
+<a href=#481 id=481 data-nosnippet>481</a>                    pipeline: pipeline.error_ident(),
+<a href=#482 id=482 data-nosnippet>482</a>                },
+<a href=#483 id=483 data-nosnippet>483</a>            })
+<a href=#484 id=484 data-nosnippet>484</a>        })
+<a href=#485 id=485 data-nosnippet>485</a>    }
+<a href=#486 id=486 data-nosnippet>486</a>
+<a href=#487 id=487 data-nosnippet>487</a>    <span class="doccomment">/// Scan active buffer bindings corresponding to layouts without `min_binding_size` specified.
+<a href=#488 id=488 data-nosnippet>488</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>check_late_buffer_bindings(
+<a href=#489 id=489 data-nosnippet>489</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#490 id=490 data-nosnippet>490</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), LateMinBufferBindingSizeMismatch&gt; {
+<a href=#491 id=491 data-nosnippet>491</a>        <span class="kw">for </span>group_index <span class="kw">in </span><span class="self">self</span>.manager.list_active() {
+<a href=#492 id=492 data-nosnippet>492</a>            <span class="kw">let </span>payload = <span class="kw-2">&amp;</span><span class="self">self</span>.payloads[group_index];
+<a href=#493 id=493 data-nosnippet>493</a>            <span class="kw">for </span>late_binding <span class="kw">in
+<a href=#494 id=494 data-nosnippet>494</a>                </span><span class="kw-2">&amp;</span>payload.late_buffer_bindings[..payload.late_bindings_effective_count]
+<a href=#495 id=495 data-nosnippet>495</a>            {
+<a href=#496 id=496 data-nosnippet>496</a>                <span class="kw">if </span>late_binding.bound_size &lt; late_binding.shader_expect_size {
+<a href=#497 id=497 data-nosnippet>497</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(LateMinBufferBindingSizeMismatch {
+<a href=#498 id=498 data-nosnippet>498</a>                        group_index: group_index <span class="kw">as </span>u32,
+<a href=#499 id=499 data-nosnippet>499</a>                        binding_index: late_binding.binding_index,
+<a href=#500 id=500 data-nosnippet>500</a>                        shader_size: late_binding.shader_expect_size,
+<a href=#501 id=501 data-nosnippet>501</a>                        bound_size: late_binding.bound_size,
+<a href=#502 id=502 data-nosnippet>502</a>                    });
+<a href=#503 id=503 data-nosnippet>503</a>                }
+<a href=#504 id=504 data-nosnippet>504</a>            }
+<a href=#505 id=505 data-nosnippet>505</a>        }
+<a href=#506 id=506 data-nosnippet>506</a>        <span class="prelude-val">Ok</span>(())
+<a href=#507 id=507 data-nosnippet>507</a>    }
+<a href=#508 id=508 data-nosnippet>508</a>}</code></pre></div></section></main></body></html>
