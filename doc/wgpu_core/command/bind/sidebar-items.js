@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["BinderError"],"fn":["compute_nonoverlapping_ranges"],"mod":["compat"],"struct":["Binder","EntryPayload","ImmediateChange","LateBufferBinding"]};
+window.SIDEBAR_ITEMS = {"enum":["BinderError"],"mod":["compat"],"struct":["Binder","EntryPayload","LateBufferBinding"]};

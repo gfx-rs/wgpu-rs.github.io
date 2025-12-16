@@ -19,7 +19,7 @@
 <a href=#19 id=19 data-nosnippet>19</a>
 <a href=#20 id=20 data-nosnippet>20</a><span class="kw">extern crate </span>alloc;
 <a href=#21 id=21 data-nosnippet>21</a>
-<a href=#22 id=22 data-nosnippet>22</a><span class="kw">use </span>core::{fmt, hash::Hash, ops::Range, time::Duration};
+<a href=#22 id=22 data-nosnippet>22</a><span class="kw">use </span>core::{fmt, hash::Hash, time::Duration};
 <a href=#23 id=23 data-nosnippet>23</a>
 <a href=#24 id=24 data-nosnippet>24</a><span class="attr">#[cfg(any(feature = <span class="string">"serde"</span>, test))]
 <a href=#25 id=25 data-nosnippet>25</a></span><span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -197,7 +197,7 @@
 <a href=#197 id=197 data-nosnippet>197</a><span class="doccomment">/// Ranges of [writes to immediate data] must be at least this aligned.
 <a href=#198 id=198 data-nosnippet>198</a>///
 <a href=#199 id=199 data-nosnippet>199</a></span><span class="attr">#[doc = <span class="macro">link_to_wgpu_docs!</span>([<span class="string">"writes to immediate data"</span>]</span>: <span class="string">"struct.RenderPass.html#method.set_immediates"</span>)]
-<a href=#200 id=200 data-nosnippet>200</a><span class="kw">pub const </span>IMMEDIATES_ALIGNMENT: u32 = <span class="number">4</span>;
+<a href=#200 id=200 data-nosnippet>200</a><span class="kw">pub const </span>IMMEDIATE_DATA_ALIGNMENT: u32 = <span class="number">4</span>;
 <a href=#201 id=201 data-nosnippet>201</a>
 <a href=#202 id=202 data-nosnippet>202</a><span class="doccomment">/// Storage buffer binding sizes must be multiples of this value.
 <a href=#203 id=203 data-nosnippet>203</a></span><span class="attr">#[doc(hidden)]
@@ -434,148 +434,136 @@
 <a href=#434 id=434 data-nosnippet>434</a>    };
 <a href=#435 id=435 data-nosnippet>435</a>}
 <a href=#436 id=436 data-nosnippet>436</a>
-<a href=#437 id=437 data-nosnippet>437</a><span class="doccomment">/// A range of immediate data memory to pass to a shader stage.
-<a href=#438 id=438 data-nosnippet>438</a></span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-<a href=#439 id=439 data-nosnippet>439</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#440 id=440 data-nosnippet>440</a></span><span class="kw">pub struct </span>ImmediateRange {
-<a href=#441 id=441 data-nosnippet>441</a>    <span class="doccomment">/// Stage immediate data range is visible from. Each stage can only be served by at most one range.
-<a href=#442 id=442 data-nosnippet>442</a>    /// One range can serve multiple stages however.
-<a href=#443 id=443 data-nosnippet>443</a>    </span><span class="kw">pub </span>stages: ShaderStages,
-<a href=#444 id=444 data-nosnippet>444</a>    <span class="doccomment">/// Range in immediate data memory to use for the stage. Must be less than [`Limits::max_immediate_size`].
-<a href=#445 id=445 data-nosnippet>445</a>    /// Start and end must be aligned to the 4s.
-<a href=#446 id=446 data-nosnippet>446</a>    </span><span class="kw">pub </span>range: Range&lt;u32&gt;,
+<a href=#437 id=437 data-nosnippet>437</a><span class="doccomment">/// Describes a [`CommandBuffer`](../wgpu/struct.CommandBuffer.html).
+<a href=#438 id=438 data-nosnippet>438</a>///
+<a href=#439 id=439 data-nosnippet>439</a>/// Corresponds to [WebGPU `GPUCommandBufferDescriptor`](
+<a href=#440 id=440 data-nosnippet>440</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gpucommandbufferdescriptor).
+<a href=#441 id=441 data-nosnippet>441</a></span><span class="attr">#[repr(C)]
+<a href=#442 id=442 data-nosnippet>442</a>#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
+<a href=#443 id=443 data-nosnippet>443</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#444 id=444 data-nosnippet>444</a></span><span class="kw">pub struct </span>CommandBufferDescriptor&lt;L&gt; {
+<a href=#445 id=445 data-nosnippet>445</a>    <span class="doccomment">/// Debug label of this command buffer.
+<a href=#446 id=446 data-nosnippet>446</a>    </span><span class="kw">pub </span>label: L,
 <a href=#447 id=447 data-nosnippet>447</a>}
 <a href=#448 id=448 data-nosnippet>448</a>
-<a href=#449 id=449 data-nosnippet>449</a><span class="doccomment">/// Describes a [`CommandBuffer`](../wgpu/struct.CommandBuffer.html).
-<a href=#450 id=450 data-nosnippet>450</a>///
-<a href=#451 id=451 data-nosnippet>451</a>/// Corresponds to [WebGPU `GPUCommandBufferDescriptor`](
-<a href=#452 id=452 data-nosnippet>452</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gpucommandbufferdescriptor).
-<a href=#453 id=453 data-nosnippet>453</a></span><span class="attr">#[repr(C)]
-<a href=#454 id=454 data-nosnippet>454</a>#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-<a href=#455 id=455 data-nosnippet>455</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#456 id=456 data-nosnippet>456</a></span><span class="kw">pub struct </span>CommandBufferDescriptor&lt;L&gt; {
-<a href=#457 id=457 data-nosnippet>457</a>    <span class="doccomment">/// Debug label of this command buffer.
-<a href=#458 id=458 data-nosnippet>458</a>    </span><span class="kw">pub </span>label: L,
-<a href=#459 id=459 data-nosnippet>459</a>}
-<a href=#460 id=460 data-nosnippet>460</a>
-<a href=#461 id=461 data-nosnippet>461</a><span class="kw">impl</span>&lt;L&gt; CommandBufferDescriptor&lt;L&gt; {
-<a href=#462 id=462 data-nosnippet>462</a>    <span class="doccomment">/// Takes a closure and maps the label of the command buffer descriptor into another.
-<a href=#463 id=463 data-nosnippet>463</a>    </span><span class="attr">#[must_use]
-<a href=#464 id=464 data-nosnippet>464</a>    </span><span class="kw">pub fn </span>map_label&lt;K&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K) -&gt; CommandBufferDescriptor&lt;K&gt; {
-<a href=#465 id=465 data-nosnippet>465</a>        CommandBufferDescriptor {
-<a href=#466 id=466 data-nosnippet>466</a>            label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
-<a href=#467 id=467 data-nosnippet>467</a>        }
-<a href=#468 id=468 data-nosnippet>468</a>    }
-<a href=#469 id=469 data-nosnippet>469</a>}
-<a href=#470 id=470 data-nosnippet>470</a>
-<a href=#471 id=471 data-nosnippet>471</a><span class="doccomment">/// Describes how to create a `QuerySet`.
-<a href=#472 id=472 data-nosnippet>472</a>///
-<a href=#473 id=473 data-nosnippet>473</a>/// Corresponds to [WebGPU `GPUQuerySetDescriptor`](
-<a href=#474 id=474 data-nosnippet>474</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gpuquerysetdescriptor).
-<a href=#475 id=475 data-nosnippet>475</a></span><span class="attr">#[derive(Clone, Debug)]
-<a href=#476 id=476 data-nosnippet>476</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#477 id=477 data-nosnippet>477</a></span><span class="kw">pub struct </span>QuerySetDescriptor&lt;L&gt; {
-<a href=#478 id=478 data-nosnippet>478</a>    <span class="doccomment">/// Debug label for the query set.
-<a href=#479 id=479 data-nosnippet>479</a>    </span><span class="kw">pub </span>label: L,
-<a href=#480 id=480 data-nosnippet>480</a>    <span class="doccomment">/// Kind of query that this query set should contain.
-<a href=#481 id=481 data-nosnippet>481</a>    </span><span class="kw">pub </span>ty: QueryType,
-<a href=#482 id=482 data-nosnippet>482</a>    <span class="doccomment">/// Total count of queries the set contains. Must not be zero.
-<a href=#483 id=483 data-nosnippet>483</a>    /// Must not be greater than [`QUERY_SET_MAX_QUERIES`].
-<a href=#484 id=484 data-nosnippet>484</a>    </span><span class="kw">pub </span>count: u32,
+<a href=#449 id=449 data-nosnippet>449</a><span class="kw">impl</span>&lt;L&gt; CommandBufferDescriptor&lt;L&gt; {
+<a href=#450 id=450 data-nosnippet>450</a>    <span class="doccomment">/// Takes a closure and maps the label of the command buffer descriptor into another.
+<a href=#451 id=451 data-nosnippet>451</a>    </span><span class="attr">#[must_use]
+<a href=#452 id=452 data-nosnippet>452</a>    </span><span class="kw">pub fn </span>map_label&lt;K&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K) -&gt; CommandBufferDescriptor&lt;K&gt; {
+<a href=#453 id=453 data-nosnippet>453</a>        CommandBufferDescriptor {
+<a href=#454 id=454 data-nosnippet>454</a>            label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
+<a href=#455 id=455 data-nosnippet>455</a>        }
+<a href=#456 id=456 data-nosnippet>456</a>    }
+<a href=#457 id=457 data-nosnippet>457</a>}
+<a href=#458 id=458 data-nosnippet>458</a>
+<a href=#459 id=459 data-nosnippet>459</a><span class="doccomment">/// Describes how to create a `QuerySet`.
+<a href=#460 id=460 data-nosnippet>460</a>///
+<a href=#461 id=461 data-nosnippet>461</a>/// Corresponds to [WebGPU `GPUQuerySetDescriptor`](
+<a href=#462 id=462 data-nosnippet>462</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gpuquerysetdescriptor).
+<a href=#463 id=463 data-nosnippet>463</a></span><span class="attr">#[derive(Clone, Debug)]
+<a href=#464 id=464 data-nosnippet>464</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#465 id=465 data-nosnippet>465</a></span><span class="kw">pub struct </span>QuerySetDescriptor&lt;L&gt; {
+<a href=#466 id=466 data-nosnippet>466</a>    <span class="doccomment">/// Debug label for the query set.
+<a href=#467 id=467 data-nosnippet>467</a>    </span><span class="kw">pub </span>label: L,
+<a href=#468 id=468 data-nosnippet>468</a>    <span class="doccomment">/// Kind of query that this query set should contain.
+<a href=#469 id=469 data-nosnippet>469</a>    </span><span class="kw">pub </span>ty: QueryType,
+<a href=#470 id=470 data-nosnippet>470</a>    <span class="doccomment">/// Total count of queries the set contains. Must not be zero.
+<a href=#471 id=471 data-nosnippet>471</a>    /// Must not be greater than [`QUERY_SET_MAX_QUERIES`].
+<a href=#472 id=472 data-nosnippet>472</a>    </span><span class="kw">pub </span>count: u32,
+<a href=#473 id=473 data-nosnippet>473</a>}
+<a href=#474 id=474 data-nosnippet>474</a>
+<a href=#475 id=475 data-nosnippet>475</a><span class="kw">impl</span>&lt;L&gt; QuerySetDescriptor&lt;L&gt; {
+<a href=#476 id=476 data-nosnippet>476</a>    <span class="doccomment">/// Takes a closure and maps the label of the query set descriptor into another.
+<a href=#477 id=477 data-nosnippet>477</a>    </span><span class="attr">#[must_use]
+<a href=#478 id=478 data-nosnippet>478</a>    </span><span class="kw">pub fn </span>map_label&lt;<span class="lifetime">'a</span>, K&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>L) -&gt; K) -&gt; QuerySetDescriptor&lt;K&gt; {
+<a href=#479 id=479 data-nosnippet>479</a>        QuerySetDescriptor {
+<a href=#480 id=480 data-nosnippet>480</a>            label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
+<a href=#481 id=481 data-nosnippet>481</a>            ty: <span class="self">self</span>.ty,
+<a href=#482 id=482 data-nosnippet>482</a>            count: <span class="self">self</span>.count,
+<a href=#483 id=483 data-nosnippet>483</a>        }
+<a href=#484 id=484 data-nosnippet>484</a>    }
 <a href=#485 id=485 data-nosnippet>485</a>}
 <a href=#486 id=486 data-nosnippet>486</a>
-<a href=#487 id=487 data-nosnippet>487</a><span class="kw">impl</span>&lt;L&gt; QuerySetDescriptor&lt;L&gt; {
-<a href=#488 id=488 data-nosnippet>488</a>    <span class="doccomment">/// Takes a closure and maps the label of the query set descriptor into another.
-<a href=#489 id=489 data-nosnippet>489</a>    </span><span class="attr">#[must_use]
-<a href=#490 id=490 data-nosnippet>490</a>    </span><span class="kw">pub fn </span>map_label&lt;<span class="lifetime">'a</span>, K&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>L) -&gt; K) -&gt; QuerySetDescriptor&lt;K&gt; {
-<a href=#491 id=491 data-nosnippet>491</a>        QuerySetDescriptor {
-<a href=#492 id=492 data-nosnippet>492</a>            label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
-<a href=#493 id=493 data-nosnippet>493</a>            ty: <span class="self">self</span>.ty,
-<a href=#494 id=494 data-nosnippet>494</a>            count: <span class="self">self</span>.count,
-<a href=#495 id=495 data-nosnippet>495</a>        }
-<a href=#496 id=496 data-nosnippet>496</a>    }
-<a href=#497 id=497 data-nosnippet>497</a>}
-<a href=#498 id=498 data-nosnippet>498</a>
-<a href=#499 id=499 data-nosnippet>499</a><span class="doccomment">/// Type of query contained in a [`QuerySet`].
-<a href=#500 id=500 data-nosnippet>500</a>///
-<a href=#501 id=501 data-nosnippet>501</a>/// Corresponds to [WebGPU `GPUQueryType`](
-<a href=#502 id=502 data-nosnippet>502</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpuquerytype).
-<a href=#503 id=503 data-nosnippet>503</a>///
-<a href=#504 id=504 data-nosnippet>504</a></span><span class="attr">#[doc = <span class="macro">link_to_wgpu_item!</span>(<span class="kw">struct </span>QuerySet)]
-<a href=#505 id=505 data-nosnippet>505</a>#[derive(Copy, Clone, Debug)]
-<a href=#506 id=506 data-nosnippet>506</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#507 id=507 data-nosnippet>507</a></span><span class="kw">pub enum </span>QueryType {
-<a href=#508 id=508 data-nosnippet>508</a>    <span class="doccomment">/// Query returns a single 64-bit number, serving as an occlusion boolean.
-<a href=#509 id=509 data-nosnippet>509</a>    </span>Occlusion,
-<a href=#510 id=510 data-nosnippet>510</a>    <span class="doccomment">/// Query returns up to 5 64-bit numbers based on the given flags.
-<a href=#511 id=511 data-nosnippet>511</a>    ///
-<a href=#512 id=512 data-nosnippet>512</a>    /// See [`PipelineStatisticsTypes`]'s documentation for more information
-<a href=#513 id=513 data-nosnippet>513</a>    /// on how they get resolved.
+<a href=#487 id=487 data-nosnippet>487</a><span class="doccomment">/// Type of query contained in a [`QuerySet`].
+<a href=#488 id=488 data-nosnippet>488</a>///
+<a href=#489 id=489 data-nosnippet>489</a>/// Corresponds to [WebGPU `GPUQueryType`](
+<a href=#490 id=490 data-nosnippet>490</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpuquerytype).
+<a href=#491 id=491 data-nosnippet>491</a>///
+<a href=#492 id=492 data-nosnippet>492</a></span><span class="attr">#[doc = <span class="macro">link_to_wgpu_item!</span>(<span class="kw">struct </span>QuerySet)]
+<a href=#493 id=493 data-nosnippet>493</a>#[derive(Copy, Clone, Debug)]
+<a href=#494 id=494 data-nosnippet>494</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#495 id=495 data-nosnippet>495</a></span><span class="kw">pub enum </span>QueryType {
+<a href=#496 id=496 data-nosnippet>496</a>    <span class="doccomment">/// Query returns a single 64-bit number, serving as an occlusion boolean.
+<a href=#497 id=497 data-nosnippet>497</a>    </span>Occlusion,
+<a href=#498 id=498 data-nosnippet>498</a>    <span class="doccomment">/// Query returns up to 5 64-bit numbers based on the given flags.
+<a href=#499 id=499 data-nosnippet>499</a>    ///
+<a href=#500 id=500 data-nosnippet>500</a>    /// See [`PipelineStatisticsTypes`]'s documentation for more information
+<a href=#501 id=501 data-nosnippet>501</a>    /// on how they get resolved.
+<a href=#502 id=502 data-nosnippet>502</a>    ///
+<a href=#503 id=503 data-nosnippet>503</a>    /// [`Features::PIPELINE_STATISTICS_QUERY`] must be enabled to use this query type.
+<a href=#504 id=504 data-nosnippet>504</a>    </span>PipelineStatistics(PipelineStatisticsTypes),
+<a href=#505 id=505 data-nosnippet>505</a>    <span class="doccomment">/// Query returns a 64-bit number indicating the GPU-timestamp
+<a href=#506 id=506 data-nosnippet>506</a>    /// where all previous commands have finished executing.
+<a href=#507 id=507 data-nosnippet>507</a>    ///
+<a href=#508 id=508 data-nosnippet>508</a>    /// Must be multiplied by [`Queue::get_timestamp_period`][Qgtp] to get
+<a href=#509 id=509 data-nosnippet>509</a>    /// the value in nanoseconds. Absolute values have no meaning,
+<a href=#510 id=510 data-nosnippet>510</a>    /// but timestamps can be subtracted to get the time it takes
+<a href=#511 id=511 data-nosnippet>511</a>    /// for a string of operations to complete.
+<a href=#512 id=512 data-nosnippet>512</a>    ///
+<a href=#513 id=513 data-nosnippet>513</a>    /// [`Features::TIMESTAMP_QUERY`] must be enabled to use this query type.
 <a href=#514 id=514 data-nosnippet>514</a>    ///
-<a href=#515 id=515 data-nosnippet>515</a>    /// [`Features::PIPELINE_STATISTICS_QUERY`] must be enabled to use this query type.
-<a href=#516 id=516 data-nosnippet>516</a>    </span>PipelineStatistics(PipelineStatisticsTypes),
-<a href=#517 id=517 data-nosnippet>517</a>    <span class="doccomment">/// Query returns a 64-bit number indicating the GPU-timestamp
-<a href=#518 id=518 data-nosnippet>518</a>    /// where all previous commands have finished executing.
-<a href=#519 id=519 data-nosnippet>519</a>    ///
-<a href=#520 id=520 data-nosnippet>520</a>    /// Must be multiplied by [`Queue::get_timestamp_period`][Qgtp] to get
-<a href=#521 id=521 data-nosnippet>521</a>    /// the value in nanoseconds. Absolute values have no meaning,
-<a href=#522 id=522 data-nosnippet>522</a>    /// but timestamps can be subtracted to get the time it takes
-<a href=#523 id=523 data-nosnippet>523</a>    /// for a string of operations to complete.
-<a href=#524 id=524 data-nosnippet>524</a>    ///
-<a href=#525 id=525 data-nosnippet>525</a>    /// [`Features::TIMESTAMP_QUERY`] must be enabled to use this query type.
-<a href=#526 id=526 data-nosnippet>526</a>    ///
-<a href=#527 id=527 data-nosnippet>527</a>    </span><span class="attr">#[doc = <span class="macro">link_to_wgpu_docs!</span>([<span class="string">"Qgtp"</span>]</span>: <span class="string">"struct.Queue.html#method.get_timestamp_period"</span>)]
-<a href=#528 id=528 data-nosnippet>528</a>    Timestamp,
-<a href=#529 id=529 data-nosnippet>529</a>}
-<a href=#530 id=530 data-nosnippet>530</a>
-<a href=#531 id=531 data-nosnippet>531</a><span class="macro">bitflags::bitflags!</span> {
-<a href=#532 id=532 data-nosnippet>532</a>    <span class="doccomment">/// Flags for which pipeline data should be recorded in a query.
-<a href=#533 id=533 data-nosnippet>533</a>    ///
-<a href=#534 id=534 data-nosnippet>534</a>    /// Used in [`QueryType`].
-<a href=#535 id=535 data-nosnippet>535</a>    ///
-<a href=#536 id=536 data-nosnippet>536</a>    /// The amount of values written when resolved depends
-<a href=#537 id=537 data-nosnippet>537</a>    /// on the amount of flags set. For example, if 3 flags are set, 3
-<a href=#538 id=538 data-nosnippet>538</a>    /// 64-bit values will be written per query.
-<a href=#539 id=539 data-nosnippet>539</a>    ///
-<a href=#540 id=540 data-nosnippet>540</a>    /// The order they are written is the order they are declared
-<a href=#541 id=541 data-nosnippet>541</a>    /// in these bitflags. For example, if you enabled `CLIPPER_PRIMITIVES_OUT`
-<a href=#542 id=542 data-nosnippet>542</a>    /// and `COMPUTE_SHADER_INVOCATIONS`, it would write 16 bytes,
-<a href=#543 id=543 data-nosnippet>543</a>    /// the first 8 bytes being the primitive out value, the last 8
-<a href=#544 id=544 data-nosnippet>544</a>    /// bytes being the compute shader invocation count.
-<a href=#545 id=545 data-nosnippet>545</a>    </span><span class="attr">#[repr(transparent)]
-<a href=#546 id=546 data-nosnippet>546</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#547 id=547 data-nosnippet>547</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
-<a href=#548 id=548 data-nosnippet>548</a>    #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-<a href=#549 id=549 data-nosnippet>549</a>    </span><span class="kw">pub struct </span>PipelineStatisticsTypes : u8 {
-<a href=#550 id=550 data-nosnippet>550</a>        <span class="doccomment">/// Amount of times the vertex shader is ran. Accounts for
-<a href=#551 id=551 data-nosnippet>551</a>        /// the vertex cache when doing indexed rendering.
-<a href=#552 id=552 data-nosnippet>552</a>        </span><span class="kw">const </span>VERTEX_SHADER_INVOCATIONS = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
-<a href=#553 id=553 data-nosnippet>553</a>        <span class="doccomment">/// Amount of times the clipper is invoked. This
-<a href=#554 id=554 data-nosnippet>554</a>        /// is also the amount of triangles output by the vertex shader.
-<a href=#555 id=555 data-nosnippet>555</a>        </span><span class="kw">const </span>CLIPPER_INVOCATIONS = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
-<a href=#556 id=556 data-nosnippet>556</a>        <span class="doccomment">/// Amount of primitives that are not culled by the clipper.
-<a href=#557 id=557 data-nosnippet>557</a>        /// This is the amount of triangles that are actually on screen
-<a href=#558 id=558 data-nosnippet>558</a>        /// and will be rasterized and rendered.
-<a href=#559 id=559 data-nosnippet>559</a>        </span><span class="kw">const </span>CLIPPER_PRIMITIVES_OUT = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
-<a href=#560 id=560 data-nosnippet>560</a>        <span class="doccomment">/// Amount of times the fragment shader is ran. Accounts for
-<a href=#561 id=561 data-nosnippet>561</a>        /// fragment shaders running in 2x2 blocks in order to get
-<a href=#562 id=562 data-nosnippet>562</a>        /// derivatives.
-<a href=#563 id=563 data-nosnippet>563</a>        </span><span class="kw">const </span>FRAGMENT_SHADER_INVOCATIONS = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
-<a href=#564 id=564 data-nosnippet>564</a>        <span class="doccomment">/// Amount of times a compute shader is invoked. This will
-<a href=#565 id=565 data-nosnippet>565</a>        /// be equivalent to the dispatch count times the workgroup size.
-<a href=#566 id=566 data-nosnippet>566</a>        </span><span class="kw">const </span>COMPUTE_SHADER_INVOCATIONS = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
-<a href=#567 id=567 data-nosnippet>567</a>    }
-<a href=#568 id=568 data-nosnippet>568</a>}
-<a href=#569 id=569 data-nosnippet>569</a>
-<a href=#570 id=570 data-nosnippet>570</a><span class="doccomment">/// Corresponds to a [`GPUDeviceLostReason`].
-<a href=#571 id=571 data-nosnippet>571</a>///
-<a href=#572 id=572 data-nosnippet>572</a>/// [`GPUDeviceLostReason`]: https://www.w3.org/TR/webgpu/#enumdef-gpudevicelostreason
-<a href=#573 id=573 data-nosnippet>573</a></span><span class="attr">#[repr(u8)]
-<a href=#574 id=574 data-nosnippet>574</a>#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-<a href=#575 id=575 data-nosnippet>575</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#576 id=576 data-nosnippet>576</a></span><span class="kw">pub enum </span>DeviceLostReason {
-<a href=#577 id=577 data-nosnippet>577</a>    <span class="doccomment">/// The device was lost for an unspecific reason, including driver errors.
-<a href=#578 id=578 data-nosnippet>578</a>    </span>Unknown = <span class="number">0</span>,
-<a href=#579 id=579 data-nosnippet>579</a>    <span class="doccomment">/// The device's `destroy` method was called.
-<a href=#580 id=580 data-nosnippet>580</a>    </span>Destroyed = <span class="number">1</span>,
-<a href=#581 id=581 data-nosnippet>581</a>}</code></pre></div></section></main></body></html>
+<a href=#515 id=515 data-nosnippet>515</a>    </span><span class="attr">#[doc = <span class="macro">link_to_wgpu_docs!</span>([<span class="string">"Qgtp"</span>]</span>: <span class="string">"struct.Queue.html#method.get_timestamp_period"</span>)]
+<a href=#516 id=516 data-nosnippet>516</a>    Timestamp,
+<a href=#517 id=517 data-nosnippet>517</a>}
+<a href=#518 id=518 data-nosnippet>518</a>
+<a href=#519 id=519 data-nosnippet>519</a><span class="macro">bitflags::bitflags!</span> {
+<a href=#520 id=520 data-nosnippet>520</a>    <span class="doccomment">/// Flags for which pipeline data should be recorded in a query.
+<a href=#521 id=521 data-nosnippet>521</a>    ///
+<a href=#522 id=522 data-nosnippet>522</a>    /// Used in [`QueryType`].
+<a href=#523 id=523 data-nosnippet>523</a>    ///
+<a href=#524 id=524 data-nosnippet>524</a>    /// The amount of values written when resolved depends
+<a href=#525 id=525 data-nosnippet>525</a>    /// on the amount of flags set. For example, if 3 flags are set, 3
+<a href=#526 id=526 data-nosnippet>526</a>    /// 64-bit values will be written per query.
+<a href=#527 id=527 data-nosnippet>527</a>    ///
+<a href=#528 id=528 data-nosnippet>528</a>    /// The order they are written is the order they are declared
+<a href=#529 id=529 data-nosnippet>529</a>    /// in these bitflags. For example, if you enabled `CLIPPER_PRIMITIVES_OUT`
+<a href=#530 id=530 data-nosnippet>530</a>    /// and `COMPUTE_SHADER_INVOCATIONS`, it would write 16 bytes,
+<a href=#531 id=531 data-nosnippet>531</a>    /// the first 8 bytes being the primitive out value, the last 8
+<a href=#532 id=532 data-nosnippet>532</a>    /// bytes being the compute shader invocation count.
+<a href=#533 id=533 data-nosnippet>533</a>    </span><span class="attr">#[repr(transparent)]
+<a href=#534 id=534 data-nosnippet>534</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#535 id=535 data-nosnippet>535</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
+<a href=#536 id=536 data-nosnippet>536</a>    #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+<a href=#537 id=537 data-nosnippet>537</a>    </span><span class="kw">pub struct </span>PipelineStatisticsTypes : u8 {
+<a href=#538 id=538 data-nosnippet>538</a>        <span class="doccomment">/// Amount of times the vertex shader is ran. Accounts for
+<a href=#539 id=539 data-nosnippet>539</a>        /// the vertex cache when doing indexed rendering.
+<a href=#540 id=540 data-nosnippet>540</a>        </span><span class="kw">const </span>VERTEX_SHADER_INVOCATIONS = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
+<a href=#541 id=541 data-nosnippet>541</a>        <span class="doccomment">/// Amount of times the clipper is invoked. This
+<a href=#542 id=542 data-nosnippet>542</a>        /// is also the amount of triangles output by the vertex shader.
+<a href=#543 id=543 data-nosnippet>543</a>        </span><span class="kw">const </span>CLIPPER_INVOCATIONS = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+<a href=#544 id=544 data-nosnippet>544</a>        <span class="doccomment">/// Amount of primitives that are not culled by the clipper.
+<a href=#545 id=545 data-nosnippet>545</a>        /// This is the amount of triangles that are actually on screen
+<a href=#546 id=546 data-nosnippet>546</a>        /// and will be rasterized and rendered.
+<a href=#547 id=547 data-nosnippet>547</a>        </span><span class="kw">const </span>CLIPPER_PRIMITIVES_OUT = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+<a href=#548 id=548 data-nosnippet>548</a>        <span class="doccomment">/// Amount of times the fragment shader is ran. Accounts for
+<a href=#549 id=549 data-nosnippet>549</a>        /// fragment shaders running in 2x2 blocks in order to get
+<a href=#550 id=550 data-nosnippet>550</a>        /// derivatives.
+<a href=#551 id=551 data-nosnippet>551</a>        </span><span class="kw">const </span>FRAGMENT_SHADER_INVOCATIONS = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+<a href=#552 id=552 data-nosnippet>552</a>        <span class="doccomment">/// Amount of times a compute shader is invoked. This will
+<a href=#553 id=553 data-nosnippet>553</a>        /// be equivalent to the dispatch count times the workgroup size.
+<a href=#554 id=554 data-nosnippet>554</a>        </span><span class="kw">const </span>COMPUTE_SHADER_INVOCATIONS = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+<a href=#555 id=555 data-nosnippet>555</a>    }
+<a href=#556 id=556 data-nosnippet>556</a>}
+<a href=#557 id=557 data-nosnippet>557</a>
+<a href=#558 id=558 data-nosnippet>558</a><span class="doccomment">/// Corresponds to a [`GPUDeviceLostReason`].
+<a href=#559 id=559 data-nosnippet>559</a>///
+<a href=#560 id=560 data-nosnippet>560</a>/// [`GPUDeviceLostReason`]: https://www.w3.org/TR/webgpu/#enumdef-gpudevicelostreason
+<a href=#561 id=561 data-nosnippet>561</a></span><span class="attr">#[repr(u8)]
+<a href=#562 id=562 data-nosnippet>562</a>#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+<a href=#563 id=563 data-nosnippet>563</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#564 id=564 data-nosnippet>564</a></span><span class="kw">pub enum </span>DeviceLostReason {
+<a href=#565 id=565 data-nosnippet>565</a>    <span class="doccomment">/// The device was lost for an unspecific reason, including driver errors.
+<a href=#566 id=566 data-nosnippet>566</a>    </span>Unknown = <span class="number">0</span>,
+<a href=#567 id=567 data-nosnippet>567</a>    <span class="doccomment">/// The device's `destroy` method was called.
+<a href=#568 id=568 data-nosnippet>568</a>    </span>Destroyed = <span class="number">1</span>,
+<a href=#569 id=569 data-nosnippet>569</a>}</code></pre></div></section></main></body></html>

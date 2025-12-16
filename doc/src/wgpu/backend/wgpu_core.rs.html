@@ -1286,7 +1286,7 @@
 <a href=#1286 id=1286 data-nosnippet>1286</a>        <span class="kw">let </span>descriptor = wgc::binding_model::PipelineLayoutDescriptor {
 <a href=#1287 id=1287 data-nosnippet>1287</a>            label: desc.label.map(Borrowed),
 <a href=#1288 id=1288 data-nosnippet>1288</a>            bind_group_layouts: Borrowed(<span class="kw-2">&amp;</span>temp_layouts),
-<a href=#1289 id=1289 data-nosnippet>1289</a>            immediates_ranges: Borrowed(desc.immediates_ranges),
+<a href=#1289 id=1289 data-nosnippet>1289</a>            immediate_size: desc.immediate_size,
 <a href=#1290 id=1290 data-nosnippet>1290</a>        };
 <a href=#1291 id=1291 data-nosnippet>1291</a>
 <a href=#1292 id=1292 data-nosnippet>1292</a>        <span class="kw">let </span>(id, error) = <span class="self">self
@@ -3185,11 +3185,11 @@
 <a href=#3185 id=3185 data-nosnippet>3185</a>        }
 <a href=#3186 id=3186 data-nosnippet>3186</a>    }
 <a href=#3187 id=3187 data-nosnippet>3187</a>
-<a href=#3188 id=3188 data-nosnippet>3188</a>    <span class="kw">fn </span>set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: <span class="kw">crate</span>::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
-<a href=#3189 id=3189 data-nosnippet>3189</a>        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
-<a href=#3190 id=3190 data-nosnippet>3190</a>            <span class="self">self</span>.context
-<a href=#3191 id=3191 data-nosnippet>3191</a>                .<span class="number">0
-<a href=#3192 id=3192 data-nosnippet>3192</a>                </span>.render_pass_set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>.pass, stages, offset, data)
+<a href=#3188 id=3188 data-nosnippet>3188</a>    <span class="kw">fn </span>set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
+<a href=#3189 id=3189 data-nosnippet>3189</a>        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self
+<a href=#3190 id=3190 data-nosnippet>3190</a>            </span>.context
+<a href=#3191 id=3191 data-nosnippet>3191</a>            .<span class="number">0
+<a href=#3192 id=3192 data-nosnippet>3192</a>            </span>.render_pass_set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>.pass, offset, data)
 <a href=#3193 id=3193 data-nosnippet>3193</a>        {
 <a href=#3194 id=3194 data-nosnippet>3194</a>            <span class="self">self</span>.context.handle_error(
 <a href=#3195 id=3195 data-nosnippet>3195</a>                <span class="kw-2">&amp;</span><span class="self">self</span>.error_sink,
@@ -3761,235 +3761,234 @@
 <a href=#3761 id=3761 data-nosnippet>3761</a>        wgpu_render_bundle_set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder, slot, buffer.id, offset, size)
 <a href=#3762 id=3762 data-nosnippet>3762</a>    }
 <a href=#3763 id=3763 data-nosnippet>3763</a>
-<a href=#3764 id=3764 data-nosnippet>3764</a>    <span class="kw">fn </span>set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: <span class="kw">crate</span>::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
+<a href=#3764 id=3764 data-nosnippet>3764</a>    <span class="kw">fn </span>set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
 <a href=#3765 id=3765 data-nosnippet>3765</a>        <span class="kw">unsafe </span>{
 <a href=#3766 id=3766 data-nosnippet>3766</a>            wgpu_render_bundle_set_immediates(
 <a href=#3767 id=3767 data-nosnippet>3767</a>                <span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder,
-<a href=#3768 id=3768 data-nosnippet>3768</a>                stages,
-<a href=#3769 id=3769 data-nosnippet>3769</a>                offset,
-<a href=#3770 id=3770 data-nosnippet>3770</a>                data.len().try_into().unwrap(),
-<a href=#3771 id=3771 data-nosnippet>3771</a>                data.as_ptr(),
-<a href=#3772 id=3772 data-nosnippet>3772</a>            )
-<a href=#3773 id=3773 data-nosnippet>3773</a>        }
-<a href=#3774 id=3774 data-nosnippet>3774</a>    }
-<a href=#3775 id=3775 data-nosnippet>3775</a>
-<a href=#3776 id=3776 data-nosnippet>3776</a>    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
-<a href=#3777 id=3777 data-nosnippet>3777</a>        wgpu_render_bundle_draw(
-<a href=#3778 id=3778 data-nosnippet>3778</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder,
-<a href=#3779 id=3779 data-nosnippet>3779</a>            vertices.end - vertices.start,
-<a href=#3780 id=3780 data-nosnippet>3780</a>            instances.end - instances.start,
-<a href=#3781 id=3781 data-nosnippet>3781</a>            vertices.start,
-<a href=#3782 id=3782 data-nosnippet>3782</a>            instances.start,
-<a href=#3783 id=3783 data-nosnippet>3783</a>        )
-<a href=#3784 id=3784 data-nosnippet>3784</a>    }
-<a href=#3785 id=3785 data-nosnippet>3785</a>
-<a href=#3786 id=3786 data-nosnippet>3786</a>    <span class="kw">fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
-<a href=#3787 id=3787 data-nosnippet>3787</a>        wgpu_render_bundle_draw_indexed(
-<a href=#3788 id=3788 data-nosnippet>3788</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder,
-<a href=#3789 id=3789 data-nosnippet>3789</a>            indices.end - indices.start,
-<a href=#3790 id=3790 data-nosnippet>3790</a>            instances.end - instances.start,
-<a href=#3791 id=3791 data-nosnippet>3791</a>            indices.start,
-<a href=#3792 id=3792 data-nosnippet>3792</a>            base_vertex,
-<a href=#3793 id=3793 data-nosnippet>3793</a>            instances.start,
-<a href=#3794 id=3794 data-nosnippet>3794</a>        )
-<a href=#3795 id=3795 data-nosnippet>3795</a>    }
-<a href=#3796 id=3796 data-nosnippet>3796</a>
-<a href=#3797 id=3797 data-nosnippet>3797</a>    <span class="kw">fn </span>draw_indirect(
-<a href=#3798 id=3798 data-nosnippet>3798</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#3799 id=3799 data-nosnippet>3799</a>        indirect_buffer: <span class="kw-2">&amp;</span>dispatch::DispatchBuffer,
-<a href=#3800 id=3800 data-nosnippet>3800</a>        indirect_offset: <span class="kw">crate</span>::BufferAddress,
-<a href=#3801 id=3801 data-nosnippet>3801</a>    ) {
-<a href=#3802 id=3802 data-nosnippet>3802</a>        <span class="kw">let </span>indirect_buffer = indirect_buffer.as_core();
-<a href=#3803 id=3803 data-nosnippet>3803</a>
-<a href=#3804 id=3804 data-nosnippet>3804</a>        wgpu_render_bundle_draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder, indirect_buffer.id, indirect_offset)
-<a href=#3805 id=3805 data-nosnippet>3805</a>    }
-<a href=#3806 id=3806 data-nosnippet>3806</a>
-<a href=#3807 id=3807 data-nosnippet>3807</a>    <span class="kw">fn </span>draw_indexed_indirect(
-<a href=#3808 id=3808 data-nosnippet>3808</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#3809 id=3809 data-nosnippet>3809</a>        indirect_buffer: <span class="kw-2">&amp;</span>dispatch::DispatchBuffer,
-<a href=#3810 id=3810 data-nosnippet>3810</a>        indirect_offset: <span class="kw">crate</span>::BufferAddress,
-<a href=#3811 id=3811 data-nosnippet>3811</a>    ) {
-<a href=#3812 id=3812 data-nosnippet>3812</a>        <span class="kw">let </span>indirect_buffer = indirect_buffer.as_core();
-<a href=#3813 id=3813 data-nosnippet>3813</a>
-<a href=#3814 id=3814 data-nosnippet>3814</a>        wgpu_render_bundle_draw_indexed_indirect(
-<a href=#3815 id=3815 data-nosnippet>3815</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder,
-<a href=#3816 id=3816 data-nosnippet>3816</a>            indirect_buffer.id,
-<a href=#3817 id=3817 data-nosnippet>3817</a>            indirect_offset,
-<a href=#3818 id=3818 data-nosnippet>3818</a>        )
-<a href=#3819 id=3819 data-nosnippet>3819</a>    }
-<a href=#3820 id=3820 data-nosnippet>3820</a>
-<a href=#3821 id=3821 data-nosnippet>3821</a>    <span class="kw">fn </span>finish(<span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderBundleDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; dispatch::DispatchRenderBundle
-<a href=#3822 id=3822 data-nosnippet>3822</a>    <span class="kw">where
-<a href=#3823 id=3823 data-nosnippet>3823</a>        </span><span class="self">Self</span>: Sized,
-<a href=#3824 id=3824 data-nosnippet>3824</a>    {
-<a href=#3825 id=3825 data-nosnippet>3825</a>        <span class="kw">let </span>(id, error) = <span class="self">self</span>.context.<span class="number">0</span>.render_bundle_encoder_finish(
-<a href=#3826 id=3826 data-nosnippet>3826</a>            <span class="self">self</span>.encoder,
-<a href=#3827 id=3827 data-nosnippet>3827</a>            <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
-<a href=#3828 id=3828 data-nosnippet>3828</a>            <span class="prelude-val">None</span>,
-<a href=#3829 id=3829 data-nosnippet>3829</a>        );
-<a href=#3830 id=3830 data-nosnippet>3830</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
-<a href=#3831 id=3831 data-nosnippet>3831</a>            <span class="self">self</span>.context
-<a href=#3832 id=3832 data-nosnippet>3832</a>                .handle_error_fatal(err, <span class="string">"RenderBundleEncoder::finish"</span>);
-<a href=#3833 id=3833 data-nosnippet>3833</a>        }
-<a href=#3834 id=3834 data-nosnippet>3834</a>        CoreRenderBundle {
-<a href=#3835 id=3835 data-nosnippet>3835</a>            context: <span class="self">self</span>.context.clone(),
-<a href=#3836 id=3836 data-nosnippet>3836</a>            id,
-<a href=#3837 id=3837 data-nosnippet>3837</a>        }
-<a href=#3838 id=3838 data-nosnippet>3838</a>        .into()
-<a href=#3839 id=3839 data-nosnippet>3839</a>    }
-<a href=#3840 id=3840 data-nosnippet>3840</a>}
-<a href=#3841 id=3841 data-nosnippet>3841</a>
-<a href=#3842 id=3842 data-nosnippet>3842</a><span class="kw">impl </span>dispatch::RenderBundleInterface <span class="kw">for </span>CoreRenderBundle {}
-<a href=#3843 id=3843 data-nosnippet>3843</a>
-<a href=#3844 id=3844 data-nosnippet>3844</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreRenderBundle {
-<a href=#3845 id=3845 data-nosnippet>3845</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#3846 id=3846 data-nosnippet>3846</a>        <span class="self">self</span>.context.<span class="number">0</span>.render_bundle_drop(<span class="self">self</span>.id)
-<a href=#3847 id=3847 data-nosnippet>3847</a>    }
-<a href=#3848 id=3848 data-nosnippet>3848</a>}
-<a href=#3849 id=3849 data-nosnippet>3849</a>
-<a href=#3850 id=3850 data-nosnippet>3850</a><span class="kw">impl </span>dispatch::SurfaceInterface <span class="kw">for </span>CoreSurface {
-<a href=#3851 id=3851 data-nosnippet>3851</a>    <span class="kw">fn </span>get_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter: <span class="kw-2">&amp;</span>dispatch::DispatchAdapter) -&gt; wgt::SurfaceCapabilities {
-<a href=#3852 id=3852 data-nosnippet>3852</a>        <span class="kw">let </span>adapter = adapter.as_core();
-<a href=#3853 id=3853 data-nosnippet>3853</a>
-<a href=#3854 id=3854 data-nosnippet>3854</a>        <span class="self">self</span>.context
-<a href=#3855 id=3855 data-nosnippet>3855</a>            .<span class="number">0
-<a href=#3856 id=3856 data-nosnippet>3856</a>            </span>.surface_get_capabilities(<span class="self">self</span>.id, adapter.id)
-<a href=#3857 id=3857 data-nosnippet>3857</a>            .unwrap_or_default()
-<a href=#3858 id=3858 data-nosnippet>3858</a>    }
-<a href=#3859 id=3859 data-nosnippet>3859</a>
-<a href=#3860 id=3860 data-nosnippet>3860</a>    <span class="kw">fn </span>configure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>dispatch::DispatchDevice, config: <span class="kw-2">&amp;</span><span class="kw">crate</span>::SurfaceConfiguration) {
-<a href=#3861 id=3861 data-nosnippet>3861</a>        <span class="kw">let </span>device = device.as_core();
-<a href=#3862 id=3862 data-nosnippet>3862</a>
-<a href=#3863 id=3863 data-nosnippet>3863</a>        <span class="kw">let </span>error = <span class="self">self</span>.context.<span class="number">0</span>.surface_configure(<span class="self">self</span>.id, device.id, config);
-<a href=#3864 id=3864 data-nosnippet>3864</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
-<a href=#3865 id=3865 data-nosnippet>3865</a>            <span class="self">self</span>.context
-<a href=#3866 id=3866 data-nosnippet>3866</a>                .handle_error_nolabel(<span class="kw-2">&amp;</span>device.error_sink, e, <span class="string">"Surface::configure"</span>);
-<a href=#3867 id=3867 data-nosnippet>3867</a>        } <span class="kw">else </span>{
-<a href=#3868 id=3868 data-nosnippet>3868</a>            <span class="kw-2">*</span><span class="self">self</span>.configured_device.lock() = <span class="prelude-val">Some</span>(device.id);
-<a href=#3869 id=3869 data-nosnippet>3869</a>            <span class="kw-2">*</span><span class="self">self</span>.error_sink.lock() = <span class="prelude-val">Some</span>(device.error_sink.clone());
-<a href=#3870 id=3870 data-nosnippet>3870</a>        }
-<a href=#3871 id=3871 data-nosnippet>3871</a>    }
-<a href=#3872 id=3872 data-nosnippet>3872</a>
-<a href=#3873 id=3873 data-nosnippet>3873</a>    <span class="kw">fn </span>get_current_texture(
-<a href=#3874 id=3874 data-nosnippet>3874</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#3875 id=3875 data-nosnippet>3875</a>    ) -&gt; (
-<a href=#3876 id=3876 data-nosnippet>3876</a>        <span class="prelude-ty">Option</span>&lt;dispatch::DispatchTexture&gt;,
-<a href=#3877 id=3877 data-nosnippet>3877</a>        <span class="kw">crate</span>::SurfaceStatus,
-<a href=#3878 id=3878 data-nosnippet>3878</a>        dispatch::DispatchSurfaceOutputDetail,
-<a href=#3879 id=3879 data-nosnippet>3879</a>    ) {
-<a href=#3880 id=3880 data-nosnippet>3880</a>        <span class="kw">let </span>error_sink = <span class="kw">if let </span><span class="prelude-val">Some</span>(error_sink) = <span class="self">self</span>.error_sink.lock().as_ref() {
-<a href=#3881 id=3881 data-nosnippet>3881</a>            error_sink.clone()
-<a href=#3882 id=3882 data-nosnippet>3882</a>        } <span class="kw">else </span>{
-<a href=#3883 id=3883 data-nosnippet>3883</a>            Arc::new(Mutex::new(ErrorSinkRaw::new()))
-<a href=#3884 id=3884 data-nosnippet>3884</a>        };
-<a href=#3885 id=3885 data-nosnippet>3885</a>
-<a href=#3886 id=3886 data-nosnippet>3886</a>        <span class="kw">let </span>output_detail = CoreSurfaceOutputDetail {
-<a href=#3887 id=3887 data-nosnippet>3887</a>            context: <span class="self">self</span>.context.clone(),
-<a href=#3888 id=3888 data-nosnippet>3888</a>            surface_id: <span class="self">self</span>.id,
-<a href=#3889 id=3889 data-nosnippet>3889</a>            error_sink: error_sink.clone(),
-<a href=#3890 id=3890 data-nosnippet>3890</a>        }
-<a href=#3891 id=3891 data-nosnippet>3891</a>        .into();
-<a href=#3892 id=3892 data-nosnippet>3892</a>
-<a href=#3893 id=3893 data-nosnippet>3893</a>        <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.surface_get_current_texture(<span class="self">self</span>.id, <span class="prelude-val">None</span>) {
-<a href=#3894 id=3894 data-nosnippet>3894</a>            <span class="prelude-val">Ok</span>(wgc::present::SurfaceOutput {
-<a href=#3895 id=3895 data-nosnippet>3895</a>                status,
-<a href=#3896 id=3896 data-nosnippet>3896</a>                texture: texture_id,
-<a href=#3897 id=3897 data-nosnippet>3897</a>            }) =&gt; {
-<a href=#3898 id=3898 data-nosnippet>3898</a>                <span class="kw">let </span>data = texture_id
-<a href=#3899 id=3899 data-nosnippet>3899</a>                    .map(|id| CoreTexture {
-<a href=#3900 id=3900 data-nosnippet>3900</a>                        context: <span class="self">self</span>.context.clone(),
-<a href=#3901 id=3901 data-nosnippet>3901</a>                        id,
-<a href=#3902 id=3902 data-nosnippet>3902</a>                        error_sink,
-<a href=#3903 id=3903 data-nosnippet>3903</a>                    })
-<a href=#3904 id=3904 data-nosnippet>3904</a>                    .map(Into::into);
-<a href=#3905 id=3905 data-nosnippet>3905</a>
-<a href=#3906 id=3906 data-nosnippet>3906</a>                (data, status, output_detail)
-<a href=#3907 id=3907 data-nosnippet>3907</a>            }
-<a href=#3908 id=3908 data-nosnippet>3908</a>            <span class="prelude-val">Err</span>(err) =&gt; {
-<a href=#3909 id=3909 data-nosnippet>3909</a>                <span class="kw">let </span>error_sink = <span class="self">self</span>.error_sink.lock();
-<a href=#3910 id=3910 data-nosnippet>3910</a>                <span class="kw">match </span>error_sink.as_ref() {
-<a href=#3911 id=3911 data-nosnippet>3911</a>                    <span class="prelude-val">Some</span>(error_sink) =&gt; {
-<a href=#3912 id=3912 data-nosnippet>3912</a>                        <span class="self">self</span>.context.handle_error_nolabel(
-<a href=#3913 id=3913 data-nosnippet>3913</a>                            error_sink,
-<a href=#3914 id=3914 data-nosnippet>3914</a>                            err,
-<a href=#3915 id=3915 data-nosnippet>3915</a>                            <span class="string">"Surface::get_current_texture_view"</span>,
-<a href=#3916 id=3916 data-nosnippet>3916</a>                        );
-<a href=#3917 id=3917 data-nosnippet>3917</a>                        (<span class="prelude-val">None</span>, <span class="kw">crate</span>::SurfaceStatus::Unknown, output_detail)
-<a href=#3918 id=3918 data-nosnippet>3918</a>                    }
-<a href=#3919 id=3919 data-nosnippet>3919</a>                    <span class="prelude-val">None </span>=&gt; <span class="self">self
-<a href=#3920 id=3920 data-nosnippet>3920</a>                        </span>.context
-<a href=#3921 id=3921 data-nosnippet>3921</a>                        .handle_error_fatal(err, <span class="string">"Surface::get_current_texture_view"</span>),
-<a href=#3922 id=3922 data-nosnippet>3922</a>                }
-<a href=#3923 id=3923 data-nosnippet>3923</a>            }
-<a href=#3924 id=3924 data-nosnippet>3924</a>        }
-<a href=#3925 id=3925 data-nosnippet>3925</a>    }
-<a href=#3926 id=3926 data-nosnippet>3926</a>}
-<a href=#3927 id=3927 data-nosnippet>3927</a>
-<a href=#3928 id=3928 data-nosnippet>3928</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreSurface {
-<a href=#3929 id=3929 data-nosnippet>3929</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#3930 id=3930 data-nosnippet>3930</a>        <span class="self">self</span>.context.<span class="number">0</span>.surface_drop(<span class="self">self</span>.id)
-<a href=#3931 id=3931 data-nosnippet>3931</a>    }
-<a href=#3932 id=3932 data-nosnippet>3932</a>}
-<a href=#3933 id=3933 data-nosnippet>3933</a>
-<a href=#3934 id=3934 data-nosnippet>3934</a><span class="kw">impl </span>dispatch::SurfaceOutputDetailInterface <span class="kw">for </span>CoreSurfaceOutputDetail {
-<a href=#3935 id=3935 data-nosnippet>3935</a>    <span class="kw">fn </span>present(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-<a href=#3936 id=3936 data-nosnippet>3936</a>        <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.surface_present(<span class="self">self</span>.surface_id) {
-<a href=#3937 id=3937 data-nosnippet>3937</a>            <span class="prelude-val">Ok</span>(_status) =&gt; (),
-<a href=#3938 id=3938 data-nosnippet>3938</a>            <span class="prelude-val">Err</span>(err) =&gt; {
-<a href=#3939 id=3939 data-nosnippet>3939</a>                <span class="self">self</span>.context
-<a href=#3940 id=3940 data-nosnippet>3940</a>                    .handle_error_nolabel(<span class="kw-2">&amp;</span><span class="self">self</span>.error_sink, err, <span class="string">"Surface::present"</span>);
-<a href=#3941 id=3941 data-nosnippet>3941</a>            }
-<a href=#3942 id=3942 data-nosnippet>3942</a>        }
-<a href=#3943 id=3943 data-nosnippet>3943</a>    }
-<a href=#3944 id=3944 data-nosnippet>3944</a>
-<a href=#3945 id=3945 data-nosnippet>3945</a>    <span class="kw">fn </span>texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-<a href=#3946 id=3946 data-nosnippet>3946</a>        <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.surface_texture_discard(<span class="self">self</span>.surface_id) {
-<a href=#3947 id=3947 data-nosnippet>3947</a>            <span class="prelude-val">Ok</span>(_status) =&gt; (),
-<a href=#3948 id=3948 data-nosnippet>3948</a>            <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self
-<a href=#3949 id=3949 data-nosnippet>3949</a>                </span>.context
-<a href=#3950 id=3950 data-nosnippet>3950</a>                .handle_error_fatal(err, <span class="string">"Surface::discard_texture"</span>),
-<a href=#3951 id=3951 data-nosnippet>3951</a>        }
-<a href=#3952 id=3952 data-nosnippet>3952</a>    }
-<a href=#3953 id=3953 data-nosnippet>3953</a>}
-<a href=#3954 id=3954 data-nosnippet>3954</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreSurfaceOutputDetail {
-<a href=#3955 id=3955 data-nosnippet>3955</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#3956 id=3956 data-nosnippet>3956</a>        <span class="comment">// Discard gets called by the api struct
-<a href=#3957 id=3957 data-nosnippet>3957</a>
-<a href=#3958 id=3958 data-nosnippet>3958</a>        // no-op
-<a href=#3959 id=3959 data-nosnippet>3959</a>    </span>}
-<a href=#3960 id=3960 data-nosnippet>3960</a>}
-<a href=#3961 id=3961 data-nosnippet>3961</a>
-<a href=#3962 id=3962 data-nosnippet>3962</a><span class="kw">impl </span>dispatch::QueueWriteBufferInterface <span class="kw">for </span>CoreQueueWriteBuffer {
-<a href=#3963 id=3963 data-nosnippet>3963</a>    <span class="kw">fn </span>slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-<a href=#3964 id=3964 data-nosnippet>3964</a>        <span class="macro">panic!</span>()
-<a href=#3965 id=3965 data-nosnippet>3965</a>    }
-<a href=#3966 id=3966 data-nosnippet>3966</a>
-<a href=#3967 id=3967 data-nosnippet>3967</a>    <span class="attr">#[inline]
-<a href=#3968 id=3968 data-nosnippet>3968</a>    </span><span class="kw">fn </span>slice_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
-<a href=#3969 id=3969 data-nosnippet>3969</a>        <span class="self">self</span>.mapping.slice_mut()
-<a href=#3970 id=3970 data-nosnippet>3970</a>    }
-<a href=#3971 id=3971 data-nosnippet>3971</a>}
-<a href=#3972 id=3972 data-nosnippet>3972</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreQueueWriteBuffer {
-<a href=#3973 id=3973 data-nosnippet>3973</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#3974 id=3974 data-nosnippet>3974</a>        <span class="comment">// The api struct calls queue.write_staging_buffer
-<a href=#3975 id=3975 data-nosnippet>3975</a>
-<a href=#3976 id=3976 data-nosnippet>3976</a>        // no-op
-<a href=#3977 id=3977 data-nosnippet>3977</a>    </span>}
-<a href=#3978 id=3978 data-nosnippet>3978</a>}
-<a href=#3979 id=3979 data-nosnippet>3979</a>
-<a href=#3980 id=3980 data-nosnippet>3980</a><span class="kw">impl </span>dispatch::BufferMappedRangeInterface <span class="kw">for </span>CoreBufferMappedRange {
-<a href=#3981 id=3981 data-nosnippet>3981</a>    <span class="attr">#[inline]
-<a href=#3982 id=3982 data-nosnippet>3982</a>    </span><span class="kw">fn </span>slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-<a href=#3983 id=3983 data-nosnippet>3983</a>        <span class="kw">unsafe </span>{ slice::from_raw_parts(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size) }
-<a href=#3984 id=3984 data-nosnippet>3984</a>    }
-<a href=#3985 id=3985 data-nosnippet>3985</a>
-<a href=#3986 id=3986 data-nosnippet>3986</a>    <span class="attr">#[inline]
-<a href=#3987 id=3987 data-nosnippet>3987</a>    </span><span class="kw">fn </span>slice_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
-<a href=#3988 id=3988 data-nosnippet>3988</a>        <span class="kw">unsafe </span>{ slice::from_raw_parts_mut(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size) }
-<a href=#3989 id=3989 data-nosnippet>3989</a>    }
-<a href=#3990 id=3990 data-nosnippet>3990</a>
-<a href=#3991 id=3991 data-nosnippet>3991</a>    <span class="attr">#[cfg(webgpu)]
-<a href=#3992 id=3992 data-nosnippet>3992</a>    </span><span class="kw">fn </span>as_uint8array(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>js_sys::Uint8Array {
-<a href=#3993 id=3993 data-nosnippet>3993</a>        <span class="macro">panic!</span>(<span class="string">"Only available on WebGPU"</span>)
-<a href=#3994 id=3994 data-nosnippet>3994</a>    }
-<a href=#3995 id=3995 data-nosnippet>3995</a>}</code></pre></div></section></main></body></html>
+<a href=#3768 id=3768 data-nosnippet>3768</a>                offset,
+<a href=#3769 id=3769 data-nosnippet>3769</a>                data.len().try_into().unwrap(),
+<a href=#3770 id=3770 data-nosnippet>3770</a>                data.as_ptr(),
+<a href=#3771 id=3771 data-nosnippet>3771</a>            )
+<a href=#3772 id=3772 data-nosnippet>3772</a>        }
+<a href=#3773 id=3773 data-nosnippet>3773</a>    }
+<a href=#3774 id=3774 data-nosnippet>3774</a>
+<a href=#3775 id=3775 data-nosnippet>3775</a>    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
+<a href=#3776 id=3776 data-nosnippet>3776</a>        wgpu_render_bundle_draw(
+<a href=#3777 id=3777 data-nosnippet>3777</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder,
+<a href=#3778 id=3778 data-nosnippet>3778</a>            vertices.end - vertices.start,
+<a href=#3779 id=3779 data-nosnippet>3779</a>            instances.end - instances.start,
+<a href=#3780 id=3780 data-nosnippet>3780</a>            vertices.start,
+<a href=#3781 id=3781 data-nosnippet>3781</a>            instances.start,
+<a href=#3782 id=3782 data-nosnippet>3782</a>        )
+<a href=#3783 id=3783 data-nosnippet>3783</a>    }
+<a href=#3784 id=3784 data-nosnippet>3784</a>
+<a href=#3785 id=3785 data-nosnippet>3785</a>    <span class="kw">fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
+<a href=#3786 id=3786 data-nosnippet>3786</a>        wgpu_render_bundle_draw_indexed(
+<a href=#3787 id=3787 data-nosnippet>3787</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder,
+<a href=#3788 id=3788 data-nosnippet>3788</a>            indices.end - indices.start,
+<a href=#3789 id=3789 data-nosnippet>3789</a>            instances.end - instances.start,
+<a href=#3790 id=3790 data-nosnippet>3790</a>            indices.start,
+<a href=#3791 id=3791 data-nosnippet>3791</a>            base_vertex,
+<a href=#3792 id=3792 data-nosnippet>3792</a>            instances.start,
+<a href=#3793 id=3793 data-nosnippet>3793</a>        )
+<a href=#3794 id=3794 data-nosnippet>3794</a>    }
+<a href=#3795 id=3795 data-nosnippet>3795</a>
+<a href=#3796 id=3796 data-nosnippet>3796</a>    <span class="kw">fn </span>draw_indirect(
+<a href=#3797 id=3797 data-nosnippet>3797</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#3798 id=3798 data-nosnippet>3798</a>        indirect_buffer: <span class="kw-2">&amp;</span>dispatch::DispatchBuffer,
+<a href=#3799 id=3799 data-nosnippet>3799</a>        indirect_offset: <span class="kw">crate</span>::BufferAddress,
+<a href=#3800 id=3800 data-nosnippet>3800</a>    ) {
+<a href=#3801 id=3801 data-nosnippet>3801</a>        <span class="kw">let </span>indirect_buffer = indirect_buffer.as_core();
+<a href=#3802 id=3802 data-nosnippet>3802</a>
+<a href=#3803 id=3803 data-nosnippet>3803</a>        wgpu_render_bundle_draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder, indirect_buffer.id, indirect_offset)
+<a href=#3804 id=3804 data-nosnippet>3804</a>    }
+<a href=#3805 id=3805 data-nosnippet>3805</a>
+<a href=#3806 id=3806 data-nosnippet>3806</a>    <span class="kw">fn </span>draw_indexed_indirect(
+<a href=#3807 id=3807 data-nosnippet>3807</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#3808 id=3808 data-nosnippet>3808</a>        indirect_buffer: <span class="kw-2">&amp;</span>dispatch::DispatchBuffer,
+<a href=#3809 id=3809 data-nosnippet>3809</a>        indirect_offset: <span class="kw">crate</span>::BufferAddress,
+<a href=#3810 id=3810 data-nosnippet>3810</a>    ) {
+<a href=#3811 id=3811 data-nosnippet>3811</a>        <span class="kw">let </span>indirect_buffer = indirect_buffer.as_core();
+<a href=#3812 id=3812 data-nosnippet>3812</a>
+<a href=#3813 id=3813 data-nosnippet>3813</a>        wgpu_render_bundle_draw_indexed_indirect(
+<a href=#3814 id=3814 data-nosnippet>3814</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder,
+<a href=#3815 id=3815 data-nosnippet>3815</a>            indirect_buffer.id,
+<a href=#3816 id=3816 data-nosnippet>3816</a>            indirect_offset,
+<a href=#3817 id=3817 data-nosnippet>3817</a>        )
+<a href=#3818 id=3818 data-nosnippet>3818</a>    }
+<a href=#3819 id=3819 data-nosnippet>3819</a>
+<a href=#3820 id=3820 data-nosnippet>3820</a>    <span class="kw">fn </span>finish(<span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderBundleDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; dispatch::DispatchRenderBundle
+<a href=#3821 id=3821 data-nosnippet>3821</a>    <span class="kw">where
+<a href=#3822 id=3822 data-nosnippet>3822</a>        </span><span class="self">Self</span>: Sized,
+<a href=#3823 id=3823 data-nosnippet>3823</a>    {
+<a href=#3824 id=3824 data-nosnippet>3824</a>        <span class="kw">let </span>(id, error) = <span class="self">self</span>.context.<span class="number">0</span>.render_bundle_encoder_finish(
+<a href=#3825 id=3825 data-nosnippet>3825</a>            <span class="self">self</span>.encoder,
+<a href=#3826 id=3826 data-nosnippet>3826</a>            <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
+<a href=#3827 id=3827 data-nosnippet>3827</a>            <span class="prelude-val">None</span>,
+<a href=#3828 id=3828 data-nosnippet>3828</a>        );
+<a href=#3829 id=3829 data-nosnippet>3829</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
+<a href=#3830 id=3830 data-nosnippet>3830</a>            <span class="self">self</span>.context
+<a href=#3831 id=3831 data-nosnippet>3831</a>                .handle_error_fatal(err, <span class="string">"RenderBundleEncoder::finish"</span>);
+<a href=#3832 id=3832 data-nosnippet>3832</a>        }
+<a href=#3833 id=3833 data-nosnippet>3833</a>        CoreRenderBundle {
+<a href=#3834 id=3834 data-nosnippet>3834</a>            context: <span class="self">self</span>.context.clone(),
+<a href=#3835 id=3835 data-nosnippet>3835</a>            id,
+<a href=#3836 id=3836 data-nosnippet>3836</a>        }
+<a href=#3837 id=3837 data-nosnippet>3837</a>        .into()
+<a href=#3838 id=3838 data-nosnippet>3838</a>    }
+<a href=#3839 id=3839 data-nosnippet>3839</a>}
+<a href=#3840 id=3840 data-nosnippet>3840</a>
+<a href=#3841 id=3841 data-nosnippet>3841</a><span class="kw">impl </span>dispatch::RenderBundleInterface <span class="kw">for </span>CoreRenderBundle {}
+<a href=#3842 id=3842 data-nosnippet>3842</a>
+<a href=#3843 id=3843 data-nosnippet>3843</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreRenderBundle {
+<a href=#3844 id=3844 data-nosnippet>3844</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#3845 id=3845 data-nosnippet>3845</a>        <span class="self">self</span>.context.<span class="number">0</span>.render_bundle_drop(<span class="self">self</span>.id)
+<a href=#3846 id=3846 data-nosnippet>3846</a>    }
+<a href=#3847 id=3847 data-nosnippet>3847</a>}
+<a href=#3848 id=3848 data-nosnippet>3848</a>
+<a href=#3849 id=3849 data-nosnippet>3849</a><span class="kw">impl </span>dispatch::SurfaceInterface <span class="kw">for </span>CoreSurface {
+<a href=#3850 id=3850 data-nosnippet>3850</a>    <span class="kw">fn </span>get_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter: <span class="kw-2">&amp;</span>dispatch::DispatchAdapter) -&gt; wgt::SurfaceCapabilities {
+<a href=#3851 id=3851 data-nosnippet>3851</a>        <span class="kw">let </span>adapter = adapter.as_core();
+<a href=#3852 id=3852 data-nosnippet>3852</a>
+<a href=#3853 id=3853 data-nosnippet>3853</a>        <span class="self">self</span>.context
+<a href=#3854 id=3854 data-nosnippet>3854</a>            .<span class="number">0
+<a href=#3855 id=3855 data-nosnippet>3855</a>            </span>.surface_get_capabilities(<span class="self">self</span>.id, adapter.id)
+<a href=#3856 id=3856 data-nosnippet>3856</a>            .unwrap_or_default()
+<a href=#3857 id=3857 data-nosnippet>3857</a>    }
+<a href=#3858 id=3858 data-nosnippet>3858</a>
+<a href=#3859 id=3859 data-nosnippet>3859</a>    <span class="kw">fn </span>configure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>dispatch::DispatchDevice, config: <span class="kw-2">&amp;</span><span class="kw">crate</span>::SurfaceConfiguration) {
+<a href=#3860 id=3860 data-nosnippet>3860</a>        <span class="kw">let </span>device = device.as_core();
+<a href=#3861 id=3861 data-nosnippet>3861</a>
+<a href=#3862 id=3862 data-nosnippet>3862</a>        <span class="kw">let </span>error = <span class="self">self</span>.context.<span class="number">0</span>.surface_configure(<span class="self">self</span>.id, device.id, config);
+<a href=#3863 id=3863 data-nosnippet>3863</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
+<a href=#3864 id=3864 data-nosnippet>3864</a>            <span class="self">self</span>.context
+<a href=#3865 id=3865 data-nosnippet>3865</a>                .handle_error_nolabel(<span class="kw-2">&amp;</span>device.error_sink, e, <span class="string">"Surface::configure"</span>);
+<a href=#3866 id=3866 data-nosnippet>3866</a>        } <span class="kw">else </span>{
+<a href=#3867 id=3867 data-nosnippet>3867</a>            <span class="kw-2">*</span><span class="self">self</span>.configured_device.lock() = <span class="prelude-val">Some</span>(device.id);
+<a href=#3868 id=3868 data-nosnippet>3868</a>            <span class="kw-2">*</span><span class="self">self</span>.error_sink.lock() = <span class="prelude-val">Some</span>(device.error_sink.clone());
+<a href=#3869 id=3869 data-nosnippet>3869</a>        }
+<a href=#3870 id=3870 data-nosnippet>3870</a>    }
+<a href=#3871 id=3871 data-nosnippet>3871</a>
+<a href=#3872 id=3872 data-nosnippet>3872</a>    <span class="kw">fn </span>get_current_texture(
+<a href=#3873 id=3873 data-nosnippet>3873</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#3874 id=3874 data-nosnippet>3874</a>    ) -&gt; (
+<a href=#3875 id=3875 data-nosnippet>3875</a>        <span class="prelude-ty">Option</span>&lt;dispatch::DispatchTexture&gt;,
+<a href=#3876 id=3876 data-nosnippet>3876</a>        <span class="kw">crate</span>::SurfaceStatus,
+<a href=#3877 id=3877 data-nosnippet>3877</a>        dispatch::DispatchSurfaceOutputDetail,
+<a href=#3878 id=3878 data-nosnippet>3878</a>    ) {
+<a href=#3879 id=3879 data-nosnippet>3879</a>        <span class="kw">let </span>error_sink = <span class="kw">if let </span><span class="prelude-val">Some</span>(error_sink) = <span class="self">self</span>.error_sink.lock().as_ref() {
+<a href=#3880 id=3880 data-nosnippet>3880</a>            error_sink.clone()
+<a href=#3881 id=3881 data-nosnippet>3881</a>        } <span class="kw">else </span>{
+<a href=#3882 id=3882 data-nosnippet>3882</a>            Arc::new(Mutex::new(ErrorSinkRaw::new()))
+<a href=#3883 id=3883 data-nosnippet>3883</a>        };
+<a href=#3884 id=3884 data-nosnippet>3884</a>
+<a href=#3885 id=3885 data-nosnippet>3885</a>        <span class="kw">let </span>output_detail = CoreSurfaceOutputDetail {
+<a href=#3886 id=3886 data-nosnippet>3886</a>            context: <span class="self">self</span>.context.clone(),
+<a href=#3887 id=3887 data-nosnippet>3887</a>            surface_id: <span class="self">self</span>.id,
+<a href=#3888 id=3888 data-nosnippet>3888</a>            error_sink: error_sink.clone(),
+<a href=#3889 id=3889 data-nosnippet>3889</a>        }
+<a href=#3890 id=3890 data-nosnippet>3890</a>        .into();
+<a href=#3891 id=3891 data-nosnippet>3891</a>
+<a href=#3892 id=3892 data-nosnippet>3892</a>        <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.surface_get_current_texture(<span class="self">self</span>.id, <span class="prelude-val">None</span>) {
+<a href=#3893 id=3893 data-nosnippet>3893</a>            <span class="prelude-val">Ok</span>(wgc::present::SurfaceOutput {
+<a href=#3894 id=3894 data-nosnippet>3894</a>                status,
+<a href=#3895 id=3895 data-nosnippet>3895</a>                texture: texture_id,
+<a href=#3896 id=3896 data-nosnippet>3896</a>            }) =&gt; {
+<a href=#3897 id=3897 data-nosnippet>3897</a>                <span class="kw">let </span>data = texture_id
+<a href=#3898 id=3898 data-nosnippet>3898</a>                    .map(|id| CoreTexture {
+<a href=#3899 id=3899 data-nosnippet>3899</a>                        context: <span class="self">self</span>.context.clone(),
+<a href=#3900 id=3900 data-nosnippet>3900</a>                        id,
+<a href=#3901 id=3901 data-nosnippet>3901</a>                        error_sink,
+<a href=#3902 id=3902 data-nosnippet>3902</a>                    })
+<a href=#3903 id=3903 data-nosnippet>3903</a>                    .map(Into::into);
+<a href=#3904 id=3904 data-nosnippet>3904</a>
+<a href=#3905 id=3905 data-nosnippet>3905</a>                (data, status, output_detail)
+<a href=#3906 id=3906 data-nosnippet>3906</a>            }
+<a href=#3907 id=3907 data-nosnippet>3907</a>            <span class="prelude-val">Err</span>(err) =&gt; {
+<a href=#3908 id=3908 data-nosnippet>3908</a>                <span class="kw">let </span>error_sink = <span class="self">self</span>.error_sink.lock();
+<a href=#3909 id=3909 data-nosnippet>3909</a>                <span class="kw">match </span>error_sink.as_ref() {
+<a href=#3910 id=3910 data-nosnippet>3910</a>                    <span class="prelude-val">Some</span>(error_sink) =&gt; {
+<a href=#3911 id=3911 data-nosnippet>3911</a>                        <span class="self">self</span>.context.handle_error_nolabel(
+<a href=#3912 id=3912 data-nosnippet>3912</a>                            error_sink,
+<a href=#3913 id=3913 data-nosnippet>3913</a>                            err,
+<a href=#3914 id=3914 data-nosnippet>3914</a>                            <span class="string">"Surface::get_current_texture_view"</span>,
+<a href=#3915 id=3915 data-nosnippet>3915</a>                        );
+<a href=#3916 id=3916 data-nosnippet>3916</a>                        (<span class="prelude-val">None</span>, <span class="kw">crate</span>::SurfaceStatus::Unknown, output_detail)
+<a href=#3917 id=3917 data-nosnippet>3917</a>                    }
+<a href=#3918 id=3918 data-nosnippet>3918</a>                    <span class="prelude-val">None </span>=&gt; <span class="self">self
+<a href=#3919 id=3919 data-nosnippet>3919</a>                        </span>.context
+<a href=#3920 id=3920 data-nosnippet>3920</a>                        .handle_error_fatal(err, <span class="string">"Surface::get_current_texture_view"</span>),
+<a href=#3921 id=3921 data-nosnippet>3921</a>                }
+<a href=#3922 id=3922 data-nosnippet>3922</a>            }
+<a href=#3923 id=3923 data-nosnippet>3923</a>        }
+<a href=#3924 id=3924 data-nosnippet>3924</a>    }
+<a href=#3925 id=3925 data-nosnippet>3925</a>}
+<a href=#3926 id=3926 data-nosnippet>3926</a>
+<a href=#3927 id=3927 data-nosnippet>3927</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreSurface {
+<a href=#3928 id=3928 data-nosnippet>3928</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#3929 id=3929 data-nosnippet>3929</a>        <span class="self">self</span>.context.<span class="number">0</span>.surface_drop(<span class="self">self</span>.id)
+<a href=#3930 id=3930 data-nosnippet>3930</a>    }
+<a href=#3931 id=3931 data-nosnippet>3931</a>}
+<a href=#3932 id=3932 data-nosnippet>3932</a>
+<a href=#3933 id=3933 data-nosnippet>3933</a><span class="kw">impl </span>dispatch::SurfaceOutputDetailInterface <span class="kw">for </span>CoreSurfaceOutputDetail {
+<a href=#3934 id=3934 data-nosnippet>3934</a>    <span class="kw">fn </span>present(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+<a href=#3935 id=3935 data-nosnippet>3935</a>        <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.surface_present(<span class="self">self</span>.surface_id) {
+<a href=#3936 id=3936 data-nosnippet>3936</a>            <span class="prelude-val">Ok</span>(_status) =&gt; (),
+<a href=#3937 id=3937 data-nosnippet>3937</a>            <span class="prelude-val">Err</span>(err) =&gt; {
+<a href=#3938 id=3938 data-nosnippet>3938</a>                <span class="self">self</span>.context
+<a href=#3939 id=3939 data-nosnippet>3939</a>                    .handle_error_nolabel(<span class="kw-2">&amp;</span><span class="self">self</span>.error_sink, err, <span class="string">"Surface::present"</span>);
+<a href=#3940 id=3940 data-nosnippet>3940</a>            }
+<a href=#3941 id=3941 data-nosnippet>3941</a>        }
+<a href=#3942 id=3942 data-nosnippet>3942</a>    }
+<a href=#3943 id=3943 data-nosnippet>3943</a>
+<a href=#3944 id=3944 data-nosnippet>3944</a>    <span class="kw">fn </span>texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+<a href=#3945 id=3945 data-nosnippet>3945</a>        <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.surface_texture_discard(<span class="self">self</span>.surface_id) {
+<a href=#3946 id=3946 data-nosnippet>3946</a>            <span class="prelude-val">Ok</span>(_status) =&gt; (),
+<a href=#3947 id=3947 data-nosnippet>3947</a>            <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self
+<a href=#3948 id=3948 data-nosnippet>3948</a>                </span>.context
+<a href=#3949 id=3949 data-nosnippet>3949</a>                .handle_error_fatal(err, <span class="string">"Surface::discard_texture"</span>),
+<a href=#3950 id=3950 data-nosnippet>3950</a>        }
+<a href=#3951 id=3951 data-nosnippet>3951</a>    }
+<a href=#3952 id=3952 data-nosnippet>3952</a>}
+<a href=#3953 id=3953 data-nosnippet>3953</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreSurfaceOutputDetail {
+<a href=#3954 id=3954 data-nosnippet>3954</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#3955 id=3955 data-nosnippet>3955</a>        <span class="comment">// Discard gets called by the api struct
+<a href=#3956 id=3956 data-nosnippet>3956</a>
+<a href=#3957 id=3957 data-nosnippet>3957</a>        // no-op
+<a href=#3958 id=3958 data-nosnippet>3958</a>    </span>}
+<a href=#3959 id=3959 data-nosnippet>3959</a>}
+<a href=#3960 id=3960 data-nosnippet>3960</a>
+<a href=#3961 id=3961 data-nosnippet>3961</a><span class="kw">impl </span>dispatch::QueueWriteBufferInterface <span class="kw">for </span>CoreQueueWriteBuffer {
+<a href=#3962 id=3962 data-nosnippet>3962</a>    <span class="kw">fn </span>slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+<a href=#3963 id=3963 data-nosnippet>3963</a>        <span class="macro">panic!</span>()
+<a href=#3964 id=3964 data-nosnippet>3964</a>    }
+<a href=#3965 id=3965 data-nosnippet>3965</a>
+<a href=#3966 id=3966 data-nosnippet>3966</a>    <span class="attr">#[inline]
+<a href=#3967 id=3967 data-nosnippet>3967</a>    </span><span class="kw">fn </span>slice_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
+<a href=#3968 id=3968 data-nosnippet>3968</a>        <span class="self">self</span>.mapping.slice_mut()
+<a href=#3969 id=3969 data-nosnippet>3969</a>    }
+<a href=#3970 id=3970 data-nosnippet>3970</a>}
+<a href=#3971 id=3971 data-nosnippet>3971</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreQueueWriteBuffer {
+<a href=#3972 id=3972 data-nosnippet>3972</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#3973 id=3973 data-nosnippet>3973</a>        <span class="comment">// The api struct calls queue.write_staging_buffer
+<a href=#3974 id=3974 data-nosnippet>3974</a>
+<a href=#3975 id=3975 data-nosnippet>3975</a>        // no-op
+<a href=#3976 id=3976 data-nosnippet>3976</a>    </span>}
+<a href=#3977 id=3977 data-nosnippet>3977</a>}
+<a href=#3978 id=3978 data-nosnippet>3978</a>
+<a href=#3979 id=3979 data-nosnippet>3979</a><span class="kw">impl </span>dispatch::BufferMappedRangeInterface <span class="kw">for </span>CoreBufferMappedRange {
+<a href=#3980 id=3980 data-nosnippet>3980</a>    <span class="attr">#[inline]
+<a href=#3981 id=3981 data-nosnippet>3981</a>    </span><span class="kw">fn </span>slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+<a href=#3982 id=3982 data-nosnippet>3982</a>        <span class="kw">unsafe </span>{ slice::from_raw_parts(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size) }
+<a href=#3983 id=3983 data-nosnippet>3983</a>    }
+<a href=#3984 id=3984 data-nosnippet>3984</a>
+<a href=#3985 id=3985 data-nosnippet>3985</a>    <span class="attr">#[inline]
+<a href=#3986 id=3986 data-nosnippet>3986</a>    </span><span class="kw">fn </span>slice_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
+<a href=#3987 id=3987 data-nosnippet>3987</a>        <span class="kw">unsafe </span>{ slice::from_raw_parts_mut(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size) }
+<a href=#3988 id=3988 data-nosnippet>3988</a>    }
+<a href=#3989 id=3989 data-nosnippet>3989</a>
+<a href=#3990 id=3990 data-nosnippet>3990</a>    <span class="attr">#[cfg(webgpu)]
+<a href=#3991 id=3991 data-nosnippet>3991</a>    </span><span class="kw">fn </span>as_uint8array(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>js_sys::Uint8Array {
+<a href=#3992 id=3992 data-nosnippet>3992</a>        <span class="macro">panic!</span>(<span class="string">"Only available on WebGPU"</span>)
+<a href=#3993 id=3993 data-nosnippet>3993</a>    }
+<a href=#3994 id=3994 data-nosnippet>3994</a>}</code></pre></div></section></main></body></html>
