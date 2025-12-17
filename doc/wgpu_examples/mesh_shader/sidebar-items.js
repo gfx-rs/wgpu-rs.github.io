@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["compile_glsl","compile_hlsl","compile_msl","main"],"struct":["Example"]};
+window.SIDEBAR_ITEMS = {"fn":["compile_hlsl","compile_msl","compile_wgsl","main"],"struct":["Example"]};
