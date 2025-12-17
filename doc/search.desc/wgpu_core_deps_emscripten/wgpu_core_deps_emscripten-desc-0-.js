@@ -1,1 +1,0 @@
-searchState.loadedDescShard("wgpu_core_deps_emscripten", 0, "This crate exists to allow platform and feature specific …")
