@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["InterStageBuiltIn","MaxFragmentShaderInputDeduction","MaxVertexShaderOutputDeduction"],"fn":["display_deductions_as_optional_list"]};
