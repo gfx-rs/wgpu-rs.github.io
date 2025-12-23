@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["InstanceDescriptor","InstanceFlags","MemoryBudgetThresholds"]};
+window.SIDEBAR_ITEMS = {"struct":["InstanceDescriptor","InstanceFlags","MemoryBudgetThresholds"],"trait":["WgpuHasDisplayHandle"]};
