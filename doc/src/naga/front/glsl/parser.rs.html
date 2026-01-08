@@ -14,7 +14,7 @@
 <a href=#14 id=14 data-nosnippet>14</a>    variables::{GlobalOrConstant, VarDeclaration},
 <a href=#15 id=15 data-nosnippet>15</a>    Frontend, <span class="prelude-ty">Result</span>,
 <a href=#16 id=16 data-nosnippet>16</a>};
-<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use crate</span>::{arena::Handle, proc::U32EvalError, Expression, Module, Span, Type};
+<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use crate</span>::{arena::Handle, proc::ConstValueError, Expression, Module, Span, Type};
 <a href=#18 id=18 data-nosnippet>18</a>
 <a href=#19 id=19 data-nosnippet>19</a><span class="kw">mod </span>declarations;
 <a href=#20 id=20 data-nosnippet>20</a><span class="kw">mod </span>expressions;
@@ -211,15 +211,15 @@
 <a href=#211 id=211 data-nosnippet>211</a>            ctx.global_expression_kind_tracker,
 <a href=#212 id=212 data-nosnippet>212</a>        )<span class="question-mark">?</span>;
 <a href=#213 id=213 data-nosnippet>213</a>
-<a href=#214 id=214 data-nosnippet>214</a>        <span class="kw">let </span>res = ctx.module.to_ctx().eval_expr_to_u32(const_expr);
+<a href=#214 id=214 data-nosnippet>214</a>        <span class="kw">let </span>res = ctx.module.to_ctx().get_const_val(const_expr);
 <a href=#215 id=215 data-nosnippet>215</a>
 <a href=#216 id=216 data-nosnippet>216</a>        <span class="kw">let </span>int = <span class="kw">match </span>res {
 <a href=#217 id=217 data-nosnippet>217</a>            <span class="prelude-val">Ok</span>(value) =&gt; <span class="prelude-val">Ok</span>(value),
-<a href=#218 id=218 data-nosnippet>218</a>            <span class="prelude-val">Err</span>(U32EvalError::Negative) =&gt; <span class="prelude-val">Err</span>(Error {
+<a href=#218 id=218 data-nosnippet>218</a>            <span class="prelude-val">Err</span>(ConstValueError::Negative) =&gt; <span class="prelude-val">Err</span>(Error {
 <a href=#219 id=219 data-nosnippet>219</a>                kind: ErrorKind::SemanticError(<span class="string">"int constant overflows"</span>.into()),
 <a href=#220 id=220 data-nosnippet>220</a>                meta,
 <a href=#221 id=221 data-nosnippet>221</a>            }),
-<a href=#222 id=222 data-nosnippet>222</a>            <span class="prelude-val">Err</span>(U32EvalError::NonConst) =&gt; <span class="prelude-val">Err</span>(Error {
+<a href=#222 id=222 data-nosnippet>222</a>            <span class="prelude-val">Err</span>(ConstValueError::NonConst | ConstValueError::InvalidType) =&gt; <span class="prelude-val">Err</span>(Error {
 <a href=#223 id=223 data-nosnippet>223</a>                kind: ErrorKind::SemanticError(<span class="string">"Expected a uint constant"</span>.into()),
 <a href=#224 id=224 data-nosnippet>224</a>                meta,
 <a href=#225 id=225 data-nosnippet>225</a>            }),
