@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["FILE_NAME"],"enum":["Action"],"type":["FileName","TraceBindGroupDescriptor"]};
+window.SIDEBAR_ITEMS = {"constant":["FILE_NAME"],"enum":["Action","Data","DataKind"],"mod":["record","replay"],"struct":["DiskTrace","DiskTraceLoader","MemoryTrace"],"trait":["DataLoader","Trace"],"type":["FileName","TraceBindGroupDescriptor"]};

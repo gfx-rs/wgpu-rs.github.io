@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["action_to_owned","new_render_bundle_encoder_descriptor"],"struct":["DiskTrace","MemoryTrace"],"trait":["IntoTrace","Trace"]};
