@@ -717,241 +717,264 @@
 <a href=#717 id=717 data-nosnippet>717</a>    ///
 <a href=#718 id=718 data-nosnippet>718</a>    /// This function is not for clamping requests for values beyond the
 <a href=#719 id=719 data-nosnippet>719</a>    /// supported limits. For that purpose the desired function would be
-<a href=#720 id=720 data-nosnippet>720</a>    /// `or_worse_values_from` (which doesn't exist, but could be added if
-<a href=#721 id=721 data-nosnippet>721</a>    /// needed).
-<a href=#722 id=722 data-nosnippet>722</a>    </span><span class="attr">#[must_use]
-<a href=#723 id=723 data-nosnippet>723</a>    </span><span class="kw">pub fn </span>or_better_values_from(<span class="kw-2">mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
-<a href=#724 id=724 data-nosnippet>724</a>        <span class="macro">macro_rules!</span> or_better_value_from {
-<a href=#725 id=725 data-nosnippet>725</a>            (<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$ordering</span>:expr) =&gt; {
-<a href=#726 id=726 data-nosnippet>726</a>                <span class="kw">match </span><span class="macro-nonterminal">$ordering </span>{
-<a href=#727 id=727 data-nosnippet>727</a>                    <span class="comment">// Limits that are maximum values (most of them)
-<a href=#728 id=728 data-nosnippet>728</a>                    </span>Ordering::Less =&gt; <span class="self">self</span>.<span class="macro-nonterminal">$name </span>= <span class="self">self</span>.<span class="macro-nonterminal">$name</span>.max(other.<span class="macro-nonterminal">$name</span>),
-<a href=#729 id=729 data-nosnippet>729</a>                    <span class="comment">// Limits that are minimum values
-<a href=#730 id=730 data-nosnippet>730</a>                    </span>Ordering::Greater =&gt; <span class="self">self</span>.<span class="macro-nonterminal">$name </span>= <span class="self">self</span>.<span class="macro-nonterminal">$name</span>.min(other.<span class="macro-nonterminal">$name</span>),
-<a href=#731 id=731 data-nosnippet>731</a>                    Ordering::Equal =&gt; <span class="macro">unreachable!</span>(),
-<a href=#732 id=732 data-nosnippet>732</a>                }
-<a href=#733 id=733 data-nosnippet>733</a>            };
-<a href=#734 id=734 data-nosnippet>734</a>        }
-<a href=#735 id=735 data-nosnippet>735</a>
-<a href=#736 id=736 data-nosnippet>736</a>        <span class="macro">with_limits!</span>(or_better_value_from);
-<a href=#737 id=737 data-nosnippet>737</a>
-<a href=#738 id=738 data-nosnippet>738</a>        <span class="self">self
-<a href=#739 id=739 data-nosnippet>739</a>    </span>}
-<a href=#740 id=740 data-nosnippet>740</a>}
-<a href=#741 id=741 data-nosnippet>741</a>
-<a href=#742 id=742 data-nosnippet>742</a><span class="doccomment">/// Represents the sets of additional limits on an adapter,
-<a href=#743 id=743 data-nosnippet>743</a>/// which take place when running on downlevel backends.
-<a href=#744 id=744 data-nosnippet>744</a></span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-<a href=#745 id=745 data-nosnippet>745</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#746 id=746 data-nosnippet>746</a></span><span class="kw">pub struct </span>DownlevelLimits {}
-<a href=#747 id=747 data-nosnippet>747</a>
-<a href=#748 id=748 data-nosnippet>748</a><span class="attr">#[allow(clippy::derivable_impls)]
-<a href=#749 id=749 data-nosnippet>749</a></span><span class="kw">impl </span>Default <span class="kw">for </span>DownlevelLimits {
-<a href=#750 id=750 data-nosnippet>750</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-<a href=#751 id=751 data-nosnippet>751</a>        DownlevelLimits {}
-<a href=#752 id=752 data-nosnippet>752</a>    }
-<a href=#753 id=753 data-nosnippet>753</a>}
-<a href=#754 id=754 data-nosnippet>754</a>
-<a href=#755 id=755 data-nosnippet>755</a><span class="doccomment">/// Lists various ways the underlying platform does not conform to the WebGPU standard.
-<a href=#756 id=756 data-nosnippet>756</a></span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-<a href=#757 id=757 data-nosnippet>757</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#758 id=758 data-nosnippet>758</a></span><span class="kw">pub struct </span>DownlevelCapabilities {
-<a href=#759 id=759 data-nosnippet>759</a>    <span class="doccomment">/// Combined boolean flags.
-<a href=#760 id=760 data-nosnippet>760</a>    </span><span class="kw">pub </span>flags: DownlevelFlags,
-<a href=#761 id=761 data-nosnippet>761</a>    <span class="doccomment">/// Additional limits
-<a href=#762 id=762 data-nosnippet>762</a>    </span><span class="kw">pub </span>limits: DownlevelLimits,
-<a href=#763 id=763 data-nosnippet>763</a>    <span class="doccomment">/// Which collections of features shaders support. Defined in terms of D3D's shader models.
-<a href=#764 id=764 data-nosnippet>764</a>    </span><span class="kw">pub </span>shader_model: ShaderModel,
-<a href=#765 id=765 data-nosnippet>765</a>}
-<a href=#766 id=766 data-nosnippet>766</a>
-<a href=#767 id=767 data-nosnippet>767</a><span class="kw">impl </span>Default <span class="kw">for </span>DownlevelCapabilities {
-<a href=#768 id=768 data-nosnippet>768</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-<a href=#769 id=769 data-nosnippet>769</a>        <span class="self">Self </span>{
-<a href=#770 id=770 data-nosnippet>770</a>            flags: DownlevelFlags::all(),
-<a href=#771 id=771 data-nosnippet>771</a>            limits: DownlevelLimits::default(),
-<a href=#772 id=772 data-nosnippet>772</a>            shader_model: ShaderModel::Sm5,
-<a href=#773 id=773 data-nosnippet>773</a>        }
-<a href=#774 id=774 data-nosnippet>774</a>    }
-<a href=#775 id=775 data-nosnippet>775</a>}
-<a href=#776 id=776 data-nosnippet>776</a>
-<a href=#777 id=777 data-nosnippet>777</a><span class="kw">impl </span>DownlevelCapabilities {
-<a href=#778 id=778 data-nosnippet>778</a>    <span class="doccomment">/// Returns true if the underlying platform offers complete support of the baseline WebGPU standard.
-<a href=#779 id=779 data-nosnippet>779</a>    ///
-<a href=#780 id=780 data-nosnippet>780</a>    /// If this returns false, some parts of the API will result in validation errors where they would not normally.
-<a href=#781 id=781 data-nosnippet>781</a>    /// These parts can be determined by the values in this structure.
-<a href=#782 id=782 data-nosnippet>782</a>    </span><span class="attr">#[must_use]
-<a href=#783 id=783 data-nosnippet>783</a>    </span><span class="kw">pub fn </span>is_webgpu_compliant(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-<a href=#784 id=784 data-nosnippet>784</a>        <span class="self">self</span>.flags.contains(DownlevelFlags::compliant())
-<a href=#785 id=785 data-nosnippet>785</a>            &amp;&amp; <span class="self">self</span>.limits == DownlevelLimits::default()
-<a href=#786 id=786 data-nosnippet>786</a>            &amp;&amp; <span class="self">self</span>.shader_model &gt;= ShaderModel::Sm5
-<a href=#787 id=787 data-nosnippet>787</a>    }
+<a href=#720 id=720 data-nosnippet>720</a>    /// `or_worse_values_from`.
+<a href=#721 id=721 data-nosnippet>721</a>    </span><span class="attr">#[must_use]
+<a href=#722 id=722 data-nosnippet>722</a>    </span><span class="kw">pub fn </span>or_better_values_from(<span class="kw-2">mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+<a href=#723 id=723 data-nosnippet>723</a>        <span class="macro">macro_rules!</span> or_better_value_from {
+<a href=#724 id=724 data-nosnippet>724</a>            (<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$ordering</span>:expr) =&gt; {
+<a href=#725 id=725 data-nosnippet>725</a>                <span class="kw">match </span><span class="macro-nonterminal">$ordering </span>{
+<a href=#726 id=726 data-nosnippet>726</a>                    <span class="comment">// Limits that are maximum values (most of them)
+<a href=#727 id=727 data-nosnippet>727</a>                    </span>Ordering::Less =&gt; <span class="self">self</span>.<span class="macro-nonterminal">$name </span>= <span class="self">self</span>.<span class="macro-nonterminal">$name</span>.max(other.<span class="macro-nonterminal">$name</span>),
+<a href=#728 id=728 data-nosnippet>728</a>                    <span class="comment">// Limits that are minimum values
+<a href=#729 id=729 data-nosnippet>729</a>                    </span>Ordering::Greater =&gt; <span class="self">self</span>.<span class="macro-nonterminal">$name </span>= <span class="self">self</span>.<span class="macro-nonterminal">$name</span>.min(other.<span class="macro-nonterminal">$name</span>),
+<a href=#730 id=730 data-nosnippet>730</a>                    Ordering::Equal =&gt; <span class="macro">unreachable!</span>(),
+<a href=#731 id=731 data-nosnippet>731</a>                }
+<a href=#732 id=732 data-nosnippet>732</a>            };
+<a href=#733 id=733 data-nosnippet>733</a>        }
+<a href=#734 id=734 data-nosnippet>734</a>
+<a href=#735 id=735 data-nosnippet>735</a>        <span class="macro">with_limits!</span>(or_better_value_from);
+<a href=#736 id=736 data-nosnippet>736</a>
+<a href=#737 id=737 data-nosnippet>737</a>        <span class="self">self
+<a href=#738 id=738 data-nosnippet>738</a>    </span>}
+<a href=#739 id=739 data-nosnippet>739</a>
+<a href=#740 id=740 data-nosnippet>740</a>    <span class="doccomment">/// For each limit in `other` that is worse than the value in `self`,
+<a href=#741 id=741 data-nosnippet>741</a>    /// replace the value in `self` with the value from `other`.
+<a href=#742 id=742 data-nosnippet>742</a>    ///
+<a href=#743 id=743 data-nosnippet>743</a>    /// This function is for clamping requests for values beyond the
+<a href=#744 id=744 data-nosnippet>744</a>    /// supported limits.
+<a href=#745 id=745 data-nosnippet>745</a>    </span><span class="attr">#[must_use]
+<a href=#746 id=746 data-nosnippet>746</a>    </span><span class="kw">pub fn </span>or_worse_values_from(<span class="kw-2">mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+<a href=#747 id=747 data-nosnippet>747</a>        <span class="macro">macro_rules!</span> or_worse_value_from {
+<a href=#748 id=748 data-nosnippet>748</a>            (<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$ordering</span>:expr) =&gt; {
+<a href=#749 id=749 data-nosnippet>749</a>                <span class="kw">match </span><span class="macro-nonterminal">$ordering </span>{
+<a href=#750 id=750 data-nosnippet>750</a>                    <span class="comment">// Limits that are maximum values (most of them)
+<a href=#751 id=751 data-nosnippet>751</a>                    </span>Ordering::Less =&gt; <span class="self">self</span>.<span class="macro-nonterminal">$name </span>= <span class="self">self</span>.<span class="macro-nonterminal">$name</span>.min(other.<span class="macro-nonterminal">$name</span>),
+<a href=#752 id=752 data-nosnippet>752</a>                    <span class="comment">// Limits that are minimum values
+<a href=#753 id=753 data-nosnippet>753</a>                    </span>Ordering::Greater =&gt; <span class="self">self</span>.<span class="macro-nonterminal">$name </span>= <span class="self">self</span>.<span class="macro-nonterminal">$name</span>.max(other.<span class="macro-nonterminal">$name</span>),
+<a href=#754 id=754 data-nosnippet>754</a>                    Ordering::Equal =&gt; <span class="macro">unreachable!</span>(),
+<a href=#755 id=755 data-nosnippet>755</a>                }
+<a href=#756 id=756 data-nosnippet>756</a>            };
+<a href=#757 id=757 data-nosnippet>757</a>        }
+<a href=#758 id=758 data-nosnippet>758</a>
+<a href=#759 id=759 data-nosnippet>759</a>        <span class="macro">with_limits!</span>(or_worse_value_from);
+<a href=#760 id=760 data-nosnippet>760</a>
+<a href=#761 id=761 data-nosnippet>761</a>        <span class="self">self
+<a href=#762 id=762 data-nosnippet>762</a>    </span>}
+<a href=#763 id=763 data-nosnippet>763</a>}
+<a href=#764 id=764 data-nosnippet>764</a>
+<a href=#765 id=765 data-nosnippet>765</a><span class="doccomment">/// Represents the sets of additional limits on an adapter,
+<a href=#766 id=766 data-nosnippet>766</a>/// which take place when running on downlevel backends.
+<a href=#767 id=767 data-nosnippet>767</a></span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+<a href=#768 id=768 data-nosnippet>768</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#769 id=769 data-nosnippet>769</a></span><span class="kw">pub struct </span>DownlevelLimits {}
+<a href=#770 id=770 data-nosnippet>770</a>
+<a href=#771 id=771 data-nosnippet>771</a><span class="attr">#[allow(clippy::derivable_impls)]
+<a href=#772 id=772 data-nosnippet>772</a></span><span class="kw">impl </span>Default <span class="kw">for </span>DownlevelLimits {
+<a href=#773 id=773 data-nosnippet>773</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#774 id=774 data-nosnippet>774</a>        DownlevelLimits {}
+<a href=#775 id=775 data-nosnippet>775</a>    }
+<a href=#776 id=776 data-nosnippet>776</a>}
+<a href=#777 id=777 data-nosnippet>777</a>
+<a href=#778 id=778 data-nosnippet>778</a><span class="doccomment">/// Lists various ways the underlying platform does not conform to the WebGPU standard.
+<a href=#779 id=779 data-nosnippet>779</a></span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+<a href=#780 id=780 data-nosnippet>780</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#781 id=781 data-nosnippet>781</a></span><span class="kw">pub struct </span>DownlevelCapabilities {
+<a href=#782 id=782 data-nosnippet>782</a>    <span class="doccomment">/// Combined boolean flags.
+<a href=#783 id=783 data-nosnippet>783</a>    </span><span class="kw">pub </span>flags: DownlevelFlags,
+<a href=#784 id=784 data-nosnippet>784</a>    <span class="doccomment">/// Additional limits
+<a href=#785 id=785 data-nosnippet>785</a>    </span><span class="kw">pub </span>limits: DownlevelLimits,
+<a href=#786 id=786 data-nosnippet>786</a>    <span class="doccomment">/// Which collections of features shaders support. Defined in terms of D3D's shader models.
+<a href=#787 id=787 data-nosnippet>787</a>    </span><span class="kw">pub </span>shader_model: ShaderModel,
 <a href=#788 id=788 data-nosnippet>788</a>}
 <a href=#789 id=789 data-nosnippet>789</a>
-<a href=#790 id=790 data-nosnippet>790</a><span class="macro">bitflags::bitflags!</span> {
-<a href=#791 id=791 data-nosnippet>791</a>    <span class="doccomment">/// Binary flags listing features that may or may not be present on downlevel adapters.
-<a href=#792 id=792 data-nosnippet>792</a>    ///
-<a href=#793 id=793 data-nosnippet>793</a>    /// A downlevel adapter is a GPU adapter that wgpu supports, but with potentially limited
-<a href=#794 id=794 data-nosnippet>794</a>    /// features, due to the lack of hardware feature support.
-<a href=#795 id=795 data-nosnippet>795</a>    ///
-<a href=#796 id=796 data-nosnippet>796</a>    /// Flags that are **not** present for a downlevel adapter or device usually indicates
-<a href=#797 id=797 data-nosnippet>797</a>    /// non-compliance with the WebGPU specification, but not always.
-<a href=#798 id=798 data-nosnippet>798</a>    ///
-<a href=#799 id=799 data-nosnippet>799</a>    /// You can check whether a set of flags is compliant through the
-<a href=#800 id=800 data-nosnippet>800</a>    /// [`DownlevelCapabilities::is_webgpu_compliant()`] function.
-<a href=#801 id=801 data-nosnippet>801</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#802 id=802 data-nosnippet>802</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
-<a href=#803 id=803 data-nosnippet>803</a>    #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-<a href=#804 id=804 data-nosnippet>804</a>    </span><span class="kw">pub struct </span>DownlevelFlags: u32 {
-<a href=#805 id=805 data-nosnippet>805</a>        <span class="doccomment">/// The device supports compiling and using compute shaders.
-<a href=#806 id=806 data-nosnippet>806</a>        ///
-<a href=#807 id=807 data-nosnippet>807</a>        /// WebGL2, and GLES3.0 devices do not support compute.
-<a href=#808 id=808 data-nosnippet>808</a>        </span><span class="kw">const </span>COMPUTE_SHADERS = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
-<a href=#809 id=809 data-nosnippet>809</a>        <span class="doccomment">/// Supports binding storage buffers and textures to fragment shaders.
-<a href=#810 id=810 data-nosnippet>810</a>        </span><span class="kw">const </span>FRAGMENT_WRITABLE_STORAGE = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
-<a href=#811 id=811 data-nosnippet>811</a>        <span class="doccomment">/// Supports indirect drawing and dispatching.
-<a href=#812 id=812 data-nosnippet>812</a>        ///
-<a href=#813 id=813 data-nosnippet>813</a>        /// [`Self::COMPUTE_SHADERS`] must be present for this flag.
-<a href=#814 id=814 data-nosnippet>814</a>        ///
-<a href=#815 id=815 data-nosnippet>815</a>        /// WebGL2, GLES 3.0, and Metal on Apple1/Apple2 GPUs do not support indirect.
-<a href=#816 id=816 data-nosnippet>816</a>        </span><span class="kw">const </span>INDIRECT_EXECUTION = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
-<a href=#817 id=817 data-nosnippet>817</a>        <span class="doccomment">/// Supports non-zero `base_vertex` parameter to direct indexed draw calls.
-<a href=#818 id=818 data-nosnippet>818</a>        ///
-<a href=#819 id=819 data-nosnippet>819</a>        /// Indirect calls, if supported, always support non-zero `base_vertex`.
-<a href=#820 id=820 data-nosnippet>820</a>        ///
-<a href=#821 id=821 data-nosnippet>821</a>        /// Supported by:
-<a href=#822 id=822 data-nosnippet>822</a>        /// - Vulkan
-<a href=#823 id=823 data-nosnippet>823</a>        /// - DX12
-<a href=#824 id=824 data-nosnippet>824</a>        /// - Metal on Apple3+ or Mac1+
-<a href=#825 id=825 data-nosnippet>825</a>        /// - OpenGL 3.2+
-<a href=#826 id=826 data-nosnippet>826</a>        /// - OpenGL ES 3.2
-<a href=#827 id=827 data-nosnippet>827</a>        </span><span class="kw">const </span>BASE_VERTEX = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
-<a href=#828 id=828 data-nosnippet>828</a>        <span class="doccomment">/// Supports reading from a depth/stencil texture while using it as a read-only
-<a href=#829 id=829 data-nosnippet>829</a>        /// depth/stencil attachment.
-<a href=#830 id=830 data-nosnippet>830</a>        ///
-<a href=#831 id=831 data-nosnippet>831</a>        /// The WebGL2 and GLES backends do not support RODS.
-<a href=#832 id=832 data-nosnippet>832</a>        </span><span class="kw">const </span>READ_ONLY_DEPTH_STENCIL = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
-<a href=#833 id=833 data-nosnippet>833</a>        <span class="doccomment">/// Supports textures with mipmaps which have a non power of two size.
-<a href=#834 id=834 data-nosnippet>834</a>        </span><span class="kw">const </span>NON_POWER_OF_TWO_MIPMAPPED_TEXTURES = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
-<a href=#835 id=835 data-nosnippet>835</a>        <span class="doccomment">/// Supports textures that are cube arrays.
-<a href=#836 id=836 data-nosnippet>836</a>        </span><span class="kw">const </span>CUBE_ARRAY_TEXTURES = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
-<a href=#837 id=837 data-nosnippet>837</a>        <span class="doccomment">/// Supports comparison samplers.
-<a href=#838 id=838 data-nosnippet>838</a>        </span><span class="kw">const </span>COMPARISON_SAMPLERS = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
-<a href=#839 id=839 data-nosnippet>839</a>        <span class="doccomment">/// Supports different blend operations per color attachment.
-<a href=#840 id=840 data-nosnippet>840</a>        </span><span class="kw">const </span>INDEPENDENT_BLEND = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
-<a href=#841 id=841 data-nosnippet>841</a>        <span class="doccomment">/// Supports storage buffers in vertex shaders.
-<a href=#842 id=842 data-nosnippet>842</a>        </span><span class="kw">const </span>VERTEX_STORAGE = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
-<a href=#843 id=843 data-nosnippet>843</a>
-<a href=#844 id=844 data-nosnippet>844</a>        <span class="doccomment">/// Supports samplers with anisotropic filtering. Note this isn't actually required by
-<a href=#845 id=845 data-nosnippet>845</a>        /// WebGPU, the implementation is allowed to completely ignore aniso clamp. This flag is
-<a href=#846 id=846 data-nosnippet>846</a>        /// here for native backends so they can communicate to the user of aniso is enabled.
-<a href=#847 id=847 data-nosnippet>847</a>        ///
-<a href=#848 id=848 data-nosnippet>848</a>        /// All backends and all devices support anisotropic filtering.
-<a href=#849 id=849 data-nosnippet>849</a>        </span><span class="kw">const </span>ANISOTROPIC_FILTERING = <span class="number">1 </span>&lt;&lt; <span class="number">10</span>;
-<a href=#850 id=850 data-nosnippet>850</a>
-<a href=#851 id=851 data-nosnippet>851</a>        <span class="doccomment">/// Supports storage buffers in fragment shaders.
-<a href=#852 id=852 data-nosnippet>852</a>        </span><span class="kw">const </span>FRAGMENT_STORAGE = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
-<a href=#853 id=853 data-nosnippet>853</a>
-<a href=#854 id=854 data-nosnippet>854</a>        <span class="doccomment">/// Supports sample-rate shading.
-<a href=#855 id=855 data-nosnippet>855</a>        </span><span class="kw">const </span>MULTISAMPLED_SHADING = <span class="number">1 </span>&lt;&lt; <span class="number">12</span>;
-<a href=#856 id=856 data-nosnippet>856</a>
-<a href=#857 id=857 data-nosnippet>857</a>        <span class="doccomment">/// Supports copies between depth textures and buffers.
-<a href=#858 id=858 data-nosnippet>858</a>        ///
-<a href=#859 id=859 data-nosnippet>859</a>        /// GLES/WebGL don't support this.
-<a href=#860 id=860 data-nosnippet>860</a>        </span><span class="kw">const </span>DEPTH_TEXTURE_AND_BUFFER_COPIES = <span class="number">1 </span>&lt;&lt; <span class="number">13</span>;
-<a href=#861 id=861 data-nosnippet>861</a>
-<a href=#862 id=862 data-nosnippet>862</a>        <span class="doccomment">/// Supports all the texture usages described in WebGPU. If this isn't supported, you
-<a href=#863 id=863 data-nosnippet>863</a>        /// should call `get_texture_format_features` to get how you can use textures of a given format
-<a href=#864 id=864 data-nosnippet>864</a>        </span><span class="kw">const </span>WEBGPU_TEXTURE_FORMAT_SUPPORT = <span class="number">1 </span>&lt;&lt; <span class="number">14</span>;
-<a href=#865 id=865 data-nosnippet>865</a>
-<a href=#866 id=866 data-nosnippet>866</a>        <span class="doccomment">/// Supports buffer bindings with sizes that aren't a multiple of 16.
-<a href=#867 id=867 data-nosnippet>867</a>        ///
-<a href=#868 id=868 data-nosnippet>868</a>        /// WebGL doesn't support this.
-<a href=#869 id=869 data-nosnippet>869</a>        </span><span class="kw">const </span>BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED = <span class="number">1 </span>&lt;&lt; <span class="number">15</span>;
-<a href=#870 id=870 data-nosnippet>870</a>
-<a href=#871 id=871 data-nosnippet>871</a>        <span class="doccomment">/// Supports buffers to combine [`BufferUsages::INDEX`] with usages other than [`BufferUsages::COPY_DST`] and [`BufferUsages::COPY_SRC`].
-<a href=#872 id=872 data-nosnippet>872</a>        /// Furthermore, in absence of this feature it is not allowed to copy index buffers from/to buffers with a set of usage flags containing
-<a href=#873 id=873 data-nosnippet>873</a>        /// [`BufferUsages::VERTEX`]/[`BufferUsages::UNIFORM`]/[`BufferUsages::STORAGE`] or [`BufferUsages::INDIRECT`].
-<a href=#874 id=874 data-nosnippet>874</a>        ///
-<a href=#875 id=875 data-nosnippet>875</a>        /// WebGL doesn't support this.
-<a href=#876 id=876 data-nosnippet>876</a>        </span><span class="kw">const </span>UNRESTRICTED_INDEX_BUFFER = <span class="number">1 </span>&lt;&lt; <span class="number">16</span>;
-<a href=#877 id=877 data-nosnippet>877</a>
-<a href=#878 id=878 data-nosnippet>878</a>        <span class="doccomment">/// Supports full 32-bit range indices (2^32-1 as opposed to 2^24-1 without this flag)
-<a href=#879 id=879 data-nosnippet>879</a>        ///
-<a href=#880 id=880 data-nosnippet>880</a>        /// Corresponds to Vulkan's `VkPhysicalDeviceFeatures.fullDrawIndexUint32`
-<a href=#881 id=881 data-nosnippet>881</a>        </span><span class="kw">const </span>FULL_DRAW_INDEX_UINT32 = <span class="number">1 </span>&lt;&lt; <span class="number">17</span>;
-<a href=#882 id=882 data-nosnippet>882</a>
-<a href=#883 id=883 data-nosnippet>883</a>        <span class="doccomment">/// Supports depth bias clamping
-<a href=#884 id=884 data-nosnippet>884</a>        ///
-<a href=#885 id=885 data-nosnippet>885</a>        /// Corresponds to Vulkan's `VkPhysicalDeviceFeatures.depthBiasClamp`
-<a href=#886 id=886 data-nosnippet>886</a>        </span><span class="kw">const </span>DEPTH_BIAS_CLAMP = <span class="number">1 </span>&lt;&lt; <span class="number">18</span>;
-<a href=#887 id=887 data-nosnippet>887</a>
-<a href=#888 id=888 data-nosnippet>888</a>        <span class="doccomment">/// Supports specifying which view format values are allowed when create_view() is called on a texture.
-<a href=#889 id=889 data-nosnippet>889</a>        ///
-<a href=#890 id=890 data-nosnippet>890</a>        /// The WebGL and GLES backends doesn't support this.
-<a href=#891 id=891 data-nosnippet>891</a>        </span><span class="kw">const </span>VIEW_FORMATS = <span class="number">1 </span>&lt;&lt; <span class="number">19</span>;
-<a href=#892 id=892 data-nosnippet>892</a>
-<a href=#893 id=893 data-nosnippet>893</a>        <span class="doccomment">/// With this feature not present, there are the following restrictions on `Queue::copy_external_image_to_texture`:
-<a href=#894 id=894 data-nosnippet>894</a>        /// - The source must not be [`web_sys::OffscreenCanvas`]
-<a href=#895 id=895 data-nosnippet>895</a>        /// - [`CopyExternalImageSourceInfo::origin`] must be zero.
-<a href=#896 id=896 data-nosnippet>896</a>        /// - [`CopyExternalImageDestInfo::color_space`] must be srgb.
-<a href=#897 id=897 data-nosnippet>897</a>        /// - If the source is an [`web_sys::ImageBitmap`]:
-<a href=#898 id=898 data-nosnippet>898</a>        ///   - [`CopyExternalImageSourceInfo::flip_y`] must be false.
-<a href=#899 id=899 data-nosnippet>899</a>        ///   - [`CopyExternalImageDestInfo::premultiplied_alpha`] must be false.
-<a href=#900 id=900 data-nosnippet>900</a>        ///
-<a href=#901 id=901 data-nosnippet>901</a>        /// WebGL doesn't support this. WebGPU does.
-<a href=#902 id=902 data-nosnippet>902</a>        </span><span class="kw">const </span>UNRESTRICTED_EXTERNAL_TEXTURE_COPIES = <span class="number">1 </span>&lt;&lt; <span class="number">20</span>;
-<a href=#903 id=903 data-nosnippet>903</a>
-<a href=#904 id=904 data-nosnippet>904</a>        <span class="doccomment">/// Supports specifying which view formats are allowed when calling create_view on the texture returned by
-<a href=#905 id=905 data-nosnippet>905</a>        /// `Surface::get_current_texture`.
-<a href=#906 id=906 data-nosnippet>906</a>        ///
-<a href=#907 id=907 data-nosnippet>907</a>        /// The GLES/WebGL and Vulkan on Android doesn't support this.
-<a href=#908 id=908 data-nosnippet>908</a>        </span><span class="kw">const </span>SURFACE_VIEW_FORMATS = <span class="number">1 </span>&lt;&lt; <span class="number">21</span>;
-<a href=#909 id=909 data-nosnippet>909</a>
-<a href=#910 id=910 data-nosnippet>910</a>        <span class="doccomment">/// If this is true, calls to `CommandEncoder::resolve_query_set` will be performed on the queue timeline.
-<a href=#911 id=911 data-nosnippet>911</a>        ///
-<a href=#912 id=912 data-nosnippet>912</a>        /// If this is false, calls to `CommandEncoder::resolve_query_set` will be performed on the device (i.e. cpu) timeline
-<a href=#913 id=913 data-nosnippet>913</a>        /// and will block that timeline until the query has data. You may work around this limitation by waiting until the submit
-<a href=#914 id=914 data-nosnippet>914</a>        /// whose queries you are resolving is fully finished (through use of `queue.on_submitted_work_done`) and only
-<a href=#915 id=915 data-nosnippet>915</a>        /// then submitting the resolve_query_set command. The queries will be guaranteed finished, so will not block.
-<a href=#916 id=916 data-nosnippet>916</a>        ///
-<a href=#917 id=917 data-nosnippet>917</a>        /// Supported by:
-<a href=#918 id=918 data-nosnippet>918</a>        /// - Vulkan,
-<a href=#919 id=919 data-nosnippet>919</a>        /// - DX12
-<a href=#920 id=920 data-nosnippet>920</a>        /// - Metal
-<a href=#921 id=921 data-nosnippet>921</a>        /// - OpenGL 4.4+
-<a href=#922 id=922 data-nosnippet>922</a>        ///
-<a href=#923 id=923 data-nosnippet>923</a>        /// Not Supported by:
-<a href=#924 id=924 data-nosnippet>924</a>        /// - GL ES / WebGL
-<a href=#925 id=925 data-nosnippet>925</a>        </span><span class="kw">const </span>NONBLOCKING_QUERY_RESOLVE = <span class="number">1 </span>&lt;&lt; <span class="number">22</span>;
+<a href=#790 id=790 data-nosnippet>790</a><span class="kw">impl </span>Default <span class="kw">for </span>DownlevelCapabilities {
+<a href=#791 id=791 data-nosnippet>791</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#792 id=792 data-nosnippet>792</a>        <span class="self">Self </span>{
+<a href=#793 id=793 data-nosnippet>793</a>            flags: DownlevelFlags::all(),
+<a href=#794 id=794 data-nosnippet>794</a>            limits: DownlevelLimits::default(),
+<a href=#795 id=795 data-nosnippet>795</a>            shader_model: ShaderModel::Sm5,
+<a href=#796 id=796 data-nosnippet>796</a>        }
+<a href=#797 id=797 data-nosnippet>797</a>    }
+<a href=#798 id=798 data-nosnippet>798</a>}
+<a href=#799 id=799 data-nosnippet>799</a>
+<a href=#800 id=800 data-nosnippet>800</a><span class="kw">impl </span>DownlevelCapabilities {
+<a href=#801 id=801 data-nosnippet>801</a>    <span class="doccomment">/// Returns true if the underlying platform offers complete support of the baseline WebGPU standard.
+<a href=#802 id=802 data-nosnippet>802</a>    ///
+<a href=#803 id=803 data-nosnippet>803</a>    /// If this returns false, some parts of the API will result in validation errors where they would not normally.
+<a href=#804 id=804 data-nosnippet>804</a>    /// These parts can be determined by the values in this structure.
+<a href=#805 id=805 data-nosnippet>805</a>    </span><span class="attr">#[must_use]
+<a href=#806 id=806 data-nosnippet>806</a>    </span><span class="kw">pub fn </span>is_webgpu_compliant(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+<a href=#807 id=807 data-nosnippet>807</a>        <span class="self">self</span>.flags.contains(DownlevelFlags::compliant())
+<a href=#808 id=808 data-nosnippet>808</a>            &amp;&amp; <span class="self">self</span>.limits == DownlevelLimits::default()
+<a href=#809 id=809 data-nosnippet>809</a>            &amp;&amp; <span class="self">self</span>.shader_model &gt;= ShaderModel::Sm5
+<a href=#810 id=810 data-nosnippet>810</a>    }
+<a href=#811 id=811 data-nosnippet>811</a>}
+<a href=#812 id=812 data-nosnippet>812</a>
+<a href=#813 id=813 data-nosnippet>813</a><span class="macro">bitflags::bitflags!</span> {
+<a href=#814 id=814 data-nosnippet>814</a>    <span class="doccomment">/// Binary flags listing features that may or may not be present on downlevel adapters.
+<a href=#815 id=815 data-nosnippet>815</a>    ///
+<a href=#816 id=816 data-nosnippet>816</a>    /// A downlevel adapter is a GPU adapter that wgpu supports, but with potentially limited
+<a href=#817 id=817 data-nosnippet>817</a>    /// features, due to the lack of hardware feature support.
+<a href=#818 id=818 data-nosnippet>818</a>    ///
+<a href=#819 id=819 data-nosnippet>819</a>    /// Flags that are **not** present for a downlevel adapter or device usually indicates
+<a href=#820 id=820 data-nosnippet>820</a>    /// non-compliance with the WebGPU specification, but not always.
+<a href=#821 id=821 data-nosnippet>821</a>    ///
+<a href=#822 id=822 data-nosnippet>822</a>    /// You can check whether a set of flags is compliant through the
+<a href=#823 id=823 data-nosnippet>823</a>    /// [`DownlevelCapabilities::is_webgpu_compliant()`] function.
+<a href=#824 id=824 data-nosnippet>824</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#825 id=825 data-nosnippet>825</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
+<a href=#826 id=826 data-nosnippet>826</a>    #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+<a href=#827 id=827 data-nosnippet>827</a>    </span><span class="kw">pub struct </span>DownlevelFlags: u32 {
+<a href=#828 id=828 data-nosnippet>828</a>        <span class="doccomment">/// The device supports compiling and using compute shaders.
+<a href=#829 id=829 data-nosnippet>829</a>        ///
+<a href=#830 id=830 data-nosnippet>830</a>        /// WebGL2, and GLES3.0 devices do not support compute.
+<a href=#831 id=831 data-nosnippet>831</a>        </span><span class="kw">const </span>COMPUTE_SHADERS = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
+<a href=#832 id=832 data-nosnippet>832</a>        <span class="doccomment">/// Supports binding storage buffers and textures to fragment shaders.
+<a href=#833 id=833 data-nosnippet>833</a>        </span><span class="kw">const </span>FRAGMENT_WRITABLE_STORAGE = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+<a href=#834 id=834 data-nosnippet>834</a>        <span class="doccomment">/// Supports indirect drawing and dispatching.
+<a href=#835 id=835 data-nosnippet>835</a>        ///
+<a href=#836 id=836 data-nosnippet>836</a>        /// [`Self::COMPUTE_SHADERS`] must be present for this flag.
+<a href=#837 id=837 data-nosnippet>837</a>        ///
+<a href=#838 id=838 data-nosnippet>838</a>        /// WebGL2, GLES 3.0, and Metal on Apple1/Apple2 GPUs do not support indirect.
+<a href=#839 id=839 data-nosnippet>839</a>        </span><span class="kw">const </span>INDIRECT_EXECUTION = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+<a href=#840 id=840 data-nosnippet>840</a>        <span class="doccomment">/// Supports non-zero `base_vertex` parameter to direct indexed draw calls.
+<a href=#841 id=841 data-nosnippet>841</a>        ///
+<a href=#842 id=842 data-nosnippet>842</a>        /// Indirect calls, if supported, always support non-zero `base_vertex`.
+<a href=#843 id=843 data-nosnippet>843</a>        ///
+<a href=#844 id=844 data-nosnippet>844</a>        /// Supported by:
+<a href=#845 id=845 data-nosnippet>845</a>        /// - Vulkan
+<a href=#846 id=846 data-nosnippet>846</a>        /// - DX12
+<a href=#847 id=847 data-nosnippet>847</a>        /// - Metal on Apple3+ or Mac1+
+<a href=#848 id=848 data-nosnippet>848</a>        /// - OpenGL 3.2+
+<a href=#849 id=849 data-nosnippet>849</a>        /// - OpenGL ES 3.2
+<a href=#850 id=850 data-nosnippet>850</a>        </span><span class="kw">const </span>BASE_VERTEX = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+<a href=#851 id=851 data-nosnippet>851</a>        <span class="doccomment">/// Supports reading from a depth/stencil texture while using it as a read-only
+<a href=#852 id=852 data-nosnippet>852</a>        /// depth/stencil attachment.
+<a href=#853 id=853 data-nosnippet>853</a>        ///
+<a href=#854 id=854 data-nosnippet>854</a>        /// The WebGL2 and GLES backends do not support RODS.
+<a href=#855 id=855 data-nosnippet>855</a>        </span><span class="kw">const </span>READ_ONLY_DEPTH_STENCIL = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+<a href=#856 id=856 data-nosnippet>856</a>        <span class="doccomment">/// Supports textures with mipmaps which have a non power of two size.
+<a href=#857 id=857 data-nosnippet>857</a>        </span><span class="kw">const </span>NON_POWER_OF_TWO_MIPMAPPED_TEXTURES = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+<a href=#858 id=858 data-nosnippet>858</a>        <span class="doccomment">/// Supports textures that are cube arrays.
+<a href=#859 id=859 data-nosnippet>859</a>        </span><span class="kw">const </span>CUBE_ARRAY_TEXTURES = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
+<a href=#860 id=860 data-nosnippet>860</a>        <span class="doccomment">/// Supports comparison samplers.
+<a href=#861 id=861 data-nosnippet>861</a>        </span><span class="kw">const </span>COMPARISON_SAMPLERS = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+<a href=#862 id=862 data-nosnippet>862</a>        <span class="doccomment">/// Supports different blend operations per color attachment.
+<a href=#863 id=863 data-nosnippet>863</a>        </span><span class="kw">const </span>INDEPENDENT_BLEND = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+<a href=#864 id=864 data-nosnippet>864</a>        <span class="doccomment">/// Supports storage buffers in vertex shaders.
+<a href=#865 id=865 data-nosnippet>865</a>        </span><span class="kw">const </span>VERTEX_STORAGE = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
+<a href=#866 id=866 data-nosnippet>866</a>
+<a href=#867 id=867 data-nosnippet>867</a>        <span class="doccomment">/// Supports samplers with anisotropic filtering. Note this isn't actually required by
+<a href=#868 id=868 data-nosnippet>868</a>        /// WebGPU, the implementation is allowed to completely ignore aniso clamp. This flag is
+<a href=#869 id=869 data-nosnippet>869</a>        /// here for native backends so they can communicate to the user of aniso is enabled.
+<a href=#870 id=870 data-nosnippet>870</a>        ///
+<a href=#871 id=871 data-nosnippet>871</a>        /// All backends and all devices support anisotropic filtering.
+<a href=#872 id=872 data-nosnippet>872</a>        </span><span class="kw">const </span>ANISOTROPIC_FILTERING = <span class="number">1 </span>&lt;&lt; <span class="number">10</span>;
+<a href=#873 id=873 data-nosnippet>873</a>
+<a href=#874 id=874 data-nosnippet>874</a>        <span class="doccomment">/// Supports storage buffers in fragment shaders.
+<a href=#875 id=875 data-nosnippet>875</a>        </span><span class="kw">const </span>FRAGMENT_STORAGE = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
+<a href=#876 id=876 data-nosnippet>876</a>
+<a href=#877 id=877 data-nosnippet>877</a>        <span class="doccomment">/// Supports sample-rate shading.
+<a href=#878 id=878 data-nosnippet>878</a>        </span><span class="kw">const </span>MULTISAMPLED_SHADING = <span class="number">1 </span>&lt;&lt; <span class="number">12</span>;
+<a href=#879 id=879 data-nosnippet>879</a>
+<a href=#880 id=880 data-nosnippet>880</a>        <span class="doccomment">/// Supports copies between depth textures and buffers.
+<a href=#881 id=881 data-nosnippet>881</a>        ///
+<a href=#882 id=882 data-nosnippet>882</a>        /// GLES/WebGL don't support this.
+<a href=#883 id=883 data-nosnippet>883</a>        </span><span class="kw">const </span>DEPTH_TEXTURE_AND_BUFFER_COPIES = <span class="number">1 </span>&lt;&lt; <span class="number">13</span>;
+<a href=#884 id=884 data-nosnippet>884</a>
+<a href=#885 id=885 data-nosnippet>885</a>        <span class="doccomment">/// Supports all the texture usages described in WebGPU. If this isn't supported, you
+<a href=#886 id=886 data-nosnippet>886</a>        /// should call `get_texture_format_features` to get how you can use textures of a given format
+<a href=#887 id=887 data-nosnippet>887</a>        </span><span class="kw">const </span>WEBGPU_TEXTURE_FORMAT_SUPPORT = <span class="number">1 </span>&lt;&lt; <span class="number">14</span>;
+<a href=#888 id=888 data-nosnippet>888</a>
+<a href=#889 id=889 data-nosnippet>889</a>        <span class="doccomment">/// Supports buffer bindings with sizes that aren't a multiple of 16.
+<a href=#890 id=890 data-nosnippet>890</a>        ///
+<a href=#891 id=891 data-nosnippet>891</a>        /// WebGL doesn't support this.
+<a href=#892 id=892 data-nosnippet>892</a>        </span><span class="kw">const </span>BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED = <span class="number">1 </span>&lt;&lt; <span class="number">15</span>;
+<a href=#893 id=893 data-nosnippet>893</a>
+<a href=#894 id=894 data-nosnippet>894</a>        <span class="doccomment">/// Supports buffers to combine [`BufferUsages::INDEX`] with usages other than [`BufferUsages::COPY_DST`] and [`BufferUsages::COPY_SRC`].
+<a href=#895 id=895 data-nosnippet>895</a>        /// Furthermore, in absence of this feature it is not allowed to copy index buffers from/to buffers with a set of usage flags containing
+<a href=#896 id=896 data-nosnippet>896</a>        /// [`BufferUsages::VERTEX`]/[`BufferUsages::UNIFORM`]/[`BufferUsages::STORAGE`] or [`BufferUsages::INDIRECT`].
+<a href=#897 id=897 data-nosnippet>897</a>        ///
+<a href=#898 id=898 data-nosnippet>898</a>        /// WebGL doesn't support this.
+<a href=#899 id=899 data-nosnippet>899</a>        </span><span class="kw">const </span>UNRESTRICTED_INDEX_BUFFER = <span class="number">1 </span>&lt;&lt; <span class="number">16</span>;
+<a href=#900 id=900 data-nosnippet>900</a>
+<a href=#901 id=901 data-nosnippet>901</a>        <span class="doccomment">/// Supports full 32-bit range indices (2^32-1 as opposed to 2^24-1 without this flag)
+<a href=#902 id=902 data-nosnippet>902</a>        ///
+<a href=#903 id=903 data-nosnippet>903</a>        /// Corresponds to Vulkan's `VkPhysicalDeviceFeatures.fullDrawIndexUint32`
+<a href=#904 id=904 data-nosnippet>904</a>        </span><span class="kw">const </span>FULL_DRAW_INDEX_UINT32 = <span class="number">1 </span>&lt;&lt; <span class="number">17</span>;
+<a href=#905 id=905 data-nosnippet>905</a>
+<a href=#906 id=906 data-nosnippet>906</a>        <span class="doccomment">/// Supports depth bias clamping
+<a href=#907 id=907 data-nosnippet>907</a>        ///
+<a href=#908 id=908 data-nosnippet>908</a>        /// Corresponds to Vulkan's `VkPhysicalDeviceFeatures.depthBiasClamp`
+<a href=#909 id=909 data-nosnippet>909</a>        </span><span class="kw">const </span>DEPTH_BIAS_CLAMP = <span class="number">1 </span>&lt;&lt; <span class="number">18</span>;
+<a href=#910 id=910 data-nosnippet>910</a>
+<a href=#911 id=911 data-nosnippet>911</a>        <span class="doccomment">/// Supports specifying which view format values are allowed when create_view() is called on a texture.
+<a href=#912 id=912 data-nosnippet>912</a>        ///
+<a href=#913 id=913 data-nosnippet>913</a>        /// The WebGL and GLES backends doesn't support this.
+<a href=#914 id=914 data-nosnippet>914</a>        </span><span class="kw">const </span>VIEW_FORMATS = <span class="number">1 </span>&lt;&lt; <span class="number">19</span>;
+<a href=#915 id=915 data-nosnippet>915</a>
+<a href=#916 id=916 data-nosnippet>916</a>        <span class="doccomment">/// With this feature not present, there are the following restrictions on `Queue::copy_external_image_to_texture`:
+<a href=#917 id=917 data-nosnippet>917</a>        /// - The source must not be [`web_sys::OffscreenCanvas`]
+<a href=#918 id=918 data-nosnippet>918</a>        /// - [`CopyExternalImageSourceInfo::origin`] must be zero.
+<a href=#919 id=919 data-nosnippet>919</a>        /// - [`CopyExternalImageDestInfo::color_space`] must be srgb.
+<a href=#920 id=920 data-nosnippet>920</a>        /// - If the source is an [`web_sys::ImageBitmap`]:
+<a href=#921 id=921 data-nosnippet>921</a>        ///   - [`CopyExternalImageSourceInfo::flip_y`] must be false.
+<a href=#922 id=922 data-nosnippet>922</a>        ///   - [`CopyExternalImageDestInfo::premultiplied_alpha`] must be false.
+<a href=#923 id=923 data-nosnippet>923</a>        ///
+<a href=#924 id=924 data-nosnippet>924</a>        /// WebGL doesn't support this. WebGPU does.
+<a href=#925 id=925 data-nosnippet>925</a>        </span><span class="kw">const </span>UNRESTRICTED_EXTERNAL_TEXTURE_COPIES = <span class="number">1 </span>&lt;&lt; <span class="number">20</span>;
 <a href=#926 id=926 data-nosnippet>926</a>
-<a href=#927 id=927 data-nosnippet>927</a>        <span class="doccomment">/// Allows shaders to use `quantizeToF16`, `pack2x16float`, and `unpack2x16float`, which
-<a href=#928 id=928 data-nosnippet>928</a>        /// operate on `f16`-precision values stored in `f32`s.
+<a href=#927 id=927 data-nosnippet>927</a>        <span class="doccomment">/// Supports specifying which view formats are allowed when calling create_view on the texture returned by
+<a href=#928 id=928 data-nosnippet>928</a>        /// `Surface::get_current_texture`.
 <a href=#929 id=929 data-nosnippet>929</a>        ///
-<a href=#930 id=930 data-nosnippet>930</a>        /// Not supported by Vulkan on Mesa when [`Features::SHADER_F16`] is absent.
-<a href=#931 id=931 data-nosnippet>931</a>        </span><span class="kw">const </span>SHADER_F16_IN_F32 = <span class="number">1 </span>&lt;&lt; <span class="number">23</span>;
-<a href=#932 id=932 data-nosnippet>932</a>    }
-<a href=#933 id=933 data-nosnippet>933</a>}
-<a href=#934 id=934 data-nosnippet>934</a>
-<a href=#935 id=935 data-nosnippet>935</a><span class="kw">impl </span>DownlevelFlags {
-<a href=#936 id=936 data-nosnippet>936</a>    <span class="doccomment">/// All flags that indicate if the backend is WebGPU compliant
-<a href=#937 id=937 data-nosnippet>937</a>    </span><span class="attr">#[must_use]
-<a href=#938 id=938 data-nosnippet>938</a>    </span><span class="kw">pub const fn </span>compliant() -&gt; <span class="self">Self </span>{
-<a href=#939 id=939 data-nosnippet>939</a>        <span class="comment">// We use manual bit twiddling to make this a const fn as `Sub` and `.remove` aren't const
-<a href=#940 id=940 data-nosnippet>940</a>
-<a href=#941 id=941 data-nosnippet>941</a>        // WebGPU doesn't actually require aniso
-<a href=#942 id=942 data-nosnippet>942</a>        </span><span class="self">Self</span>::from_bits_truncate(<span class="self">Self</span>::all().bits() &amp; !<span class="self">Self</span>::ANISOTROPIC_FILTERING.bits())
-<a href=#943 id=943 data-nosnippet>943</a>    }
-<a href=#944 id=944 data-nosnippet>944</a>}
-<a href=#945 id=945 data-nosnippet>945</a>
-<a href=#946 id=946 data-nosnippet>946</a><span class="doccomment">/// Collections of shader features a device supports if they support less than WebGPU normally allows.
-<a href=#947 id=947 data-nosnippet>947</a></span><span class="comment">// TODO: Fill out the differences between shader models more completely
-<a href=#948 id=948 data-nosnippet>948</a></span><span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-<a href=#949 id=949 data-nosnippet>949</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#950 id=950 data-nosnippet>950</a></span><span class="kw">pub enum </span>ShaderModel {
-<a href=#951 id=951 data-nosnippet>951</a>    <span class="doccomment">/// Extremely limited shaders, including a total instruction limit.
-<a href=#952 id=952 data-nosnippet>952</a>    </span>Sm2,
-<a href=#953 id=953 data-nosnippet>953</a>    <span class="doccomment">/// Missing minor features and storage images.
-<a href=#954 id=954 data-nosnippet>954</a>    </span>Sm4,
-<a href=#955 id=955 data-nosnippet>955</a>    <span class="doccomment">/// WebGPU supports shader module 5.
-<a href=#956 id=956 data-nosnippet>956</a>    </span>Sm5,
-<a href=#957 id=957 data-nosnippet>957</a>}</code></pre></div></section></main></body></html>
+<a href=#930 id=930 data-nosnippet>930</a>        /// The GLES/WebGL and Vulkan on Android doesn't support this.
+<a href=#931 id=931 data-nosnippet>931</a>        </span><span class="kw">const </span>SURFACE_VIEW_FORMATS = <span class="number">1 </span>&lt;&lt; <span class="number">21</span>;
+<a href=#932 id=932 data-nosnippet>932</a>
+<a href=#933 id=933 data-nosnippet>933</a>        <span class="doccomment">/// If this is true, calls to `CommandEncoder::resolve_query_set` will be performed on the queue timeline.
+<a href=#934 id=934 data-nosnippet>934</a>        ///
+<a href=#935 id=935 data-nosnippet>935</a>        /// If this is false, calls to `CommandEncoder::resolve_query_set` will be performed on the device (i.e. cpu) timeline
+<a href=#936 id=936 data-nosnippet>936</a>        /// and will block that timeline until the query has data. You may work around this limitation by waiting until the submit
+<a href=#937 id=937 data-nosnippet>937</a>        /// whose queries you are resolving is fully finished (through use of `queue.on_submitted_work_done`) and only
+<a href=#938 id=938 data-nosnippet>938</a>        /// then submitting the resolve_query_set command. The queries will be guaranteed finished, so will not block.
+<a href=#939 id=939 data-nosnippet>939</a>        ///
+<a href=#940 id=940 data-nosnippet>940</a>        /// Supported by:
+<a href=#941 id=941 data-nosnippet>941</a>        /// - Vulkan,
+<a href=#942 id=942 data-nosnippet>942</a>        /// - DX12
+<a href=#943 id=943 data-nosnippet>943</a>        /// - Metal
+<a href=#944 id=944 data-nosnippet>944</a>        /// - OpenGL 4.4+
+<a href=#945 id=945 data-nosnippet>945</a>        ///
+<a href=#946 id=946 data-nosnippet>946</a>        /// Not Supported by:
+<a href=#947 id=947 data-nosnippet>947</a>        /// - GL ES / WebGL
+<a href=#948 id=948 data-nosnippet>948</a>        </span><span class="kw">const </span>NONBLOCKING_QUERY_RESOLVE = <span class="number">1 </span>&lt;&lt; <span class="number">22</span>;
+<a href=#949 id=949 data-nosnippet>949</a>
+<a href=#950 id=950 data-nosnippet>950</a>        <span class="doccomment">/// Allows shaders to use `quantizeToF16`, `pack2x16float`, and `unpack2x16float`, which
+<a href=#951 id=951 data-nosnippet>951</a>        /// operate on `f16`-precision values stored in `f32`s.
+<a href=#952 id=952 data-nosnippet>952</a>        ///
+<a href=#953 id=953 data-nosnippet>953</a>        /// Not supported by Vulkan on Mesa when [`Features::SHADER_F16`] is absent.
+<a href=#954 id=954 data-nosnippet>954</a>        </span><span class="kw">const </span>SHADER_F16_IN_F32 = <span class="number">1 </span>&lt;&lt; <span class="number">23</span>;
+<a href=#955 id=955 data-nosnippet>955</a>    }
+<a href=#956 id=956 data-nosnippet>956</a>}
+<a href=#957 id=957 data-nosnippet>957</a>
+<a href=#958 id=958 data-nosnippet>958</a><span class="kw">impl </span>DownlevelFlags {
+<a href=#959 id=959 data-nosnippet>959</a>    <span class="doccomment">/// All flags that indicate if the backend is WebGPU compliant
+<a href=#960 id=960 data-nosnippet>960</a>    </span><span class="attr">#[must_use]
+<a href=#961 id=961 data-nosnippet>961</a>    </span><span class="kw">pub const fn </span>compliant() -&gt; <span class="self">Self </span>{
+<a href=#962 id=962 data-nosnippet>962</a>        <span class="comment">// We use manual bit twiddling to make this a const fn as `Sub` and `.remove` aren't const
+<a href=#963 id=963 data-nosnippet>963</a>
+<a href=#964 id=964 data-nosnippet>964</a>        // WebGPU doesn't actually require aniso
+<a href=#965 id=965 data-nosnippet>965</a>        </span><span class="self">Self</span>::from_bits_truncate(<span class="self">Self</span>::all().bits() &amp; !<span class="self">Self</span>::ANISOTROPIC_FILTERING.bits())
+<a href=#966 id=966 data-nosnippet>966</a>    }
+<a href=#967 id=967 data-nosnippet>967</a>}
+<a href=#968 id=968 data-nosnippet>968</a>
+<a href=#969 id=969 data-nosnippet>969</a><span class="doccomment">/// Collections of shader features a device supports if they support less than WebGPU normally allows.
+<a href=#970 id=970 data-nosnippet>970</a></span><span class="comment">// TODO: Fill out the differences between shader models more completely
+<a href=#971 id=971 data-nosnippet>971</a></span><span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+<a href=#972 id=972 data-nosnippet>972</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#973 id=973 data-nosnippet>973</a></span><span class="kw">pub enum </span>ShaderModel {
+<a href=#974 id=974 data-nosnippet>974</a>    <span class="doccomment">/// Extremely limited shaders, including a total instruction limit.
+<a href=#975 id=975 data-nosnippet>975</a>    </span>Sm2,
+<a href=#976 id=976 data-nosnippet>976</a>    <span class="doccomment">/// Missing minor features and storage images.
+<a href=#977 id=977 data-nosnippet>977</a>    </span>Sm4,
+<a href=#978 id=978 data-nosnippet>978</a>    <span class="doccomment">/// WebGPU supports shader module 5.
+<a href=#979 id=979 data-nosnippet>979</a>    </span>Sm5,
+<a href=#980 id=980 data-nosnippet>980</a>}</code></pre></div></section></main></body></html>
