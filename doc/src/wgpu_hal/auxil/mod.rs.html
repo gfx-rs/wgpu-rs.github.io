@@ -127,20 +127,31 @@
 <a href=#127 id=127 data-nosnippet>127</a>    }
 <a href=#128 id=128 data-nosnippet>128</a>}
 <a href=#129 id=129 data-nosnippet>129</a>
-<a href=#130 id=130 data-nosnippet>130</a><span class="doccomment">/// Clamp the limits in `limits` to honor any HAL-imposed maximums.
-<a href=#131 id=131 data-nosnippet>131</a>///
-<a href=#132 id=132 data-nosnippet>132</a>/// Limits that do not have a HAL-defined maximum are left unchanged.
-<a href=#133 id=133 data-nosnippet>133</a></span><span class="attr">#[cfg_attr(not(any_backend), allow(dead_code))]
-<a href=#134 id=134 data-nosnippet>134</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>apply_hal_limits(<span class="kw-2">mut </span>limits: wgt::Limits) -&gt; wgt::Limits {
-<a href=#135 id=135 data-nosnippet>135</a>    <span class="comment">// The Metal backend wants to have its own consistent view of the limits, so
-<a href=#136 id=136 data-nosnippet>136</a>    // it may duplicate some of these limits.
-<a href=#137 id=137 data-nosnippet>137</a>    </span>limits.max_bind_groups = limits.max_bind_groups.min(<span class="kw">crate</span>::MAX_BIND_GROUPS <span class="kw">as </span>u32);
-<a href=#138 id=138 data-nosnippet>138</a>    limits.max_storage_buffer_binding_size &amp;= !(wgt::STORAGE_BINDING_SIZE_ALIGNMENT - <span class="number">1</span>);
-<a href=#139 id=139 data-nosnippet>139</a>    limits.max_vertex_buffers = limits
-<a href=#140 id=140 data-nosnippet>140</a>        .max_vertex_buffers
-<a href=#141 id=141 data-nosnippet>141</a>        .min(<span class="kw">crate</span>::MAX_VERTEX_BUFFERS <span class="kw">as </span>u32);
-<a href=#142 id=142 data-nosnippet>142</a>    limits.max_color_attachments = limits
-<a href=#143 id=143 data-nosnippet>143</a>        .max_color_attachments
-<a href=#144 id=144 data-nosnippet>144</a>        .min(<span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS <span class="kw">as </span>u32);
-<a href=#145 id=145 data-nosnippet>145</a>    limits
-<a href=#146 id=146 data-nosnippet>146</a>}</code></pre></div></section></main></body></html>
+<a href=#130 id=130 data-nosnippet>130</a><span class="doccomment">/// Clamp the limits in `limits` to honor HAL-imposed maximums and WebGPU
+<a href=#131 id=131 data-nosnippet>131</a>/// alignment requirements.
+<a href=#132 id=132 data-nosnippet>132</a>///
+<a href=#133 id=133 data-nosnippet>133</a>/// Other limits are left unchanged.
+<a href=#134 id=134 data-nosnippet>134</a></span><span class="attr">#[cfg_attr(not(any_backend), allow(dead_code))]
+<a href=#135 id=135 data-nosnippet>135</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>apply_hal_limits(<span class="kw-2">mut </span>limits: wgt::Limits) -&gt; wgt::Limits {
+<a href=#136 id=136 data-nosnippet>136</a>    <span class="comment">// The Metal backend maintains two copies of many limit values (one as
+<a href=#137 id=137 data-nosnippet>137</a>    // `wgt::Limits` and one as `metal::PrivateCapabilities`). In order to avoid
+<a href=#138 id=138 data-nosnippet>138</a>    // confusing discrepancies between the two, some of the logic here is
+<a href=#139 id=139 data-nosnippet>139</a>    // duplicated in the initialization of `metal::PrivateCapabilities`.
+<a href=#140 id=140 data-nosnippet>140</a>    // See &lt;https://github.com/gfx-rs/wgpu/issues/8715&gt;.
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a>    </span>limits.max_bind_groups = limits.max_bind_groups.min(<span class="kw">crate</span>::MAX_BIND_GROUPS <span class="kw">as </span>u32);
+<a href=#143 id=143 data-nosnippet>143</a>    limits.max_vertex_buffers = limits
+<a href=#144 id=144 data-nosnippet>144</a>        .max_vertex_buffers
+<a href=#145 id=145 data-nosnippet>145</a>        .min(<span class="kw">crate</span>::MAX_VERTEX_BUFFERS <span class="kw">as </span>u32);
+<a href=#146 id=146 data-nosnippet>146</a>    limits.max_color_attachments = limits
+<a href=#147 id=147 data-nosnippet>147</a>        .max_color_attachments
+<a href=#148 id=148 data-nosnippet>148</a>        .min(<span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS <span class="kw">as </span>u32);
+<a href=#149 id=149 data-nosnippet>149</a>
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="comment">// Round some limits down to the WebGPU alignment requirement, to avoid
+<a href=#151 id=151 data-nosnippet>151</a>    // suggesting values that won't work. (In particular, the CTS queries limits
+<a href=#152 id=152 data-nosnippet>152</a>    // and then tests the exact limit value.)
+<a href=#153 id=153 data-nosnippet>153</a>    </span>limits.max_storage_buffer_binding_size &amp;= !(wgt::STORAGE_BINDING_SIZE_ALIGNMENT - <span class="number">1</span>);
+<a href=#154 id=154 data-nosnippet>154</a>    limits.max_vertex_buffer_array_stride &amp;= !(wgt::VERTEX_ALIGNMENT <span class="kw">as </span>u32 - <span class="number">1</span>);
+<a href=#155 id=155 data-nosnippet>155</a>
+<a href=#156 id=156 data-nosnippet>156</a>    limits
+<a href=#157 id=157 data-nosnippet>157</a>}</code></pre></div></section></main></body></html>
