@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["RacyLock"]};
+window.SIDEBAR_ITEMS = {"struct":["RacyLock"],"type":["Inner"]};
