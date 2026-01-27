@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["write_ray_flags_contains_flags"]};
+window.SIDEBAR_ITEMS = {"mod":["query"]};
