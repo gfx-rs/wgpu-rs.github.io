@@ -1926,7 +1926,7 @@ function __wbg_get_imports() {
             arg0.writeTexture(arg1, arg2, arg3, arg4);
         }, arguments); },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { dtor_idx: 1626, function: Function { arguments: [NamedExternref("GPUUncapturedErrorEvent")], shim_idx: 1081, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { dtor_idx: 1133, function: Function { arguments: [NamedExternref("GPUUncapturedErrorEvent")], shim_idx: 1374, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h0d2c1ed5262cabf4, wasm_bindgen__convert__closures_____invoke__h99f17246505675d2);
             return ret;
         },
