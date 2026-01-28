@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/spv/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/front/spv/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">/*!
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/spv/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/front/spv/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">/*!
 <a href=#2 id=2 data-nosnippet>2</a>Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a>## ID lookups
@@ -1862,7 +1862,7 @@
 <a href=#1862 id=1862 data-nosnippet>1862</a>        <span class="self">self</span>.switch(ModuleState::Extension, inst.op)<span class="question-mark">?</span>;
 <a href=#1863 id=1863 data-nosnippet>1863</a>        inst.expect_at_least(<span class="number">2</span>)<span class="question-mark">?</span>;
 <a href=#1864 id=1864 data-nosnippet>1864</a>        <span class="kw">let </span>(name, left) = <span class="self">self</span>.next_string(inst.wc - <span class="number">1</span>)<span class="question-mark">?</span>;
-<a href=#1865 id=1865 data-nosnippet>1865</a>        <span class="kw">if </span>left != <span class="number">0 </span>{
+<a href=#1865 id=1865 data-nosnippet>1865</a>        <span class="kw">if </span><span class="macro">left !</span>= <span class="number">0 </span>{
 <a href=#1866 id=1866 data-nosnippet>1866</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidOperand);
 <a href=#1867 id=1867 data-nosnippet>1867</a>        }
 <a href=#1868 id=1868 data-nosnippet>1868</a>        <span class="kw">if </span>!SUPPORTED_EXTENSIONS.contains(<span class="kw-2">&amp;</span>name.as_str()) {
@@ -1876,7 +1876,7 @@
 <a href=#1876 id=1876 data-nosnippet>1876</a>        inst.expect_at_least(<span class="number">3</span>)<span class="question-mark">?</span>;
 <a href=#1877 id=1877 data-nosnippet>1877</a>        <span class="kw">let </span>result_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
 <a href=#1878 id=1878 data-nosnippet>1878</a>        <span class="kw">let </span>(name, left) = <span class="self">self</span>.next_string(inst.wc - <span class="number">2</span>)<span class="question-mark">?</span>;
-<a href=#1879 id=1879 data-nosnippet>1879</a>        <span class="kw">if </span>left != <span class="number">0 </span>{
+<a href=#1879 id=1879 data-nosnippet>1879</a>        <span class="kw">if </span><span class="macro">left !</span>= <span class="number">0 </span>{
 <a href=#1880 id=1880 data-nosnippet>1880</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidOperand);
 <a href=#1881 id=1881 data-nosnippet>1881</a>        }
 <a href=#1882 id=1882 data-nosnippet>1882</a>        <span class="kw">if </span><span class="kw-2">&amp;</span>name == <span class="string">"GLSL.std.450" </span>{
@@ -2035,7 +2035,7 @@
 <a href=#2035 id=2035 data-nosnippet>2035</a>        inst.expect_at_least(<span class="number">3</span>)<span class="question-mark">?</span>;
 <a href=#2036 id=2036 data-nosnippet>2036</a>        <span class="kw">let </span>id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
 <a href=#2037 id=2037 data-nosnippet>2037</a>        <span class="kw">let </span>(name, left) = <span class="self">self</span>.next_string(inst.wc - <span class="number">2</span>)<span class="question-mark">?</span>;
-<a href=#2038 id=2038 data-nosnippet>2038</a>        <span class="kw">if </span>left != <span class="number">0 </span>{
+<a href=#2038 id=2038 data-nosnippet>2038</a>        <span class="kw">if </span><span class="macro">left !</span>= <span class="number">0 </span>{
 <a href=#2039 id=2039 data-nosnippet>2039</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidOperand);
 <a href=#2040 id=2040 data-nosnippet>2040</a>        }
 <a href=#2041 id=2041 data-nosnippet>2041</a>        <span class="self">self</span>.future_decor.entry(id).or_default().name = <span class="prelude-val">Some</span>(name);
@@ -2048,7 +2048,7 @@
 <a href=#2048 id=2048 data-nosnippet>2048</a>        <span class="kw">let </span>id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
 <a href=#2049 id=2049 data-nosnippet>2049</a>        <span class="kw">let </span>member = <span class="self">self</span>.next()<span class="question-mark">?</span>;
 <a href=#2050 id=2050 data-nosnippet>2050</a>        <span class="kw">let </span>(name, left) = <span class="self">self</span>.next_string(inst.wc - <span class="number">3</span>)<span class="question-mark">?</span>;
-<a href=#2051 id=2051 data-nosnippet>2051</a>        <span class="kw">if </span>left != <span class="number">0 </span>{
+<a href=#2051 id=2051 data-nosnippet>2051</a>        <span class="kw">if </span><span class="macro">left !</span>= <span class="number">0 </span>{
 <a href=#2052 id=2052 data-nosnippet>2052</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidOperand);
 <a href=#2053 id=2053 data-nosnippet>2053</a>        }
 <a href=#2054 id=2054 data-nosnippet>2054</a>
@@ -2064,7 +2064,7 @@
 <a href=#2064 id=2064 data-nosnippet>2064</a>        inst.expect_at_least(<span class="number">2</span>)<span class="question-mark">?</span>;
 <a href=#2065 id=2065 data-nosnippet>2065</a>        <span class="kw">let </span>(_info, left) = <span class="self">self</span>.next_string(inst.wc - <span class="number">1</span>)<span class="question-mark">?</span>;
 <a href=#2066 id=2066 data-nosnippet>2066</a>        <span class="comment">//Note: string is ignored
-<a href=#2067 id=2067 data-nosnippet>2067</a>        </span><span class="kw">if </span>left != <span class="number">0 </span>{
+<a href=#2067 id=2067 data-nosnippet>2067</a>        </span><span class="kw">if </span><span class="macro">left !</span>= <span class="number">0 </span>{
 <a href=#2068 id=2068 data-nosnippet>2068</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidOperand);
 <a href=#2069 id=2069 data-nosnippet>2069</a>        }
 <a href=#2070 id=2070 data-nosnippet>2070</a>        <span class="prelude-val">Ok</span>(())
@@ -2641,7 +2641,7 @@
 <a href=#2641 id=2641 data-nosnippet>2641</a>        <span class="kw">let </span>inner = <span class="kw">crate</span>::TypeInner::Image {
 <a href=#2642 id=2642 data-nosnippet>2642</a>            class: <span class="kw">if </span>is_depth == <span class="number">1 </span>{
 <a href=#2643 id=2643 data-nosnippet>2643</a>                <span class="kw">crate</span>::ImageClass::Depth { multi: is_msaa }
-<a href=#2644 id=2644 data-nosnippet>2644</a>            } <span class="kw">else if </span>format != <span class="number">0 </span>{
+<a href=#2644 id=2644 data-nosnippet>2644</a>            } <span class="kw">else if </span><span class="macro">format !</span>= <span class="number">0 </span>{
 <a href=#2645 id=2645 data-nosnippet>2645</a>                <span class="kw">crate</span>::ImageClass::Storage {
 <a href=#2646 id=2646 data-nosnippet>2646</a>                    format: map_image_format(format)<span class="question-mark">?</span>,
 <a href=#2647 id=2647 data-nosnippet>2647</a>                    access: <span class="kw">crate</span>::StorageAccess::default(),
@@ -3232,4 +3232,5 @@
 <a href=#3232 id=3232 data-nosnippet>3232</a>        ];
 <a href=#3233 id=3233 data-nosnippet>3233</a>        <span class="kw">let _ </span>= <span class="kw">super</span>::parse_u8_slice(<span class="kw-2">&amp;</span>bin, <span class="kw-2">&amp;</span>Default::default()).unwrap();
 <a href=#3234 id=3234 data-nosnippet>3234</a>    }
-<a href=#3235 id=3235 data-nosnippet>3235</a>}</code></pre></div></section></main></body></html>
+<a href=#3235 id=3235 data-nosnippet>3235</a>}
+</code></pre></div></section></main></body></html>

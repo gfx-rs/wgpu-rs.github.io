@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/device.rs`."><title>device.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_hal/gles/</div>device.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/device.rs`."><title>device.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_hal/gles/</div>device.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
 <a href=#2 id=2 data-nosnippet>2</a>    borrow::ToOwned, format, string::String, string::ToString <span class="kw">as _</span>, sync::Arc, vec, vec::Vec,
 <a href=#3 id=3 data-nosnippet>3</a>};
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>core::{cmp::max, convert::TryInto, num::NonZeroU32, ptr, sync::atomic::Ordering};
@@ -258,8 +258,8 @@
 <a href=#258 id=258 data-nosnippet>258</a>        };
 <a href=#259 id=259 data-nosnippet>259</a>
 <a href=#260 id=260 data-nosnippet>260</a>        <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
-<a href=#261 id=261 data-nosnippet>261</a>        <span class="kw">let </span>needs_temp_options = stage.zero_initialize_workgroup_memory
-<a href=#262 id=262 data-nosnippet>262</a>            != context.layout.naga_options.zero_initialize_workgroup_memory;
+<a href=#261 id=261 data-nosnippet>261</a>        <span class="kw">let </span>needs_temp_options = stage.<span class="macro">zero_initialize_workgroup_memory
+<a href=#262 id=262 data-nosnippet>262</a>            !</span>= context.layout.naga_options.zero_initialize_workgroup_memory;
 <a href=#263 id=263 data-nosnippet>263</a>        <span class="kw">let </span><span class="kw-2">mut </span>temp_options;
 <a href=#264 id=264 data-nosnippet>264</a>        <span class="kw">let </span>naga_options = <span class="kw">if </span>needs_temp_options {
 <a href=#265 id=265 data-nosnippet>265</a>            <span class="comment">// We use a conditional here, as cloning the naga_options could be expensive
@@ -657,7 +657,7 @@
 <a href=#657 id=657 data-nosnippet>657</a>        buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
 <a href=#658 id=658 data-nosnippet>658</a>        range: <span class="kw">crate</span>::MemoryRange,
 <a href=#659 id=659 data-nosnippet>659</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::BufferMapping, <span class="kw">crate</span>::DeviceError&gt; {
-<a href=#660 id=660 data-nosnippet>660</a>        <span class="kw">let </span>is_coherent = buffer.map_flags &amp; glow::MAP_COHERENT_BIT != <span class="number">0</span>;
+<a href=#660 id=660 data-nosnippet>660</a>        <span class="kw">let </span>is_coherent = buffer.map_flags &amp; <span class="macro">glow::MAP_COHERENT_BIT !</span>= <span class="number">0</span>;
 <a href=#661 id=661 data-nosnippet>661</a>        <span class="kw">let </span>ptr = <span class="kw">match </span>buffer.raw {
 <a href=#662 id=662 data-nosnippet>662</a>            <span class="prelude-val">None </span>=&gt; {
 <a href=#663 id=663 data-nosnippet>663</a>                <span class="kw">let </span><span class="kw-2">mut </span>vec = lock(buffer.data.as_ref().unwrap());
@@ -1064,7 +1064,7 @@
 <a href=#1064 id=1064 data-nosnippet>1064</a>        <span class="kw">unsafe </span>{ gl.sampler_parameter_f32(raw, glow::TEXTURE_MAX_LOD, desc.lod_clamp.end) };
 <a href=#1065 id=1065 data-nosnippet>1065</a>
 <a href=#1066 id=1066 data-nosnippet>1066</a>        <span class="comment">// If clamp is not 1, we know anisotropy is supported up to 16x
-<a href=#1067 id=1067 data-nosnippet>1067</a>        </span><span class="kw">if </span>desc.anisotropy_clamp != <span class="number">1 </span>{
+<a href=#1067 id=1067 data-nosnippet>1067</a>        </span><span class="kw">if </span>desc.<span class="macro">anisotropy_clamp !</span>= <span class="number">1 </span>{
 <a href=#1068 id=1068 data-nosnippet>1068</a>            <span class="kw">unsafe </span>{
 <a href=#1069 id=1069 data-nosnippet>1069</a>                gl.sampler_parameter_i32(
 <a href=#1070 id=1070 data-nosnippet>1070</a>                    raw,
@@ -1277,7 +1277,7 @@
 <a href=#1277 id=1277 data-nosnippet>1277</a>                }
 <a href=#1278 id=1278 data-nosnippet>1278</a>                wgt::BindingType::Texture { view_dimension, .. } =&gt; {
 <a href=#1279 id=1279 data-nosnippet>1279</a>                    <span class="kw">let </span>view = desc.textures[entry.resource_index <span class="kw">as </span>usize].view;
-<a href=#1280 id=1280 data-nosnippet>1280</a>                    <span class="kw">if </span>view.array_layers.start != <span class="number">0 </span>{
+<a href=#1280 id=1280 data-nosnippet>1280</a>                    <span class="kw">if </span>view.array_layers.<span class="macro">start !</span>= <span class="number">0 </span>{
 <a href=#1281 id=1281 data-nosnippet>1281</a>                        <span class="macro">log::error!</span>(<span class="string">"Unable to create a sampled texture binding for non-zero array layer.\n{}"</span>,
 <a href=#1282 id=1282 data-nosnippet>1282</a>                            <span class="string">"This is an implementation problem of wgpu-hal/gles backend."</span>)
 <a href=#1283 id=1283 data-nosnippet>1283</a>                    }
@@ -1450,7 +1450,7 @@
 <a href=#1450 id=1450 data-nosnippet>1450</a>            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
 <a href=#1451 id=1451 data-nosnippet>1451</a>            <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
 <a href=#1452 id=1452 data-nosnippet>1452</a>            program_cache.retain(|<span class="kw">_</span>, v| <span class="kw">match </span><span class="kw-2">*</span>v {
-<a href=#1453 id=1453 data-nosnippet>1453</a>                <span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>p) =&gt; p.program != pipeline.inner.program,
+<a href=#1453 id=1453 data-nosnippet>1453</a>                <span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>p) =&gt; p.<span class="macro">program !</span>= pipeline.inner.program,
 <a href=#1454 id=1454 data-nosnippet>1454</a>                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
 <a href=#1455 id=1455 data-nosnippet>1455</a>            });
 <a href=#1456 id=1456 data-nosnippet>1456</a>            <span class="kw">unsafe </span>{ gl.delete_program(pipeline.inner.program) };
@@ -1486,7 +1486,7 @@
 <a href=#1486 id=1486 data-nosnippet>1486</a>            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
 <a href=#1487 id=1487 data-nosnippet>1487</a>            <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
 <a href=#1488 id=1488 data-nosnippet>1488</a>            program_cache.retain(|<span class="kw">_</span>, v| <span class="kw">match </span><span class="kw-2">*</span>v {
-<a href=#1489 id=1489 data-nosnippet>1489</a>                <span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>p) =&gt; p.program != pipeline.inner.program,
+<a href=#1489 id=1489 data-nosnippet>1489</a>                <span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>p) =&gt; p.<span class="macro">program !</span>= pipeline.inner.program,
 <a href=#1490 id=1490 data-nosnippet>1490</a>                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
 <a href=#1491 id=1491 data-nosnippet>1491</a>            });
 <a href=#1492 id=1492 data-nosnippet>1492</a>            <span class="kw">unsafe </span>{ gl.delete_program(pipeline.inner.program) };
@@ -1645,4 +1645,5 @@
 <a href=#1645 id=1645 data-nosnippet>1645</a><span class="attr">#[cfg(send_sync)]
 <a href=#1646 id=1646 data-nosnippet>1646</a></span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span><span class="kw">super</span>::Device {}
 <a href=#1647 id=1647 data-nosnippet>1647</a><span class="attr">#[cfg(send_sync)]
-<a href=#1648 id=1648 data-nosnippet>1648</a></span><span class="kw">unsafe impl </span>Send <span class="kw">for </span><span class="kw">super</span>::Device {}</code></pre></div></section></main></body></html>
+<a href=#1648 id=1648 data-nosnippet>1648</a></span><span class="kw">unsafe impl </span>Send <span class="kw">for </span><span class="kw">super</span>::Device {}
+</code></pre></div></section></main></body></html>

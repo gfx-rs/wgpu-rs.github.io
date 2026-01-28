@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/context.rs`."><title>context.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/front/glsl/</div>context.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{format, string::String, vec::Vec};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/context.rs`."><title>context.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/front/glsl/</div>context.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{format, string::String, vec::Vec};
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::ops::Index;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use super</span>::{
@@ -171,7 +171,7 @@
 <a href=#171 id=171 data-nosnippet>171</a>                <span class="kw">let </span>span = <span class="self">self</span>.module.global_variables.get_span(v);
 <a href=#172 id=172 data-nosnippet>172</a>                (
 <a href=#173 id=173 data-nosnippet>173</a>                    <span class="self">self</span>.add_expression(Expression::GlobalVariable(v), span)<span class="question-mark">?</span>,
-<a href=#174 id=174 data-nosnippet>174</a>                    <span class="self">self</span>.module.global_variables[v].space != AddressSpace::Handle,
+<a href=#174 id=174 data-nosnippet>174</a>                    <span class="self">self</span>.module.global_variables[v].<span class="macro">space !</span>= AddressSpace::Handle,
 <a href=#175 id=175 data-nosnippet>175</a>                    <span class="prelude-val">None</span>,
 <a href=#176 id=176 data-nosnippet>176</a>                )
 <a href=#177 id=177 data-nosnippet>177</a>            }
@@ -355,7 +355,7 @@
 <a href=#355 id=355 data-nosnippet>355</a>
 <a href=#356 id=356 data-nosnippet>356</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>((name, meta)) = name_meta {
 <a href=#357 id=357 data-nosnippet>357</a>            <span class="kw">let </span>expr = <span class="self">self</span>.add_expression(Expression::FunctionArgument(index <span class="kw">as </span>u32), meta)<span class="question-mark">?</span>;
-<a href=#358 id=358 data-nosnippet>358</a>            <span class="kw">let </span>mutable = qualifier != ParameterQualifier::Const &amp;&amp; !opaque;
+<a href=#358 id=358 data-nosnippet>358</a>            <span class="kw">let </span>mutable = <span class="macro">qualifier !</span>= ParameterQualifier::Const &amp;&amp; !opaque;
 <a href=#359 id=359 data-nosnippet>359</a>            <span class="kw">let </span>load = qualifier.is_lhs();
 <a href=#360 id=360 data-nosnippet>360</a>
 <a href=#361 id=361 data-nosnippet>361</a>            <span class="kw">let </span>var = <span class="kw">if </span>mutable &amp;&amp; !load {
@@ -597,10 +597,10 @@
 <a href=#597 id=597 data-nosnippet>597</a>
 <a href=#598 id=598 data-nosnippet>598</a>                frontend.field_selection(<span class="self">self</span>, pos, base, field, meta)<span class="question-mark">?
 <a href=#599 id=599 data-nosnippet>599</a>            </span>}
-<a href=#600 id=600 data-nosnippet>600</a>            HirExprKind::Literal(literal) <span class="kw">if </span>pos != ExprPos::Lhs =&gt; {
+<a href=#600 id=600 data-nosnippet>600</a>            HirExprKind::Literal(literal) <span class="kw">if </span><span class="macro">pos !</span>= ExprPos::Lhs =&gt; {
 <a href=#601 id=601 data-nosnippet>601</a>                <span class="self">self</span>.add_expression(Expression::Literal(literal), meta)<span class="question-mark">?
 <a href=#602 id=602 data-nosnippet>602</a>            </span>}
-<a href=#603 id=603 data-nosnippet>603</a>            HirExprKind::Binary { left, op, right } <span class="kw">if </span>pos != ExprPos::Lhs =&gt; {
+<a href=#603 id=603 data-nosnippet>603</a>            HirExprKind::Binary { left, op, right } <span class="kw">if </span><span class="macro">pos !</span>= ExprPos::Lhs =&gt; {
 <a href=#604 id=604 data-nosnippet>604</a>                <span class="kw">let </span>(<span class="kw-2">mut </span>left, left_meta) =
 <a href=#605 id=605 data-nosnippet>605</a>                    <span class="self">self</span>.lower_expect_inner(stmt, frontend, left, ExprPos::Rhs)<span class="question-mark">?</span>;
 <a href=#606 id=606 data-nosnippet>606</a>                <span class="kw">let </span>(<span class="kw-2">mut </span>right, right_meta) =
@@ -640,7 +640,7 @@
 <a href=#640 id=640 data-nosnippet>640</a>                        };
 <a href=#641 id=641 data-nosnippet>641</a>
 <a href=#642 id=642 data-nosnippet>642</a>                        <span class="comment">// Check that the two arguments have the same dimensions
-<a href=#643 id=643 data-nosnippet>643</a>                        </span><span class="kw">if </span>!dimensions_ok || left_scalar != right_scalar {
+<a href=#643 id=643 data-nosnippet>643</a>                        </span><span class="kw">if </span>!dimensions_ok || <span class="macro">left_scalar !</span>= right_scalar {
 <a href=#644 id=644 data-nosnippet>644</a>                            frontend.errors.push(Error {
 <a href=#645 id=645 data-nosnippet>645</a>                                kind: ErrorKind::SemanticError(
 <a href=#646 id=646 data-nosnippet>646</a>                                    <span class="macro">format!</span>(
@@ -838,7 +838,7 @@
 <a href=#838 id=838 data-nosnippet>838</a>                        },
 <a href=#839 id=839 data-nosnippet>839</a>                    ) =&gt; {
 <a href=#840 id=840 data-nosnippet>840</a>                        <span class="comment">// Check that the two arguments have the same scalar type
-<a href=#841 id=841 data-nosnippet>841</a>                        </span><span class="kw">if </span>left_scalar != right_scalar {
+<a href=#841 id=841 data-nosnippet>841</a>                        </span><span class="kw">if </span><span class="macro">left_scalar !</span>= right_scalar {
 <a href=#842 id=842 data-nosnippet>842</a>                            frontend.errors.push(Error {
 <a href=#843 id=843 data-nosnippet>843</a>                                kind: ErrorKind::SemanticError(
 <a href=#844 id=844 data-nosnippet>844</a>                                    <span class="macro">format!</span>(
@@ -918,7 +918,7 @@
 <a href=#918 id=918 data-nosnippet>918</a>                        <span class="kw-2">&amp;</span>TypeInner::Scalar(right_scalar),
 <a href=#919 id=919 data-nosnippet>919</a>                    ) =&gt; {
 <a href=#920 id=920 data-nosnippet>920</a>                        <span class="comment">// Check that the two arguments have the same scalar type
-<a href=#921 id=921 data-nosnippet>921</a>                        </span><span class="kw">if </span>left_scalar != right_scalar {
+<a href=#921 id=921 data-nosnippet>921</a>                        </span><span class="kw">if </span><span class="macro">left_scalar !</span>= right_scalar {
 <a href=#922 id=922 data-nosnippet>922</a>                            frontend.errors.push(Error {
 <a href=#923 id=923 data-nosnippet>923</a>                                kind: ErrorKind::SemanticError(
 <a href=#924 id=924 data-nosnippet>924</a>                                    <span class="macro">format!</span>(
@@ -993,7 +993,7 @@
 <a href=#993 id=993 data-nosnippet>993</a>                    <span class="kw">_ </span>=&gt; <span class="self">self</span>.add_expression(Expression::Binary { left, op, right }, meta)<span class="question-mark">?</span>,
 <a href=#994 id=994 data-nosnippet>994</a>                }
 <a href=#995 id=995 data-nosnippet>995</a>            }
-<a href=#996 id=996 data-nosnippet>996</a>            HirExprKind::Unary { op, expr } <span class="kw">if </span>pos != ExprPos::Lhs =&gt; {
+<a href=#996 id=996 data-nosnippet>996</a>            HirExprKind::Unary { op, expr } <span class="kw">if </span><span class="macro">pos !</span>= ExprPos::Lhs =&gt; {
 <a href=#997 id=997 data-nosnippet>997</a>                <span class="kw">let </span>expr = <span class="self">self
 <a href=#998 id=998 data-nosnippet>998</a>                    </span>.lower_expect_inner(stmt, frontend, expr, ExprPos::Rhs)<span class="question-mark">?
 <a href=#999 id=999 data-nosnippet>999</a>                    </span>.<span class="number">0</span>;
@@ -1059,7 +1059,7 @@
 <a href=#1059 id=1059 data-nosnippet>1059</a>                    }
 <a href=#1060 id=1060 data-nosnippet>1060</a>                }
 <a href=#1061 id=1061 data-nosnippet>1061</a>            },
-<a href=#1062 id=1062 data-nosnippet>1062</a>            HirExprKind::Call(<span class="kw-2">ref </span>call) <span class="kw">if </span>pos != ExprPos::Lhs =&gt; {
+<a href=#1062 id=1062 data-nosnippet>1062</a>            HirExprKind::Call(<span class="kw-2">ref </span>call) <span class="kw">if </span><span class="macro">pos !</span>= ExprPos::Lhs =&gt; {
 <a href=#1063 id=1063 data-nosnippet>1063</a>                <span class="kw">let </span>maybe_expr = frontend.function_or_constructor_call(
 <a href=#1064 id=1064 data-nosnippet>1064</a>                    <span class="self">self</span>,
 <a href=#1065 id=1065 data-nosnippet>1065</a>                    stmt,
@@ -1078,7 +1078,7 @@
 <a href=#1078 id=1078 data-nosnippet>1078</a>                condition,
 <a href=#1079 id=1079 data-nosnippet>1079</a>                accept,
 <a href=#1080 id=1080 data-nosnippet>1080</a>                reject,
-<a href=#1081 id=1081 data-nosnippet>1081</a>            } <span class="kw">if </span>ExprPos::Lhs != pos =&gt; {
+<a href=#1081 id=1081 data-nosnippet>1081</a>            } <span class="kw">if </span><span class="macro">ExprPos::Lhs !</span>= pos =&gt; {
 <a href=#1082 id=1082 data-nosnippet>1082</a>                <span class="comment">// Given an expression `a ? b : c`, we need to produce a Naga
 <a href=#1083 id=1083 data-nosnippet>1083</a>                // statement roughly like:
 <a href=#1084 id=1084 data-nosnippet>1084</a>                //
@@ -1189,7 +1189,7 @@
 <a href=#1189 id=1189 data-nosnippet>1189</a>                    meta,
 <a href=#1190 id=1190 data-nosnippet>1190</a>                )<span class="question-mark">?
 <a href=#1191 id=1191 data-nosnippet>1191</a>            </span>}
-<a href=#1192 id=1192 data-nosnippet>1192</a>            HirExprKind::Assign { tgt, value } <span class="kw">if </span>ExprPos::Lhs != pos =&gt; {
+<a href=#1192 id=1192 data-nosnippet>1192</a>            HirExprKind::Assign { tgt, value } <span class="kw">if </span><span class="macro">ExprPos::Lhs !</span>= pos =&gt; {
 <a href=#1193 id=1193 data-nosnippet>1193</a>                <span class="kw">let </span>(pointer, ptr_meta) =
 <a href=#1194 id=1194 data-nosnippet>1194</a>                    <span class="self">self</span>.lower_expect_inner(stmt, frontend, tgt, ExprPos::Lhs)<span class="question-mark">?</span>;
 <a href=#1195 id=1195 data-nosnippet>1195</a>                <span class="kw">let </span>(<span class="kw-2">mut </span>value, value_meta) =
@@ -1208,7 +1208,7 @@
 <a href=#1208 id=1208 data-nosnippet>1208</a>
 <a href=#1209 id=1209 data-nosnippet>1209</a>                value
 <a href=#1210 id=1210 data-nosnippet>1210</a>            }
-<a href=#1211 id=1211 data-nosnippet>1211</a>            HirExprKind::PrePostfix { op, postfix, expr } <span class="kw">if </span>ExprPos::Lhs != pos =&gt; {
+<a href=#1211 id=1211 data-nosnippet>1211</a>            HirExprKind::PrePostfix { op, postfix, expr } <span class="kw">if </span><span class="macro">ExprPos::Lhs !</span>= pos =&gt; {
 <a href=#1212 id=1212 data-nosnippet>1212</a>                <span class="kw">let </span>(pointer, <span class="kw">_</span>) = <span class="self">self</span>.lower_expect_inner(stmt, frontend, expr, ExprPos::Lhs)<span class="question-mark">?</span>;
 <a href=#1213 id=1213 data-nosnippet>1213</a>                <span class="kw">let </span>left = <span class="kw">if let </span>Expression::Swizzle { .. } = <span class="self">self</span>.expressions[pointer] {
 <a href=#1214 id=1214 data-nosnippet>1214</a>                    pointer
@@ -1294,7 +1294,7 @@
 <a href=#1294 id=1294 data-nosnippet>1294</a>                expr: object,
 <a href=#1295 id=1295 data-nosnippet>1295</a>                <span class="kw-2">ref </span>name,
 <a href=#1296 id=1296 data-nosnippet>1296</a>                <span class="kw-2">ref </span>args,
-<a href=#1297 id=1297 data-nosnippet>1297</a>            } <span class="kw">if </span>ExprPos::Lhs != pos =&gt; {
+<a href=#1297 id=1297 data-nosnippet>1297</a>            } <span class="kw">if </span><span class="macro">ExprPos::Lhs !</span>= pos =&gt; {
 <a href=#1298 id=1298 data-nosnippet>1298</a>                <span class="kw">let </span>args = args
 <a href=#1299 id=1299 data-nosnippet>1299</a>                    .iter()
 <a href=#1300 id=1300 data-nosnippet>1300</a>                    .map(|e| <span class="self">self</span>.lower_expect_inner(stmt, frontend, <span class="kw-2">*</span>e, ExprPos::Rhs))
@@ -1344,7 +1344,7 @@
 <a href=#1344 id=1344 data-nosnippet>1344</a>                    }
 <a href=#1345 id=1345 data-nosnippet>1345</a>                }
 <a href=#1346 id=1346 data-nosnippet>1346</a>            }
-<a href=#1347 id=1347 data-nosnippet>1347</a>            HirExprKind::Sequence { <span class="kw-2">ref </span>exprs } <span class="kw">if </span>pos != ExprPos::Lhs =&gt; {
+<a href=#1347 id=1347 data-nosnippet>1347</a>            HirExprKind::Sequence { <span class="kw-2">ref </span>exprs } <span class="kw">if </span><span class="macro">pos !</span>= ExprPos::Lhs =&gt; {
 <a href=#1348 id=1348 data-nosnippet>1348</a>                <span class="kw">let </span><span class="kw-2">mut </span>last_handle = <span class="prelude-val">None</span>;
 <a href=#1349 id=1349 data-nosnippet>1349</a>                <span class="kw">for </span>expr <span class="kw">in </span>exprs.iter() {
 <a href=#1350 id=1350 data-nosnippet>1350</a>                    <span class="kw">let </span>(handle, <span class="kw">_</span>) =
@@ -1429,7 +1429,7 @@
 <a href=#1429 id=1429 data-nosnippet>1429</a>        scalar: Scalar,
 <a href=#1430 id=1430 data-nosnippet>1430</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
 <a href=#1431 id=1431 data-nosnippet>1431</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(expr_scalar) = <span class="self">self</span>.expr_scalar_components(<span class="kw-2">*</span>expr, meta)<span class="question-mark">? </span>{
-<a href=#1432 id=1432 data-nosnippet>1432</a>            <span class="kw">if </span>expr_scalar != scalar {
+<a href=#1432 id=1432 data-nosnippet>1432</a>            <span class="kw">if </span><span class="macro">expr_scalar !</span>= scalar {
 <a href=#1433 id=1433 data-nosnippet>1433</a>                <span class="self">self</span>.conversion(expr, meta, scalar)<span class="question-mark">?</span>;
 <a href=#1434 id=1434 data-nosnippet>1434</a>            }
 <a href=#1435 id=1435 data-nosnippet>1435</a>        }
@@ -1526,4 +1526,5 @@
 <a href=#1526 id=1526 data-nosnippet>1526</a>            hir_exprs: Arena::new(),
 <a href=#1527 id=1527 data-nosnippet>1527</a>        }
 <a href=#1528 id=1528 data-nosnippet>1528</a>    }
-<a href=#1529 id=1529 data-nosnippet>1529</a>}</code></pre></div></section></main></body></html>
+<a href=#1529 id=1529 data-nosnippet>1529</a>}
+</code></pre></div></section></main></body></html>

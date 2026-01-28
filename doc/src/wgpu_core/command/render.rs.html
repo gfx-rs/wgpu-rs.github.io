@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/render.rs`."><title>render.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>render.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/render.rs`."><title>render.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>render.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::{convert::Infallible, fmt, num::NonZeroU32, ops::Range, str};
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>smallvec::SmallVec;
 <a href=#4 id=4 data-nosnippet>4</a>
@@ -567,7 +567,7 @@
 <a href=#567 id=567 data-nosnippet>567</a>                        .ok_or(DrawError::MissingIndexBuffer)<span class="question-mark">?</span>;
 <a href=#568 id=568 data-nosnippet>568</a>
 <a href=#569 id=569 data-nosnippet>569</a>                    <span class="comment">// The buffers are different formats
-<a href=#570 id=570 data-nosnippet>570</a>                    </span><span class="kw">if </span>pipeline_index_format != buffer_index_format {
+<a href=#570 id=570 data-nosnippet>570</a>                    </span><span class="kw">if </span><span class="macro">pipeline_index_format !</span>= buffer_index_format {
 <a href=#571 id=571 data-nosnippet>571</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::UnmatchedIndexFormats {
 <a href=#572 id=572 data-nosnippet>572</a>                            pipeline: pipeline.error_ident(),
 <a href=#573 id=573 data-nosnippet>573</a>                            pipeline_format: pipeline_index_format,
@@ -578,7 +578,7 @@
 <a href=#578 id=578 data-nosnippet>578</a>            }
 <a href=#579 id=579 data-nosnippet>579</a>            <span class="kw">if </span>(family == DrawCommandFamily::DrawMeshTasks) != pipeline.is_mesh {
 <a href=#580 id=580 data-nosnippet>580</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::WrongPipelineType {
-<a href=#581 id=581 data-nosnippet>581</a>                    wanted_mesh_pipeline: !pipeline.is_mesh,
+<a href=#581 id=581 data-nosnippet>581</a>                    <span class="macro">wanted_mesh_pipeline: !</span>pipeline.is_mesh,
 <a href=#582 id=582 data-nosnippet>582</a>                });
 <a href=#583 id=583 data-nosnippet>583</a>            }
 <a href=#584 id=584 data-nosnippet>584</a>            <span class="prelude-val">Ok</span>(())
@@ -1033,13 +1033,13 @@
 <a href=#1033 id=1033 data-nosnippet>1033</a>            </span>};
 <a href=#1034 id=1034 data-nosnippet>1034</a>
 <a href=#1035 id=1035 data-nosnippet>1035</a>            <span class="comment">// Make sure that if this view is a multiview, it is set to be an array
-<a href=#1036 id=1036 data-nosnippet>1036</a>            </span><span class="kw">if </span>this_multiview.is_some() &amp;&amp; view.desc.dimension != TextureViewDimension::D2Array {
+<a href=#1036 id=1036 data-nosnippet>1036</a>            </span><span class="kw">if </span>this_multiview.is_some() &amp;&amp; view.desc.<span class="macro">dimension !</span>= TextureViewDimension::D2Array {
 <a href=#1037 id=1037 data-nosnippet>1037</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::MultiViewDimensionMismatch);
 <a href=#1038 id=1038 data-nosnippet>1038</a>            }
 <a href=#1039 id=1039 data-nosnippet>1039</a>
 <a href=#1040 id=1040 data-nosnippet>1040</a>            <span class="comment">// Validate matching first, or store the first one
 <a href=#1041 id=1041 data-nosnippet>1041</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(multiview) = detected_multiview {
-<a href=#1042 id=1042 data-nosnippet>1042</a>                <span class="kw">if </span>multiview != this_multiview {
+<a href=#1042 id=1042 data-nosnippet>1042</a>                <span class="kw">if </span><span class="macro">multiview !</span>= this_multiview {
 <a href=#1043 id=1043 data-nosnippet>1043</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::MultiViewMismatch);
 <a href=#1044 id=1044 data-nosnippet>1044</a>                }
 <a href=#1045 id=1045 data-nosnippet>1045</a>            } <span class="kw">else </span>{
@@ -1061,7 +1061,7 @@
 <a href=#1061 id=1061 data-nosnippet>1061</a>                RenderPassErrorInner::TextureViewIsNotRenderable { location, reason }
 <a href=#1062 id=1062 data-nosnippet>1062</a>            })<span class="question-mark">?</span>;
 <a href=#1063 id=1063 data-nosnippet>1063</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(ex) = extent {
-<a href=#1064 id=1064 data-nosnippet>1064</a>                <span class="kw">if </span>ex != render_extent {
+<a href=#1064 id=1064 data-nosnippet>1064</a>                <span class="kw">if </span><span class="macro">ex !</span>= render_extent {
 <a href=#1065 id=1065 data-nosnippet>1065</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::AttachmentsDimensionMismatch {
 <a href=#1066 id=1066 data-nosnippet>1066</a>                        expected_location: attachment_location,
 <a href=#1067 id=1067 data-nosnippet>1067</a>                        expected_extent: ex,
@@ -1074,7 +1074,7 @@
 <a href=#1074 id=1074 data-nosnippet>1074</a>            }
 <a href=#1075 id=1075 data-nosnippet>1075</a>            <span class="kw">if </span>sample_count == <span class="number">0 </span>{
 <a href=#1076 id=1076 data-nosnippet>1076</a>                sample_count = view.samples;
-<a href=#1077 id=1077 data-nosnippet>1077</a>            } <span class="kw">else if </span>sample_count != view.samples {
+<a href=#1077 id=1077 data-nosnippet>1077</a>            } <span class="kw">else if </span><span class="macro">sample_count !</span>= view.samples {
 <a href=#1078 id=1078 data-nosnippet>1078</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::AttachmentSampleCountMismatch {
 <a href=#1079 id=1079 data-nosnippet>1079</a>                    expected_location: attachment_location,
 <a href=#1080 id=1080 data-nosnippet>1080</a>                    expected_samples: sample_count,
@@ -1354,14 +1354,14 @@
 <a href=#1354 id=1354 data-nosnippet>1354</a>                        actual_extent: render_extent,
 <a href=#1355 id=1355 data-nosnippet>1355</a>                    });
 <a href=#1356 id=1356 data-nosnippet>1356</a>                }
-<a href=#1357 id=1357 data-nosnippet>1357</a>                <span class="kw">if </span>color_view.samples == <span class="number">1 </span>|| resolve_view.samples != <span class="number">1 </span>{
+<a href=#1357 id=1357 data-nosnippet>1357</a>                <span class="kw">if </span>color_view.samples == <span class="number">1 </span>|| resolve_view.<span class="macro">samples !</span>= <span class="number">1 </span>{
 <a href=#1358 id=1358 data-nosnippet>1358</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::InvalidResolveSampleCounts {
 <a href=#1359 id=1359 data-nosnippet>1359</a>                        location: resolve_location,
 <a href=#1360 id=1360 data-nosnippet>1360</a>                        src: color_view.samples,
 <a href=#1361 id=1361 data-nosnippet>1361</a>                        dst: resolve_view.samples,
 <a href=#1362 id=1362 data-nosnippet>1362</a>                    });
 <a href=#1363 id=1363 data-nosnippet>1363</a>                }
-<a href=#1364 id=1364 data-nosnippet>1364</a>                <span class="kw">if </span>color_view.desc.format != resolve_view.desc.format {
+<a href=#1364 id=1364 data-nosnippet>1364</a>                <span class="kw">if </span>color_view.desc.<span class="macro">format !</span>= resolve_view.desc.format {
 <a href=#1365 id=1365 data-nosnippet>1365</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::MismatchedResolveTextureFormat {
 <a href=#1366 id=1366 data-nosnippet>1366</a>                        location: resolve_location,
 <a href=#1367 id=1367 data-nosnippet>1367</a>                        src: color_view.desc.format,
@@ -1648,7 +1648,7 @@
 <a href=#1648 id=1648 data-nosnippet>1648</a>                    view.same_device(device)<span class="question-mark">?</span>;
 <a href=#1649 id=1649 data-nosnippet>1649</a>
 <a href=#1650 id=1650 data-nosnippet>1650</a>                    <span class="kw">if </span>view.desc.usage.contains(TextureUsages::TRANSIENT)
-<a href=#1651 id=1651 data-nosnippet>1651</a>                        &amp;&amp; <span class="kw-2">*</span>store_op != StoreOp::Discard
+<a href=#1651 id=1651 data-nosnippet>1651</a>                        &amp;&amp; <span class="kw-2">*</span><span class="macro">store_op !</span>= StoreOp::Discard
 <a href=#1652 id=1652 data-nosnippet>1652</a>                    {
 <a href=#1653 id=1653 data-nosnippet>1653</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::ColorAttachment(
 <a href=#1654 id=1654 data-nosnippet>1654</a>                            ColorAttachmentError::InvalidUsageForStoreOp(
@@ -2094,7 +2094,7 @@
 <a href=#2094 id=2094 data-nosnippet>2094</a>                    instance_limit: <span class="kw">_</span>,
 <a href=#2095 id=2095 data-nosnippet>2095</a>                } =&gt; {
 <a href=#2096 id=2096 data-nosnippet>2096</a>                    <span class="kw">let </span>scope = PassErrorScope::Draw {
-<a href=#2097 id=2097 data-nosnippet>2097</a>                        kind: <span class="kw">if </span>count != <span class="number">1 </span>{
+<a href=#2097 id=2097 data-nosnippet>2097</a>                        kind: <span class="kw">if </span><span class="macro">count !</span>= <span class="number">1 </span>{
 <a href=#2098 id=2098 data-nosnippet>2098</a>                            DrawKind::MultiDrawIndirect
 <a href=#2099 id=2099 data-nosnippet>2099</a>                        } <span class="kw">else </span>{
 <a href=#2100 id=2100 data-nosnippet>2100</a>                            DrawKind::DrawIndirect
@@ -3832,4 +3832,5 @@
 <a href=#3832 id=3832 data-nosnippet>3832</a>        DrawCommandFamily::DrawIndexed =&gt; size_of::&lt;wgt::DrawIndexedIndirectArgs&gt;() <span class="kw">as </span>u64,
 <a href=#3833 id=3833 data-nosnippet>3833</a>        DrawCommandFamily::DrawMeshTasks =&gt; size_of::&lt;wgt::DispatchIndirectArgs&gt;() <span class="kw">as </span>u64,
 <a href=#3834 id=3834 data-nosnippet>3834</a>    }
-<a href=#3835 id=3835 data-nosnippet>3835</a>}</code></pre></div></section></main></body></html>
+<a href=#3835 id=3835 data-nosnippet>3835</a>}
+</code></pre></div></section></main></body></html>

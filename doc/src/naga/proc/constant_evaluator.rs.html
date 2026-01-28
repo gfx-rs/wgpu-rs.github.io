@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/constant_evaluator.rs`."><title>constant_evaluator.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/proc/</div>constant_evaluator.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/constant_evaluator.rs`."><title>constant_evaluator.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/proc/</div>constant_evaluator.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
 <a href=#2 id=2 data-nosnippet>2</a>    format,
 <a href=#3 id=3 data-nosnippet>3</a>    string::{String, ToString},
 <a href=#4 id=4 data-nosnippet>4</a>    vec,
@@ -1497,7 +1497,7 @@
 <a href=#1497 id=1497 data-nosnippet>1497</a>            .chain(arg2)
 <a href=#1498 id=1498 data-nosnippet>1498</a>            .chain(arg3)
 <a href=#1499 id=1499 data-nosnippet>1499</a>            .count();
-<a href=#1500 id=1500 data-nosnippet>1500</a>        <span class="kw">if </span>expected != given {
+<a href=#1500 id=1500 data-nosnippet>1500</a>        <span class="kw">if </span><span class="macro">expected !</span>= given {
 <a href=#1501 id=1501 data-nosnippet>1501</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidMathArgCount(
 <a href=#1502 id=1502 data-nosnippet>1502</a>                fun, expected, given,
 <a href=#1503 id=1503 data-nosnippet>1503</a>            ));
@@ -2378,13 +2378,13 @@
 <a href=#2378 id=2378 data-nosnippet>2378</a>                        Literal::AbstractFloat(v) =&gt; f64::try_from_abstract(v)<span class="question-mark">?</span>,
 <a href=#2379 id=2379 data-nosnippet>2379</a>                    }),
 <a href=#2380 id=2380 data-nosnippet>2380</a>                    Sc::BOOL =&gt; Literal::Bool(<span class="kw">match </span>literal {
-<a href=#2381 id=2381 data-nosnippet>2381</a>                        Literal::I32(v) =&gt; v != <span class="number">0</span>,
-<a href=#2382 id=2382 data-nosnippet>2382</a>                        Literal::U32(v) =&gt; v != <span class="number">0</span>,
-<a href=#2383 id=2383 data-nosnippet>2383</a>                        Literal::F32(v) =&gt; v != <span class="number">0.0</span>,
-<a href=#2384 id=2384 data-nosnippet>2384</a>                        Literal::F16(v) =&gt; v != f16::zero(),
+<a href=#2381 id=2381 data-nosnippet>2381</a>                        Literal::I32(v) =&gt; <span class="macro">v !</span>= <span class="number">0</span>,
+<a href=#2382 id=2382 data-nosnippet>2382</a>                        Literal::U32(v) =&gt; <span class="macro">v !</span>= <span class="number">0</span>,
+<a href=#2383 id=2383 data-nosnippet>2383</a>                        Literal::F32(v) =&gt; <span class="macro">v !</span>= <span class="number">0.0</span>,
+<a href=#2384 id=2384 data-nosnippet>2384</a>                        Literal::F16(v) =&gt; <span class="macro">v !</span>= f16::zero(),
 <a href=#2385 id=2385 data-nosnippet>2385</a>                        Literal::Bool(v) =&gt; v,
-<a href=#2386 id=2386 data-nosnippet>2386</a>                        Literal::AbstractInt(v) =&gt; v != <span class="number">0</span>,
-<a href=#2387 id=2387 data-nosnippet>2387</a>                        Literal::AbstractFloat(v) =&gt; v != <span class="number">0.0</span>,
+<a href=#2386 id=2386 data-nosnippet>2386</a>                        Literal::AbstractInt(v) =&gt; <span class="macro">v !</span>= <span class="number">0</span>,
+<a href=#2387 id=2387 data-nosnippet>2387</a>                        Literal::AbstractFloat(v) =&gt; <span class="macro">v !</span>= <span class="number">0.0</span>,
 <a href=#2388 id=2388 data-nosnippet>2388</a>                        Literal::F64(<span class="kw">_</span>) | Literal::I64(<span class="kw">_</span>) | Literal::U64(<span class="kw">_</span>) =&gt; {
 <a href=#2389 id=2389 data-nosnippet>2389</a>                            <span class="kw">return </span>make_error();
 <a href=#2390 id=2390 data-nosnippet>2390</a>                        }
@@ -2599,7 +2599,7 @@
 <a href=#2599 id=2599 data-nosnippet>2599</a>            (<span class="kw-2">&amp;</span>Expression::Literal(left_value), <span class="kw-2">&amp;</span>Expression::Literal(right_value)) =&gt; {
 <a href=#2600 id=2600 data-nosnippet>2600</a>                <span class="kw">let </span>literal = <span class="kw">match </span>op {
 <a href=#2601 id=2601 data-nosnippet>2601</a>                    BinaryOperator::Equal =&gt; Literal::Bool(left_value == right_value),
-<a href=#2602 id=2602 data-nosnippet>2602</a>                    BinaryOperator::NotEqual =&gt; Literal::Bool(left_value != right_value),
+<a href=#2602 id=2602 data-nosnippet>2602</a>                    BinaryOperator::NotEqual =&gt; Literal::Bool(<span class="macro">left_value !</span>= right_value),
 <a href=#2603 id=2603 data-nosnippet>2603</a>                    BinaryOperator::Less =&gt; Literal::Bool(left_value &lt; right_value),
 <a href=#2604 id=2604 data-nosnippet>2604</a>                    BinaryOperator::LessEqual =&gt; Literal::Bool(left_value &lt;= right_value),
 <a href=#2605 id=2605 data-nosnippet>2605</a>                    BinaryOperator::Greater =&gt; Literal::Bool(left_value &gt; right_value),
@@ -2987,7 +2987,7 @@
 <a href=#2987 id=2987 data-nosnippet>2987</a>            <span class="kw">if let </span>TypeInner::Vector { size, scalar: <span class="kw">_ </span>} = <span class="self">self</span>.types[ty].inner {
 <a href=#2988 id=2988 data-nosnippet>2988</a>                <span class="kw">let </span>expected = size <span class="kw">as </span>usize;
 <a href=#2989 id=2989 data-nosnippet>2989</a>                <span class="kw">let </span>actual = <span class="self">self</span>.vector_compose_flattened_size(components)<span class="question-mark">?</span>;
-<a href=#2990 id=2990 data-nosnippet>2990</a>                <span class="kw">if </span>expected != actual {
+<a href=#2990 id=2990 data-nosnippet>2990</a>                <span class="kw">if </span><span class="macro">expected !</span>= actual {
 <a href=#2991 id=2991 data-nosnippet>2991</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidVectorComposeLength {
 <a href=#2992 id=2992 data-nosnippet>2992</a>                        expected,
 <a href=#2993 id=2993 data-nosnippet>2993</a>                        actual,
@@ -3106,7 +3106,7 @@
 <a href=#3106 id=3106 data-nosnippet>3106</a>                    <span class="kw">let </span>[(reject_vec_size, <span class="kw">_</span>), (accept_vec_size, <span class="kw">_</span>)] =
 <a href=#3107 id=3107 data-nosnippet>3107</a>                        [reject_ty, accept_ty].map(ty_deets);
 <a href=#3108 id=3108 data-nosnippet>3108</a>
-<a href=#3109 id=3109 data-nosnippet>3109</a>                    <span class="kw">if </span>reject_vec_size != accept_vec_size {
+<a href=#3109 id=3109 data-nosnippet>3109</a>                    <span class="kw">if </span><span class="macro">reject_vec_size !</span>= accept_vec_size {
 <a href=#3110 id=3110 data-nosnippet>3110</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::SelectVecRejectAcceptSizeMismatch {
 <a href=#3111 id=3111 data-nosnippet>3111</a>                            reject: reject_vec_size,
 <a href=#3112 id=3112 data-nosnippet>3112</a>                            accept: accept_vec_size,
@@ -3124,10 +3124,10 @@
 <a href=#3124 id=3124 data-nosnippet>3124</a>                        components: <span class="kw-2">ref </span>condition_components,
 <a href=#3125 id=3125 data-nosnippet>3125</a>                    } =&gt; {
 <a href=#3126 id=3126 data-nosnippet>3126</a>                        <span class="kw">let </span>(condition_vec_size, condition_scalar) = ty_deets(condition_ty);
-<a href=#3127 id=3127 data-nosnippet>3127</a>                        <span class="kw">if </span>condition_scalar.kind != ScalarKind::Bool {
+<a href=#3127 id=3127 data-nosnippet>3127</a>                        <span class="kw">if </span>condition_scalar.<span class="macro">kind !</span>= ScalarKind::Bool {
 <a href=#3128 id=3128 data-nosnippet>3128</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::SelectConditionNotAVecBool);
 <a href=#3129 id=3129 data-nosnippet>3129</a>                        }
-<a href=#3130 id=3130 data-nosnippet>3130</a>                        <span class="kw">if </span>condition_vec_size != expected_vec_size {
+<a href=#3130 id=3130 data-nosnippet>3130</a>                        <span class="kw">if </span><span class="macro">condition_vec_size !</span>= expected_vec_size {
 <a href=#3131 id=3131 data-nosnippet>3131</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::SelectConditionVecSizeMismatch);
 <a href=#3132 id=3132 data-nosnippet>3132</a>                        }
 <a href=#3133 id=3133 data-nosnippet>3133</a>                        condition_components
@@ -4113,4 +4113,5 @@
 <a href=#4113 id=4113 data-nosnippet>4113</a>            <span class="macro">panic!</span>(<span class="string">"unexpected evaluation result"</span>)
 <a href=#4114 id=4114 data-nosnippet>4114</a>        }
 <a href=#4115 id=4115 data-nosnippet>4115</a>    }
-<a href=#4116 id=4116 data-nosnippet>4116</a>}</code></pre></div></section></main></body></html>
+<a href=#4116 id=4116 data-nosnippet>4116</a>}
+</code></pre></div></section></main></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/egl.rs`."><title>egl.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_hal/gles/</div>egl.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{string::String, sync::Arc, vec::Vec};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/egl.rs`."><title>egl.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_hal/gles/</div>egl.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{string::String, sync::Arc, vec::Vec};
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::{ffi, mem::ManuallyDrop, ptr, time::Duration};
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>std::sync::LazyLock;
 <a href=#4 id=4 data-nosnippet>4</a>
@@ -470,12 +470,12 @@
 <a href=#470 id=470 data-nosnippet>470</a>        gl_context_attributes.push(<span class="number">3</span>);
 <a href=#471 id=471 data-nosnippet>471</a>        gl_context_attributes.push(khronos_egl::CONTEXT_MINOR_VERSION);
 <a href=#472 id=472 data-nosnippet>472</a>        gl_context_attributes.push(<span class="number">3</span>);
-<a href=#473 id=473 data-nosnippet>473</a>        <span class="kw">if </span>supports_opengl &amp;&amp; force_gles_minor_version != wgt::Gles3MinorVersion::Automatic {
+<a href=#473 id=473 data-nosnippet>473</a>        <span class="kw">if </span>supports_opengl &amp;&amp; <span class="macro">force_gles_minor_version !</span>= wgt::Gles3MinorVersion::Automatic {
 <a href=#474 id=474 data-nosnippet>474</a>            <span class="macro">log::warn!</span>(<span class="string">"Ignoring specified GLES minor version as OpenGL is used"</span>);
 <a href=#475 id=475 data-nosnippet>475</a>        }
 <a href=#476 id=476 data-nosnippet>476</a>        gles_context_attributes.push(khronos_egl::CONTEXT_MAJOR_VERSION);
 <a href=#477 id=477 data-nosnippet>477</a>        gles_context_attributes.push(<span class="number">3</span>); <span class="comment">// Request GLES 3.0 or higher
-<a href=#478 id=478 data-nosnippet>478</a>        </span><span class="kw">if </span>force_gles_minor_version != wgt::Gles3MinorVersion::Automatic {
+<a href=#478 id=478 data-nosnippet>478</a>        </span><span class="kw">if </span><span class="macro">force_gles_minor_version !</span>= wgt::Gles3MinorVersion::Automatic {
 <a href=#479 id=479 data-nosnippet>479</a>            gles_context_attributes.push(khronos_egl::CONTEXT_MINOR_VERSION);
 <a href=#480 id=480 data-nosnippet>480</a>            gles_context_attributes.push(<span class="kw">match </span>force_gles_minor_version {
 <a href=#481 id=481 data-nosnippet>481</a>                wgt::Gles3MinorVersion::Automatic =&gt; <span class="macro">unreachable!</span>(),
@@ -497,7 +497,7 @@
 <a href=#497 id=497 data-nosnippet>497</a>            }
 <a href=#498 id=498 data-nosnippet>498</a>        }
 <a href=#499 id=499 data-nosnippet>499</a>
-<a href=#500 id=500 data-nosnippet>500</a>        <span class="kw">if </span>khr_context_flags != <span class="number">0 </span>{
+<a href=#500 id=500 data-nosnippet>500</a>        <span class="kw">if </span><span class="macro">khr_context_flags !</span>= <span class="number">0 </span>{
 <a href=#501 id=501 data-nosnippet>501</a>            context_attributes.push(EGL_CONTEXT_FLAGS_KHR);
 <a href=#502 id=502 data-nosnippet>502</a>            context_attributes.push(khr_context_flags);
 <a href=#503 id=503 data-nosnippet>503</a>        }
@@ -926,7 +926,7 @@
 <a href=#926 id=926 data-nosnippet>926</a>                    )
 <a href=#927 id=927 data-nosnippet>927</a>                };
 <a href=#928 id=928 data-nosnippet>928</a>
-<a href=#929 id=929 data-nosnippet>929</a>                <span class="kw">if </span>ret != <span class="number">0 </span>{
+<a href=#929 id=929 data-nosnippet>929</a>                <span class="kw">if </span><span class="macro">ret !</span>= <span class="number">0 </span>{
 <a href=#930 id=930 data-nosnippet>930</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(<span class="macro">format!</span>(
 <a href=#931 id=931 data-nosnippet>931</a>                        <span class="string">"error {ret} returned from ANativeWindow_setBuffersGeometry"</span>,
 <a href=#932 id=932 data-nosnippet>932</a>                    )));
@@ -1310,7 +1310,7 @@
 <a href=#1310 id=1310 data-nosnippet>1310</a>
 <a href=#1311 id=1311 data-nosnippet>1311</a>                <span class="comment">// Careful, we can still be in 1.4 version even if `upcast` succeeds
 <a href=#1312 id=1312 data-nosnippet>1312</a>                </span><span class="kw">let </span>raw_result = <span class="kw">match </span>egl1_5 {
-<a href=#1313 id=1313 data-nosnippet>1313</a>                    <span class="prelude-val">Some</span>(egl) <span class="kw">if </span><span class="self">self</span>.wsi.kind != WindowKind::Unknown =&gt; {
+<a href=#1313 id=1313 data-nosnippet>1313</a>                    <span class="prelude-val">Some</span>(egl) <span class="kw">if </span><span class="self">self</span>.wsi.<span class="macro">kind !</span>= WindowKind::Unknown =&gt; {
 <a href=#1314 id=1314 data-nosnippet>1314</a>                        <span class="kw">let </span>attributes_usize = attributes
 <a href=#1315 id=1315 data-nosnippet>1315</a>                            .into_iter()
 <a href=#1316 id=1316 data-nosnippet>1316</a>                            .map(|v| v <span class="kw">as </span>usize)
@@ -1436,4 +1436,5 @@
 <a href=#1436 id=1436 data-nosnippet>1436</a>        }))
 <a href=#1437 id=1437 data-nosnippet>1437</a>    }
 <a href=#1438 id=1438 data-nosnippet>1438</a>    <span class="kw">unsafe fn </span>discard_texture(<span class="kw-2">&amp;</span><span class="self">self</span>, _texture: <span class="kw">super</span>::Texture) {}
-<a href=#1439 id=1439 data-nosnippet>1439</a>}</code></pre></div></section></main></body></html>
+<a href=#1439 id=1439 data-nosnippet>1439</a>}
+</code></pre></div></section></main></body></html>

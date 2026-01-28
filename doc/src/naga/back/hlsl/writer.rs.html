@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/hlsl/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/back/hlsl/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/hlsl/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/back/hlsl/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
 <a href=#2 id=2 data-nosnippet>2</a>    format,
 <a href=#3 id=3 data-nosnippet>3</a>    string::{String, ToString},
 <a href=#4 id=4 data-nosnippet>4</a>    vec::Vec,
@@ -313,7 +313,7 @@
 <a href=#313 id=313 data-nosnippet>313</a>                <span class="string">"ConstantBuffer&lt;{}&gt; {}: register(b{}"</span>,
 <a href=#314 id=314 data-nosnippet>314</a>                SPECIAL_CBUF_TYPE, SPECIAL_CBUF_VAR, bt.register
 <a href=#315 id=315 data-nosnippet>315</a>            )<span class="question-mark">?</span>;
-<a href=#316 id=316 data-nosnippet>316</a>            <span class="kw">if </span>bt.space != <span class="number">0 </span>{
+<a href=#316 id=316 data-nosnippet>316</a>            <span class="kw">if </span>bt.<span class="macro">space !</span>= <span class="number">0 </span>{
 <a href=#317 id=317 data-nosnippet>317</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", space{}"</span>, bt.space)<span class="question-mark">?</span>;
 <a href=#318 id=318 data-nosnippet>318</a>            }
 <a href=#319 id=319 data-nosnippet>319</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
@@ -894,7 +894,7 @@
 <a href=#894 id=894 data-nosnippet>894</a>                TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
 <a href=#895 id=895 data-nosnippet>895</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = {{ "</span>)<span class="question-mark">?</span>;
 <a href=#896 id=896 data-nosnippet>896</a>                    <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..members.len() {
-<a href=#897 id=897 data-nosnippet>897</a>                        <span class="kw">if </span>index != <span class="number">0 </span>{
+<a href=#897 id=897 data-nosnippet>897</a>                        <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
 <a href=#898 id=898 data-nosnippet>898</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#899 id=899 data-nosnippet>899</a>                        }
 <a href=#900 id=900 data-nosnippet>900</a>                        <span class="self">self</span>.write_ep_argument_initialization(
@@ -1052,7 +1052,7 @@
 <a href=#1052 id=1052 data-nosnippet>1052</a>                .as_ref()
 <a href=#1053 id=1053 data-nosnippet>1053</a>                .expect(<span class="string">"No bind target was defined for the immediates block"</span>);
 <a href=#1054 id=1054 data-nosnippet>1054</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">": register(b{}"</span>, target.register)<span class="question-mark">?</span>;
-<a href=#1055 id=1055 data-nosnippet>1055</a>            <span class="kw">if </span>target.space != <span class="number">0 </span>{
+<a href=#1055 id=1055 data-nosnippet>1055</a>            <span class="kw">if </span>target.<span class="macro">space !</span>= <span class="number">0 </span>{
 <a href=#1056 id=1056 data-nosnippet>1056</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", space{}"</span>, target.space)<span class="question-mark">?</span>;
 <a href=#1057 id=1057 data-nosnippet>1057</a>            }
 <a href=#1058 id=1058 data-nosnippet>1058</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
@@ -1072,7 +1072,7 @@
 <a href=#1072 id=1072 data-nosnippet>1072</a>            }
 <a href=#1073 id=1073 data-nosnippet>1073</a>
 <a href=#1074 id=1074 data-nosnippet>1074</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" : register({}{}"</span>, register_ty, bt.register)<span class="question-mark">?</span>;
-<a href=#1075 id=1075 data-nosnippet>1075</a>            <span class="kw">if </span>bt.space != <span class="number">0 </span>{
+<a href=#1075 id=1075 data-nosnippet>1075</a>            <span class="kw">if </span>bt.<span class="macro">space !</span>= <span class="number">0 </span>{
 <a href=#1076 id=1076 data-nosnippet>1076</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", space{}"</span>, bt.space)<span class="question-mark">?</span>;
 <a href=#1077 id=1077 data-nosnippet>1077</a>            }
 <a href=#1078 id=1078 data-nosnippet>1078</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
@@ -1210,7 +1210,7 @@
 <a href=#1210 id=1210 data-nosnippet>1210</a>                <span class="string">"Texture2D&lt;float4&gt; {}: register(t{}"</span>,
 <a href=#1211 id=1211 data-nosnippet>1211</a>                name, bt.register
 <a href=#1212 id=1212 data-nosnippet>1212</a>            )<span class="question-mark">?</span>;
-<a href=#1213 id=1213 data-nosnippet>1213</a>            <span class="kw">if </span>bt.space != <span class="number">0 </span>{
+<a href=#1213 id=1213 data-nosnippet>1213</a>            <span class="kw">if </span>bt.<span class="macro">space !</span>= <span class="number">0 </span>{
 <a href=#1214 id=1214 data-nosnippet>1214</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", space{}"</span>, bt.space)<span class="question-mark">?</span>;
 <a href=#1215 id=1215 data-nosnippet>1215</a>            }
 <a href=#1216 id=1216 data-nosnippet>1216</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
@@ -1231,7 +1231,7 @@
 <a href=#1231 id=1231 data-nosnippet>1231</a>            <span class="string">"cbuffer {}: register(b{}"</span>,
 <a href=#1232 id=1232 data-nosnippet>1232</a>            params_name, ext_tex_bindings.params.register
 <a href=#1233 id=1233 data-nosnippet>1233</a>        )<span class="question-mark">?</span>;
-<a href=#1234 id=1234 data-nosnippet>1234</a>        <span class="kw">if </span>ext_tex_bindings.params.space != <span class="number">0 </span>{
+<a href=#1234 id=1234 data-nosnippet>1234</a>        <span class="kw">if </span>ext_tex_bindings.params.<span class="macro">space !</span>= <span class="number">0 </span>{
 <a href=#1235 id=1235 data-nosnippet>1235</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", space{}"</span>, ext_tex_bindings.params.space)<span class="question-mark">?</span>;
 <a href=#1236 id=1236 data-nosnippet>1236</a>        }
 <a href=#1237 id=1237 data-nosnippet>1237</a>        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">") {{ {params_ty_name} {params_name}; }};"</span>)<span class="question-mark">?</span>;
@@ -1351,7 +1351,7 @@
 <a href=#1351 id=1351 data-nosnippet>1351</a>                    <span class="kw">let </span>field_name_key = NameKey::StructMember(handle, index <span class="kw">as </span>u32);
 <a href=#1352 id=1352 data-nosnippet>1352</a>
 <a href=#1353 id=1353 data-nosnippet>1353</a>                    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..columns <span class="kw">as </span>u8 {
-<a href=#1354 id=1354 data-nosnippet>1354</a>                        <span class="kw">if </span>i != <span class="number">0 </span>{
+<a href=#1354 id=1354 data-nosnippet>1354</a>                        <span class="kw">if </span><span class="macro">i !</span>= <span class="number">0 </span>{
 <a href=#1355 id=1355 data-nosnippet>1355</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"; "</span>)<span class="question-mark">?</span>;
 <a href=#1356 id=1356 data-nosnippet>1356</a>                        }
 <a href=#1357 id=1357 data-nosnippet>1357</a>                        <span class="self">self</span>.write_value_type(module, <span class="kw-2">&amp;</span>vec_ty)<span class="question-mark">?</span>;
@@ -1588,7 +1588,7 @@
 <a href=#1588 id=1588 data-nosnippet>1588</a>        </span><span class="kw">match </span>func_ctx.ty {
 <a href=#1589 id=1589 data-nosnippet>1589</a>            back::FunctionType::Function(handle) =&gt; {
 <a href=#1590 id=1590 data-nosnippet>1590</a>                <span class="kw">for </span>(index, arg) <span class="kw">in </span>func.arguments.iter().enumerate() {
-<a href=#1591 id=1591 data-nosnippet>1591</a>                    <span class="kw">if </span>index != <span class="number">0 </span>{
+<a href=#1591 id=1591 data-nosnippet>1591</a>                    <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
 <a href=#1592 id=1592 data-nosnippet>1592</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#1593 id=1593 data-nosnippet>1593</a>                    }
 <a href=#1594 id=1594 data-nosnippet>1594</a>
@@ -1603,7 +1603,7 @@
 <a href=#1603 id=1603 data-nosnippet>1603</a>                } <span class="kw">else </span>{
 <a href=#1604 id=1604 data-nosnippet>1604</a>                    <span class="kw">let </span>stage = module.entry_points[ep_index <span class="kw">as </span>usize].stage;
 <a href=#1605 id=1605 data-nosnippet>1605</a>                    <span class="kw">for </span>(index, arg) <span class="kw">in </span>func.arguments.iter().enumerate() {
-<a href=#1606 id=1606 data-nosnippet>1606</a>                        <span class="kw">if </span>index != <span class="number">0 </span>{
+<a href=#1606 id=1606 data-nosnippet>1606</a>                        <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
 <a href=#1607 id=1607 data-nosnippet>1607</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#1608 id=1608 data-nosnippet>1608</a>                        }
 <a href=#1609 id=1609 data-nosnippet>1609</a>                        <span class="self">self</span>.write_type(module, arg.ty)<span class="question-mark">?</span>;
@@ -2106,7 +2106,7 @@
 <a href=#2106 id=2106 data-nosnippet>2106</a>                                level, ep_output.ty_name, final_name,
 <a href=#2107 id=2107 data-nosnippet>2107</a>                            )<span class="question-mark">?</span>;
 <a href=#2108 id=2108 data-nosnippet>2108</a>                            <span class="kw">for </span>(index, m) <span class="kw">in </span>ep_output.members.iter().enumerate() {
-<a href=#2109 id=2109 data-nosnippet>2109</a>                                <span class="kw">if </span>index != <span class="number">0 </span>{
+<a href=#2109 id=2109 data-nosnippet>2109</a>                                <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
 <a href=#2110 id=2110 data-nosnippet>2110</a>                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#2111 id=2111 data-nosnippet>2111</a>                                }
 <a href=#2112 id=2112 data-nosnippet>2112</a>                                <span class="kw">let </span>member_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::StructMember(ty, m.index)];
@@ -2455,7 +2455,7 @@
 <a href=#2455 id=2455 data-nosnippet>2455</a>                <span class="kw">let </span>func_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Function(function)];
 <a href=#2456 id=2456 data-nosnippet>2456</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{func_name}("</span>)<span class="question-mark">?</span>;
 <a href=#2457 id=2457 data-nosnippet>2457</a>                <span class="kw">for </span>(index, argument) <span class="kw">in </span>arguments.iter().enumerate() {
-<a href=#2458 id=2458 data-nosnippet>2458</a>                    <span class="kw">if </span>index != <span class="number">0 </span>{
+<a href=#2458 id=2458 data-nosnippet>2458</a>                    <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
 <a href=#2459 id=2459 data-nosnippet>2459</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#2460 id=2460 data-nosnippet>2460</a>                    }
 <a href=#2461 id=2461 data-nosnippet>2461</a>                    <span class="self">self</span>.write_expr(module, <span class="kw-2">*</span>argument, func_ctx)<span class="question-mark">?</span>;
@@ -2894,7 +2894,7 @@
 <a href=#2894 id=2894 data-nosnippet>2894</a>                };
 <a href=#2895 id=2895 data-nosnippet>2895</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
 <a href=#2896 id=2896 data-nosnippet>2896</a>                <span class="kw">for </span>(index, component) <span class="kw">in </span>components.iter().enumerate() {
-<a href=#2897 id=2897 data-nosnippet>2897</a>                    <span class="kw">if </span>index != <span class="number">0 </span>{
+<a href=#2897 id=2897 data-nosnippet>2897</a>                    <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
 <a href=#2898 id=2898 data-nosnippet>2898</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#2899 id=2899 data-nosnippet>2899</a>                    }
 <a href=#2900 id=2900 data-nosnippet>2900</a>                    write_expression(<span class="self">self</span>, <span class="kw-2">*</span>component)<span class="question-mark">?</span>;
@@ -4114,7 +4114,7 @@
 <a href=#4114 id=4114 data-nosnippet>4114</a>
 <a href=#4115 id=4115 data-nosnippet>4115</a>                                <span class="kw">let </span>scalar_width_bits = scalar.width * <span class="number">8</span>;
 <a href=#4116 id=4116 data-nosnippet>4116</a>
-<a href=#4117 id=4117 data-nosnippet>4117</a>                                <span class="kw">if </span>scalar.kind == ScalarKind::Uint || scalar.width != <span class="number">4 </span>{
+<a href=#4117 id=4117 data-nosnippet>4117</a>                                <span class="kw">if </span>scalar.kind == ScalarKind::Uint || scalar.<span class="macro">width !</span>= <span class="number">4 </span>{
 <a href=#4118 id=4118 data-nosnippet>4118</a>                                    <span class="macro">write!</span>(
 <a href=#4119 id=4119 data-nosnippet>4119</a>                                        <span class="self">self</span>.out,
 <a href=#4120 id=4120 data-nosnippet>4120</a>                                        <span class="string">"min(({scalar_width_bits}u){s}, firstbitlow("
@@ -4134,7 +4134,7 @@
 <a href=#4134 id=4134 data-nosnippet>4134</a>                            TypeInner::Scalar(scalar) =&gt; {
 <a href=#4135 id=4135 data-nosnippet>4135</a>                                <span class="kw">let </span>scalar_width_bits = scalar.width * <span class="number">8</span>;
 <a href=#4136 id=4136 data-nosnippet>4136</a>
-<a href=#4137 id=4137 data-nosnippet>4137</a>                                <span class="kw">if </span>scalar.kind == ScalarKind::Uint || scalar.width != <span class="number">4 </span>{
+<a href=#4137 id=4137 data-nosnippet>4137</a>                                <span class="kw">if </span>scalar.kind == ScalarKind::Uint || scalar.<span class="macro">width !</span>= <span class="number">4 </span>{
 <a href=#4138 id=4138 data-nosnippet>4138</a>                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min({scalar_width_bits}u, firstbitlow("</span>)<span class="question-mark">?</span>;
 <a href=#4139 id=4139 data-nosnippet>4139</a>                                    <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
 <a href=#4140 id=4140 data-nosnippet>4140</a>                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
@@ -4805,4 +4805,5 @@
 <a href=#4805 id=4805 data-nosnippet>4805</a>        };
 <a href=#4806 id=4806 data-nosnippet>4806</a>    }
 <a href=#4807 id=4807 data-nosnippet>4807</a>    <span class="prelude-val">None
-<a href=#4808 id=4808 data-nosnippet>4808</a></span>}</code></pre></div></section></main></body></html>
+<a href=#4808 id=4808 data-nosnippet>4808</a></span>}
+</code></pre></div></section></main></body></html>

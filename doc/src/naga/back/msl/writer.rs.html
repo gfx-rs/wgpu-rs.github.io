@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/msl/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/back/msl/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/msl/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/back/msl/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
 <a href=#2 id=2 data-nosnippet>2</a>    format,
 <a href=#3 id=3 data-nosnippet>3</a>    string::{String, ToString},
 <a href=#4 id=4 data-nosnippet>4</a>    vec,
@@ -778,7 +778,7 @@
 <a href=#778 id=778 data-nosnippet>778</a>    </span><span class="kw">fn </span>image_needs_lod(<span class="kw-2">&amp;</span><span class="self">self</span>, image: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; bool {
 <a href=#779 id=779 data-nosnippet>779</a>        <span class="kw">let </span>image_ty = <span class="self">self</span>.resolve_type(image);
 <a href=#780 id=780 data-nosnippet>780</a>        <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Image { dim, class, .. } = <span class="kw-2">*</span>image_ty {
-<a href=#781 id=781 data-nosnippet>781</a>            class.is_mipmapped() &amp;&amp; dim != <span class="kw">crate</span>::ImageDimension::D1
+<a href=#781 id=781 data-nosnippet>781</a>            class.is_mipmapped() &amp;&amp; <span class="macro">dim !</span>= <span class="kw">crate</span>::ImageDimension::D1
 <a href=#782 id=782 data-nosnippet>782</a>        } <span class="kw">else </span>{
 <a href=#783 id=783 data-nosnippet>783</a>            <span class="bool-val">false
 <a href=#784 id=784 data-nosnippet>784</a>        </span>}
@@ -1017,7 +1017,7 @@
 <a href=#1017 id=1017 data-nosnippet>1017</a>    {
 <a href=#1018 id=1018 data-nosnippet>1018</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
 <a href=#1019 id=1019 data-nosnippet>1019</a>        <span class="kw">for </span>(i, handle) <span class="kw">in </span>parameters.enumerate() {
-<a href=#1020 id=1020 data-nosnippet>1020</a>            <span class="kw">if </span>i != <span class="number">0 </span>{
+<a href=#1020 id=1020 data-nosnippet>1020</a>            <span class="kw">if </span><span class="macro">i !</span>= <span class="number">0 </span>{
 <a href=#1021 id=1021 data-nosnippet>1021</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#1022 id=1022 data-nosnippet>1022</a>            }
 <a href=#1023 id=1023 data-nosnippet>1023</a>            put_expression(<span class="self">self</span>, ctx, handle)<span class="question-mark">?</span>;
@@ -1841,7 +1841,7 @@
 <a href=#1841 id=1841 data-nosnippet>1841</a>                    <span class="kw">crate</span>::TypeInner::Array { .. } | <span class="kw">crate</span>::TypeInner::Struct { .. } =&gt; {
 <a href=#1842 id=1842 data-nosnippet>1842</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {{"</span>)<span class="question-mark">?</span>;
 <a href=#1843 id=1843 data-nosnippet>1843</a>                        <span class="kw">for </span>(index, <span class="kw-2">&amp;</span>component) <span class="kw">in </span>components.iter().enumerate() {
-<a href=#1844 id=1844 data-nosnippet>1844</a>                            <span class="kw">if </span>index != <span class="number">0 </span>{
+<a href=#1844 id=1844 data-nosnippet>1844</a>                            <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
 <a href=#1845 id=1845 data-nosnippet>1845</a>                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#1846 id=1846 data-nosnippet>1846</a>                            }
 <a href=#1847 id=1847 data-nosnippet>1847</a>                            <span class="comment">// insert padding initialization, if needed
@@ -3346,7 +3346,7 @@
 <a href=#3346 id=3346 data-nosnippet>3346</a>                            {
 <a href=#3347 id=3347 data-nosnippet>3347</a>                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{comma} {{"</span>)<span class="question-mark">?</span>;
 <a href=#3348 id=3348 data-nosnippet>3348</a>                                <span class="kw">for </span>j <span class="kw">in </span><span class="number">0</span>..size.get() {
-<a href=#3349 id=3349 data-nosnippet>3349</a>                                    <span class="kw">if </span>j != <span class="number">0 </span>{
+<a href=#3349 id=3349 data-nosnippet>3349</a>                                    <span class="kw">if </span><span class="macro">j !</span>= <span class="number">0 </span>{
 <a href=#3350 id=3350 data-nosnippet>3350</a>                                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">","</span>)<span class="question-mark">?</span>;
 <a href=#3351 id=3351 data-nosnippet>3351</a>                                    }
 <a href=#3352 id=3352 data-nosnippet>3352</a>                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{tmp}.{name}.{WRAPPED_ARRAY_FIELD}[{j}]"</span>)<span class="question-mark">?</span>;
@@ -3561,7 +3561,7 @@
 <a href=#3561 id=3561 data-nosnippet>3561</a>            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
 <a href=#3562 id=3562 data-nosnippet>3562</a>        };
 <a href=#3563 id=3563 data-nosnippet>3563</a>
-<a href=#3564 id=3564 data-nosnippet>3564</a>        <span class="kw">if </span>context.expression.policies.image_load != index::BoundsCheckPolicy::Restrict
+<a href=#3564 id=3564 data-nosnippet>3564</a>        <span class="kw">if </span>context.expression.policies.<span class="macro">image_load !</span>= index::BoundsCheckPolicy::Restrict
 <a href=#3565 id=3565 data-nosnippet>3565</a>            || !context.expression.image_needs_lod(image)
 <a href=#3566 id=3566 data-nosnippet>3566</a>        {
 <a href=#3567 id=3567 data-nosnippet>3567</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
@@ -3870,7 +3870,7 @@
 <a href=#3870 id=3870 data-nosnippet>3870</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{fun_name}("</span>)<span class="question-mark">?</span>;
 <a href=#3871 id=3871 data-nosnippet>3871</a>                    <span class="comment">// first, write down the actual arguments
 <a href=#3872 id=3872 data-nosnippet>3872</a>                    </span><span class="kw">for </span>(i, <span class="kw-2">&amp;</span>handle) <span class="kw">in </span>arguments.iter().enumerate() {
-<a href=#3873 id=3873 data-nosnippet>3873</a>                        <span class="kw">if </span>i != <span class="number">0 </span>{
+<a href=#3873 id=3873 data-nosnippet>3873</a>                        <span class="kw">if </span><span class="macro">i !</span>= <span class="number">0 </span>{
 <a href=#3874 id=3874 data-nosnippet>3874</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#3875 id=3875 data-nosnippet>3875</a>                        }
 <a href=#3876 id=3876 data-nosnippet>3876</a>                        <span class="self">self</span>.put_expression(handle, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
@@ -4818,7 +4818,7 @@
 <a href=#4818 id=4818 data-nosnippet>4818</a>            )<span class="question-mark">?</span>;
 <a href=#4819 id=4819 data-nosnippet>4819</a>        }
 <a href=#4820 id=4820 data-nosnippet>4820</a>        <span class="comment">// avoid setting it on platforms that don't support it
-<a href=#4821 id=4821 data-nosnippet>4821</a>        </span><span class="kw">if </span>sampler.border_color != sm::BorderColor::TransparentBlack {
+<a href=#4821 id=4821 data-nosnippet>4821</a>        </span><span class="kw">if </span>sampler.<span class="macro">border_color !</span>= sm::BorderColor::TransparentBlack {
 <a href=#4822 id=4822 data-nosnippet>4822</a>            <span class="macro">writeln!</span>(
 <a href=#4823 id=4823 data-nosnippet>4823</a>                <span class="self">self</span>.out,
 <a href=#4824 id=4824 data-nosnippet>4824</a>                <span class="string">"{}{}::border_color::{},"</span>,
@@ -4838,7 +4838,7 @@
 <a href=#4838 id=4838 data-nosnippet>4838</a>                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{}max_anisotropy({}),"</span>, level, aniso.get(),)<span class="question-mark">?</span>;
 <a href=#4839 id=4839 data-nosnippet>4839</a>            }
 <a href=#4840 id=4840 data-nosnippet>4840</a>        }
-<a href=#4841 id=4841 data-nosnippet>4841</a>        <span class="kw">if </span>sampler.compare_func != sm::CompareFunc::Never {
+<a href=#4841 id=4841 data-nosnippet>4841</a>        <span class="kw">if </span>sampler.<span class="macro">compare_func !</span>= sm::CompareFunc::Never {
 <a href=#4842 id=4842 data-nosnippet>4842</a>            <span class="macro">writeln!</span>(
 <a href=#4843 id=4843 data-nosnippet>4843</a>                <span class="self">self</span>.out,
 <a href=#4844 id=4844 data-nosnippet>4844</a>                <span class="string">"{}{}::compare_func::{},"</span>,
@@ -6027,9 +6027,9 @@
 <a href=#6027 id=6027 data-nosnippet>6027</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
 <a href=#6028 id=6028 data-nosnippet>6028</a>        };
 <a href=#6029 id=6029 data-nosnippet>6029</a>        <span class="kw">let </span>dst_scalar = <span class="kw">crate</span>::Scalar { kind, width };
-<a href=#6030 id=6030 data-nosnippet>6030</a>        <span class="kw">if </span>src_scalar.kind != <span class="kw">crate</span>::ScalarKind::Float
-<a href=#6031 id=6031 data-nosnippet>6031</a>            || (dst_scalar.kind != <span class="kw">crate</span>::ScalarKind::Sint
-<a href=#6032 id=6032 data-nosnippet>6032</a>                &amp;&amp; dst_scalar.kind != <span class="kw">crate</span>::ScalarKind::Uint)
+<a href=#6030 id=6030 data-nosnippet>6030</a>        <span class="kw">if </span>src_scalar.<span class="macro">kind !</span>= <span class="kw">crate</span>::ScalarKind::Float
+<a href=#6031 id=6031 data-nosnippet>6031</a>            || (dst_scalar.<span class="macro">kind !</span>= <span class="kw">crate</span>::ScalarKind::Sint
+<a href=#6032 id=6032 data-nosnippet>6032</a>                &amp;&amp; dst_scalar.<span class="macro">kind !</span>= <span class="kw">crate</span>::ScalarKind::Uint)
 <a href=#6033 id=6033 data-nosnippet>6033</a>        {
 <a href=#6034 id=6034 data-nosnippet>6034</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
 <a href=#6035 id=6035 data-nosnippet>6035</a>        }
@@ -6146,7 +6146,7 @@
 <a href=#6146 id=6146 data-nosnippet>6146</a>            <span class="kw">crate</span>::TypeInner::Image { class, .. } =&gt; class,
 <a href=#6147 id=6147 data-nosnippet>6147</a>            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
 <a href=#6148 id=6148 data-nosnippet>6148</a>        };
-<a href=#6149 id=6149 data-nosnippet>6149</a>        <span class="kw">if </span>class != <span class="kw">crate</span>::ImageClass::External {
+<a href=#6149 id=6149 data-nosnippet>6149</a>        <span class="kw">if </span><span class="macro">class !</span>= <span class="kw">crate</span>::ImageClass::External {
 <a href=#6150 id=6150 data-nosnippet>6150</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
 <a href=#6151 id=6151 data-nosnippet>6151</a>        }
 <a href=#6152 id=6152 data-nosnippet>6152</a>        <span class="kw">let </span>wrapped = WrappedFunction::ImageLoad { class };
@@ -6363,7 +6363,7 @@
 <a href=#6363 id=6363 data-nosnippet>6363</a>            <span class="kw">crate</span>::TypeInner::Image { class, .. } =&gt; class,
 <a href=#6364 id=6364 data-nosnippet>6364</a>            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
 <a href=#6365 id=6365 data-nosnippet>6365</a>        };
-<a href=#6366 id=6366 data-nosnippet>6366</a>        <span class="kw">if </span>class != <span class="kw">crate</span>::ImageClass::External {
+<a href=#6366 id=6366 data-nosnippet>6366</a>        <span class="kw">if </span><span class="macro">class !</span>= <span class="kw">crate</span>::ImageClass::External {
 <a href=#6367 id=6367 data-nosnippet>6367</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
 <a href=#6368 id=6368 data-nosnippet>6368</a>        }
 <a href=#6369 id=6369 data-nosnippet>6369</a>        <span class="kw">let </span>wrapped = WrappedFunction::ImageQuerySize { class };
@@ -7589,7 +7589,7 @@
 <a href=#7589 id=7589 data-nosnippet>7589</a>
 <a href=#7590 id=7590 data-nosnippet>7590</a>                        </span><span class="kw">let </span>needs_padding_or_truncation = am.dimension.cmp(<span class="kw-2">&amp;</span>func.dimension);
 <a href=#7591 id=7591 data-nosnippet>7591</a>
-<a href=#7592 id=7592 data-nosnippet>7592</a>                        <span class="kw">if </span>needs_padding_or_truncation != Ordering::Equal {
+<a href=#7592 id=7592 data-nosnippet>7592</a>                        <span class="kw">if </span><span class="macro">needs_padding_or_truncation !</span>= Ordering::Equal {
 <a href=#7593 id=7593 data-nosnippet>7593</a>                            <span class="comment">// Emit a comment flagging that a conversion is happening,
 <a href=#7594 id=7594 data-nosnippet>7594</a>                            // since the actual logic can be at the end of a long line.
 <a href=#7595 id=7595 data-nosnippet>7595</a>                            </span><span class="macro">writeln!</span>(
@@ -7760,7 +7760,7 @@
 <a href=#7760 id=7760 data-nosnippet>7760</a>                        <span class="kw">for </span>(member_index, member) <span class="kw">in </span>members.iter().enumerate() {
 <a href=#7761 id=7761 data-nosnippet>7761</a>                            <span class="kw">let </span>key = NameKey::StructMember(arg.ty, member_index <span class="kw">as </span>u32);
 <a href=#7762 id=7762 data-nosnippet>7762</a>                            <span class="kw">let </span>name = <span class="kw-2">&amp;</span>flattened_member_names[<span class="kw-2">&amp;</span>key];
-<a href=#7763 id=7763 data-nosnippet>7763</a>                            <span class="kw">if </span>member_index != <span class="number">0 </span>{
+<a href=#7763 id=7763 data-nosnippet>7763</a>                            <span class="kw">if </span><span class="macro">member_index !</span>= <span class="number">0 </span>{
 <a href=#7764 id=7764 data-nosnippet>7764</a>                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#7765 id=7765 data-nosnippet>7765</a>                            }
 <a href=#7766 id=7766 data-nosnippet>7766</a>                            <span class="comment">// insert padding initialization, if needed
@@ -8092,4 +8092,5 @@
 <a href=#8092 id=8092 data-nosnippet>8092</a>            ))<span class="question-mark">?</span>,
 <a href=#8093 id=8093 data-nosnippet>8093</a>        })
 <a href=#8094 id=8094 data-nosnippet>8094</a>    }
-<a href=#8095 id=8095 data-nosnippet>8095</a>}</code></pre></div></section></main></body></html>
+<a href=#8095 id=8095 data-nosnippet>8095</a>}
+</code></pre></div></section></main></body></html>

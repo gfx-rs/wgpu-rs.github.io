@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/queue.rs`."><title>queue.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/device/</div>queue.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{boxed::Box, string::ToString, sync::Arc, vec, vec::Vec};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/queue.rs`."><title>queue.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/device/</div>queue.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{boxed::Box, string::ToString, sync::Arc, vec, vec::Vec};
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::{
 <a href=#3 id=3 data-nosnippet>3</a>    iter,
 <a href=#4 id=4 data-nosnippet>4</a>    mem::{<span class="self">self</span>, ManuallyDrop},
@@ -969,12 +969,12 @@
 <a href=#969 id=969 data-nosnippet>969</a>
 <a href=#970 id=970 data-nosnippet>970</a>        <span class="kw">let </span><span class="kw-2">mut </span>needs_flag = <span class="bool-val">false</span>;
 <a href=#971 id=971 data-nosnippet>971</a>        needs_flag |= <span class="macro">matches!</span>(source.source, wgt::ExternalImageSource::OffscreenCanvas(<span class="kw">_</span>));
-<a href=#972 id=972 data-nosnippet>972</a>        needs_flag |= source.origin != wgt::Origin2d::ZERO;
-<a href=#973 id=973 data-nosnippet>973</a>        needs_flag |= destination.color_space != wgt::PredefinedColorSpace::Srgb;
+<a href=#972 id=972 data-nosnippet>972</a>        needs_flag |= source.<span class="macro">origin !</span>= wgt::Origin2d::ZERO;
+<a href=#973 id=973 data-nosnippet>973</a>        needs_flag |= destination.<span class="macro">color_space !</span>= wgt::PredefinedColorSpace::Srgb;
 <a href=#974 id=974 data-nosnippet>974</a>        <span class="attr">#[allow(clippy::bool_comparison)]
 <a href=#975 id=975 data-nosnippet>975</a>        </span><span class="kw">if </span><span class="macro">matches!</span>(source.source, wgt::ExternalImageSource::ImageBitmap(<span class="kw">_</span>)) {
-<a href=#976 id=976 data-nosnippet>976</a>            needs_flag |= source.flip_y != <span class="bool-val">false</span>;
-<a href=#977 id=977 data-nosnippet>977</a>            needs_flag |= destination.premultiplied_alpha != <span class="bool-val">false</span>;
+<a href=#976 id=976 data-nosnippet>976</a>            needs_flag |= source.<span class="macro">flip_y !</span>= <span class="bool-val">false</span>;
+<a href=#977 id=977 data-nosnippet>977</a>            needs_flag |= destination.<span class="macro">premultiplied_alpha !</span>= <span class="bool-val">false</span>;
 <a href=#978 id=978 data-nosnippet>978</a>        }
 <a href=#979 id=979 data-nosnippet>979</a>
 <a href=#980 id=980 data-nosnippet>980</a>        <span class="kw">if </span>needs_flag {
@@ -1000,12 +1000,12 @@
 <a href=#1000 id=1000 data-nosnippet>1000</a>                TransferError::ExternalCopyToForbiddenTextureFormat(dst.desc.format).into(),
 <a href=#1001 id=1001 data-nosnippet>1001</a>            );
 <a href=#1002 id=1002 data-nosnippet>1002</a>        }
-<a href=#1003 id=1003 data-nosnippet>1003</a>        <span class="kw">if </span>dst.desc.dimension != wgt::TextureDimension::D2 {
+<a href=#1003 id=1003 data-nosnippet>1003</a>        <span class="kw">if </span>dst.desc.<span class="macro">dimension !</span>= wgt::TextureDimension::D2 {
 <a href=#1004 id=1004 data-nosnippet>1004</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidDimensionExternal.into());
 <a href=#1005 id=1005 data-nosnippet>1005</a>        }
 <a href=#1006 id=1006 data-nosnippet>1006</a>        dst.check_usage(wgt::TextureUsages::COPY_DST | wgt::TextureUsages::RENDER_ATTACHMENT)
 <a href=#1007 id=1007 data-nosnippet>1007</a>            .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
-<a href=#1008 id=1008 data-nosnippet>1008</a>        <span class="kw">if </span>dst.desc.sample_count != <span class="number">1 </span>{
+<a href=#1008 id=1008 data-nosnippet>1008</a>        <span class="kw">if </span>dst.desc.<span class="macro">sample_count !</span>= <span class="number">1 </span>{
 <a href=#1009 id=1009 data-nosnippet>1009</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidSampleCount {
 <a href=#1010 id=1010 data-nosnippet>1010</a>                sample_count: dst.desc.sample_count,
 <a href=#1011 id=1011 data-nosnippet>1011</a>            }
@@ -1032,7 +1032,7 @@
 <a href=#1032 id=1032 data-nosnippet>1032</a>            }
 <a href=#1033 id=1033 data-nosnippet>1033</a>            .into());
 <a href=#1034 id=1034 data-nosnippet>1034</a>        }
-<a href=#1035 id=1035 data-nosnippet>1035</a>        <span class="kw">if </span>size.depth_or_array_layers != <span class="number">1 </span>{
+<a href=#1035 id=1035 data-nosnippet>1035</a>        <span class="kw">if </span>size.<span class="macro">depth_or_array_layers !</span>= <span class="number">1 </span>{
 <a href=#1036 id=1036 data-nosnippet>1036</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::TextureOverrun {
 <a href=#1037 id=1037 data-nosnippet>1037</a>                start_offset: <span class="number">0</span>,
 <a href=#1038 id=1038 data-nosnippet>1038</a>                end_offset: size.depth_or_array_layers,
@@ -1869,4 +1869,5 @@
 <a href=#1869 id=1869 data-nosnippet>1869</a>        }
 <a href=#1870 id=1870 data-nosnippet>1870</a>    }
 <a href=#1871 id=1871 data-nosnippet>1871</a>    <span class="prelude-val">Ok</span>(())
-<a href=#1872 id=1872 data-nosnippet>1872</a>}</code></pre></div></section></main></body></html>
+<a href=#1872 id=1872 data-nosnippet>1872</a>}
+</code></pre></div></section></main></body></html>

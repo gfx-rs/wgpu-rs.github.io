@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/back/spv/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{format, string::String, vec, vec::Vec};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/back/spv/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{format, string::String, vec, vec::Vec};
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>arrayvec::ArrayVec;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>hashbrown::hash_map::Entry;
@@ -68,7 +68,7 @@
 <a href=#68 id=68 data-nosnippet>68</a><span class="kw">impl </span>Writer {
 <a href=#69 id=69 data-nosnippet>69</a>    <span class="kw">pub fn </span>new(options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
 <a href=#70 id=70 data-nosnippet>70</a>        <span class="kw">let </span>(major, minor) = options.lang_version;
-<a href=#71 id=71 data-nosnippet>71</a>        <span class="kw">if </span>major != <span class="number">1 </span>{
+<a href=#71 id=71 data-nosnippet>71</a>        <span class="kw">if </span><span class="macro">major !</span>= <span class="number">1 </span>{
 <a href=#72 id=72 data-nosnippet>72</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedVersion(major, minor));
 <a href=#73 id=73 data-nosnippet>73</a>        }
 <a href=#74 id=74 data-nosnippet>74</a>
@@ -119,7 +119,7 @@
 <a href=#119 id=119 data-nosnippet>119</a>
 <a href=#120 id=120 data-nosnippet>120</a>    <span class="kw">pub fn </span>set_options(<span class="kw-2">&amp;mut </span><span class="self">self</span>, options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
 <a href=#121 id=121 data-nosnippet>121</a>        <span class="kw">let </span>(major, minor) = options.lang_version;
-<a href=#122 id=122 data-nosnippet>122</a>        <span class="kw">if </span>major != <span class="number">1 </span>{
+<a href=#122 id=122 data-nosnippet>122</a>        <span class="kw">if </span><span class="macro">major !</span>= <span class="number">1 </span>{
 <a href=#123 id=123 data-nosnippet>123</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedVersion(major, minor));
 <a href=#124 id=124 data-nosnippet>124</a>        }
 <a href=#125 id=125 data-nosnippet>125</a>        <span class="self">self</span>.physical_layout = PhysicalLayout::new(major, minor);
@@ -142,15 +142,15 @@
 <a href=#142 id=142 data-nosnippet>142</a>
 <a href=#143 id=143 data-nosnippet>143</a>    <span class="doccomment">/// Reset `Writer` to its initial state, retaining any allocations.
 <a href=#144 id=144 data-nosnippet>144</a>    ///
-<a href=#145 id=145 data-nosnippet>145</a>    /// Why not just implement `Recyclable` for `Writer`? By design,
-<a href=#146 id=146 data-nosnippet>146</a>    /// `Recyclable::recycle` requires ownership of the value, not just
+<a href=#145 id=145 data-nosnippet>145</a>    /// Why not just implement `Reclaimable` for `Writer`? By design,
+<a href=#146 id=146 data-nosnippet>146</a>    /// `Reclaimable::reclaim` requires ownership of the value, not just
 <a href=#147 id=147 data-nosnippet>147</a>    /// `&amp;mut`; see the trait documentation. But we need to use this method
 <a href=#148 id=148 data-nosnippet>148</a>    /// from functions like `Writer::write`, which only have `&amp;mut Writer`.
 <a href=#149 id=149 data-nosnippet>149</a>    /// Workarounds include unsafe code (`core::ptr::read`, then `write`, ugh)
 <a href=#150 id=150 data-nosnippet>150</a>    /// or something like a `Default` impl that returns an oddly-initialized
 <a href=#151 id=151 data-nosnippet>151</a>    /// `Writer`, which is worse.
 <a href=#152 id=152 data-nosnippet>152</a>    </span><span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#153 id=153 data-nosnippet>153</a>        <span class="kw">use </span><span class="kw">super</span>::recyclable::Recyclable;
+<a href=#153 id=153 data-nosnippet>153</a>        <span class="kw">use </span><span class="kw">super</span>::reclaimable::Reclaimable;
 <a href=#154 id=154 data-nosnippet>154</a>        <span class="kw">use </span>core::mem::take;
 <a href=#155 id=155 data-nosnippet>155</a>
 <a href=#156 id=156 data-nosnippet>156</a>        <span class="kw">let </span><span class="kw-2">mut </span>id_gen = IdGenerator::default();
@@ -176,26 +176,26 @@
 <a href=#176 id=176 data-nosnippet>176</a>            void_type,
 <a href=#177 id=177 data-nosnippet>177</a>            gl450_ext_inst_id,
 <a href=#178 id=178 data-nosnippet>178</a>
-<a href=#179 id=179 data-nosnippet>179</a>            <span class="comment">// Recycled:
-<a href=#180 id=180 data-nosnippet>180</a>            </span>capabilities_used: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.capabilities_used).recycle(),
-<a href=#181 id=181 data-nosnippet>181</a>            extensions_used: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.extensions_used).recycle(),
-<a href=#182 id=182 data-nosnippet>182</a>            physical_layout: <span class="self">self</span>.physical_layout.clone().recycle(),
-<a href=#183 id=183 data-nosnippet>183</a>            logical_layout: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout).recycle(),
-<a href=#184 id=184 data-nosnippet>184</a>            debug_strings: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_strings).recycle(),
-<a href=#185 id=185 data-nosnippet>185</a>            debugs: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.debugs).recycle(),
-<a href=#186 id=186 data-nosnippet>186</a>            annotations: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.annotations).recycle(),
-<a href=#187 id=187 data-nosnippet>187</a>            lookup_type: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.lookup_type).recycle(),
-<a href=#188 id=188 data-nosnippet>188</a>            lookup_function: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.lookup_function).recycle(),
-<a href=#189 id=189 data-nosnippet>189</a>            lookup_function_type: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.lookup_function_type).recycle(),
-<a href=#190 id=190 data-nosnippet>190</a>            wrapped_functions: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.wrapped_functions).recycle(),
-<a href=#191 id=191 data-nosnippet>191</a>            constant_ids: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.constant_ids).recycle(),
-<a href=#192 id=192 data-nosnippet>192</a>            cached_constants: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.cached_constants).recycle(),
-<a href=#193 id=193 data-nosnippet>193</a>            global_variables: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.global_variables).recycle(),
-<a href=#194 id=194 data-nosnippet>194</a>            std140_compat_uniform_types: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.std140_compat_uniform_types).recycle(),
-<a href=#195 id=195 data-nosnippet>195</a>            saved_cached: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.saved_cached).recycle(),
-<a href=#196 id=196 data-nosnippet>196</a>            temp_list: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_list).recycle(),
-<a href=#197 id=197 data-nosnippet>197</a>            ray_query_functions: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ray_query_functions).recycle(),
-<a href=#198 id=198 data-nosnippet>198</a>            io_f16_polyfills: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.io_f16_polyfills).recycle(),
+<a href=#179 id=179 data-nosnippet>179</a>            <span class="comment">// Reclaimed:
+<a href=#180 id=180 data-nosnippet>180</a>            </span>capabilities_used: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.capabilities_used).reclaim(),
+<a href=#181 id=181 data-nosnippet>181</a>            extensions_used: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.extensions_used).reclaim(),
+<a href=#182 id=182 data-nosnippet>182</a>            physical_layout: <span class="self">self</span>.physical_layout.clone().reclaim(),
+<a href=#183 id=183 data-nosnippet>183</a>            logical_layout: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout).reclaim(),
+<a href=#184 id=184 data-nosnippet>184</a>            debug_strings: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_strings).reclaim(),
+<a href=#185 id=185 data-nosnippet>185</a>            debugs: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.debugs).reclaim(),
+<a href=#186 id=186 data-nosnippet>186</a>            annotations: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.annotations).reclaim(),
+<a href=#187 id=187 data-nosnippet>187</a>            lookup_type: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.lookup_type).reclaim(),
+<a href=#188 id=188 data-nosnippet>188</a>            lookup_function: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.lookup_function).reclaim(),
+<a href=#189 id=189 data-nosnippet>189</a>            lookup_function_type: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.lookup_function_type).reclaim(),
+<a href=#190 id=190 data-nosnippet>190</a>            wrapped_functions: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.wrapped_functions).reclaim(),
+<a href=#191 id=191 data-nosnippet>191</a>            constant_ids: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.constant_ids).reclaim(),
+<a href=#192 id=192 data-nosnippet>192</a>            cached_constants: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.cached_constants).reclaim(),
+<a href=#193 id=193 data-nosnippet>193</a>            global_variables: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.global_variables).reclaim(),
+<a href=#194 id=194 data-nosnippet>194</a>            std140_compat_uniform_types: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.std140_compat_uniform_types).reclaim(),
+<a href=#195 id=195 data-nosnippet>195</a>            saved_cached: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.saved_cached).reclaim(),
+<a href=#196 id=196 data-nosnippet>196</a>            temp_list: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_list).reclaim(),
+<a href=#197 id=197 data-nosnippet>197</a>            ray_query_functions: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ray_query_functions).reclaim(),
+<a href=#198 id=198 data-nosnippet>198</a>            io_f16_polyfills: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.io_f16_polyfills).reclaim(),
 <a href=#199 id=199 data-nosnippet>199</a>            debug_printf: <span class="prelude-val">None</span>,
 <a href=#200 id=200 data-nosnippet>200</a>        };
 <a href=#201 id=201 data-nosnippet>201</a>
@@ -1452,7 +1452,7 @@
 <a href=#1452 id=1452 data-nosnippet>1452</a>            <span class="kw">let </span><span class="kw-2">mut </span>gv = <span class="self">self</span>.global_variables[handle].clone();
 <a href=#1453 id=1453 data-nosnippet>1453</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>iface) = interface {
 <a href=#1454 id=1454 data-nosnippet>1454</a>                <span class="comment">// Have to include global variables in the interface
-<a href=#1455 id=1455 data-nosnippet>1455</a>                </span><span class="kw">if </span><span class="self">self</span>.physical_layout.version &gt;= <span class="number">0x10400 </span>&amp;&amp; iface.task_payload != <span class="prelude-val">Some</span>(handle) {
+<a href=#1455 id=1455 data-nosnippet>1455</a>                </span><span class="kw">if </span><span class="self">self</span>.physical_layout.version &gt;= <span class="number">0x10400 </span>&amp;&amp; iface.<span class="macro">task_payload !</span>= <span class="prelude-val">Some</span>(handle) {
 <a href=#1456 id=1456 data-nosnippet>1456</a>                    iface.varying_ids.push(gv.var_id);
 <a href=#1457 id=1457 data-nosnippet>1457</a>                }
 <a href=#1458 id=1458 data-nosnippet>1458</a>            }
@@ -3610,7 +3610,7 @@
 <a href=#3610 id=3610 data-nosnippet>3610</a>        <span class="kw">for </span>(handle, <span class="kw">_</span>) <span class="kw">in </span>ir_module.global_expressions.iter() {
 <a href=#3611 id=3611 data-nosnippet>3611</a>            <span class="self">self</span>.write_constant_expr(handle, ir_module, mod_info)<span class="question-mark">?</span>;
 <a href=#3612 id=3612 data-nosnippet>3612</a>        }
-<a href=#3613 id=3613 data-nosnippet>3613</a>        <span class="macro">debug_assert!</span>(<span class="self">self</span>.constant_ids.iter().all(|<span class="kw-2">&amp;</span>id| id != <span class="number">0</span>));
+<a href=#3613 id=3613 data-nosnippet>3613</a>        <span class="macro">debug_assert!</span>(<span class="self">self</span>.constant_ids.iter().all(|<span class="kw-2">&amp;</span>id| <span class="macro">id !</span>= <span class="number">0</span>));
 <a href=#3614 id=3614 data-nosnippet>3614</a>
 <a href=#3615 id=3615 data-nosnippet>3615</a>        <span class="comment">// write the name of constants on their respective const-expression initializer
 <a href=#3616 id=3616 data-nosnippet>3616</a>        </span><span class="kw">if </span><span class="self">self</span>.flags.contains(WriterFlags::DEBUG) {
@@ -3671,7 +3671,7 @@
 <a href=#3671 id=3671 data-nosnippet>3671</a>
 <a href=#3672 id=3672 data-nosnippet>3672</a>        <span class="comment">// write all or one entry points
 <a href=#3673 id=3673 data-nosnippet>3673</a>        </span><span class="kw">for </span>(index, ir_ep) <span class="kw">in </span>ir_module.entry_points.iter().enumerate() {
-<a href=#3674 id=3674 data-nosnippet>3674</a>            <span class="kw">if </span>ep_index.is_some() &amp;&amp; ep_index != <span class="prelude-val">Some</span>(index) {
+<a href=#3674 id=3674 data-nosnippet>3674</a>            <span class="kw">if </span>ep_index.is_some() &amp;&amp; <span class="macro">ep_index !</span>= <span class="prelude-val">Some</span>(index) {
 <a href=#3675 id=3675 data-nosnippet>3675</a>                <span class="kw">continue</span>;
 <a href=#3676 id=3676 data-nosnippet>3676</a>            }
 <a href=#3677 id=3677 data-nosnippet>3677</a>            <span class="kw">let </span>info = mod_info.get_entry_point(index);
@@ -3812,4 +3812,5 @@
 <a href=#3812 id=3812 data-nosnippet>3812</a>    <span class="macro">assert_eq!</span>(writer.physical_layout.bound, <span class="number">0</span>);
 <a href=#3813 id=3813 data-nosnippet>3813</a>    writer.write_physical_layout();
 <a href=#3814 id=3814 data-nosnippet>3814</a>    <span class="macro">assert_eq!</span>(writer.physical_layout.bound, <span class="number">3</span>);
-<a href=#3815 id=3815 data-nosnippet>3815</a>}</code></pre></div></section></main></body></html>
+<a href=#3815 id=3815 data-nosnippet>3815</a>}
+</code></pre></div></section></main></body></html>

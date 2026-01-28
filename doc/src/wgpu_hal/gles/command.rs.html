@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/command.rs`."><title>command.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_hal/gles/</div>command.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::string::String;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/command.rs`."><title>command.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_hal/gles/</div>command.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::string::String;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::{mem, ops::Range};
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>arrayvec::ArrayVec;
@@ -217,12 +217,12 @@
 <a href=#217 id=217 data-nosnippet>217</a>            first_instance
 <a href=#218 id=218 data-nosnippet>218</a>        };
 <a href=#219 id=219 data-nosnippet>219</a>
-<a href=#220 id=220 data-nosnippet>220</a>        <span class="kw">if </span>emulated_first_instance_value != <span class="self">self</span>.state.active_first_instance {
+<a href=#220 id=220 data-nosnippet>220</a>        <span class="kw">if </span><span class="macro">emulated_first_instance_value !</span>= <span class="self">self</span>.state.active_first_instance {
 <a href=#221 id=221 data-nosnippet>221</a>            <span class="comment">// rebind all per-instance buffers on first-instance change
 <a href=#222 id=222 data-nosnippet>222</a>            </span><span class="self">self</span>.state.dirty_vbuf_mask |= <span class="self">self</span>.state.instance_vbuf_mask;
 <a href=#223 id=223 data-nosnippet>223</a>            <span class="self">self</span>.state.active_first_instance = emulated_first_instance_value;
 <a href=#224 id=224 data-nosnippet>224</a>        }
-<a href=#225 id=225 data-nosnippet>225</a>        <span class="kw">if </span><span class="self">self</span>.state.dirty_vbuf_mask != <span class="number">0 </span>{
+<a href=#225 id=225 data-nosnippet>225</a>        <span class="kw">if </span><span class="self">self</span>.state.<span class="macro">dirty_vbuf_mask !</span>= <span class="number">0 </span>{
 <a href=#226 id=226 data-nosnippet>226</a>            <span class="self">self</span>.rebind_vertex_data(emulated_first_instance_value);
 <a href=#227 id=227 data-nosnippet>227</a>        }
 <a href=#228 id=228 data-nosnippet>228</a>    }
@@ -246,12 +246,12 @@
 <a href=#246 id=246 data-nosnippet>246</a>            .zip(inner.sampler_map.iter())
 <a href=#247 id=247 data-nosnippet>247</a>            .enumerate()
 <a href=#248 id=248 data-nosnippet>248</a>        {
-<a href=#249 id=249 data-nosnippet>249</a>            <span class="kw">if </span>slot.sampler_index != sampler_index {
+<a href=#249 id=249 data-nosnippet>249</a>            <span class="kw">if </span>slot.<span class="macro">sampler_index !</span>= sampler_index {
 <a href=#250 id=250 data-nosnippet>250</a>                slot.sampler_index = sampler_index;
 <a href=#251 id=251 data-nosnippet>251</a>                dirty_textures |= <span class="number">1 </span>&lt;&lt; texture_index;
 <a href=#252 id=252 data-nosnippet>252</a>            }
 <a href=#253 id=253 data-nosnippet>253</a>        }
-<a href=#254 id=254 data-nosnippet>254</a>        <span class="kw">if </span>dirty_textures != <span class="number">0 </span>{
+<a href=#254 id=254 data-nosnippet>254</a>        <span class="kw">if </span><span class="macro">dirty_textures !</span>= <span class="number">0 </span>{
 <a href=#255 id=255 data-nosnippet>255</a>            <span class="self">self</span>.rebind_sampler_states(dirty_textures, <span class="number">0</span>);
 <a href=#256 id=256 data-nosnippet>256</a>        }
 <a href=#257 id=257 data-nosnippet>257</a>    }
@@ -891,7 +891,7 @@
 <a href=#891 id=891 data-nosnippet>891</a>            <span class="kw">if </span>pipe_desc.step == wgt::VertexStepMode::Instance {
 <a href=#892 id=892 data-nosnippet>892</a>                <span class="self">self</span>.state.instance_vbuf_mask |= <span class="number">1 </span>&lt;&lt; index;
 <a href=#893 id=893 data-nosnippet>893</a>            }
-<a href=#894 id=894 data-nosnippet>894</a>            <span class="kw">if </span>state_desc != pipe_desc {
+<a href=#894 id=894 data-nosnippet>894</a>            <span class="kw">if </span><span class="macro">state_desc !</span>= pipe_desc {
 <a href=#895 id=895 data-nosnippet>895</a>                <span class="self">self</span>.state.dirty_vbuf_mask |= <span class="number">1 </span>&lt;&lt; index;
 <a href=#896 id=896 data-nosnippet>896</a>                <span class="kw-2">*</span>state_desc = pipe_desc.clone();
 <a href=#897 id=897 data-nosnippet>897</a>            }
@@ -901,7 +901,7 @@
 <a href=#901 id=901 data-nosnippet>901</a>
 <a href=#902 id=902 data-nosnippet>902</a>        <span class="comment">// set primitive state
 <a href=#903 id=903 data-nosnippet>903</a>        </span><span class="kw">let </span>prim_state = conv::map_primitive_state(<span class="kw-2">&amp;</span>pipeline.primitive);
-<a href=#904 id=904 data-nosnippet>904</a>        <span class="kw">if </span>prim_state != <span class="self">self</span>.state.primitive {
+<a href=#904 id=904 data-nosnippet>904</a>        <span class="kw">if </span><span class="macro">prim_state !</span>= <span class="self">self</span>.state.primitive {
 <a href=#905 id=905 data-nosnippet>905</a>            <span class="self">self</span>.cmd_buffer
 <a href=#906 id=906 data-nosnippet>906</a>                .commands
 <a href=#907 id=907 data-nosnippet>907</a>                .push(C::SetPrimitive(prim_state.clone()));
@@ -910,7 +910,7 @@
 <a href=#910 id=910 data-nosnippet>910</a>
 <a href=#911 id=911 data-nosnippet>911</a>        <span class="comment">// set depth/stencil states
 <a href=#912 id=912 data-nosnippet>912</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>aspects = <span class="kw">crate</span>::FormatAspects::empty();
-<a href=#913 id=913 data-nosnippet>913</a>        <span class="kw">if </span>pipeline.depth_bias != <span class="self">self</span>.state.depth_bias {
+<a href=#913 id=913 data-nosnippet>913</a>        <span class="kw">if </span>pipeline.<span class="macro">depth_bias !</span>= <span class="self">self</span>.state.depth_bias {
 <a href=#914 id=914 data-nosnippet>914</a>            <span class="self">self</span>.state.depth_bias = pipeline.depth_bias;
 <a href=#915 id=915 data-nosnippet>915</a>            <span class="self">self</span>.cmd_buffer
 <a href=#916 id=916 data-nosnippet>916</a>                .commands
@@ -950,7 +950,7 @@
 <a href=#950 id=950 data-nosnippet>950</a>            .push(C::ConfigureDepthStencil(aspects));
 <a href=#951 id=951 data-nosnippet>951</a>
 <a href=#952 id=952 data-nosnippet>952</a>        <span class="comment">// set multisampling state
-<a href=#953 id=953 data-nosnippet>953</a>        </span><span class="kw">if </span>pipeline.alpha_to_coverage_enabled != <span class="self">self</span>.state.alpha_to_coverage_enabled {
+<a href=#953 id=953 data-nosnippet>953</a>        </span><span class="kw">if </span>pipeline.<span class="macro">alpha_to_coverage_enabled !</span>= <span class="self">self</span>.state.alpha_to_coverage_enabled {
 <a href=#954 id=954 data-nosnippet>954</a>            <span class="self">self</span>.state.alpha_to_coverage_enabled = pipeline.alpha_to_coverage_enabled;
 <a href=#955 id=955 data-nosnippet>955</a>            <span class="self">self</span>.cmd_buffer
 <a href=#956 id=956 data-nosnippet>956</a>                .commands
@@ -963,7 +963,7 @@
 <a href=#963 id=963 data-nosnippet>963</a>                .color_targets
 <a href=#964 id=964 data-nosnippet>964</a>                .iter()
 <a href=#965 id=965 data-nosnippet>965</a>                .skip(<span class="number">1</span>)
-<a href=#966 id=966 data-nosnippet>966</a>                .any(|ct| <span class="kw-2">*</span>ct != pipeline.color_targets[<span class="number">0</span>])
+<a href=#966 id=966 data-nosnippet>966</a>                .any(|ct| <span class="kw-2">*</span><span class="macro">ct !</span>= pipeline.color_targets[<span class="number">0</span>])
 <a href=#967 id=967 data-nosnippet>967</a>            {
 <a href=#968 id=968 data-nosnippet>968</a>                <span class="kw">for </span>(index, ct) <span class="kw">in </span>pipeline.color_targets.iter().enumerate() {
 <a href=#969 id=969 data-nosnippet>969</a>                    <span class="self">self</span>.cmd_buffer.commands.push(C::SetColorTarget {
@@ -984,7 +984,7 @@
 <a href=#984 id=984 data-nosnippet>984</a>        }
 <a href=#985 id=985 data-nosnippet>985</a>
 <a href=#986 id=986 data-nosnippet>986</a>        <span class="comment">// set clip plane count
-<a href=#987 id=987 data-nosnippet>987</a>        </span><span class="kw">if </span>pipeline.inner.clip_distance_count != <span class="self">self</span>.state.clip_distance_count {
+<a href=#987 id=987 data-nosnippet>987</a>        </span><span class="kw">if </span>pipeline.inner.<span class="macro">clip_distance_count !</span>= <span class="self">self</span>.state.clip_distance_count {
 <a href=#988 id=988 data-nosnippet>988</a>            <span class="self">self</span>.cmd_buffer.commands.push(C::SetClipDistances {
 <a href=#989 id=989 data-nosnippet>989</a>                old_count: <span class="self">self</span>.state.clip_distance_count,
 <a href=#990 id=990 data-nosnippet>990</a>                new_count: pipeline.inner.clip_distance_count,
@@ -1266,4 +1266,5 @@
 <a href=#1266 id=1266 data-nosnippet>1266</a>    ) {
 <a href=#1267 id=1267 data-nosnippet>1267</a>        <span class="macro">unimplemented!</span>()
 <a href=#1268 id=1268 data-nosnippet>1268</a>    }
-<a href=#1269 id=1269 data-nosnippet>1269</a>}</code></pre></div></section></main></body></html>
+<a href=#1269 id=1269 data-nosnippet>1269</a>}
+</code></pre></div></section></main></body></html>

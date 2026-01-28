@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/functions.rs`."><title>functions.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/front/glsl/</div>functions.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/functions.rs`."><title>functions.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/front/glsl/</div>functions.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
 <a href=#2 id=2 data-nosnippet>2</a>    format,
 <a href=#3 id=3 data-nosnippet>3</a>    string::{String, ToString},
 <a href=#4 id=4 data-nosnippet>4</a>    vec,
@@ -76,7 +76,7 @@
 <a href=#76 id=76 data-nosnippet>76</a>
 <a href=#77 id=77 data-nosnippet>77</a>        <span class="comment">// Special case: if casting from a bool, we need to use Select and not As.
 <a href=#78 id=78 data-nosnippet>78</a>        </span><span class="kw">match </span>ctx.module.types[ty].inner.scalar() {
-<a href=#79 id=79 data-nosnippet>79</a>            <span class="prelude-val">Some</span>(result_scalar) <span class="kw">if </span>expr_is_bool &amp;&amp; result_scalar.kind != ScalarKind::Bool =&gt; {
+<a href=#79 id=79 data-nosnippet>79</a>            <span class="prelude-val">Some</span>(result_scalar) <span class="kw">if </span>expr_is_bool &amp;&amp; result_scalar.<span class="macro">kind !</span>= ScalarKind::Bool =&gt; {
 <a href=#80 id=80 data-nosnippet>80</a>                <span class="kw">let </span>result_scalar = Scalar {
 <a href=#81 id=81 data-nosnippet>81</a>                    width: <span class="number">4</span>,
 <a href=#82 id=82 data-nosnippet>82</a>                    ..result_scalar
@@ -147,7 +147,7 @@
 <a href=#147 id=147 data-nosnippet>147</a>                )<span class="question-mark">?
 <a href=#148 id=148 data-nosnippet>148</a>            </span>}
 <a href=#149 id=149 data-nosnippet>149</a>            TypeInner::Vector { size, scalar } =&gt; {
-<a href=#150 id=150 data-nosnippet>150</a>                <span class="kw">if </span>vector_size != <span class="prelude-val">Some</span>(size) {
+<a href=#150 id=150 data-nosnippet>150</a>                <span class="kw">if </span><span class="macro">vector_size !</span>= <span class="prelude-val">Some</span>(size) {
 <a href=#151 id=151 data-nosnippet>151</a>                    value = ctx.vector_resize(size, value, expr_meta)<span class="question-mark">?</span>;
 <a href=#152 id=152 data-nosnippet>152</a>                }
 <a href=#153 id=153 data-nosnippet>153</a>
@@ -899,12 +899,12 @@
 <a href=#899 id=899 data-nosnippet>899</a>            <span class="comment">// If the argument is a pointer whose address space isn't `Function`, an
 <a href=#900 id=900 data-nosnippet>900</a>            // indirection through a local variable is needed to align the address
 <a href=#901 id=901 data-nosnippet>901</a>            // spaces of the call argument and the overload parameter.
-<a href=#902 id=902 data-nosnippet>902</a>            </span>TypeInner::Pointer { base, space } <span class="kw">if </span>space != AddressSpace::Function =&gt; <span class="prelude-val">Some</span>(base),
+<a href=#902 id=902 data-nosnippet>902</a>            </span>TypeInner::Pointer { base, space } <span class="kw">if </span><span class="macro">space !</span>= AddressSpace::Function =&gt; <span class="prelude-val">Some</span>(base),
 <a href=#903 id=903 data-nosnippet>903</a>            TypeInner::ValuePointer {
 <a href=#904 id=904 data-nosnippet>904</a>                size,
 <a href=#905 id=905 data-nosnippet>905</a>                scalar,
 <a href=#906 id=906 data-nosnippet>906</a>                space,
-<a href=#907 id=907 data-nosnippet>907</a>            } <span class="kw">if </span>space != AddressSpace::Function =&gt; {
+<a href=#907 id=907 data-nosnippet>907</a>            } <span class="kw">if </span><span class="macro">space !</span>= AddressSpace::Function =&gt; {
 <a href=#908 id=908 data-nosnippet>908</a>                <span class="kw">let </span>inner = <span class="kw">match </span>size {
 <a href=#909 id=909 data-nosnippet>909</a>                    <span class="prelude-val">Some</span>(size) =&gt; TypeInner::Vector { size, scalar },
 <a href=#910 id=910 data-nosnippet>910</a>                    <span class="prelude-val">None </span>=&gt; TypeInner::Scalar(scalar),
@@ -931,7 +931,7 @@
 <a href=#931 id=931 data-nosnippet>931</a>
 <a href=#932 id=932 data-nosnippet>932</a>        <span class="kw">let </span>overload_param_ty = <span class="kw-2">&amp;</span>ctx.module.types[parameter_ty].inner;
 <a href=#933 id=933 data-nosnippet>933</a>        <span class="kw">let </span>call_arg_ty = ctx.get_type(call_argument.<span class="number">0</span>);
-<a href=#934 id=934 data-nosnippet>934</a>        <span class="kw">let </span>needs_conversion = call_arg_ty != overload_param_ty;
+<a href=#934 id=934 data-nosnippet>934</a>        <span class="kw">let </span>needs_conversion = <span class="macro">call_arg_ty !</span>= overload_param_ty;
 <a href=#935 id=935 data-nosnippet>935</a>
 <a href=#936 id=936 data-nosnippet>936</a>        <span class="kw">let </span>arg_scalar_comps = scalar_components(call_arg_ty);
 <a href=#937 id=937 data-nosnippet>937</a>
@@ -1081,7 +1081,7 @@
 <a href=#1081 id=1081 data-nosnippet>1081</a>                <span class="kw">let </span>new_inner = <span class="kw-2">&amp;</span>module.types[<span class="kw-2">*</span>new_parameter].inner;
 <a href=#1082 id=1082 data-nosnippet>1082</a>                <span class="kw">let </span>old_inner = <span class="kw-2">&amp;</span>module.types[<span class="kw-2">*</span>old_parameter].inner;
 <a href=#1083 id=1083 data-nosnippet>1083</a>
-<a href=#1084 id=1084 data-nosnippet>1084</a>                <span class="kw">if </span>new_inner != old_inner {
+<a href=#1084 id=1084 data-nosnippet>1084</a>                <span class="kw">if </span><span class="macro">new_inner !</span>= old_inner {
 <a href=#1085 id=1085 data-nosnippet>1085</a>                    <span class="kw">continue </span><span class="lifetime">'outer</span>;
 <a href=#1086 id=1086 data-nosnippet>1086</a>                }
 <a href=#1087 id=1087 data-nosnippet>1087</a>            }
@@ -1163,7 +1163,7 @@
 <a href=#1163 id=1163 data-nosnippet>1163</a>                <span class="kw">let </span>new_inner = <span class="kw-2">&amp;</span>module.types[<span class="kw-2">*</span>new_parameter].inner;
 <a href=#1164 id=1164 data-nosnippet>1164</a>                <span class="kw">let </span>old_inner = <span class="kw-2">&amp;</span>module.types[<span class="kw-2">*</span>old_parameter].inner;
 <a href=#1165 id=1165 data-nosnippet>1165</a>
-<a href=#1166 id=1166 data-nosnippet>1166</a>                <span class="kw">if </span>new_inner != old_inner {
+<a href=#1166 id=1166 data-nosnippet>1166</a>                <span class="kw">if </span><span class="macro">new_inner !</span>= old_inner {
 <a href=#1167 id=1167 data-nosnippet>1167</a>                    <span class="kw">continue </span><span class="lifetime">'outer</span>;
 <a href=#1168 id=1168 data-nosnippet>1168</a>                }
 <a href=#1169 id=1169 data-nosnippet>1169</a>            }
@@ -1234,7 +1234,7 @@
 <a href=#1234 id=1234 data-nosnippet>1234</a>        <span class="kw">let </span>global_init_body = core::mem::replace(<span class="kw-2">&amp;mut </span>ctx.body, body);
 <a href=#1235 id=1235 data-nosnippet>1235</a>
 <a href=#1236 id=1236 data-nosnippet>1236</a>        <span class="kw">for </span>arg <span class="kw">in </span><span class="self">self</span>.entry_args.iter() {
-<a href=#1237 id=1237 data-nosnippet>1237</a>            <span class="kw">if </span>arg.storage != StorageQualifier::Input {
+<a href=#1237 id=1237 data-nosnippet>1237</a>            <span class="kw">if </span>arg.<span class="macro">storage !</span>= StorageQualifier::Input {
 <a href=#1238 id=1238 data-nosnippet>1238</a>                <span class="kw">continue</span>;
 <a href=#1239 id=1239 data-nosnippet>1239</a>            }
 <a href=#1240 id=1240 data-nosnippet>1240</a>
@@ -1287,7 +1287,7 @@
 <a href=#1287 id=1287 data-nosnippet>1287</a>        <span class="kw">let </span><span class="kw-2">mut </span>components = Vec::new();
 <a href=#1288 id=1288 data-nosnippet>1288</a>
 <a href=#1289 id=1289 data-nosnippet>1289</a>        <span class="kw">for </span>arg <span class="kw">in </span><span class="self">self</span>.entry_args.iter() {
-<a href=#1290 id=1290 data-nosnippet>1290</a>            <span class="kw">if </span>arg.storage != StorageQualifier::Output {
+<a href=#1290 id=1290 data-nosnippet>1290</a>            <span class="kw">if </span>arg.<span class="macro">storage !</span>= StorageQualifier::Output {
 <a href=#1291 id=1291 data-nosnippet>1291</a>                <span class="kw">continue</span>;
 <a href=#1292 id=1292 data-nosnippet>1292</a>            }
 <a href=#1293 id=1293 data-nosnippet>1293</a>
@@ -1619,4 +1619,5 @@
 <a href=#1619 id=1619 data-nosnippet>1619</a>    }
 <a href=#1620 id=1620 data-nosnippet>1620</a>
 <a href=#1621 id=1621 data-nosnippet>1621</a>    variations
-<a href=#1622 id=1622 data-nosnippet>1622</a>}</code></pre></div></section></main></body></html>
+<a href=#1622 id=1622 data-nosnippet>1622</a>}
+</code></pre></div></section></main></body></html>

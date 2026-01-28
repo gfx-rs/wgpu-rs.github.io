@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/spv/image.rs`."><title>image.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/front/spv/</div>image.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::vec::Vec;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/spv/image.rs`."><title>image.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/front/spv/</div>image.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::vec::Vec;
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use crate</span>::{
 <a href=#4 id=4 data-nosnippet>4</a>    arena::{Handle, UniqueArena},
@@ -277,9 +277,9 @@
 <a href=#277 id=277 data-nosnippet>277</a>        <span class="kw">let </span>coordinate_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
 <a href=#278 id=278 data-nosnippet>278</a>        <span class="kw">let </span>value_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
 <a href=#279 id=279 data-nosnippet>279</a>
-<a href=#280 id=280 data-nosnippet>280</a>        <span class="kw">let </span>image_ops = <span class="kw">if </span>words_left != <span class="number">0 </span>{ <span class="self">self</span>.next()<span class="question-mark">? </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
+<a href=#280 id=280 data-nosnippet>280</a>        <span class="kw">let </span>image_ops = <span class="kw">if </span><span class="macro">words_left !</span>= <span class="number">0 </span>{ <span class="self">self</span>.next()<span class="question-mark">? </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
 <a href=#281 id=281 data-nosnippet>281</a>
-<a href=#282 id=282 data-nosnippet>282</a>        <span class="kw">if </span>image_ops != <span class="number">0 </span>{
+<a href=#282 id=282 data-nosnippet>282</a>        <span class="kw">if </span><span class="macro">image_ops !</span>= <span class="number">0 </span>{
 <a href=#283 id=283 data-nosnippet>283</a>            <span class="kw">let </span>other = spirv::ImageOperands::from_bits_truncate(image_ops);
 <a href=#284 id=284 data-nosnippet>284</a>            <span class="macro">log::warn!</span>(<span class="string">"Unknown image write ops {other:?}"</span>);
 <a href=#285 id=285 data-nosnippet>285</a>            <span class="kw">for _ in </span><span class="number">1</span>..words_left {
@@ -378,7 +378,7 @@
 <a href=#378 id=378 data-nosnippet>378</a>        <span class="kw">let </span>image_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
 <a href=#379 id=379 data-nosnippet>379</a>        <span class="kw">let </span>coordinate_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
 <a href=#380 id=380 data-nosnippet>380</a>
-<a href=#381 id=381 data-nosnippet>381</a>        <span class="kw">let </span><span class="kw-2">mut </span>image_ops = <span class="kw">if </span>words_left != <span class="number">0 </span>{
+<a href=#381 id=381 data-nosnippet>381</a>        <span class="kw">let </span><span class="kw-2">mut </span>image_ops = <span class="kw">if </span><span class="macro">words_left !</span>= <span class="number">0 </span>{
 <a href=#382 id=382 data-nosnippet>382</a>            words_left -= <span class="number">1</span>;
 <a href=#383 id=383 data-nosnippet>383</a>            <span class="self">self</span>.next()<span class="question-mark">?
 <a href=#384 id=384 data-nosnippet>384</a>        </span>} <span class="kw">else </span>{
@@ -387,7 +387,7 @@
 <a href=#387 id=387 data-nosnippet>387</a>
 <a href=#388 id=388 data-nosnippet>388</a>        <span class="kw">let </span><span class="kw-2">mut </span>sample = <span class="prelude-val">None</span>;
 <a href=#389 id=389 data-nosnippet>389</a>        <span class="kw">let </span><span class="kw-2">mut </span>level = <span class="prelude-val">None</span>;
-<a href=#390 id=390 data-nosnippet>390</a>        <span class="kw">while </span>image_ops != <span class="number">0 </span>{
+<a href=#390 id=390 data-nosnippet>390</a>        <span class="kw">while </span><span class="macro">image_ops !</span>= <span class="number">0 </span>{
 <a href=#391 id=391 data-nosnippet>391</a>            <span class="kw">let </span>bit = <span class="number">1 </span>&lt;&lt; image_ops.trailing_zeros();
 <a href=#392 id=392 data-nosnippet>392</a>            <span class="kw">match </span>spirv::ImageOperands::from_bits_truncate(bit) {
 <a href=#393 id=393 data-nosnippet>393</a>                spirv::ImageOperands::LOD =&gt; {
@@ -509,7 +509,7 @@
 <a href=#509 id=509 data-nosnippet>509</a>        };
 <a href=#510 id=510 data-nosnippet>510</a>        <span class="kw">let </span>span = <span class="self">self</span>.span_from_with_op(start);
 <a href=#511 id=511 data-nosnippet>511</a>
-<a href=#512 id=512 data-nosnippet>512</a>        <span class="kw">let </span><span class="kw-2">mut </span>image_ops = <span class="kw">if </span>words_left != <span class="number">0 </span>{
+<a href=#512 id=512 data-nosnippet>512</a>        <span class="kw">let </span><span class="kw-2">mut </span>image_ops = <span class="kw">if </span><span class="macro">words_left !</span>= <span class="number">0 </span>{
 <a href=#513 id=513 data-nosnippet>513</a>            words_left -= <span class="number">1</span>;
 <a href=#514 id=514 data-nosnippet>514</a>            <span class="self">self</span>.next()<span class="question-mark">?
 <a href=#515 id=515 data-nosnippet>515</a>        </span>} <span class="kw">else </span>{
@@ -518,7 +518,7 @@
 <a href=#518 id=518 data-nosnippet>518</a>
 <a href=#519 id=519 data-nosnippet>519</a>        <span class="kw">let </span><span class="kw-2">mut </span>level = <span class="kw">crate</span>::SampleLevel::Auto;
 <a href=#520 id=520 data-nosnippet>520</a>        <span class="kw">let </span><span class="kw-2">mut </span>offset = <span class="prelude-val">None</span>;
-<a href=#521 id=521 data-nosnippet>521</a>        <span class="kw">while </span>image_ops != <span class="number">0 </span>{
+<a href=#521 id=521 data-nosnippet>521</a>        <span class="kw">while </span><span class="macro">image_ops !</span>= <span class="number">0 </span>{
 <a href=#522 id=522 data-nosnippet>522</a>            <span class="kw">let </span>bit = <span class="number">1 </span>&lt;&lt; image_ops.trailing_zeros();
 <a href=#523 id=523 data-nosnippet>523</a>            <span class="kw">match </span>spirv::ImageOperands::from_bits_truncate(bit) {
 <a href=#524 id=524 data-nosnippet>524</a>                spirv::ImageOperands::BIAS =&gt; {
@@ -929,4 +929,5 @@
 <a href=#929 id=929 data-nosnippet>929</a>
 <a href=#930 id=930 data-nosnippet>930</a>        <span class="prelude-val">Ok</span>(())
 <a href=#931 id=931 data-nosnippet>931</a>    }
-<a href=#932 id=932 data-nosnippet>932</a>}</code></pre></div></section></main></body></html>
+<a href=#932 id=932 data-nosnippet>932</a>}
+</code></pre></div></section></main></body></html>
