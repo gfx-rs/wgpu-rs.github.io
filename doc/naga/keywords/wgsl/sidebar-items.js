@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["RESERVED"],"static":["RESERVED_SET"]};
+window.SIDEBAR_ITEMS = {"constant":["BUILTIN_IDENTIFIERS","RESERVED"],"static":["BUILTIN_IDENTIFIER_SET","RESERVED_SET"]};
