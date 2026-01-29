@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {};
+window.SIDEBAR_ITEMS = {"macro":["hal_type_dx12","hal_type_gles","hal_type_metal","hal_type_vulkan"]};
