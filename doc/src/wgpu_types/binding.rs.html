@@ -221,123 +221,131 @@
 <a href=#221 id=221 data-nosnippet>221</a>        </span><span class="kw">const </span>TASK = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
 <a href=#222 id=222 data-nosnippet>222</a>        <span class="doccomment">/// Binding is visible from the mesh shader of a mesh pipeline.
 <a href=#223 id=223 data-nosnippet>223</a>        </span><span class="kw">const </span>MESH = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
-<a href=#224 id=224 data-nosnippet>224</a>    }
-<a href=#225 id=225 data-nosnippet>225</a>}
-<a href=#226 id=226 data-nosnippet>226</a>
-<a href=#227 id=227 data-nosnippet>227</a><span class="doccomment">/// Specific type of a buffer binding.
-<a href=#228 id=228 data-nosnippet>228</a>///
-<a href=#229 id=229 data-nosnippet>229</a>/// Corresponds to [WebGPU `GPUBufferBindingType`](
-<a href=#230 id=230 data-nosnippet>230</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpubufferbindingtype).
-<a href=#231 id=231 data-nosnippet>231</a></span><span class="attr">#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Hash)]
-<a href=#232 id=232 data-nosnippet>232</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#233 id=233 data-nosnippet>233</a></span><span class="kw">pub enum </span>BufferBindingType {
-<a href=#234 id=234 data-nosnippet>234</a>    <span class="doccomment">/// A buffer for uniform values.
-<a href=#235 id=235 data-nosnippet>235</a>    ///
-<a href=#236 id=236 data-nosnippet>236</a>    /// Example WGSL syntax:
-<a href=#237 id=237 data-nosnippet>237</a>    /// ```rust,ignore
-<a href=#238 id=238 data-nosnippet>238</a>    /// struct Globals {
-<a href=#239 id=239 data-nosnippet>239</a>    ///     a_uniform: vec2&lt;f32&gt;,
-<a href=#240 id=240 data-nosnippet>240</a>    ///     another_uniform: vec2&lt;f32&gt;,
-<a href=#241 id=241 data-nosnippet>241</a>    /// }
-<a href=#242 id=242 data-nosnippet>242</a>    /// @group(0) @binding(0)
-<a href=#243 id=243 data-nosnippet>243</a>    /// var&lt;uniform&gt; globals: Globals;
-<a href=#244 id=244 data-nosnippet>244</a>    /// ```
-<a href=#245 id=245 data-nosnippet>245</a>    ///
-<a href=#246 id=246 data-nosnippet>246</a>    /// Example GLSL syntax:
-<a href=#247 id=247 data-nosnippet>247</a>    /// ```cpp,ignore
-<a href=#248 id=248 data-nosnippet>248</a>    /// layout(std140, binding = 0)
-<a href=#249 id=249 data-nosnippet>249</a>    /// uniform Globals {
-<a href=#250 id=250 data-nosnippet>250</a>    ///     vec2 aUniform;
-<a href=#251 id=251 data-nosnippet>251</a>    ///     vec2 anotherUniform;
-<a href=#252 id=252 data-nosnippet>252</a>    /// };
-<a href=#253 id=253 data-nosnippet>253</a>    /// ```
-<a href=#254 id=254 data-nosnippet>254</a>    </span><span class="attr">#[default]
-<a href=#255 id=255 data-nosnippet>255</a>    </span>Uniform,
-<a href=#256 id=256 data-nosnippet>256</a>    <span class="doccomment">/// A storage buffer.
-<a href=#257 id=257 data-nosnippet>257</a>    ///
-<a href=#258 id=258 data-nosnippet>258</a>    /// Example WGSL syntax:
-<a href=#259 id=259 data-nosnippet>259</a>    /// ```rust,ignore
-<a href=#260 id=260 data-nosnippet>260</a>    /// @group(0) @binding(0)
-<a href=#261 id=261 data-nosnippet>261</a>    /// var&lt;storage, read_write&gt; my_element: array&lt;vec4&lt;f32&gt;&gt;;
-<a href=#262 id=262 data-nosnippet>262</a>    /// ```
-<a href=#263 id=263 data-nosnippet>263</a>    ///
-<a href=#264 id=264 data-nosnippet>264</a>    /// Example GLSL syntax:
-<a href=#265 id=265 data-nosnippet>265</a>    /// ```cpp,ignore
-<a href=#266 id=266 data-nosnippet>266</a>    /// layout (set=0, binding=0) buffer myStorageBuffer {
-<a href=#267 id=267 data-nosnippet>267</a>    ///     vec4 myElement[];
-<a href=#268 id=268 data-nosnippet>268</a>    /// };
-<a href=#269 id=269 data-nosnippet>269</a>    /// ```
-<a href=#270 id=270 data-nosnippet>270</a>    </span>Storage {
-<a href=#271 id=271 data-nosnippet>271</a>        <span class="doccomment">/// If `true`, the buffer can only be read in the shader,
-<a href=#272 id=272 data-nosnippet>272</a>        /// and it:
-<a href=#273 id=273 data-nosnippet>273</a>        /// - may or may not be annotated with `read` (WGSL).
-<a href=#274 id=274 data-nosnippet>274</a>        /// - must be annotated with `readonly` (GLSL).
-<a href=#275 id=275 data-nosnippet>275</a>        ///
-<a href=#276 id=276 data-nosnippet>276</a>        /// Example WGSL syntax:
-<a href=#277 id=277 data-nosnippet>277</a>        /// ```rust,ignore
-<a href=#278 id=278 data-nosnippet>278</a>        /// @group(0) @binding(0)
-<a href=#279 id=279 data-nosnippet>279</a>        /// var&lt;storage, read&gt; my_element: array&lt;vec4&lt;f32&gt;&gt;;
-<a href=#280 id=280 data-nosnippet>280</a>        /// ```
-<a href=#281 id=281 data-nosnippet>281</a>        ///
-<a href=#282 id=282 data-nosnippet>282</a>        /// Example GLSL syntax:
-<a href=#283 id=283 data-nosnippet>283</a>        /// ```cpp,ignore
-<a href=#284 id=284 data-nosnippet>284</a>        /// layout (set=0, binding=0) readonly buffer myStorageBuffer {
-<a href=#285 id=285 data-nosnippet>285</a>        ///     vec4 myElement[];
-<a href=#286 id=286 data-nosnippet>286</a>        /// };
-<a href=#287 id=287 data-nosnippet>287</a>        /// ```
-<a href=#288 id=288 data-nosnippet>288</a>        </span>read_only: bool,
-<a href=#289 id=289 data-nosnippet>289</a>    },
-<a href=#290 id=290 data-nosnippet>290</a>}
-<a href=#291 id=291 data-nosnippet>291</a>
-<a href=#292 id=292 data-nosnippet>292</a><span class="doccomment">/// Specific type of a sampler binding.
-<a href=#293 id=293 data-nosnippet>293</a>///
-<a href=#294 id=294 data-nosnippet>294</a>/// For use in [`BindingType::Sampler`].
-<a href=#295 id=295 data-nosnippet>295</a>///
-<a href=#296 id=296 data-nosnippet>296</a>/// Corresponds to [WebGPU `GPUSamplerBindingType`](
-<a href=#297 id=297 data-nosnippet>297</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpusamplerbindingtype).
-<a href=#298 id=298 data-nosnippet>298</a></span><span class="attr">#[repr(C)]
-<a href=#299 id=299 data-nosnippet>299</a>#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
-<a href=#300 id=300 data-nosnippet>300</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#301 id=301 data-nosnippet>301</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
-<a href=#302 id=302 data-nosnippet>302</a></span><span class="kw">pub enum </span>SamplerBindingType {
-<a href=#303 id=303 data-nosnippet>303</a>    <span class="doccomment">/// The sampling result is produced based on more than a single color sample from a texture,
-<a href=#304 id=304 data-nosnippet>304</a>    /// e.g. when bilinear interpolation is enabled.
-<a href=#305 id=305 data-nosnippet>305</a>    </span>Filtering,
-<a href=#306 id=306 data-nosnippet>306</a>    <span class="doccomment">/// The sampling result is produced based on a single color sample from a texture.
-<a href=#307 id=307 data-nosnippet>307</a>    </span>NonFiltering,
-<a href=#308 id=308 data-nosnippet>308</a>    <span class="doccomment">/// Use as a comparison sampler instead of a normal sampler.
-<a href=#309 id=309 data-nosnippet>309</a>    /// For more info take a look at the analogous functionality in OpenGL: &lt;https://www.khronos.org/opengl/wiki/Sampler_Object#Comparison_mode&gt;.
-<a href=#310 id=310 data-nosnippet>310</a>    </span>Comparison,
-<a href=#311 id=311 data-nosnippet>311</a>}
-<a href=#312 id=312 data-nosnippet>312</a>
-<a href=#313 id=313 data-nosnippet>313</a><span class="doccomment">/// Describes a single binding inside a bind group.
-<a href=#314 id=314 data-nosnippet>314</a>///
-<a href=#315 id=315 data-nosnippet>315</a>/// Corresponds to [WebGPU `GPUBindGroupLayoutEntry`](
-<a href=#316 id=316 data-nosnippet>316</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gpubindgrouplayoutentry).
-<a href=#317 id=317 data-nosnippet>317</a></span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-<a href=#318 id=318 data-nosnippet>318</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#319 id=319 data-nosnippet>319</a></span><span class="kw">pub struct </span>BindGroupLayoutEntry {
-<a href=#320 id=320 data-nosnippet>320</a>    <span class="doccomment">/// Binding index. Must match shader index and be unique inside a `BindGroupLayout`. A binding
-<a href=#321 id=321 data-nosnippet>321</a>    /// of index 1, would be described as `@group(0) @binding(1)` in shaders.
-<a href=#322 id=322 data-nosnippet>322</a>    </span><span class="kw">pub </span>binding: u32,
-<a href=#323 id=323 data-nosnippet>323</a>    <span class="doccomment">/// Which shader stages can see this binding.
-<a href=#324 id=324 data-nosnippet>324</a>    </span><span class="kw">pub </span>visibility: ShaderStages,
-<a href=#325 id=325 data-nosnippet>325</a>    <span class="doccomment">/// The type of the binding
-<a href=#326 id=326 data-nosnippet>326</a>    </span><span class="kw">pub </span>ty: BindingType,
-<a href=#327 id=327 data-nosnippet>327</a>    <span class="doccomment">/// If the binding is an array of multiple resources. Corresponds to `binding_array&lt;T&gt;` in the shader.
-<a href=#328 id=328 data-nosnippet>328</a>    ///
-<a href=#329 id=329 data-nosnippet>329</a>    /// When this is `Some` the following validation applies:
-<a href=#330 id=330 data-nosnippet>330</a>    /// - Count must be of value 1 or greater, this corresponds to the length of the array of resources that will be bound.
-<a href=#331 id=331 data-nosnippet>331</a>    /// - When `ty == BindingType::Texture`, [`Features::TEXTURE_BINDING_ARRAY`] must be supported.
-<a href=#332 id=332 data-nosnippet>332</a>    /// - When `ty == BindingType::Sampler`, [`Features::TEXTURE_BINDING_ARRAY`] must be supported.
-<a href=#333 id=333 data-nosnippet>333</a>    /// - When `ty == BindingType::Buffer`, [`Features::BUFFER_BINDING_ARRAY`] must be supported.
-<a href=#334 id=334 data-nosnippet>334</a>    /// - When `ty == BindingType::Buffer` and `ty.ty == BufferBindingType::Storage`, [`Features::STORAGE_RESOURCE_BINDING_ARRAY`] must be supported.
-<a href=#335 id=335 data-nosnippet>335</a>    /// - When `ty == BindingType::StorageTexture`, [`Features::STORAGE_RESOURCE_BINDING_ARRAY`] must be supported.
-<a href=#336 id=336 data-nosnippet>336</a>    /// - When any binding in the group is an array, no `BindingType::Buffer` in the group may have `has_dynamic_offset == true`
-<a href=#337 id=337 data-nosnippet>337</a>    /// - When any binding in the group is an array, no `BindingType::Buffer` in the group may have `ty.ty == BufferBindingType::Uniform`.
-<a href=#338 id=338 data-nosnippet>338</a>    /// - If [`Features::PARTIALLY_BOUND_BINDING_ARRAY`] is enabled, the specified count becomes the upper bound instead.
-<a href=#339 id=339 data-nosnippet>339</a>    ///
-<a href=#340 id=340 data-nosnippet>340</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(default))]
-<a href=#341 id=341 data-nosnippet>341</a>    </span><span class="kw">pub </span>count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
-<a href=#342 id=342 data-nosnippet>342</a>}
+<a href=#224 id=224 data-nosnippet>224</a>        <span class="doccomment">/// Binding is visible from the ray generation shader of a ray tracing pipeline.
+<a href=#225 id=225 data-nosnippet>225</a>        </span><span class="kw">const </span>RAY_GENERATION = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+<a href=#226 id=226 data-nosnippet>226</a>        <span class="doccomment">/// Binding is visible from the ray any hit shader of a ray tracing pipeline.
+<a href=#227 id=227 data-nosnippet>227</a>        </span><span class="kw">const </span>ANY_HIT = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
+<a href=#228 id=228 data-nosnippet>228</a>        <span class="doccomment">/// Binding is visible from the ray closest hit shader of a ray tracing pipeline.
+<a href=#229 id=229 data-nosnippet>229</a>        </span><span class="kw">const </span>CLOSEST_HIT = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+<a href=#230 id=230 data-nosnippet>230</a>        <span class="doccomment">/// Binding is visible from the ray miss shader of a ray tracing pipeline.
+<a href=#231 id=231 data-nosnippet>231</a>        </span><span class="kw">const </span>MISS = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+<a href=#232 id=232 data-nosnippet>232</a>    }
+<a href=#233 id=233 data-nosnippet>233</a>}
+<a href=#234 id=234 data-nosnippet>234</a>
+<a href=#235 id=235 data-nosnippet>235</a><span class="doccomment">/// Specific type of a buffer binding.
+<a href=#236 id=236 data-nosnippet>236</a>///
+<a href=#237 id=237 data-nosnippet>237</a>/// Corresponds to [WebGPU `GPUBufferBindingType`](
+<a href=#238 id=238 data-nosnippet>238</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpubufferbindingtype).
+<a href=#239 id=239 data-nosnippet>239</a></span><span class="attr">#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Hash)]
+<a href=#240 id=240 data-nosnippet>240</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#241 id=241 data-nosnippet>241</a></span><span class="kw">pub enum </span>BufferBindingType {
+<a href=#242 id=242 data-nosnippet>242</a>    <span class="doccomment">/// A buffer for uniform values.
+<a href=#243 id=243 data-nosnippet>243</a>    ///
+<a href=#244 id=244 data-nosnippet>244</a>    /// Example WGSL syntax:
+<a href=#245 id=245 data-nosnippet>245</a>    /// ```rust,ignore
+<a href=#246 id=246 data-nosnippet>246</a>    /// struct Globals {
+<a href=#247 id=247 data-nosnippet>247</a>    ///     a_uniform: vec2&lt;f32&gt;,
+<a href=#248 id=248 data-nosnippet>248</a>    ///     another_uniform: vec2&lt;f32&gt;,
+<a href=#249 id=249 data-nosnippet>249</a>    /// }
+<a href=#250 id=250 data-nosnippet>250</a>    /// @group(0) @binding(0)
+<a href=#251 id=251 data-nosnippet>251</a>    /// var&lt;uniform&gt; globals: Globals;
+<a href=#252 id=252 data-nosnippet>252</a>    /// ```
+<a href=#253 id=253 data-nosnippet>253</a>    ///
+<a href=#254 id=254 data-nosnippet>254</a>    /// Example GLSL syntax:
+<a href=#255 id=255 data-nosnippet>255</a>    /// ```cpp,ignore
+<a href=#256 id=256 data-nosnippet>256</a>    /// layout(std140, binding = 0)
+<a href=#257 id=257 data-nosnippet>257</a>    /// uniform Globals {
+<a href=#258 id=258 data-nosnippet>258</a>    ///     vec2 aUniform;
+<a href=#259 id=259 data-nosnippet>259</a>    ///     vec2 anotherUniform;
+<a href=#260 id=260 data-nosnippet>260</a>    /// };
+<a href=#261 id=261 data-nosnippet>261</a>    /// ```
+<a href=#262 id=262 data-nosnippet>262</a>    </span><span class="attr">#[default]
+<a href=#263 id=263 data-nosnippet>263</a>    </span>Uniform,
+<a href=#264 id=264 data-nosnippet>264</a>    <span class="doccomment">/// A storage buffer.
+<a href=#265 id=265 data-nosnippet>265</a>    ///
+<a href=#266 id=266 data-nosnippet>266</a>    /// Example WGSL syntax:
+<a href=#267 id=267 data-nosnippet>267</a>    /// ```rust,ignore
+<a href=#268 id=268 data-nosnippet>268</a>    /// @group(0) @binding(0)
+<a href=#269 id=269 data-nosnippet>269</a>    /// var&lt;storage, read_write&gt; my_element: array&lt;vec4&lt;f32&gt;&gt;;
+<a href=#270 id=270 data-nosnippet>270</a>    /// ```
+<a href=#271 id=271 data-nosnippet>271</a>    ///
+<a href=#272 id=272 data-nosnippet>272</a>    /// Example GLSL syntax:
+<a href=#273 id=273 data-nosnippet>273</a>    /// ```cpp,ignore
+<a href=#274 id=274 data-nosnippet>274</a>    /// layout (set=0, binding=0) buffer myStorageBuffer {
+<a href=#275 id=275 data-nosnippet>275</a>    ///     vec4 myElement[];
+<a href=#276 id=276 data-nosnippet>276</a>    /// };
+<a href=#277 id=277 data-nosnippet>277</a>    /// ```
+<a href=#278 id=278 data-nosnippet>278</a>    </span>Storage {
+<a href=#279 id=279 data-nosnippet>279</a>        <span class="doccomment">/// If `true`, the buffer can only be read in the shader,
+<a href=#280 id=280 data-nosnippet>280</a>        /// and it:
+<a href=#281 id=281 data-nosnippet>281</a>        /// - may or may not be annotated with `read` (WGSL).
+<a href=#282 id=282 data-nosnippet>282</a>        /// - must be annotated with `readonly` (GLSL).
+<a href=#283 id=283 data-nosnippet>283</a>        ///
+<a href=#284 id=284 data-nosnippet>284</a>        /// Example WGSL syntax:
+<a href=#285 id=285 data-nosnippet>285</a>        /// ```rust,ignore
+<a href=#286 id=286 data-nosnippet>286</a>        /// @group(0) @binding(0)
+<a href=#287 id=287 data-nosnippet>287</a>        /// var&lt;storage, read&gt; my_element: array&lt;vec4&lt;f32&gt;&gt;;
+<a href=#288 id=288 data-nosnippet>288</a>        /// ```
+<a href=#289 id=289 data-nosnippet>289</a>        ///
+<a href=#290 id=290 data-nosnippet>290</a>        /// Example GLSL syntax:
+<a href=#291 id=291 data-nosnippet>291</a>        /// ```cpp,ignore
+<a href=#292 id=292 data-nosnippet>292</a>        /// layout (set=0, binding=0) readonly buffer myStorageBuffer {
+<a href=#293 id=293 data-nosnippet>293</a>        ///     vec4 myElement[];
+<a href=#294 id=294 data-nosnippet>294</a>        /// };
+<a href=#295 id=295 data-nosnippet>295</a>        /// ```
+<a href=#296 id=296 data-nosnippet>296</a>        </span>read_only: bool,
+<a href=#297 id=297 data-nosnippet>297</a>    },
+<a href=#298 id=298 data-nosnippet>298</a>}
+<a href=#299 id=299 data-nosnippet>299</a>
+<a href=#300 id=300 data-nosnippet>300</a><span class="doccomment">/// Specific type of a sampler binding.
+<a href=#301 id=301 data-nosnippet>301</a>///
+<a href=#302 id=302 data-nosnippet>302</a>/// For use in [`BindingType::Sampler`].
+<a href=#303 id=303 data-nosnippet>303</a>///
+<a href=#304 id=304 data-nosnippet>304</a>/// Corresponds to [WebGPU `GPUSamplerBindingType`](
+<a href=#305 id=305 data-nosnippet>305</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpusamplerbindingtype).
+<a href=#306 id=306 data-nosnippet>306</a></span><span class="attr">#[repr(C)]
+<a href=#307 id=307 data-nosnippet>307</a>#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+<a href=#308 id=308 data-nosnippet>308</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#309 id=309 data-nosnippet>309</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
+<a href=#310 id=310 data-nosnippet>310</a></span><span class="kw">pub enum </span>SamplerBindingType {
+<a href=#311 id=311 data-nosnippet>311</a>    <span class="doccomment">/// The sampling result is produced based on more than a single color sample from a texture,
+<a href=#312 id=312 data-nosnippet>312</a>    /// e.g. when bilinear interpolation is enabled.
+<a href=#313 id=313 data-nosnippet>313</a>    </span>Filtering,
+<a href=#314 id=314 data-nosnippet>314</a>    <span class="doccomment">/// The sampling result is produced based on a single color sample from a texture.
+<a href=#315 id=315 data-nosnippet>315</a>    </span>NonFiltering,
+<a href=#316 id=316 data-nosnippet>316</a>    <span class="doccomment">/// Use as a comparison sampler instead of a normal sampler.
+<a href=#317 id=317 data-nosnippet>317</a>    /// For more info take a look at the analogous functionality in OpenGL: &lt;https://www.khronos.org/opengl/wiki/Sampler_Object#Comparison_mode&gt;.
+<a href=#318 id=318 data-nosnippet>318</a>    </span>Comparison,
+<a href=#319 id=319 data-nosnippet>319</a>}
+<a href=#320 id=320 data-nosnippet>320</a>
+<a href=#321 id=321 data-nosnippet>321</a><span class="doccomment">/// Describes a single binding inside a bind group.
+<a href=#322 id=322 data-nosnippet>322</a>///
+<a href=#323 id=323 data-nosnippet>323</a>/// Corresponds to [WebGPU `GPUBindGroupLayoutEntry`](
+<a href=#324 id=324 data-nosnippet>324</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gpubindgrouplayoutentry).
+<a href=#325 id=325 data-nosnippet>325</a></span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+<a href=#326 id=326 data-nosnippet>326</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#327 id=327 data-nosnippet>327</a></span><span class="kw">pub struct </span>BindGroupLayoutEntry {
+<a href=#328 id=328 data-nosnippet>328</a>    <span class="doccomment">/// Binding index. Must match shader index and be unique inside a `BindGroupLayout`. A binding
+<a href=#329 id=329 data-nosnippet>329</a>    /// of index 1, would be described as `@group(0) @binding(1)` in shaders.
+<a href=#330 id=330 data-nosnippet>330</a>    </span><span class="kw">pub </span>binding: u32,
+<a href=#331 id=331 data-nosnippet>331</a>    <span class="doccomment">/// Which shader stages can see this binding.
+<a href=#332 id=332 data-nosnippet>332</a>    </span><span class="kw">pub </span>visibility: ShaderStages,
+<a href=#333 id=333 data-nosnippet>333</a>    <span class="doccomment">/// The type of the binding
+<a href=#334 id=334 data-nosnippet>334</a>    </span><span class="kw">pub </span>ty: BindingType,
+<a href=#335 id=335 data-nosnippet>335</a>    <span class="doccomment">/// If the binding is an array of multiple resources. Corresponds to `binding_array&lt;T&gt;` in the shader.
+<a href=#336 id=336 data-nosnippet>336</a>    ///
+<a href=#337 id=337 data-nosnippet>337</a>    /// When this is `Some` the following validation applies:
+<a href=#338 id=338 data-nosnippet>338</a>    /// - Count must be of value 1 or greater, this corresponds to the length of the array of resources that will be bound.
+<a href=#339 id=339 data-nosnippet>339</a>    /// - When `ty == BindingType::Texture`, [`Features::TEXTURE_BINDING_ARRAY`] must be supported.
+<a href=#340 id=340 data-nosnippet>340</a>    /// - When `ty == BindingType::Sampler`, [`Features::TEXTURE_BINDING_ARRAY`] must be supported.
+<a href=#341 id=341 data-nosnippet>341</a>    /// - When `ty == BindingType::Buffer`, [`Features::BUFFER_BINDING_ARRAY`] must be supported.
+<a href=#342 id=342 data-nosnippet>342</a>    /// - When `ty == BindingType::Buffer` and `ty.ty == BufferBindingType::Storage`, [`Features::STORAGE_RESOURCE_BINDING_ARRAY`] must be supported.
+<a href=#343 id=343 data-nosnippet>343</a>    /// - When `ty == BindingType::StorageTexture`, [`Features::STORAGE_RESOURCE_BINDING_ARRAY`] must be supported.
+<a href=#344 id=344 data-nosnippet>344</a>    /// - When any binding in the group is an array, no `BindingType::Buffer` in the group may have `has_dynamic_offset == true`
+<a href=#345 id=345 data-nosnippet>345</a>    /// - When any binding in the group is an array, no `BindingType::Buffer` in the group may have `ty.ty == BufferBindingType::Uniform`.
+<a href=#346 id=346 data-nosnippet>346</a>    /// - If [`Features::PARTIALLY_BOUND_BINDING_ARRAY`] is enabled, the specified count becomes the upper bound instead.
+<a href=#347 id=347 data-nosnippet>347</a>    ///
+<a href=#348 id=348 data-nosnippet>348</a>    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(default))]
+<a href=#349 id=349 data-nosnippet>349</a>    </span><span class="kw">pub </span>count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+<a href=#350 id=350 data-nosnippet>350</a>}
 </code></pre></div></section></main></body></html>
