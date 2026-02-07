@@ -1625,6 +1625,9 @@ function __wbg_get_imports() {
         __wbg_set_required_features_650c9e5dafbaa395: function(arg0, arg1) {
             arg0.requiredFeatures = arg1;
         },
+        __wbg_set_required_limits_1088c3e88be6101e: function(arg0, arg1) {
+            arg0.requiredLimits = arg1;
+        },
         __wbg_set_resolve_target_c18cd4048765732a: function(arg0, arg1) {
             arg0.resolveTarget = arg1;
         },
@@ -1930,7 +1933,7 @@ function __wbg_get_imports() {
             arg0.writeTexture(arg1, arg2, arg3, arg4);
         }, arguments); },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { dtor_idx: 1332, function: Function { arguments: [NamedExternref("GPUUncapturedErrorEvent")], shim_idx: 1006, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { dtor_idx: 1599, function: Function { arguments: [NamedExternref("GPUUncapturedErrorEvent")], shim_idx: 1567, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h241bc06ba4e224ea, wasm_bindgen__convert__closures_____invoke__h0dc2ef66cb63b178);
             return ret;
         },
