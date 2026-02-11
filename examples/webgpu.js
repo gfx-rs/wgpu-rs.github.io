@@ -88,6 +88,9 @@ function __wbg_get_imports() {
             const ret = arg0.beginComputePass(arg1);
             return ret;
         },
+        __wbg_beginOcclusionQuery_5e4dcadab2869f1a: function(arg0, arg1) {
+            arg0.beginOcclusionQuery(arg1 >>> 0);
+        },
         __wbg_beginRenderPass_599b98d9a6ba5692: function() { return handleError(function (arg0, arg1) {
             const ret = arg0.beginRenderPass(arg1);
             return ret;
@@ -332,6 +335,9 @@ function __wbg_get_imports() {
         },
         __wbg_draw_64c668a2b76dd4fc: function(arg0, arg1, arg2, arg3, arg4) {
             arg0.draw(arg1 >>> 0, arg2 >>> 0, arg3 >>> 0, arg4 >>> 0);
+        },
+        __wbg_endOcclusionQuery_947542544339a82d: function(arg0) {
+            arg0.endOcclusionQuery();
         },
         __wbg_end_8bb194afb9988691: function(arg0) {
             arg0.end();
@@ -1960,7 +1966,7 @@ function __wbg_get_imports() {
             arg0.writeTexture(arg1, arg2, arg3, arg4);
         }, arguments); },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { dtor_idx: 1156, function: Function { arguments: [NamedExternref("GPUUncapturedErrorEvent")], shim_idx: 1123, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { dtor_idx: 1344, function: Function { arguments: [NamedExternref("GPUUncapturedErrorEvent")], shim_idx: 1284, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h241bc06ba4e224ea, wasm_bindgen__convert__closures_____invoke__h0dc2ef66cb63b178);
             return ret;
         },
