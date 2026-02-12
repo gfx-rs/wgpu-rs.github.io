@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["deserialize_binding_map"],"struct":["BindingMapSerialization","FragmentModule","Input","Parameters","SpirvInParameters","SpirvOutParameters","SpvOutVersion","Targets","WgslInParameters","WgslOutParameters"]};
+window.SIDEBAR_ITEMS = {"fn":["default_task_limits","deserialize_binding_map"],"struct":["BindingMapSerialization","FragmentModule","Input","Parameters","SpirvInParameters","SpirvOutParameters","SpvOutVersion","Targets","WgslInParameters","WgslOutParameters","WriterSharedOptions"]};
