@@ -65,7 +65,7 @@
 <a href=#65 id=65 data-nosnippet>65</a>
 <a href=#66 id=66 data-nosnippet>66</a><span class="kw">fn </span>get_shaders(device: <span class="kw-2">&amp;</span>wgpu::Device, backend: wgpu::Backend) -&gt; Shaders {
 <a href=#67 id=67 data-nosnippet>67</a>    <span class="comment">// In the case that the platform does support mesh shaders, the dummy
-<a href=#68 id=68 data-nosnippet>68</a>    // shader is used to avoid requiring EXPERIMENTAL_PASSTHROUGH_SHADERS.
+<a href=#68 id=68 data-nosnippet>68</a>    // shader is used to avoid requiring PASSTHROUGH_SHADERS.
 <a href=#69 id=69 data-nosnippet>69</a>    </span><span class="kw">match </span>backend {
 <a href=#70 id=70 data-nosnippet>70</a>        wgpu::Backend::Vulkan =&gt; {
 <a href=#71 id=71 data-nosnippet>71</a>            <span class="kw">let </span>compiled = compile_wgsl(device);
@@ -191,7 +191,7 @@
 <a href=#191 id=191 data-nosnippet>191</a>        Default::default()
 <a href=#192 id=192 data-nosnippet>192</a>    }
 <a href=#193 id=193 data-nosnippet>193</a>    <span class="kw">fn </span>required_features() -&gt; wgpu::Features {
-<a href=#194 id=194 data-nosnippet>194</a>        wgpu::Features::EXPERIMENTAL_MESH_SHADER | wgpu::Features::EXPERIMENTAL_PASSTHROUGH_SHADERS
+<a href=#194 id=194 data-nosnippet>194</a>        wgpu::Features::EXPERIMENTAL_MESH_SHADER | wgpu::Features::PASSTHROUGH_SHADERS
 <a href=#195 id=195 data-nosnippet>195</a>    }
 <a href=#196 id=196 data-nosnippet>196</a>    <span class="kw">fn </span>required_limits() -&gt; wgpu::Limits {
 <a href=#197 id=197 data-nosnippet>197</a>        wgpu::Limits::defaults().using_recommended_minimum_mesh_shader_values()
@@ -222,22 +222,19 @@
 <a href=#222 id=222 data-nosnippet>222</a>    height: <span class="number">768</span>,
 <a href=#223 id=223 data-nosnippet>223</a>    optional_features: wgpu::Features::default(),
 <a href=#224 id=224 data-nosnippet>224</a>    base_test_parameters: wgpu_test::TestParameters::default()
-<a href=#225 id=225 data-nosnippet>225</a>        .features(
-<a href=#226 id=226 data-nosnippet>226</a>            wgpu::Features::EXPERIMENTAL_MESH_SHADER
-<a href=#227 id=227 data-nosnippet>227</a>                | wgpu::Features::EXPERIMENTAL_PASSTHROUGH_SHADERS,
-<a href=#228 id=228 data-nosnippet>228</a>        )
-<a href=#229 id=229 data-nosnippet>229</a>        .instance_flags(wgpu::InstanceFlags::advanced_debugging())
-<a href=#230 id=230 data-nosnippet>230</a>        .limits(wgpu::Limits::defaults().using_recommended_minimum_mesh_shader_values())
-<a href=#231 id=231 data-nosnippet>231</a>        .skip(wgpu_test::FailureCase {
-<a href=#232 id=232 data-nosnippet>232</a>            backends: <span class="prelude-val">None</span>,
-<a href=#233 id=233 data-nosnippet>233</a>            <span class="comment">// Skip Mesa because LLVMPIPE has what is believed to be a driver bug
-<a href=#234 id=234 data-nosnippet>234</a>            </span>vendor: <span class="prelude-val">Some</span>(<span class="number">0x10005</span>),
-<a href=#235 id=235 data-nosnippet>235</a>            adapter: <span class="prelude-val">None</span>,
-<a href=#236 id=236 data-nosnippet>236</a>            driver: <span class="prelude-val">None</span>,
-<a href=#237 id=237 data-nosnippet>237</a>            reasons: <span class="macro">vec!</span>[],
-<a href=#238 id=238 data-nosnippet>238</a>            behavior: wgpu_test::FailureBehavior::Ignore,
-<a href=#239 id=239 data-nosnippet>239</a>        }),
-<a href=#240 id=240 data-nosnippet>240</a>    comparisons: <span class="kw-2">&amp;</span>[wgpu_test::ComparisonType::Mean(<span class="number">0.005</span>)],
-<a href=#241 id=241 data-nosnippet>241</a>    _phantom: std::marker::PhantomData::&lt;Example&gt;,
-<a href=#242 id=242 data-nosnippet>242</a>};
+<a href=#225 id=225 data-nosnippet>225</a>        .features(wgpu::Features::EXPERIMENTAL_MESH_SHADER | wgpu::Features::PASSTHROUGH_SHADERS)
+<a href=#226 id=226 data-nosnippet>226</a>        .instance_flags(wgpu::InstanceFlags::advanced_debugging())
+<a href=#227 id=227 data-nosnippet>227</a>        .limits(wgpu::Limits::defaults().using_recommended_minimum_mesh_shader_values())
+<a href=#228 id=228 data-nosnippet>228</a>        .skip(wgpu_test::FailureCase {
+<a href=#229 id=229 data-nosnippet>229</a>            backends: <span class="prelude-val">None</span>,
+<a href=#230 id=230 data-nosnippet>230</a>            <span class="comment">// Skip Mesa because LLVMPIPE has what is believed to be a driver bug
+<a href=#231 id=231 data-nosnippet>231</a>            </span>vendor: <span class="prelude-val">Some</span>(<span class="number">0x10005</span>),
+<a href=#232 id=232 data-nosnippet>232</a>            adapter: <span class="prelude-val">None</span>,
+<a href=#233 id=233 data-nosnippet>233</a>            driver: <span class="prelude-val">None</span>,
+<a href=#234 id=234 data-nosnippet>234</a>            reasons: <span class="macro">vec!</span>[],
+<a href=#235 id=235 data-nosnippet>235</a>            behavior: wgpu_test::FailureBehavior::Ignore,
+<a href=#236 id=236 data-nosnippet>236</a>        }),
+<a href=#237 id=237 data-nosnippet>237</a>    comparisons: <span class="kw-2">&amp;</span>[wgpu_test::ComparisonType::Mean(<span class="number">0.005</span>)],
+<a href=#238 id=238 data-nosnippet>238</a>    _phantom: std::marker::PhantomData::&lt;Example&gt;,
+<a href=#239 id=239 data-nosnippet>239</a>};
 </code></pre></div></section></main></body></html>
