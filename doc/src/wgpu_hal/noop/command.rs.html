@@ -293,39 +293,45 @@
 <a href=#293 id=293 data-nosnippet>293</a>        copy: wgt::AccelerationStructureCopy,
 <a href=#294 id=294 data-nosnippet>294</a>    ) {
 <a href=#295 id=295 data-nosnippet>295</a>    }
-<a href=#296 id=296 data-nosnippet>296</a>}
-<a href=#297 id=297 data-nosnippet>297</a>
-<a href=#298 id=298 data-nosnippet>298</a><span class="kw">impl </span>Command {
-<a href=#299 id=299 data-nosnippet>299</a>    <span class="doccomment">/// # Safety
-<a href=#300 id=300 data-nosnippet>300</a>    ///
-<a href=#301 id=301 data-nosnippet>301</a>    /// Must be called with appropriate synchronization for the resources affected by the command,
-<a href=#302 id=302 data-nosnippet>302</a>    /// such as ensuring that buffers are not accessed by a command while aliasing references exist.
-<a href=#303 id=303 data-nosnippet>303</a>    </span><span class="kw">unsafe fn </span>execute(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-<a href=#304 id=304 data-nosnippet>304</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#305 id=305 data-nosnippet>305</a>            Command::ClearBuffer { <span class="kw-2">ref </span>buffer, range } =&gt; {
-<a href=#306 id=306 data-nosnippet>306</a>                <span class="comment">// SAFETY:
-<a href=#307 id=307 data-nosnippet>307</a>                // Caller is responsible for ensuring this does not alias.
-<a href=#308 id=308 data-nosnippet>308</a>                </span><span class="kw">let </span>buffer_slice: <span class="kw-2">&amp;mut </span>[u8] = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>buffer.get_slice_ptr(range.clone()) };
-<a href=#309 id=309 data-nosnippet>309</a>                buffer_slice.fill(<span class="number">0</span>);
-<a href=#310 id=310 data-nosnippet>310</a>            }
-<a href=#311 id=311 data-nosnippet>311</a>
-<a href=#312 id=312 data-nosnippet>312</a>            Command::CopyBufferToBuffer { src, dst, regions } =&gt; {
-<a href=#313 id=313 data-nosnippet>313</a>                <span class="kw">for </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::BufferCopy {
-<a href=#314 id=314 data-nosnippet>314</a>                    src_offset,
-<a href=#315 id=315 data-nosnippet>315</a>                    dst_offset,
-<a href=#316 id=316 data-nosnippet>316</a>                    size,
-<a href=#317 id=317 data-nosnippet>317</a>                } <span class="kw">in </span>regions
-<a href=#318 id=318 data-nosnippet>318</a>                {
-<a href=#319 id=319 data-nosnippet>319</a>                    <span class="comment">// SAFETY:
-<a href=#320 id=320 data-nosnippet>320</a>                    // Caller is responsible for ensuring this does not alias.
-<a href=#321 id=321 data-nosnippet>321</a>                    </span><span class="kw">let </span>src_region: <span class="kw-2">&amp;</span>[u8] =
-<a href=#322 id=322 data-nosnippet>322</a>                        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>src.get_slice_ptr(src_offset..src_offset + size.get()) };
-<a href=#323 id=323 data-nosnippet>323</a>                    <span class="kw">let </span>dst_region: <span class="kw-2">&amp;mut </span>[u8] =
-<a href=#324 id=324 data-nosnippet>324</a>                        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>dst.get_slice_ptr(dst_offset..dst_offset + size.get()) };
-<a href=#325 id=325 data-nosnippet>325</a>                    dst_region.copy_from_slice(src_region);
-<a href=#326 id=326 data-nosnippet>326</a>                }
-<a href=#327 id=327 data-nosnippet>327</a>            }
-<a href=#328 id=328 data-nosnippet>328</a>        }
-<a href=#329 id=329 data-nosnippet>329</a>    }
-<a href=#330 id=330 data-nosnippet>330</a>}
+<a href=#296 id=296 data-nosnippet>296</a>
+<a href=#297 id=297 data-nosnippet>297</a>    <span class="kw">unsafe fn </span>set_acceleration_structure_dependencies(
+<a href=#298 id=298 data-nosnippet>298</a>        command_buffers: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>CommandBuffer],
+<a href=#299 id=299 data-nosnippet>299</a>        dependencies: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>Resource],
+<a href=#300 id=300 data-nosnippet>300</a>    ) {
+<a href=#301 id=301 data-nosnippet>301</a>    }
+<a href=#302 id=302 data-nosnippet>302</a>}
+<a href=#303 id=303 data-nosnippet>303</a>
+<a href=#304 id=304 data-nosnippet>304</a><span class="kw">impl </span>Command {
+<a href=#305 id=305 data-nosnippet>305</a>    <span class="doccomment">/// # Safety
+<a href=#306 id=306 data-nosnippet>306</a>    ///
+<a href=#307 id=307 data-nosnippet>307</a>    /// Must be called with appropriate synchronization for the resources affected by the command,
+<a href=#308 id=308 data-nosnippet>308</a>    /// such as ensuring that buffers are not accessed by a command while aliasing references exist.
+<a href=#309 id=309 data-nosnippet>309</a>    </span><span class="kw">unsafe fn </span>execute(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+<a href=#310 id=310 data-nosnippet>310</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#311 id=311 data-nosnippet>311</a>            Command::ClearBuffer { <span class="kw-2">ref </span>buffer, range } =&gt; {
+<a href=#312 id=312 data-nosnippet>312</a>                <span class="comment">// SAFETY:
+<a href=#313 id=313 data-nosnippet>313</a>                // Caller is responsible for ensuring this does not alias.
+<a href=#314 id=314 data-nosnippet>314</a>                </span><span class="kw">let </span>buffer_slice: <span class="kw-2">&amp;mut </span>[u8] = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>buffer.get_slice_ptr(range.clone()) };
+<a href=#315 id=315 data-nosnippet>315</a>                buffer_slice.fill(<span class="number">0</span>);
+<a href=#316 id=316 data-nosnippet>316</a>            }
+<a href=#317 id=317 data-nosnippet>317</a>
+<a href=#318 id=318 data-nosnippet>318</a>            Command::CopyBufferToBuffer { src, dst, regions } =&gt; {
+<a href=#319 id=319 data-nosnippet>319</a>                <span class="kw">for </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::BufferCopy {
+<a href=#320 id=320 data-nosnippet>320</a>                    src_offset,
+<a href=#321 id=321 data-nosnippet>321</a>                    dst_offset,
+<a href=#322 id=322 data-nosnippet>322</a>                    size,
+<a href=#323 id=323 data-nosnippet>323</a>                } <span class="kw">in </span>regions
+<a href=#324 id=324 data-nosnippet>324</a>                {
+<a href=#325 id=325 data-nosnippet>325</a>                    <span class="comment">// SAFETY:
+<a href=#326 id=326 data-nosnippet>326</a>                    // Caller is responsible for ensuring this does not alias.
+<a href=#327 id=327 data-nosnippet>327</a>                    </span><span class="kw">let </span>src_region: <span class="kw-2">&amp;</span>[u8] =
+<a href=#328 id=328 data-nosnippet>328</a>                        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>src.get_slice_ptr(src_offset..src_offset + size.get()) };
+<a href=#329 id=329 data-nosnippet>329</a>                    <span class="kw">let </span>dst_region: <span class="kw-2">&amp;mut </span>[u8] =
+<a href=#330 id=330 data-nosnippet>330</a>                        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>dst.get_slice_ptr(dst_offset..dst_offset + size.get()) };
+<a href=#331 id=331 data-nosnippet>331</a>                    dst_region.copy_from_slice(src_region);
+<a href=#332 id=332 data-nosnippet>332</a>                }
+<a href=#333 id=333 data-nosnippet>333</a>            }
+<a href=#334 id=334 data-nosnippet>334</a>        }
+<a href=#335 id=335 data-nosnippet>335</a>    }
+<a href=#336 id=336 data-nosnippet>336</a>}
 </code></pre></div></section></main></body></html>
