@@ -3,7 +3,7 @@
 <a href=#3 id=3 data-nosnippet>3</a><span class="attr">#[cfg(feature = <span class="string">"replay"</span>)]
 <a href=#4 id=4 data-nosnippet>4</a></span><span class="kw">mod </span>replay;
 <a href=#5 id=5 data-nosnippet>5</a>
-<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>core::{convert::Infallible, ops::Range};
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>core::convert::Infallible;
 <a href=#7 id=7 data-nosnippet>7</a>
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>alloc::{string::String, vec::Vec};
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>macro_rules_attribute::apply;
@@ -221,67 +221,68 @@
 <a href=#221 id=221 data-nosnippet>221</a>    WriteBuffer {
 <a href=#222 id=222 data-nosnippet>222</a>        id: R::Buffer,
 <a href=#223 id=223 data-nosnippet>223</a>        data: Data,
-<a href=#224 id=224 data-nosnippet>224</a>        range: Range&lt;wgt::BufferAddress&gt;,
-<a href=#225 id=225 data-nosnippet>225</a>        queued: bool,
-<a href=#226 id=226 data-nosnippet>226</a>    },
-<a href=#227 id=227 data-nosnippet>227</a>    WriteTexture {
-<a href=#228 id=228 data-nosnippet>228</a>        to: wgt::TexelCopyTextureInfo&lt;R::Texture&gt;,
-<a href=#229 id=229 data-nosnippet>229</a>        data: Data,
-<a href=#230 id=230 data-nosnippet>230</a>        layout: wgt::TexelCopyBufferLayout,
-<a href=#231 id=231 data-nosnippet>231</a>        size: wgt::Extent3d,
-<a href=#232 id=232 data-nosnippet>232</a>    },
-<a href=#233 id=233 data-nosnippet>233</a>    Submit(<span class="kw">crate</span>::SubmissionIndex, Vec&lt;Command&lt;R&gt;&gt;),
-<a href=#234 id=234 data-nosnippet>234</a>    FailedCommands {
-<a href=#235 id=235 data-nosnippet>235</a>        commands: <span class="prelude-ty">Option</span>&lt;Vec&lt;Command&lt;R&gt;&gt;&gt;,
-<a href=#236 id=236 data-nosnippet>236</a>        <span class="doccomment">/// If `None`, then encoding failed due to a validation error (returned
-<a href=#237 id=237 data-nosnippet>237</a>        /// from `CommandEncoder::finish`). If `Some`, submission failed due to
-<a href=#238 id=238 data-nosnippet>238</a>        /// a resource having been destroyed.
-<a href=#239 id=239 data-nosnippet>239</a>        </span>failed_at_submit: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::SubmissionIndex&gt;,
-<a href=#240 id=240 data-nosnippet>240</a>        error: String,
-<a href=#241 id=241 data-nosnippet>241</a>    },
-<a href=#242 id=242 data-nosnippet>242</a>    CreateBlas {
-<a href=#243 id=243 data-nosnippet>243</a>        id: R::Blas,
-<a href=#244 id=244 data-nosnippet>244</a>        desc: <span class="kw">crate</span>::resource::BlasDescriptor&lt;<span class="lifetime">'a</span>&gt;,
-<a href=#245 id=245 data-nosnippet>245</a>        sizes: wgt::BlasGeometrySizeDescriptors,
-<a href=#246 id=246 data-nosnippet>246</a>    },
-<a href=#247 id=247 data-nosnippet>247</a>    DestroyBlas(R::Blas),
-<a href=#248 id=248 data-nosnippet>248</a>    CreateTlas {
-<a href=#249 id=249 data-nosnippet>249</a>        id: R::Tlas,
-<a href=#250 id=250 data-nosnippet>250</a>        desc: <span class="kw">crate</span>::resource::TlasDescriptor&lt;<span class="lifetime">'a</span>&gt;,
-<a href=#251 id=251 data-nosnippet>251</a>    },
-<a href=#252 id=252 data-nosnippet>252</a>    DestroyTlas(R::Tlas),
-<a href=#253 id=253 data-nosnippet>253</a>}
-<a href=#254 id=254 data-nosnippet>254</a>
-<a href=#255 id=255 data-nosnippet>255</a><span class="doccomment">/// cbindgen:ignore
-<a href=#256 id=256 data-nosnippet>256</a></span><span class="kw">pub type </span>TraceBindGroupDescriptor&lt;<span class="lifetime">'a</span>&gt; = <span class="kw">crate</span>::binding_model::BindGroupDescriptor&lt;
-<a href=#257 id=257 data-nosnippet>257</a>    <span class="lifetime">'a</span>,
-<a href=#258 id=258 data-nosnippet>258</a>    PointerId&lt;markers::BindGroupLayout&gt;,
-<a href=#259 id=259 data-nosnippet>259</a>    PointerId&lt;markers::Buffer&gt;,
-<a href=#260 id=260 data-nosnippet>260</a>    PointerId&lt;markers::Sampler&gt;,
-<a href=#261 id=261 data-nosnippet>261</a>    PointerId&lt;markers::TextureView&gt;,
-<a href=#262 id=262 data-nosnippet>262</a>    PointerId&lt;markers::Tlas&gt;,
-<a href=#263 id=263 data-nosnippet>263</a>    PointerId&lt;markers::ExternalTexture&gt;,
-<a href=#264 id=264 data-nosnippet>264</a>&gt;;
-<a href=#265 id=265 data-nosnippet>265</a>
-<a href=#266 id=266 data-nosnippet>266</a><span class="doccomment">/// Not a public API. For use by `player` only.
-<a href=#267 id=267 data-nosnippet>267</a>///
-<a href=#268 id=268 data-nosnippet>268</a>/// cbindgen:ignore
-<a href=#269 id=269 data-nosnippet>269</a></span><span class="attr">#[doc(hidden)]
-<a href=#270 id=270 data-nosnippet>270</a></span><span class="kw">pub type </span>TraceGeneralRenderPipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; = GeneralRenderPipelineDescriptor&lt;
-<a href=#271 id=271 data-nosnippet>271</a>    <span class="lifetime">'a</span>,
-<a href=#272 id=272 data-nosnippet>272</a>    PointerId&lt;markers::PipelineLayout&gt;,
-<a href=#273 id=273 data-nosnippet>273</a>    PointerId&lt;markers::ShaderModule&gt;,
-<a href=#274 id=274 data-nosnippet>274</a>    PointerId&lt;markers::PipelineCache&gt;,
-<a href=#275 id=275 data-nosnippet>275</a>&gt;;
-<a href=#276 id=276 data-nosnippet>276</a>
-<a href=#277 id=277 data-nosnippet>277</a><span class="doccomment">/// Not a public API. For use by `player` only.
-<a href=#278 id=278 data-nosnippet>278</a>///
-<a href=#279 id=279 data-nosnippet>279</a>/// cbindgen:ignore
-<a href=#280 id=280 data-nosnippet>280</a></span><span class="attr">#[doc(hidden)]
-<a href=#281 id=281 data-nosnippet>281</a></span><span class="kw">pub type </span>TraceComputePipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; = <span class="kw">crate</span>::pipeline::ComputePipelineDescriptor&lt;
-<a href=#282 id=282 data-nosnippet>282</a>    <span class="lifetime">'a</span>,
-<a href=#283 id=283 data-nosnippet>283</a>    PointerId&lt;markers::PipelineLayout&gt;,
-<a href=#284 id=284 data-nosnippet>284</a>    PointerId&lt;markers::ShaderModule&gt;,
-<a href=#285 id=285 data-nosnippet>285</a>    PointerId&lt;markers::PipelineCache&gt;,
-<a href=#286 id=286 data-nosnippet>286</a>&gt;;
+<a href=#224 id=224 data-nosnippet>224</a>        offset: wgt::BufferAddress,
+<a href=#225 id=225 data-nosnippet>225</a>        size: wgt::BufferAddress,
+<a href=#226 id=226 data-nosnippet>226</a>        queued: bool,
+<a href=#227 id=227 data-nosnippet>227</a>    },
+<a href=#228 id=228 data-nosnippet>228</a>    WriteTexture {
+<a href=#229 id=229 data-nosnippet>229</a>        to: wgt::TexelCopyTextureInfo&lt;R::Texture&gt;,
+<a href=#230 id=230 data-nosnippet>230</a>        data: Data,
+<a href=#231 id=231 data-nosnippet>231</a>        layout: wgt::TexelCopyBufferLayout,
+<a href=#232 id=232 data-nosnippet>232</a>        size: wgt::Extent3d,
+<a href=#233 id=233 data-nosnippet>233</a>    },
+<a href=#234 id=234 data-nosnippet>234</a>    Submit(<span class="kw">crate</span>::SubmissionIndex, Vec&lt;Command&lt;R&gt;&gt;),
+<a href=#235 id=235 data-nosnippet>235</a>    FailedCommands {
+<a href=#236 id=236 data-nosnippet>236</a>        commands: <span class="prelude-ty">Option</span>&lt;Vec&lt;Command&lt;R&gt;&gt;&gt;,
+<a href=#237 id=237 data-nosnippet>237</a>        <span class="doccomment">/// If `None`, then encoding failed due to a validation error (returned
+<a href=#238 id=238 data-nosnippet>238</a>        /// from `CommandEncoder::finish`). If `Some`, submission failed due to
+<a href=#239 id=239 data-nosnippet>239</a>        /// a resource having been destroyed.
+<a href=#240 id=240 data-nosnippet>240</a>        </span>failed_at_submit: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::SubmissionIndex&gt;,
+<a href=#241 id=241 data-nosnippet>241</a>        error: String,
+<a href=#242 id=242 data-nosnippet>242</a>    },
+<a href=#243 id=243 data-nosnippet>243</a>    CreateBlas {
+<a href=#244 id=244 data-nosnippet>244</a>        id: R::Blas,
+<a href=#245 id=245 data-nosnippet>245</a>        desc: <span class="kw">crate</span>::resource::BlasDescriptor&lt;<span class="lifetime">'a</span>&gt;,
+<a href=#246 id=246 data-nosnippet>246</a>        sizes: wgt::BlasGeometrySizeDescriptors,
+<a href=#247 id=247 data-nosnippet>247</a>    },
+<a href=#248 id=248 data-nosnippet>248</a>    DestroyBlas(R::Blas),
+<a href=#249 id=249 data-nosnippet>249</a>    CreateTlas {
+<a href=#250 id=250 data-nosnippet>250</a>        id: R::Tlas,
+<a href=#251 id=251 data-nosnippet>251</a>        desc: <span class="kw">crate</span>::resource::TlasDescriptor&lt;<span class="lifetime">'a</span>&gt;,
+<a href=#252 id=252 data-nosnippet>252</a>    },
+<a href=#253 id=253 data-nosnippet>253</a>    DestroyTlas(R::Tlas),
+<a href=#254 id=254 data-nosnippet>254</a>}
+<a href=#255 id=255 data-nosnippet>255</a>
+<a href=#256 id=256 data-nosnippet>256</a><span class="doccomment">/// cbindgen:ignore
+<a href=#257 id=257 data-nosnippet>257</a></span><span class="kw">pub type </span>TraceBindGroupDescriptor&lt;<span class="lifetime">'a</span>&gt; = <span class="kw">crate</span>::binding_model::BindGroupDescriptor&lt;
+<a href=#258 id=258 data-nosnippet>258</a>    <span class="lifetime">'a</span>,
+<a href=#259 id=259 data-nosnippet>259</a>    PointerId&lt;markers::BindGroupLayout&gt;,
+<a href=#260 id=260 data-nosnippet>260</a>    PointerId&lt;markers::Buffer&gt;,
+<a href=#261 id=261 data-nosnippet>261</a>    PointerId&lt;markers::Sampler&gt;,
+<a href=#262 id=262 data-nosnippet>262</a>    PointerId&lt;markers::TextureView&gt;,
+<a href=#263 id=263 data-nosnippet>263</a>    PointerId&lt;markers::Tlas&gt;,
+<a href=#264 id=264 data-nosnippet>264</a>    PointerId&lt;markers::ExternalTexture&gt;,
+<a href=#265 id=265 data-nosnippet>265</a>&gt;;
+<a href=#266 id=266 data-nosnippet>266</a>
+<a href=#267 id=267 data-nosnippet>267</a><span class="doccomment">/// Not a public API. For use by `player` only.
+<a href=#268 id=268 data-nosnippet>268</a>///
+<a href=#269 id=269 data-nosnippet>269</a>/// cbindgen:ignore
+<a href=#270 id=270 data-nosnippet>270</a></span><span class="attr">#[doc(hidden)]
+<a href=#271 id=271 data-nosnippet>271</a></span><span class="kw">pub type </span>TraceGeneralRenderPipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; = GeneralRenderPipelineDescriptor&lt;
+<a href=#272 id=272 data-nosnippet>272</a>    <span class="lifetime">'a</span>,
+<a href=#273 id=273 data-nosnippet>273</a>    PointerId&lt;markers::PipelineLayout&gt;,
+<a href=#274 id=274 data-nosnippet>274</a>    PointerId&lt;markers::ShaderModule&gt;,
+<a href=#275 id=275 data-nosnippet>275</a>    PointerId&lt;markers::PipelineCache&gt;,
+<a href=#276 id=276 data-nosnippet>276</a>&gt;;
+<a href=#277 id=277 data-nosnippet>277</a>
+<a href=#278 id=278 data-nosnippet>278</a><span class="doccomment">/// Not a public API. For use by `player` only.
+<a href=#279 id=279 data-nosnippet>279</a>///
+<a href=#280 id=280 data-nosnippet>280</a>/// cbindgen:ignore
+<a href=#281 id=281 data-nosnippet>281</a></span><span class="attr">#[doc(hidden)]
+<a href=#282 id=282 data-nosnippet>282</a></span><span class="kw">pub type </span>TraceComputePipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; = <span class="kw">crate</span>::pipeline::ComputePipelineDescriptor&lt;
+<a href=#283 id=283 data-nosnippet>283</a>    <span class="lifetime">'a</span>,
+<a href=#284 id=284 data-nosnippet>284</a>    PointerId&lt;markers::PipelineLayout&gt;,
+<a href=#285 id=285 data-nosnippet>285</a>    PointerId&lt;markers::ShaderModule&gt;,
+<a href=#286 id=286 data-nosnippet>286</a>    PointerId&lt;markers::PipelineCache&gt;,
+<a href=#287 id=287 data-nosnippet>287</a>&gt;;
 </code></pre></div></section></main></body></html>
