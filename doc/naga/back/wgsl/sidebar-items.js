@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Error"],"fn":["write_string"],"mod":["polyfill","writer"],"struct":["Writer","WriterFlags"],"trait":["ToWgslIfImplemented"]};
+window.SIDEBAR_ITEMS = {"enum":["Error"],"fn":["supported_capabilities","write_string"],"mod":["polyfill","writer"],"struct":["Writer","WriterFlags"],"trait":["ToWgslIfImplemented"]};

@@ -130,14 +130,14 @@
 <a href=#130 id=130 data-nosnippet>130</a>
 <a href=#131 id=131 data-nosnippet>131</a><span class="kw">impl </span>WebGpuError <span class="kw">for </span>RenderCommandError {
 <a href=#132 id=132 data-nosnippet>132</a>    <span class="kw">fn </span>webgpu_error_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ErrorType {
-<a href=#133 id=133 data-nosnippet>133</a>        <span class="kw">let </span>e: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WebGpuError = <span class="kw">match </span><span class="self">self </span>{
-<a href=#134 id=134 data-nosnippet>134</a>            <span class="self">Self</span>::IncompatiblePipelineTargets(e) =&gt; e,
-<a href=#135 id=135 data-nosnippet>135</a>            <span class="self">Self</span>::ResourceUsageCompatibility(e) =&gt; e,
-<a href=#136 id=136 data-nosnippet>136</a>            <span class="self">Self</span>::DestroyedResource(e) =&gt; e,
-<a href=#137 id=137 data-nosnippet>137</a>            <span class="self">Self</span>::MissingBufferUsage(e) =&gt; e,
-<a href=#138 id=138 data-nosnippet>138</a>            <span class="self">Self</span>::MissingTextureUsage(e) =&gt; e,
-<a href=#139 id=139 data-nosnippet>139</a>            <span class="self">Self</span>::ImmediateData(e) =&gt; e,
-<a href=#140 id=140 data-nosnippet>140</a>            <span class="self">Self</span>::BindingError(e) =&gt; e,
+<a href=#133 id=133 data-nosnippet>133</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#134 id=134 data-nosnippet>134</a>            <span class="self">Self</span>::IncompatiblePipelineTargets(e) =&gt; e.webgpu_error_type(),
+<a href=#135 id=135 data-nosnippet>135</a>            <span class="self">Self</span>::ResourceUsageCompatibility(e) =&gt; e.webgpu_error_type(),
+<a href=#136 id=136 data-nosnippet>136</a>            <span class="self">Self</span>::DestroyedResource(e) =&gt; e.webgpu_error_type(),
+<a href=#137 id=137 data-nosnippet>137</a>            <span class="self">Self</span>::MissingBufferUsage(e) =&gt; e.webgpu_error_type(),
+<a href=#138 id=138 data-nosnippet>138</a>            <span class="self">Self</span>::MissingTextureUsage(e) =&gt; e.webgpu_error_type(),
+<a href=#139 id=139 data-nosnippet>139</a>            <span class="self">Self</span>::ImmediateData(e) =&gt; e.webgpu_error_type(),
+<a href=#140 id=140 data-nosnippet>140</a>            <span class="self">Self</span>::BindingError(e) =&gt; e.webgpu_error_type(),
 <a href=#141 id=141 data-nosnippet>141</a>
 <a href=#142 id=142 data-nosnippet>142</a>            <span class="self">Self</span>::BindGroupIndexOutOfRange { .. }
 <a href=#143 id=143 data-nosnippet>143</a>            | <span class="self">Self</span>::VertexBufferIndexOutOfRange { .. }
@@ -149,18 +149,17 @@
 <a href=#149 id=149 data-nosnippet>149</a>            | <span class="self">Self</span>::InvalidViewportRectPosition { .. }
 <a href=#150 id=150 data-nosnippet>150</a>            | <span class="self">Self</span>::InvalidViewportDepth(..)
 <a href=#151 id=151 data-nosnippet>151</a>            | <span class="self">Self</span>::InvalidScissorRect(..)
-<a href=#152 id=152 data-nosnippet>152</a>            | <span class="self">Self</span>::Unimplemented(..) =&gt; <span class="kw">return </span>ErrorType::Validation,
-<a href=#153 id=153 data-nosnippet>153</a>        };
-<a href=#154 id=154 data-nosnippet>154</a>        e.webgpu_error_type()
-<a href=#155 id=155 data-nosnippet>155</a>    }
-<a href=#156 id=156 data-nosnippet>156</a>}
-<a href=#157 id=157 data-nosnippet>157</a>
-<a href=#158 id=158 data-nosnippet>158</a><span class="attr">#[derive(Clone, Copy, Debug, Default)]
-<a href=#159 id=159 data-nosnippet>159</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-<a href=#160 id=160 data-nosnippet>160</a></span><span class="kw">pub struct </span>Rect&lt;T&gt; {
-<a href=#161 id=161 data-nosnippet>161</a>    <span class="kw">pub </span>x: T,
-<a href=#162 id=162 data-nosnippet>162</a>    <span class="kw">pub </span>y: T,
-<a href=#163 id=163 data-nosnippet>163</a>    <span class="kw">pub </span>w: T,
-<a href=#164 id=164 data-nosnippet>164</a>    <span class="kw">pub </span>h: T,
-<a href=#165 id=165 data-nosnippet>165</a>}
+<a href=#152 id=152 data-nosnippet>152</a>            | <span class="self">Self</span>::Unimplemented(..) =&gt; ErrorType::Validation,
+<a href=#153 id=153 data-nosnippet>153</a>        }
+<a href=#154 id=154 data-nosnippet>154</a>    }
+<a href=#155 id=155 data-nosnippet>155</a>}
+<a href=#156 id=156 data-nosnippet>156</a>
+<a href=#157 id=157 data-nosnippet>157</a><span class="attr">#[derive(Clone, Copy, Debug, Default)]
+<a href=#158 id=158 data-nosnippet>158</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+<a href=#159 id=159 data-nosnippet>159</a></span><span class="kw">pub struct </span>Rect&lt;T&gt; {
+<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">pub </span>x: T,
+<a href=#161 id=161 data-nosnippet>161</a>    <span class="kw">pub </span>y: T,
+<a href=#162 id=162 data-nosnippet>162</a>    <span class="kw">pub </span>w: T,
+<a href=#163 id=163 data-nosnippet>163</a>    <span class="kw">pub </span>h: T,
+<a href=#164 id=164 data-nosnippet>164</a>}
 </code></pre></div></section></main></body></html>

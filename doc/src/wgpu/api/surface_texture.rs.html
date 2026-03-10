@@ -58,47 +58,56 @@
 <a href=#58 id=58 data-nosnippet>58</a></span><span class="kw">pub enum </span>SurfaceError {
 <a href=#59 id=59 data-nosnippet>59</a>    <span class="doccomment">/// A timeout was encountered while trying to acquire the next frame.
 <a href=#60 id=60 data-nosnippet>60</a>    </span>Timeout,
-<a href=#61 id=61 data-nosnippet>61</a>    <span class="doccomment">/// The underlying surface has changed, and therefore the swap chain must be updated.
-<a href=#62 id=62 data-nosnippet>62</a>    </span>Outdated,
-<a href=#63 id=63 data-nosnippet>63</a>    <span class="doccomment">/// The swap chain has been lost and needs to be recreated.
-<a href=#64 id=64 data-nosnippet>64</a>    </span>Lost,
-<a href=#65 id=65 data-nosnippet>65</a>    <span class="doccomment">/// There is no more memory left to allocate a new frame.
-<a href=#66 id=66 data-nosnippet>66</a>    </span>OutOfMemory,
-<a href=#67 id=67 data-nosnippet>67</a>    <span class="doccomment">/// Acquiring a texture failed with a generic error. Check error callbacks for more information.
-<a href=#68 id=68 data-nosnippet>68</a>    </span>Other,
-<a href=#69 id=69 data-nosnippet>69</a>}
-<a href=#70 id=70 data-nosnippet>70</a><span class="macro">static_assertions::assert_impl_all!</span>(SurfaceError: Send, Sync);
-<a href=#71 id=71 data-nosnippet>71</a>
-<a href=#72 id=72 data-nosnippet>72</a><span class="kw">impl </span>fmt::Display <span class="kw">for </span>SurfaceError {
-<a href=#73 id=73 data-nosnippet>73</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-<a href=#74 id=74 data-nosnippet>74</a>        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="kw">match </span><span class="self">self </span>{
-<a href=#75 id=75 data-nosnippet>75</a>            <span class="self">Self</span>::Timeout =&gt; <span class="string">"A timeout was encountered while trying to acquire the next frame"</span>,
-<a href=#76 id=76 data-nosnippet>76</a>            <span class="self">Self</span>::Outdated =&gt; <span class="string">"The underlying surface has changed, and therefore the swap chain must be updated"</span>,
-<a href=#77 id=77 data-nosnippet>77</a>            <span class="self">Self</span>::Lost =&gt;  <span class="string">"The swap chain has been lost and needs to be recreated"</span>,
-<a href=#78 id=78 data-nosnippet>78</a>            <span class="self">Self</span>::OutOfMemory =&gt; <span class="string">"There is no more memory left to allocate a new frame"</span>,
-<a href=#79 id=79 data-nosnippet>79</a>            <span class="self">Self</span>::Other =&gt; <span class="string">"Acquiring a texture failed with a generic error. Check error callbacks for more information"</span>,
-<a href=#80 id=80 data-nosnippet>80</a>        })
-<a href=#81 id=81 data-nosnippet>81</a>    }
-<a href=#82 id=82 data-nosnippet>82</a>}
-<a href=#83 id=83 data-nosnippet>83</a>
-<a href=#84 id=84 data-nosnippet>84</a><span class="kw">impl </span>error::Error <span class="kw">for </span>SurfaceError {}
-<a href=#85 id=85 data-nosnippet>85</a>
-<a href=#86 id=86 data-nosnippet>86</a><span class="kw">fn </span>thread_panicking() -&gt; bool {
-<a href=#87 id=87 data-nosnippet>87</a>    <span class="macro">cfg_if::cfg_if!</span> {
-<a href=#88 id=88 data-nosnippet>88</a>        <span class="kw">if </span><span class="attr">#[cfg(std)] </span>{
-<a href=#89 id=89 data-nosnippet>89</a>            std::thread::panicking()
-<a href=#90 id=90 data-nosnippet>90</a>        } <span class="kw">else if </span><span class="attr">#[cfg(panic = <span class="string">"abort"</span>)] </span>{
-<a href=#91 id=91 data-nosnippet>91</a>            <span class="comment">// If `panic = "abort"` then a thread _cannot_ be observably panicking by definition.
-<a href=#92 id=92 data-nosnippet>92</a>            </span><span class="bool-val">false
-<a href=#93 id=93 data-nosnippet>93</a>        </span>} <span class="kw">else </span>{
-<a href=#94 id=94 data-nosnippet>94</a>            <span class="comment">// TODO: This is potentially overly pessimistic; it may be appropriate to instead allow a
-<a href=#95 id=95 data-nosnippet>95</a>            // texture to not be discarded.
-<a href=#96 id=96 data-nosnippet>96</a>            // Alternatively, this could _also_ be a `panic!`, since we only care if the thread is panicking
-<a href=#97 id=97 data-nosnippet>97</a>            // when the surface has not been presented.
-<a href=#98 id=98 data-nosnippet>98</a>            </span><span class="macro">compile_error!</span>(
-<a href=#99 id=99 data-nosnippet>99</a>                <span class="string">"cannot determine if a thread is panicking without either `panic = \"abort\"` or `std`"
-<a href=#100 id=100 data-nosnippet>100</a>            </span>);
-<a href=#101 id=101 data-nosnippet>101</a>        }
-<a href=#102 id=102 data-nosnippet>102</a>    }
-<a href=#103 id=103 data-nosnippet>103</a>}
+<a href=#61 id=61 data-nosnippet>61</a>    <span class="doccomment">/// The window is occluded (e.g. minimized or behind another window).
+<a href=#62 id=62 data-nosnippet>62</a>    ///
+<a href=#63 id=63 data-nosnippet>63</a>    /// Try again once the window is no longer occluded.
+<a href=#64 id=64 data-nosnippet>64</a>    </span>Occluded,
+<a href=#65 id=65 data-nosnippet>65</a>    <span class="doccomment">/// The underlying surface has changed, and therefore the swap chain must be updated.
+<a href=#66 id=66 data-nosnippet>66</a>    ///
+<a href=#67 id=67 data-nosnippet>67</a>    /// Reconfigure your surface and try again.
+<a href=#68 id=68 data-nosnippet>68</a>    </span>Outdated,
+<a href=#69 id=69 data-nosnippet>69</a>    <span class="doccomment">/// The swap chain has been lost and needs to be recreated.
+<a href=#70 id=70 data-nosnippet>70</a>    ///
+<a href=#71 id=71 data-nosnippet>71</a>    /// Reconfigure your surface and try again.
+<a href=#72 id=72 data-nosnippet>72</a>    </span>Lost,
+<a href=#73 id=73 data-nosnippet>73</a>    <span class="doccomment">/// There is no more memory left to allocate a new frame.
+<a href=#74 id=74 data-nosnippet>74</a>    </span>OutOfMemory,
+<a href=#75 id=75 data-nosnippet>75</a>    <span class="doccomment">/// Acquiring a texture failed with a generic error. Check error callbacks for more information.
+<a href=#76 id=76 data-nosnippet>76</a>    </span>Other,
+<a href=#77 id=77 data-nosnippet>77</a>}
+<a href=#78 id=78 data-nosnippet>78</a><span class="macro">static_assertions::assert_impl_all!</span>(SurfaceError: Send, Sync);
+<a href=#79 id=79 data-nosnippet>79</a>
+<a href=#80 id=80 data-nosnippet>80</a><span class="kw">impl </span>fmt::Display <span class="kw">for </span>SurfaceError {
+<a href=#81 id=81 data-nosnippet>81</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+<a href=#82 id=82 data-nosnippet>82</a>        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="kw">match </span><span class="self">self </span>{
+<a href=#83 id=83 data-nosnippet>83</a>            <span class="self">Self</span>::Timeout =&gt; <span class="string">"A timeout was encountered while trying to acquire the next frame"</span>,
+<a href=#84 id=84 data-nosnippet>84</a>            <span class="self">Self</span>::Occluded =&gt; <span class="string">"The window is occluded (e.g. minimized or behind another window)"</span>,
+<a href=#85 id=85 data-nosnippet>85</a>            <span class="self">Self</span>::Outdated =&gt; <span class="string">"The underlying surface has changed, and therefore the swap chain must be updated"</span>,
+<a href=#86 id=86 data-nosnippet>86</a>            <span class="self">Self</span>::Lost =&gt;  <span class="string">"The swap chain has been lost and needs to be recreated"</span>,
+<a href=#87 id=87 data-nosnippet>87</a>            <span class="self">Self</span>::OutOfMemory =&gt; <span class="string">"There is no more memory left to allocate a new frame"</span>,
+<a href=#88 id=88 data-nosnippet>88</a>            <span class="self">Self</span>::Other =&gt; <span class="string">"Acquiring a texture failed with a generic error. Check error callbacks for more information"</span>,
+<a href=#89 id=89 data-nosnippet>89</a>        })
+<a href=#90 id=90 data-nosnippet>90</a>    }
+<a href=#91 id=91 data-nosnippet>91</a>}
+<a href=#92 id=92 data-nosnippet>92</a>
+<a href=#93 id=93 data-nosnippet>93</a><span class="kw">impl </span>error::Error <span class="kw">for </span>SurfaceError {}
+<a href=#94 id=94 data-nosnippet>94</a>
+<a href=#95 id=95 data-nosnippet>95</a><span class="kw">fn </span>thread_panicking() -&gt; bool {
+<a href=#96 id=96 data-nosnippet>96</a>    <span class="macro">cfg_if::cfg_if!</span> {
+<a href=#97 id=97 data-nosnippet>97</a>        <span class="kw">if </span><span class="attr">#[cfg(std)] </span>{
+<a href=#98 id=98 data-nosnippet>98</a>            std::thread::panicking()
+<a href=#99 id=99 data-nosnippet>99</a>        } <span class="kw">else if </span><span class="attr">#[cfg(panic = <span class="string">"abort"</span>)] </span>{
+<a href=#100 id=100 data-nosnippet>100</a>            <span class="comment">// If `panic = "abort"` then a thread _cannot_ be observably panicking by definition.
+<a href=#101 id=101 data-nosnippet>101</a>            </span><span class="bool-val">false
+<a href=#102 id=102 data-nosnippet>102</a>        </span>} <span class="kw">else </span>{
+<a href=#103 id=103 data-nosnippet>103</a>            <span class="comment">// TODO: This is potentially overly pessimistic; it may be appropriate to instead allow a
+<a href=#104 id=104 data-nosnippet>104</a>            // texture to not be discarded.
+<a href=#105 id=105 data-nosnippet>105</a>            // Alternatively, this could _also_ be a `panic!`, since we only care if the thread is panicking
+<a href=#106 id=106 data-nosnippet>106</a>            // when the surface has not been presented.
+<a href=#107 id=107 data-nosnippet>107</a>            </span><span class="macro">compile_error!</span>(
+<a href=#108 id=108 data-nosnippet>108</a>                <span class="string">"cannot determine if a thread is panicking without either `panic = \"abort\"` or `std`"
+<a href=#109 id=109 data-nosnippet>109</a>            </span>);
+<a href=#110 id=110 data-nosnippet>110</a>        }
+<a href=#111 id=111 data-nosnippet>111</a>    }
+<a href=#112 id=112 data-nosnippet>112</a>}
 </code></pre></div></section></main></body></html>

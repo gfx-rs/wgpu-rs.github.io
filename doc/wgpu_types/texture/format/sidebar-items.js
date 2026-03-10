@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AstcBlock","AstcChannel","TextureFormat"],"struct":["TextureFormatFeatureFlags","TextureFormatFeatures"]};
+window.SIDEBAR_ITEMS = {"enum":["AstcBlock","AstcChannel","TextureFormat"],"struct":["TextureChannel","TextureFormatFeatureFlags","TextureFormatFeatures"]};
