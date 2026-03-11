@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/api/buffer.rs`."><title>buffer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu/api/</div>buffer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec::Vec};
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::{
 <a href=#3 id=3 data-nosnippet>3</a>    error, fmt,
-<a href=#4 id=4 data-nosnippet>4</a>    ops::{Bound, Deref, DerefMut, Range, RangeBounds},
+<a href=#4 id=4 data-nosnippet>4</a>    ops::{Bound, Deref, Range, RangeBounds},
 <a href=#5 id=5 data-nosnippet>5</a>};
 <a href=#6 id=6 data-nosnippet>6</a>
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::util::Mutex;
@@ -140,8 +140,8 @@
 <a href=#140 id=140 data-nosnippet>140</a>/// buffer.map_async(wgpu::MapMode::Write, .., move |result| {
 <a href=#141 id=141 data-nosnippet>141</a>///     if result.is_ok() {
 <a href=#142 id=142 data-nosnippet>142</a>///         let mut view = capturable.get_mapped_range_mut(..);
-<a href=#143 id=143 data-nosnippet>143</a>///         let floats: &amp;mut [f32] = bytemuck::cast_slice_mut(&amp;mut view);
-<a href=#144 id=144 data-nosnippet>144</a>///         floats.fill(42.0);
+<a href=#143 id=143 data-nosnippet>143</a>///         let mut floats: wgpu::WriteOnly&lt;[[u8; 4]]&gt; = view.slice(..).into_chunks::&lt;4&gt;().0;
+<a href=#144 id=144 data-nosnippet>144</a>///         floats.fill(42.0f32.to_ne_bytes());
 <a href=#145 id=145 data-nosnippet>145</a>///         drop(view);
 <a href=#146 id=146 data-nosnippet>146</a>///         capturable.unmap();
 <a href=#147 id=147 data-nosnippet>147</a>///     }
@@ -613,7 +613,7 @@
 <a href=#613 id=613 data-nosnippet>613</a>        }
 <a href=#614 id=614 data-nosnippet>614</a>    }
 <a href=#615 id=615 data-nosnippet>615</a>
-<a href=#616 id=616 data-nosnippet>616</a>    <span class="doccomment">/// Gain write access to the bytes of a [mapped] [`Buffer`].
+<a href=#616 id=616 data-nosnippet>616</a>    <span class="doccomment">/// Gain write-only access to the bytes of a [mapped] [`Buffer`].
 <a href=#617 id=617 data-nosnippet>617</a>    ///
 <a href=#618 id=618 data-nosnippet>618</a>    /// Returns a [`BufferViewMut`] referring to the buffer range represented by
 <a href=#619 id=619 data-nosnippet>619</a>    /// `self`. See the documentation for [`BufferViewMut`] for more details.
@@ -825,7 +825,7 @@
 <a href=#825 id=825 data-nosnippet>825</a>    ///
 <a href=#826 id=826 data-nosnippet>826</a>    /// This panics if the given range does not exactly match one previously
 <a href=#827 id=827 data-nosnippet>827</a>    /// passed to [`MapContext::validate_and_add`].
-<a href=#828 id=828 data-nosnippet>828</a>    </span><span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: BufferAddress, size: BufferSize) {
+<a href=#828 id=828 data-nosnippet>828</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: BufferAddress, size: BufferSize) {
 <a href=#829 id=829 data-nosnippet>829</a>        <span class="kw">let </span>end = offset + size.get();
 <a href=#830 id=830 data-nosnippet>830</a>
 <a href=#831 id=831 data-nosnippet>831</a>        <span class="kw">let </span>index = <span class="self">self
@@ -894,211 +894,229 @@
 <a href=#894 id=894 data-nosnippet>894</a>    inner: dispatch::DispatchBufferMappedRange,
 <a href=#895 id=895 data-nosnippet>895</a>}
 <a href=#896 id=896 data-nosnippet>896</a>
-<a href=#897 id=897 data-nosnippet>897</a><span class="attr">#[cfg(webgpu)]
-<a href=#898 id=898 data-nosnippet>898</a></span><span class="kw">impl </span>BufferView {
-<a href=#899 id=899 data-nosnippet>899</a>    <span class="doccomment">/// Provides the same data as dereferencing the view, but as a `Uint8Array` in js.
-<a href=#900 id=900 data-nosnippet>900</a>    /// This can be MUCH faster than dereferencing the view which copies the data into
-<a href=#901 id=901 data-nosnippet>901</a>    /// the Rust / wasm heap.
-<a href=#902 id=902 data-nosnippet>902</a>    </span><span class="kw">pub fn </span>as_uint8array(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>js_sys::Uint8Array {
-<a href=#903 id=903 data-nosnippet>903</a>        <span class="self">self</span>.inner.as_uint8array()
-<a href=#904 id=904 data-nosnippet>904</a>    }
-<a href=#905 id=905 data-nosnippet>905</a>}
-<a href=#906 id=906 data-nosnippet>906</a>
-<a href=#907 id=907 data-nosnippet>907</a><span class="kw">impl </span>core::ops::Deref <span class="kw">for </span>BufferView {
-<a href=#908 id=908 data-nosnippet>908</a>    <span class="kw">type </span>Target = [u8];
-<a href=#909 id=909 data-nosnippet>909</a>
-<a href=#910 id=910 data-nosnippet>910</a>    <span class="attr">#[inline]
-<a href=#911 id=911 data-nosnippet>911</a>    </span><span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-<a href=#912 id=912 data-nosnippet>912</a>        <span class="self">self</span>.inner.slice()
-<a href=#913 id=913 data-nosnippet>913</a>    }
-<a href=#914 id=914 data-nosnippet>914</a>}
-<a href=#915 id=915 data-nosnippet>915</a>
-<a href=#916 id=916 data-nosnippet>916</a><span class="kw">impl </span>AsRef&lt;[u8]&gt; <span class="kw">for </span>BufferView {
-<a href=#917 id=917 data-nosnippet>917</a>    <span class="attr">#[inline]
-<a href=#918 id=918 data-nosnippet>918</a>    </span><span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-<a href=#919 id=919 data-nosnippet>919</a>        <span class="self">self</span>.inner.slice()
-<a href=#920 id=920 data-nosnippet>920</a>    }
+<a href=#897 id=897 data-nosnippet>897</a><span class="doccomment">/// A write-only view of a mapped buffer's bytes.
+<a href=#898 id=898 data-nosnippet>898</a>///
+<a href=#899 id=899 data-nosnippet>899</a>/// To get a `BufferViewMut`, first [map] the buffer, and then
+<a href=#900 id=900 data-nosnippet>900</a>/// call `buffer.slice(range).get_mapped_range_mut()`.
+<a href=#901 id=901 data-nosnippet>901</a>///
+<a href=#902 id=902 data-nosnippet>902</a>/// Because Rust has no write-only reference type
+<a href=#903 id=903 data-nosnippet>903</a>/// (`&amp;[u8]` is read-only and `&amp;mut [u8]` is read-write),
+<a href=#904 id=904 data-nosnippet>904</a>/// this type does not dereference to a slice in the way that [`BufferView`] does.
+<a href=#905 id=905 data-nosnippet>905</a>/// Instead, [`.slice()`][BufferViewMut::slice] returns a special [`WriteOnly`] pointer type,
+<a href=#906 id=906 data-nosnippet>906</a>/// and there are also a few convenience methods such as [`BufferViewMut::copy_from_slice()`].
+<a href=#907 id=907 data-nosnippet>907</a>///
+<a href=#908 id=908 data-nosnippet>908</a>/// Before the buffer can be unmapped, all `BufferViewMut`s observing it
+<a href=#909 id=909 data-nosnippet>909</a>/// must be dropped. Otherwise, the call to [`Buffer::unmap`] will panic.
+<a href=#910 id=910 data-nosnippet>910</a>///
+<a href=#911 id=911 data-nosnippet>911</a>/// For example code, see the documentation on [mapping buffers][map].
+<a href=#912 id=912 data-nosnippet>912</a>///
+<a href=#913 id=913 data-nosnippet>913</a>/// [map]: Buffer#mapping-buffers
+<a href=#914 id=914 data-nosnippet>914</a></span><span class="attr">#[derive(Debug)]
+<a href=#915 id=915 data-nosnippet>915</a></span><span class="kw">pub struct </span>BufferViewMut {
+<a href=#916 id=916 data-nosnippet>916</a>    <span class="comment">// `buffer, offset, size` are similar to `BufferSlice`, except that they own the buffer.
+<a href=#917 id=917 data-nosnippet>917</a>    </span>buffer: Buffer,
+<a href=#918 id=918 data-nosnippet>918</a>    offset: BufferAddress,
+<a href=#919 id=919 data-nosnippet>919</a>    size: BufferSize,
+<a href=#920 id=920 data-nosnippet>920</a>    inner: dispatch::DispatchBufferMappedRange,
 <a href=#921 id=921 data-nosnippet>921</a>}
 <a href=#922 id=922 data-nosnippet>922</a>
-<a href=#923 id=923 data-nosnippet>923</a><span class="doccomment">/// A write-only view of a mapped buffer's bytes.
-<a href=#924 id=924 data-nosnippet>924</a>///
-<a href=#925 id=925 data-nosnippet>925</a>/// To get a `BufferViewMut`, first [map] the buffer, and then
-<a href=#926 id=926 data-nosnippet>926</a>/// call `buffer.slice(range).get_mapped_range_mut()`.
-<a href=#927 id=927 data-nosnippet>927</a>///
-<a href=#928 id=928 data-nosnippet>928</a>/// `BufferViewMut` dereferences to `&amp;mut [u8]`, so you can use all the usual
-<a href=#929 id=929 data-nosnippet>929</a>/// Rust slice methods to access the buffer's contents. It also implements
-<a href=#930 id=930 data-nosnippet>930</a>/// `AsMut&lt;[u8]&gt;`, if that's more convenient.
-<a href=#931 id=931 data-nosnippet>931</a>///
-<a href=#932 id=932 data-nosnippet>932</a>/// It is possible to read the buffer using this view, but doing so is not
-<a href=#933 id=933 data-nosnippet>933</a>/// recommended, as it is likely to be slow.
-<a href=#934 id=934 data-nosnippet>934</a>///
-<a href=#935 id=935 data-nosnippet>935</a>/// Before the buffer can be unmapped, all `BufferViewMut`s observing it
-<a href=#936 id=936 data-nosnippet>936</a>/// must be dropped. Otherwise, the call to [`Buffer::unmap`] will panic.
-<a href=#937 id=937 data-nosnippet>937</a>///
-<a href=#938 id=938 data-nosnippet>938</a>/// For example code, see the documentation on [mapping buffers][map].
-<a href=#939 id=939 data-nosnippet>939</a>///
-<a href=#940 id=940 data-nosnippet>940</a>/// [map]: Buffer#mapping-buffers
-<a href=#941 id=941 data-nosnippet>941</a></span><span class="attr">#[derive(Debug)]
-<a href=#942 id=942 data-nosnippet>942</a></span><span class="kw">pub struct </span>BufferViewMut {
-<a href=#943 id=943 data-nosnippet>943</a>    <span class="comment">// `buffer, offset, size` are similar to `BufferSlice`, except that they own the buffer.
-<a href=#944 id=944 data-nosnippet>944</a>    </span>buffer: Buffer,
-<a href=#945 id=945 data-nosnippet>945</a>    offset: BufferAddress,
-<a href=#946 id=946 data-nosnippet>946</a>    size: BufferSize,
-<a href=#947 id=947 data-nosnippet>947</a>    inner: dispatch::DispatchBufferMappedRange,
-<a href=#948 id=948 data-nosnippet>948</a>}
-<a href=#949 id=949 data-nosnippet>949</a>
-<a href=#950 id=950 data-nosnippet>950</a><span class="kw">impl </span>AsMut&lt;[u8]&gt; <span class="kw">for </span>BufferViewMut {
-<a href=#951 id=951 data-nosnippet>951</a>    <span class="attr">#[inline]
-<a href=#952 id=952 data-nosnippet>952</a>    </span><span class="kw">fn </span>as_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
-<a href=#953 id=953 data-nosnippet>953</a>        <span class="self">self</span>.inner.slice_mut()
-<a href=#954 id=954 data-nosnippet>954</a>    }
-<a href=#955 id=955 data-nosnippet>955</a>}
-<a href=#956 id=956 data-nosnippet>956</a>
-<a href=#957 id=957 data-nosnippet>957</a><span class="kw">impl </span>Deref <span class="kw">for </span>BufferViewMut {
-<a href=#958 id=958 data-nosnippet>958</a>    <span class="kw">type </span>Target = [u8];
-<a href=#959 id=959 data-nosnippet>959</a>
-<a href=#960 id=960 data-nosnippet>960</a>    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
-<a href=#961 id=961 data-nosnippet>961</a>        <span class="self">self</span>.inner.slice()
-<a href=#962 id=962 data-nosnippet>962</a>    }
-<a href=#963 id=963 data-nosnippet>963</a>}
-<a href=#964 id=964 data-nosnippet>964</a>
-<a href=#965 id=965 data-nosnippet>965</a><span class="kw">impl </span>DerefMut <span class="kw">for </span>BufferViewMut {
-<a href=#966 id=966 data-nosnippet>966</a>    <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
-<a href=#967 id=967 data-nosnippet>967</a>        <span class="self">self</span>.inner.slice_mut()
-<a href=#968 id=968 data-nosnippet>968</a>    }
-<a href=#969 id=969 data-nosnippet>969</a>}
-<a href=#970 id=970 data-nosnippet>970</a>
-<a href=#971 id=971 data-nosnippet>971</a><span class="kw">impl </span>Drop <span class="kw">for </span>BufferView {
-<a href=#972 id=972 data-nosnippet>972</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#973 id=973 data-nosnippet>973</a>        <span class="self">self</span>.buffer
-<a href=#974 id=974 data-nosnippet>974</a>            .map_context
-<a href=#975 id=975 data-nosnippet>975</a>            .lock()
-<a href=#976 id=976 data-nosnippet>976</a>            .remove(<span class="self">self</span>.offset, <span class="self">self</span>.size);
-<a href=#977 id=977 data-nosnippet>977</a>    }
-<a href=#978 id=978 data-nosnippet>978</a>}
-<a href=#979 id=979 data-nosnippet>979</a>
-<a href=#980 id=980 data-nosnippet>980</a><span class="kw">impl </span>Drop <span class="kw">for </span>BufferViewMut {
-<a href=#981 id=981 data-nosnippet>981</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#982 id=982 data-nosnippet>982</a>        <span class="self">self</span>.buffer
-<a href=#983 id=983 data-nosnippet>983</a>            .map_context
-<a href=#984 id=984 data-nosnippet>984</a>            .lock()
-<a href=#985 id=985 data-nosnippet>985</a>            .remove(<span class="self">self</span>.offset, <span class="self">self</span>.size);
-<a href=#986 id=986 data-nosnippet>986</a>    }
-<a href=#987 id=987 data-nosnippet>987</a>}
-<a href=#988 id=988 data-nosnippet>988</a>
-<a href=#989 id=989 data-nosnippet>989</a><span class="attr">#[track_caller]
-<a href=#990 id=990 data-nosnippet>990</a></span><span class="kw">fn </span>check_buffer_bounds(
-<a href=#991 id=991 data-nosnippet>991</a>    buffer_size: BufferAddress,
-<a href=#992 id=992 data-nosnippet>992</a>    slice_offset: BufferAddress,
-<a href=#993 id=993 data-nosnippet>993</a>    slice_size: BufferSize,
-<a href=#994 id=994 data-nosnippet>994</a>) {
-<a href=#995 id=995 data-nosnippet>995</a>    <span class="comment">// A slice of length 0 is invalid, so the offset must not be equal to or greater than the buffer size.
-<a href=#996 id=996 data-nosnippet>996</a>    </span><span class="kw">if </span>slice_offset &gt;= buffer_size {
-<a href=#997 id=997 data-nosnippet>997</a>        <span class="macro">panic!</span>(
-<a href=#998 id=998 data-nosnippet>998</a>            <span class="string">"slice offset {} is out of range for buffer of size {}"</span>,
-<a href=#999 id=999 data-nosnippet>999</a>            slice_offset, buffer_size
-<a href=#1000 id=1000 data-nosnippet>1000</a>        );
-<a href=#1001 id=1001 data-nosnippet>1001</a>    }
-<a href=#1002 id=1002 data-nosnippet>1002</a>
-<a href=#1003 id=1003 data-nosnippet>1003</a>    <span class="comment">// Detect integer overflow.
-<a href=#1004 id=1004 data-nosnippet>1004</a>    </span><span class="kw">let </span>end = slice_offset.checked_add(slice_size.get());
-<a href=#1005 id=1005 data-nosnippet>1005</a>    <span class="kw">if </span>end.is_none_or(|end| end &gt; buffer_size) {
-<a href=#1006 id=1006 data-nosnippet>1006</a>        <span class="macro">panic!</span>(
-<a href=#1007 id=1007 data-nosnippet>1007</a>            <span class="string">"slice offset {} size {} is out of range for buffer of size {}"</span>,
-<a href=#1008 id=1008 data-nosnippet>1008</a>            slice_offset, slice_size, buffer_size
-<a href=#1009 id=1009 data-nosnippet>1009</a>        );
-<a href=#1010 id=1010 data-nosnippet>1010</a>    }
-<a href=#1011 id=1011 data-nosnippet>1011</a>}
-<a href=#1012 id=1012 data-nosnippet>1012</a>
-<a href=#1013 id=1013 data-nosnippet>1013</a><span class="attr">#[track_caller]
-<a href=#1014 id=1014 data-nosnippet>1014</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>range_to_offset_size&lt;S: RangeBounds&lt;BufferAddress&gt;&gt;(
-<a href=#1015 id=1015 data-nosnippet>1015</a>    bounds: S,
-<a href=#1016 id=1016 data-nosnippet>1016</a>    whole_size: BufferAddress,
-<a href=#1017 id=1017 data-nosnippet>1017</a>) -&gt; (BufferAddress, BufferSize) {
-<a href=#1018 id=1018 data-nosnippet>1018</a>    <span class="kw">let </span>offset = <span class="kw">match </span>bounds.start_bound() {
-<a href=#1019 id=1019 data-nosnippet>1019</a>        Bound::Included(<span class="kw-2">&amp;</span>bound) =&gt; bound,
-<a href=#1020 id=1020 data-nosnippet>1020</a>        Bound::Excluded(<span class="kw-2">&amp;</span>bound) =&gt; bound + <span class="number">1</span>,
-<a href=#1021 id=1021 data-nosnippet>1021</a>        Bound::Unbounded =&gt; <span class="number">0</span>,
-<a href=#1022 id=1022 data-nosnippet>1022</a>    };
-<a href=#1023 id=1023 data-nosnippet>1023</a>    <span class="kw">let </span>size = BufferSize::new(<span class="kw">match </span>bounds.end_bound() {
-<a href=#1024 id=1024 data-nosnippet>1024</a>        Bound::Included(<span class="kw-2">&amp;</span>bound) =&gt; bound + <span class="number">1 </span>- offset,
-<a href=#1025 id=1025 data-nosnippet>1025</a>        Bound::Excluded(<span class="kw-2">&amp;</span>bound) =&gt; bound - offset,
-<a href=#1026 id=1026 data-nosnippet>1026</a>        Bound::Unbounded =&gt; whole_size - offset,
-<a href=#1027 id=1027 data-nosnippet>1027</a>    })
-<a href=#1028 id=1028 data-nosnippet>1028</a>    .expect(<span class="string">"buffer slices can not be empty"</span>);
-<a href=#1029 id=1029 data-nosnippet>1029</a>
-<a href=#1030 id=1030 data-nosnippet>1030</a>    (offset, size)
-<a href=#1031 id=1031 data-nosnippet>1031</a>}
-<a href=#1032 id=1032 data-nosnippet>1032</a>
-<a href=#1033 id=1033 data-nosnippet>1033</a><span class="attr">#[cfg(test)]
-<a href=#1034 id=1034 data-nosnippet>1034</a></span><span class="kw">mod </span>tests {
-<a href=#1035 id=1035 data-nosnippet>1035</a>    <span class="kw">use super</span>::{
-<a href=#1036 id=1036 data-nosnippet>1036</a>        check_buffer_bounds, range_overlaps, range_to_offset_size, BufferAddress, BufferSize,
-<a href=#1037 id=1037 data-nosnippet>1037</a>    };
-<a href=#1038 id=1038 data-nosnippet>1038</a>
-<a href=#1039 id=1039 data-nosnippet>1039</a>    <span class="kw">fn </span>bs(value: BufferAddress) -&gt; BufferSize {
-<a href=#1040 id=1040 data-nosnippet>1040</a>        BufferSize::new(value).unwrap()
-<a href=#1041 id=1041 data-nosnippet>1041</a>    }
-<a href=#1042 id=1042 data-nosnippet>1042</a>
-<a href=#1043 id=1043 data-nosnippet>1043</a>    <span class="attr">#[test]
-<a href=#1044 id=1044 data-nosnippet>1044</a>    </span><span class="kw">fn </span>range_to_offset_size_works() {
-<a href=#1045 id=1045 data-nosnippet>1045</a>        <span class="kw">let </span>whole = <span class="number">100</span>;
-<a href=#1046 id=1046 data-nosnippet>1046</a>
-<a href=#1047 id=1047 data-nosnippet>1047</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">0</span>..<span class="number">2</span>, whole), (<span class="number">0</span>, bs(<span class="number">2</span>)));
-<a href=#1048 id=1048 data-nosnippet>1048</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">2</span>..<span class="number">5</span>, whole), (<span class="number">2</span>, bs(<span class="number">3</span>)));
-<a href=#1049 id=1049 data-nosnippet>1049</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(.., whole), (<span class="number">0</span>, bs(whole)));
-<a href=#1050 id=1050 data-nosnippet>1050</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">21</span>.., whole), (<span class="number">21</span>, bs(whole - <span class="number">21</span>)));
-<a href=#1051 id=1051 data-nosnippet>1051</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">0</span>.., whole), (<span class="number">0</span>, bs(whole)));
-<a href=#1052 id=1052 data-nosnippet>1052</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(..<span class="number">21</span>, whole), (<span class="number">0</span>, bs(<span class="number">21</span>)));
-<a href=#1053 id=1053 data-nosnippet>1053</a>    }
-<a href=#1054 id=1054 data-nosnippet>1054</a>
-<a href=#1055 id=1055 data-nosnippet>1055</a>    <span class="attr">#[test]
-<a href=#1056 id=1056 data-nosnippet>1056</a>    #[should_panic = <span class="string">"buffer slices can not be empty"</span>]
-<a href=#1057 id=1057 data-nosnippet>1057</a>    </span><span class="kw">fn </span>range_to_offset_size_panics_for_empty_range() {
-<a href=#1058 id=1058 data-nosnippet>1058</a>        range_to_offset_size(<span class="number">123</span>..<span class="number">123</span>, <span class="number">200</span>);
+<a href=#923 id=923 data-nosnippet>923</a><span class="comment">// `BufferView` simply dereferences. `BufferViewMut` cannot, because mapped memory may be
+<a href=#924 id=924 data-nosnippet>924</a>// write-combining memory &lt;https://en.wikipedia.org/wiki/Write_combining&gt;,
+<a href=#925 id=925 data-nosnippet>925</a>// and not support the expected behavior of atomic accesses.
+<a href=#926 id=926 data-nosnippet>926</a>// Further context: &lt;https://github.com/gfx-rs/wgpu/issues/8897&gt;
+<a href=#927 id=927 data-nosnippet>927</a>
+<a href=#928 id=928 data-nosnippet>928</a></span><span class="kw">impl </span>core::ops::Deref <span class="kw">for </span>BufferView {
+<a href=#929 id=929 data-nosnippet>929</a>    <span class="kw">type </span>Target = [u8];
+<a href=#930 id=930 data-nosnippet>930</a>
+<a href=#931 id=931 data-nosnippet>931</a>    <span class="attr">#[inline]
+<a href=#932 id=932 data-nosnippet>932</a>    </span><span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+<a href=#933 id=933 data-nosnippet>933</a>        <span class="comment">// SAFETY: this is a read mapping
+<a href=#934 id=934 data-nosnippet>934</a>        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.inner.read_slice() }
+<a href=#935 id=935 data-nosnippet>935</a>    }
+<a href=#936 id=936 data-nosnippet>936</a>}
+<a href=#937 id=937 data-nosnippet>937</a>
+<a href=#938 id=938 data-nosnippet>938</a><span class="kw">impl </span>AsRef&lt;[u8]&gt; <span class="kw">for </span>BufferView {
+<a href=#939 id=939 data-nosnippet>939</a>    <span class="attr">#[inline]
+<a href=#940 id=940 data-nosnippet>940</a>    </span><span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+<a href=#941 id=941 data-nosnippet>941</a>        <span class="self">self
+<a href=#942 id=942 data-nosnippet>942</a>    </span>}
+<a href=#943 id=943 data-nosnippet>943</a>}
+<a href=#944 id=944 data-nosnippet>944</a>
+<a href=#945 id=945 data-nosnippet>945</a><span class="kw">impl </span>Drop <span class="kw">for </span>BufferView {
+<a href=#946 id=946 data-nosnippet>946</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#947 id=947 data-nosnippet>947</a>        <span class="self">self</span>.buffer
+<a href=#948 id=948 data-nosnippet>948</a>            .map_context
+<a href=#949 id=949 data-nosnippet>949</a>            .lock()
+<a href=#950 id=950 data-nosnippet>950</a>            .remove(<span class="self">self</span>.offset, <span class="self">self</span>.size);
+<a href=#951 id=951 data-nosnippet>951</a>    }
+<a href=#952 id=952 data-nosnippet>952</a>}
+<a href=#953 id=953 data-nosnippet>953</a>
+<a href=#954 id=954 data-nosnippet>954</a><span class="kw">impl </span>Drop <span class="kw">for </span>BufferViewMut {
+<a href=#955 id=955 data-nosnippet>955</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#956 id=956 data-nosnippet>956</a>        <span class="self">self</span>.buffer
+<a href=#957 id=957 data-nosnippet>957</a>            .map_context
+<a href=#958 id=958 data-nosnippet>958</a>            .lock()
+<a href=#959 id=959 data-nosnippet>959</a>            .remove(<span class="self">self</span>.offset, <span class="self">self</span>.size);
+<a href=#960 id=960 data-nosnippet>960</a>    }
+<a href=#961 id=961 data-nosnippet>961</a>}
+<a href=#962 id=962 data-nosnippet>962</a>
+<a href=#963 id=963 data-nosnippet>963</a><span class="attr">#[cfg(webgpu)]
+<a href=#964 id=964 data-nosnippet>964</a></span><span class="kw">impl </span>BufferView {
+<a href=#965 id=965 data-nosnippet>965</a>    <span class="doccomment">/// Provides the same data as dereferencing the view, but as a `Uint8Array` in js.
+<a href=#966 id=966 data-nosnippet>966</a>    /// This can be MUCH faster than dereferencing the view which copies the data into
+<a href=#967 id=967 data-nosnippet>967</a>    /// the Rust / wasm heap.
+<a href=#968 id=968 data-nosnippet>968</a>    </span><span class="kw">pub fn </span>as_uint8array(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>js_sys::Uint8Array {
+<a href=#969 id=969 data-nosnippet>969</a>        <span class="self">self</span>.inner.as_uint8array()
+<a href=#970 id=970 data-nosnippet>970</a>    }
+<a href=#971 id=971 data-nosnippet>971</a>}
+<a href=#972 id=972 data-nosnippet>972</a>
+<a href=#973 id=973 data-nosnippet>973</a><span class="doccomment">/// These methods are equivalent to the methods of the same names on [`WriteOnly`].
+<a href=#974 id=974 data-nosnippet>974</a></span><span class="kw">impl </span>BufferViewMut {
+<a href=#975 id=975 data-nosnippet>975</a>    <span class="doccomment">/// Returns the length of this view; the number of bytes to be written.
+<a href=#976 id=976 data-nosnippet>976</a>    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+<a href=#977 id=977 data-nosnippet>977</a>        <span class="comment">// cannot fail because we can't actually map more than isize::MAX bytes
+<a href=#978 id=978 data-nosnippet>978</a>        </span>usize::try_from(<span class="self">self</span>.size.get()).unwrap()
+<a href=#979 id=979 data-nosnippet>979</a>    }
+<a href=#980 id=980 data-nosnippet>980</a>
+<a href=#981 id=981 data-nosnippet>981</a>    <span class="doccomment">/// Returns `true` if the view has a length of 0.
+<a href=#982 id=982 data-nosnippet>982</a>    ///
+<a href=#983 id=983 data-nosnippet>983</a>    /// Note that this is currently impossible.
+<a href=#984 id=984 data-nosnippet>984</a>    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+<a href=#985 id=985 data-nosnippet>985</a>        <span class="self">self</span>.len() == <span class="number">0
+<a href=#986 id=986 data-nosnippet>986</a>    </span>}
+<a href=#987 id=987 data-nosnippet>987</a>
+<a href=#988 id=988 data-nosnippet>988</a>    <span class="doccomment">/// Returns a [`WriteOnly`] reference to a portion of this.
+<a href=#989 id=989 data-nosnippet>989</a>    ///
+<a href=#990 id=990 data-nosnippet>990</a>    /// `.slice(..)` can be used to access the whole data.
+<a href=#991 id=991 data-nosnippet>991</a>    </span><span class="kw">pub fn </span>slice&lt;<span class="lifetime">'a</span>, S: RangeBounds&lt;usize&gt;&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>, bounds: S) -&gt; WriteOnly&lt;<span class="lifetime">'a</span>, [u8]&gt; {
+<a href=#992 id=992 data-nosnippet>992</a>        <span class="comment">// SAFETY: this is a write mapping
+<a href=#993 id=993 data-nosnippet>993</a>        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.inner.write_slice() }.into_slice(bounds)
+<a href=#994 id=994 data-nosnippet>994</a>    }
+<a href=#995 id=995 data-nosnippet>995</a>
+<a href=#996 id=996 data-nosnippet>996</a>    <span class="doccomment">/// Copies all elements from src into `self`.
+<a href=#997 id=997 data-nosnippet>997</a>    ///
+<a href=#998 id=998 data-nosnippet>998</a>    /// The length of `src` must be the same as `self`.
+<a href=#999 id=999 data-nosnippet>999</a>    ///
+<a href=#1000 id=1000 data-nosnippet>1000</a>    /// This method is equivalent to
+<a href=#1001 id=1001 data-nosnippet>1001</a>    /// [`self.slice(..).copy_from_slice(src)`][WriteOnly::copy_from_slice].
+<a href=#1002 id=1002 data-nosnippet>1002</a>    </span><span class="kw">pub fn </span>copy_from_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>, src: <span class="kw-2">&amp;</span>[u8]) {
+<a href=#1003 id=1003 data-nosnippet>1003</a>        <span class="self">self</span>.slice(..).copy_from_slice(src)
+<a href=#1004 id=1004 data-nosnippet>1004</a>    }
+<a href=#1005 id=1005 data-nosnippet>1005</a>}
+<a href=#1006 id=1006 data-nosnippet>1006</a>
+<a href=#1007 id=1007 data-nosnippet>1007</a><span class="attr">#[track_caller]
+<a href=#1008 id=1008 data-nosnippet>1008</a></span><span class="kw">fn </span>check_buffer_bounds(
+<a href=#1009 id=1009 data-nosnippet>1009</a>    buffer_size: BufferAddress,
+<a href=#1010 id=1010 data-nosnippet>1010</a>    slice_offset: BufferAddress,
+<a href=#1011 id=1011 data-nosnippet>1011</a>    slice_size: BufferSize,
+<a href=#1012 id=1012 data-nosnippet>1012</a>) {
+<a href=#1013 id=1013 data-nosnippet>1013</a>    <span class="comment">// A slice of length 0 is invalid, so the offset must not be equal to or greater than the buffer size.
+<a href=#1014 id=1014 data-nosnippet>1014</a>    </span><span class="kw">if </span>slice_offset &gt;= buffer_size {
+<a href=#1015 id=1015 data-nosnippet>1015</a>        <span class="macro">panic!</span>(
+<a href=#1016 id=1016 data-nosnippet>1016</a>            <span class="string">"slice offset {} is out of range for buffer of size {}"</span>,
+<a href=#1017 id=1017 data-nosnippet>1017</a>            slice_offset, buffer_size
+<a href=#1018 id=1018 data-nosnippet>1018</a>        );
+<a href=#1019 id=1019 data-nosnippet>1019</a>    }
+<a href=#1020 id=1020 data-nosnippet>1020</a>
+<a href=#1021 id=1021 data-nosnippet>1021</a>    <span class="comment">// Detect integer overflow.
+<a href=#1022 id=1022 data-nosnippet>1022</a>    </span><span class="kw">let </span>end = slice_offset.checked_add(slice_size.get());
+<a href=#1023 id=1023 data-nosnippet>1023</a>    <span class="kw">if </span>end.is_none_or(|end| end &gt; buffer_size) {
+<a href=#1024 id=1024 data-nosnippet>1024</a>        <span class="macro">panic!</span>(
+<a href=#1025 id=1025 data-nosnippet>1025</a>            <span class="string">"slice offset {} size {} is out of range for buffer of size {}"</span>,
+<a href=#1026 id=1026 data-nosnippet>1026</a>            slice_offset, slice_size, buffer_size
+<a href=#1027 id=1027 data-nosnippet>1027</a>        );
+<a href=#1028 id=1028 data-nosnippet>1028</a>    }
+<a href=#1029 id=1029 data-nosnippet>1029</a>}
+<a href=#1030 id=1030 data-nosnippet>1030</a>
+<a href=#1031 id=1031 data-nosnippet>1031</a><span class="attr">#[track_caller]
+<a href=#1032 id=1032 data-nosnippet>1032</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>range_to_offset_size&lt;S: RangeBounds&lt;BufferAddress&gt;&gt;(
+<a href=#1033 id=1033 data-nosnippet>1033</a>    bounds: S,
+<a href=#1034 id=1034 data-nosnippet>1034</a>    whole_size: BufferAddress,
+<a href=#1035 id=1035 data-nosnippet>1035</a>) -&gt; (BufferAddress, BufferSize) {
+<a href=#1036 id=1036 data-nosnippet>1036</a>    <span class="kw">let </span>offset = <span class="kw">match </span>bounds.start_bound() {
+<a href=#1037 id=1037 data-nosnippet>1037</a>        Bound::Included(<span class="kw-2">&amp;</span>bound) =&gt; bound,
+<a href=#1038 id=1038 data-nosnippet>1038</a>        Bound::Excluded(<span class="kw-2">&amp;</span>bound) =&gt; bound + <span class="number">1</span>,
+<a href=#1039 id=1039 data-nosnippet>1039</a>        Bound::Unbounded =&gt; <span class="number">0</span>,
+<a href=#1040 id=1040 data-nosnippet>1040</a>    };
+<a href=#1041 id=1041 data-nosnippet>1041</a>    <span class="kw">let </span>size = BufferSize::new(<span class="kw">match </span>bounds.end_bound() {
+<a href=#1042 id=1042 data-nosnippet>1042</a>        Bound::Included(<span class="kw-2">&amp;</span>bound) =&gt; bound + <span class="number">1 </span>- offset,
+<a href=#1043 id=1043 data-nosnippet>1043</a>        Bound::Excluded(<span class="kw-2">&amp;</span>bound) =&gt; bound - offset,
+<a href=#1044 id=1044 data-nosnippet>1044</a>        Bound::Unbounded =&gt; whole_size - offset,
+<a href=#1045 id=1045 data-nosnippet>1045</a>    })
+<a href=#1046 id=1046 data-nosnippet>1046</a>    .expect(<span class="string">"buffer slices can not be empty"</span>);
+<a href=#1047 id=1047 data-nosnippet>1047</a>
+<a href=#1048 id=1048 data-nosnippet>1048</a>    (offset, size)
+<a href=#1049 id=1049 data-nosnippet>1049</a>}
+<a href=#1050 id=1050 data-nosnippet>1050</a>
+<a href=#1051 id=1051 data-nosnippet>1051</a><span class="attr">#[cfg(test)]
+<a href=#1052 id=1052 data-nosnippet>1052</a></span><span class="kw">mod </span>tests {
+<a href=#1053 id=1053 data-nosnippet>1053</a>    <span class="kw">use super</span>::{
+<a href=#1054 id=1054 data-nosnippet>1054</a>        check_buffer_bounds, range_overlaps, range_to_offset_size, BufferAddress, BufferSize,
+<a href=#1055 id=1055 data-nosnippet>1055</a>    };
+<a href=#1056 id=1056 data-nosnippet>1056</a>
+<a href=#1057 id=1057 data-nosnippet>1057</a>    <span class="kw">fn </span>bs(value: BufferAddress) -&gt; BufferSize {
+<a href=#1058 id=1058 data-nosnippet>1058</a>        BufferSize::new(value).unwrap()
 <a href=#1059 id=1059 data-nosnippet>1059</a>    }
 <a href=#1060 id=1060 data-nosnippet>1060</a>
 <a href=#1061 id=1061 data-nosnippet>1061</a>    <span class="attr">#[test]
-<a href=#1062 id=1062 data-nosnippet>1062</a>    #[should_panic = <span class="string">"buffer slices can not be empty"</span>]
-<a href=#1063 id=1063 data-nosnippet>1063</a>    </span><span class="kw">fn </span>range_to_offset_size_panics_for_unbounded_empty_range() {
-<a href=#1064 id=1064 data-nosnippet>1064</a>        range_to_offset_size(..<span class="number">0</span>, <span class="number">100</span>);
-<a href=#1065 id=1065 data-nosnippet>1065</a>    }
-<a href=#1066 id=1066 data-nosnippet>1066</a>
-<a href=#1067 id=1067 data-nosnippet>1067</a>    <span class="attr">#[test]
-<a href=#1068 id=1068 data-nosnippet>1068</a>    </span><span class="kw">fn </span>check_buffer_bounds_works_for_end_in_range() {
-<a href=#1069 id=1069 data-nosnippet>1069</a>        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, bs(<span class="number">50</span>));
-<a href=#1070 id=1070 data-nosnippet>1070</a>        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, bs(<span class="number">100</span>));
-<a href=#1071 id=1071 data-nosnippet>1071</a>        check_buffer_bounds(u64::MAX, u64::MAX - <span class="number">100</span>, bs(<span class="number">100</span>));
-<a href=#1072 id=1072 data-nosnippet>1072</a>        check_buffer_bounds(u64::MAX, <span class="number">0</span>, bs(u64::MAX));
-<a href=#1073 id=1073 data-nosnippet>1073</a>        check_buffer_bounds(u64::MAX, <span class="number">1</span>, bs(u64::MAX - <span class="number">1</span>));
-<a href=#1074 id=1074 data-nosnippet>1074</a>    }
-<a href=#1075 id=1075 data-nosnippet>1075</a>
-<a href=#1076 id=1076 data-nosnippet>1076</a>    <span class="attr">#[test]
-<a href=#1077 id=1077 data-nosnippet>1077</a>    #[should_panic]
-<a href=#1078 id=1078 data-nosnippet>1078</a>    </span><span class="kw">fn </span>check_buffer_bounds_panics_for_end_over_size() {
-<a href=#1079 id=1079 data-nosnippet>1079</a>        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, bs(<span class="number">101</span>));
-<a href=#1080 id=1080 data-nosnippet>1080</a>    }
-<a href=#1081 id=1081 data-nosnippet>1081</a>
-<a href=#1082 id=1082 data-nosnippet>1082</a>    <span class="attr">#[test]
-<a href=#1083 id=1083 data-nosnippet>1083</a>    #[should_panic]
-<a href=#1084 id=1084 data-nosnippet>1084</a>    </span><span class="kw">fn </span>check_buffer_bounds_panics_for_end_wraparound() {
-<a href=#1085 id=1085 data-nosnippet>1085</a>        check_buffer_bounds(u64::MAX, <span class="number">1</span>, bs(u64::MAX));
-<a href=#1086 id=1086 data-nosnippet>1086</a>    }
-<a href=#1087 id=1087 data-nosnippet>1087</a>
-<a href=#1088 id=1088 data-nosnippet>1088</a>    <span class="attr">#[test]
-<a href=#1089 id=1089 data-nosnippet>1089</a>    </span><span class="kw">fn </span>range_overlapping() {
-<a href=#1090 id=1090 data-nosnippet>1090</a>        <span class="comment">// First range to the left
-<a href=#1091 id=1091 data-nosnippet>1091</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">1</span>), <span class="kw-2">&amp;</span>(<span class="number">1</span>..<span class="number">3</span>)), <span class="bool-val">false</span>);
-<a href=#1092 id=1092 data-nosnippet>1092</a>        <span class="comment">// First range overlaps left edge
-<a href=#1093 id=1093 data-nosnippet>1093</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">2</span>), <span class="kw-2">&amp;</span>(<span class="number">1</span>..<span class="number">3</span>)), <span class="bool-val">true</span>);
-<a href=#1094 id=1094 data-nosnippet>1094</a>        <span class="comment">// First range completely inside second
-<a href=#1095 id=1095 data-nosnippet>1095</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">1</span>..<span class="number">2</span>), <span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">3</span>)), <span class="bool-val">true</span>);
-<a href=#1096 id=1096 data-nosnippet>1096</a>        <span class="comment">// First range completely surrounds second
-<a href=#1097 id=1097 data-nosnippet>1097</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">3</span>), <span class="kw-2">&amp;</span>(<span class="number">1</span>..<span class="number">2</span>)), <span class="bool-val">true</span>);
-<a href=#1098 id=1098 data-nosnippet>1098</a>        <span class="comment">// First range overlaps right edge
-<a href=#1099 id=1099 data-nosnippet>1099</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">1</span>..<span class="number">3</span>), <span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">2</span>)), <span class="bool-val">true</span>);
-<a href=#1100 id=1100 data-nosnippet>1100</a>        <span class="comment">// First range entirely to the right
-<a href=#1101 id=1101 data-nosnippet>1101</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">2</span>..<span class="number">3</span>), <span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">2</span>)), <span class="bool-val">false</span>);
-<a href=#1102 id=1102 data-nosnippet>1102</a>    }
-<a href=#1103 id=1103 data-nosnippet>1103</a>}
+<a href=#1062 id=1062 data-nosnippet>1062</a>    </span><span class="kw">fn </span>range_to_offset_size_works() {
+<a href=#1063 id=1063 data-nosnippet>1063</a>        <span class="kw">let </span>whole = <span class="number">100</span>;
+<a href=#1064 id=1064 data-nosnippet>1064</a>
+<a href=#1065 id=1065 data-nosnippet>1065</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">0</span>..<span class="number">2</span>, whole), (<span class="number">0</span>, bs(<span class="number">2</span>)));
+<a href=#1066 id=1066 data-nosnippet>1066</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">2</span>..<span class="number">5</span>, whole), (<span class="number">2</span>, bs(<span class="number">3</span>)));
+<a href=#1067 id=1067 data-nosnippet>1067</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(.., whole), (<span class="number">0</span>, bs(whole)));
+<a href=#1068 id=1068 data-nosnippet>1068</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">21</span>.., whole), (<span class="number">21</span>, bs(whole - <span class="number">21</span>)));
+<a href=#1069 id=1069 data-nosnippet>1069</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(<span class="number">0</span>.., whole), (<span class="number">0</span>, bs(whole)));
+<a href=#1070 id=1070 data-nosnippet>1070</a>        <span class="macro">assert_eq!</span>(range_to_offset_size(..<span class="number">21</span>, whole), (<span class="number">0</span>, bs(<span class="number">21</span>)));
+<a href=#1071 id=1071 data-nosnippet>1071</a>    }
+<a href=#1072 id=1072 data-nosnippet>1072</a>
+<a href=#1073 id=1073 data-nosnippet>1073</a>    <span class="attr">#[test]
+<a href=#1074 id=1074 data-nosnippet>1074</a>    #[should_panic = <span class="string">"buffer slices can not be empty"</span>]
+<a href=#1075 id=1075 data-nosnippet>1075</a>    </span><span class="kw">fn </span>range_to_offset_size_panics_for_empty_range() {
+<a href=#1076 id=1076 data-nosnippet>1076</a>        range_to_offset_size(<span class="number">123</span>..<span class="number">123</span>, <span class="number">200</span>);
+<a href=#1077 id=1077 data-nosnippet>1077</a>    }
+<a href=#1078 id=1078 data-nosnippet>1078</a>
+<a href=#1079 id=1079 data-nosnippet>1079</a>    <span class="attr">#[test]
+<a href=#1080 id=1080 data-nosnippet>1080</a>    #[should_panic = <span class="string">"buffer slices can not be empty"</span>]
+<a href=#1081 id=1081 data-nosnippet>1081</a>    </span><span class="kw">fn </span>range_to_offset_size_panics_for_unbounded_empty_range() {
+<a href=#1082 id=1082 data-nosnippet>1082</a>        range_to_offset_size(..<span class="number">0</span>, <span class="number">100</span>);
+<a href=#1083 id=1083 data-nosnippet>1083</a>    }
+<a href=#1084 id=1084 data-nosnippet>1084</a>
+<a href=#1085 id=1085 data-nosnippet>1085</a>    <span class="attr">#[test]
+<a href=#1086 id=1086 data-nosnippet>1086</a>    </span><span class="kw">fn </span>check_buffer_bounds_works_for_end_in_range() {
+<a href=#1087 id=1087 data-nosnippet>1087</a>        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, bs(<span class="number">50</span>));
+<a href=#1088 id=1088 data-nosnippet>1088</a>        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, bs(<span class="number">100</span>));
+<a href=#1089 id=1089 data-nosnippet>1089</a>        check_buffer_bounds(u64::MAX, u64::MAX - <span class="number">100</span>, bs(<span class="number">100</span>));
+<a href=#1090 id=1090 data-nosnippet>1090</a>        check_buffer_bounds(u64::MAX, <span class="number">0</span>, bs(u64::MAX));
+<a href=#1091 id=1091 data-nosnippet>1091</a>        check_buffer_bounds(u64::MAX, <span class="number">1</span>, bs(u64::MAX - <span class="number">1</span>));
+<a href=#1092 id=1092 data-nosnippet>1092</a>    }
+<a href=#1093 id=1093 data-nosnippet>1093</a>
+<a href=#1094 id=1094 data-nosnippet>1094</a>    <span class="attr">#[test]
+<a href=#1095 id=1095 data-nosnippet>1095</a>    #[should_panic]
+<a href=#1096 id=1096 data-nosnippet>1096</a>    </span><span class="kw">fn </span>check_buffer_bounds_panics_for_end_over_size() {
+<a href=#1097 id=1097 data-nosnippet>1097</a>        check_buffer_bounds(<span class="number">200</span>, <span class="number">100</span>, bs(<span class="number">101</span>));
+<a href=#1098 id=1098 data-nosnippet>1098</a>    }
+<a href=#1099 id=1099 data-nosnippet>1099</a>
+<a href=#1100 id=1100 data-nosnippet>1100</a>    <span class="attr">#[test]
+<a href=#1101 id=1101 data-nosnippet>1101</a>    #[should_panic]
+<a href=#1102 id=1102 data-nosnippet>1102</a>    </span><span class="kw">fn </span>check_buffer_bounds_panics_for_end_wraparound() {
+<a href=#1103 id=1103 data-nosnippet>1103</a>        check_buffer_bounds(u64::MAX, <span class="number">1</span>, bs(u64::MAX));
+<a href=#1104 id=1104 data-nosnippet>1104</a>    }
+<a href=#1105 id=1105 data-nosnippet>1105</a>
+<a href=#1106 id=1106 data-nosnippet>1106</a>    <span class="attr">#[test]
+<a href=#1107 id=1107 data-nosnippet>1107</a>    </span><span class="kw">fn </span>range_overlapping() {
+<a href=#1108 id=1108 data-nosnippet>1108</a>        <span class="comment">// First range to the left
+<a href=#1109 id=1109 data-nosnippet>1109</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">1</span>), <span class="kw-2">&amp;</span>(<span class="number">1</span>..<span class="number">3</span>)), <span class="bool-val">false</span>);
+<a href=#1110 id=1110 data-nosnippet>1110</a>        <span class="comment">// First range overlaps left edge
+<a href=#1111 id=1111 data-nosnippet>1111</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">2</span>), <span class="kw-2">&amp;</span>(<span class="number">1</span>..<span class="number">3</span>)), <span class="bool-val">true</span>);
+<a href=#1112 id=1112 data-nosnippet>1112</a>        <span class="comment">// First range completely inside second
+<a href=#1113 id=1113 data-nosnippet>1113</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">1</span>..<span class="number">2</span>), <span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">3</span>)), <span class="bool-val">true</span>);
+<a href=#1114 id=1114 data-nosnippet>1114</a>        <span class="comment">// First range completely surrounds second
+<a href=#1115 id=1115 data-nosnippet>1115</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">3</span>), <span class="kw-2">&amp;</span>(<span class="number">1</span>..<span class="number">2</span>)), <span class="bool-val">true</span>);
+<a href=#1116 id=1116 data-nosnippet>1116</a>        <span class="comment">// First range overlaps right edge
+<a href=#1117 id=1117 data-nosnippet>1117</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">1</span>..<span class="number">3</span>), <span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">2</span>)), <span class="bool-val">true</span>);
+<a href=#1118 id=1118 data-nosnippet>1118</a>        <span class="comment">// First range entirely to the right
+<a href=#1119 id=1119 data-nosnippet>1119</a>        </span><span class="macro">assert_eq!</span>(range_overlaps(<span class="kw-2">&amp;</span>(<span class="number">2</span>..<span class="number">3</span>), <span class="kw-2">&amp;</span>(<span class="number">0</span>..<span class="number">2</span>)), <span class="bool-val">false</span>);
+<a href=#1120 id=1120 data-nosnippet>1120</a>    }
+<a href=#1121 id=1121 data-nosnippet>1121</a>}
 </code></pre></div></section></main></body></html>
