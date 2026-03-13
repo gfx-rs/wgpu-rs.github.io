@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["MAX_I32_BINDING_SIZE"],"fn":["apply_hal_limits","map_naga_stage"],"mod":["db","renderdoc"]};
+window.SIDEBAR_ITEMS = {"constant":["MAX_I32_BINDING_SIZE"],"fn":["adjust_raw_limits","cap_limits_to_be_under_the_sum_limit","map_naga_stage"],"mod":["db","renderdoc"]};
