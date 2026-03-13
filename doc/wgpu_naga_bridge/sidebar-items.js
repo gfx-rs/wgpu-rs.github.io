@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["create_validator","features_to_naga_capabilities","map_naga_stage","map_storage_format_from_naga","map_storage_format_to_naga"]};

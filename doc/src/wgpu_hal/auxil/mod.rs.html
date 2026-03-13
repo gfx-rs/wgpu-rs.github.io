@@ -55,146 +55,134 @@
 <a href=#55 id=55 data-nosnippet>55</a>/// offset at some intermediate point, internally, as i32.
 <a href=#56 id=56 data-nosnippet>56</a></span><span class="kw">pub const </span>MAX_I32_BINDING_SIZE: u32 = (<span class="number">1 </span>&lt;&lt; <span class="number">31</span>) - <span class="number">1</span>;
 <a href=#57 id=57 data-nosnippet>57</a>
-<a href=#58 id=58 data-nosnippet>58</a><span class="kw">pub fn </span>map_naga_stage(stage: naga::ShaderStage) -&gt; wgt::ShaderStages {
-<a href=#59 id=59 data-nosnippet>59</a>    <span class="kw">match </span>stage {
-<a href=#60 id=60 data-nosnippet>60</a>        naga::ShaderStage::Vertex =&gt; wgt::ShaderStages::VERTEX,
-<a href=#61 id=61 data-nosnippet>61</a>        naga::ShaderStage::Fragment =&gt; wgt::ShaderStages::FRAGMENT,
-<a href=#62 id=62 data-nosnippet>62</a>        naga::ShaderStage::Compute =&gt; wgt::ShaderStages::COMPUTE,
-<a href=#63 id=63 data-nosnippet>63</a>        naga::ShaderStage::Task =&gt; wgt::ShaderStages::TASK,
-<a href=#64 id=64 data-nosnippet>64</a>        naga::ShaderStage::Mesh =&gt; wgt::ShaderStages::MESH,
-<a href=#65 id=65 data-nosnippet>65</a>        naga::ShaderStage::RayGeneration =&gt; wgt::ShaderStages::RAY_GENERATION,
-<a href=#66 id=66 data-nosnippet>66</a>        naga::ShaderStage::AnyHit =&gt; wgt::ShaderStages::ANY_HIT,
-<a href=#67 id=67 data-nosnippet>67</a>        naga::ShaderStage::ClosestHit =&gt; wgt::ShaderStages::CLOSEST_HIT,
-<a href=#68 id=68 data-nosnippet>68</a>        naga::ShaderStage::Miss =&gt; wgt::ShaderStages::MISS,
-<a href=#69 id=69 data-nosnippet>69</a>    }
-<a href=#70 id=70 data-nosnippet>70</a>}
+<a href=#58 id=58 data-nosnippet>58</a><span class="kw">pub use </span>wgpu_naga_bridge::map_naga_stage;
+<a href=#59 id=59 data-nosnippet>59</a>
+<a href=#60 id=60 data-nosnippet>60</a><span class="kw">impl </span><span class="kw">crate</span>::CopyExtent {
+<a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">pub fn </span>map_extent_to_copy_size(extent: <span class="kw-2">&amp;</span>wgt::Extent3d, dim: wgt::TextureDimension) -&gt; <span class="self">Self </span>{
+<a href=#62 id=62 data-nosnippet>62</a>        <span class="self">Self </span>{
+<a href=#63 id=63 data-nosnippet>63</a>            width: extent.width,
+<a href=#64 id=64 data-nosnippet>64</a>            height: extent.height,
+<a href=#65 id=65 data-nosnippet>65</a>            depth: <span class="kw">match </span>dim {
+<a href=#66 id=66 data-nosnippet>66</a>                wgt::TextureDimension::D1 | wgt::TextureDimension::D2 =&gt; <span class="number">1</span>,
+<a href=#67 id=67 data-nosnippet>67</a>                wgt::TextureDimension::D3 =&gt; extent.depth_or_array_layers,
+<a href=#68 id=68 data-nosnippet>68</a>            },
+<a href=#69 id=69 data-nosnippet>69</a>        }
+<a href=#70 id=70 data-nosnippet>70</a>    }
 <a href=#71 id=71 data-nosnippet>71</a>
-<a href=#72 id=72 data-nosnippet>72</a><span class="kw">impl </span><span class="kw">crate</span>::CopyExtent {
-<a href=#73 id=73 data-nosnippet>73</a>    <span class="kw">pub fn </span>map_extent_to_copy_size(extent: <span class="kw-2">&amp;</span>wgt::Extent3d, dim: wgt::TextureDimension) -&gt; <span class="self">Self </span>{
-<a href=#74 id=74 data-nosnippet>74</a>        <span class="self">Self </span>{
-<a href=#75 id=75 data-nosnippet>75</a>            width: extent.width,
-<a href=#76 id=76 data-nosnippet>76</a>            height: extent.height,
-<a href=#77 id=77 data-nosnippet>77</a>            depth: <span class="kw">match </span>dim {
-<a href=#78 id=78 data-nosnippet>78</a>                wgt::TextureDimension::D1 | wgt::TextureDimension::D2 =&gt; <span class="number">1</span>,
-<a href=#79 id=79 data-nosnippet>79</a>                wgt::TextureDimension::D3 =&gt; extent.depth_or_array_layers,
-<a href=#80 id=80 data-nosnippet>80</a>            },
-<a href=#81 id=81 data-nosnippet>81</a>        }
-<a href=#82 id=82 data-nosnippet>82</a>    }
-<a href=#83 id=83 data-nosnippet>83</a>
-<a href=#84 id=84 data-nosnippet>84</a>    <span class="kw">pub fn </span>min(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
-<a href=#85 id=85 data-nosnippet>85</a>        <span class="self">Self </span>{
-<a href=#86 id=86 data-nosnippet>86</a>            width: <span class="self">self</span>.width.min(other.width),
-<a href=#87 id=87 data-nosnippet>87</a>            height: <span class="self">self</span>.height.min(other.height),
-<a href=#88 id=88 data-nosnippet>88</a>            depth: <span class="self">self</span>.depth.min(other.depth),
-<a href=#89 id=89 data-nosnippet>89</a>        }
-<a href=#90 id=90 data-nosnippet>90</a>    }
+<a href=#72 id=72 data-nosnippet>72</a>    <span class="kw">pub fn </span>min(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+<a href=#73 id=73 data-nosnippet>73</a>        <span class="self">Self </span>{
+<a href=#74 id=74 data-nosnippet>74</a>            width: <span class="self">self</span>.width.min(other.width),
+<a href=#75 id=75 data-nosnippet>75</a>            height: <span class="self">self</span>.height.min(other.height),
+<a href=#76 id=76 data-nosnippet>76</a>            depth: <span class="self">self</span>.depth.min(other.depth),
+<a href=#77 id=77 data-nosnippet>77</a>        }
+<a href=#78 id=78 data-nosnippet>78</a>    }
+<a href=#79 id=79 data-nosnippet>79</a>
+<a href=#80 id=80 data-nosnippet>80</a>    <span class="comment">// Get the copy size at a specific mipmap level. This doesn't make most sense,
+<a href=#81 id=81 data-nosnippet>81</a>    // since the copy extents are provided *for* a mipmap level to start with.
+<a href=#82 id=82 data-nosnippet>82</a>    // But backends use `CopyExtent` more sparingly, and this piece is shared.
+<a href=#83 id=83 data-nosnippet>83</a>    </span><span class="kw">pub fn </span>at_mip_level(<span class="kw-2">&amp;</span><span class="self">self</span>, level: u32) -&gt; <span class="self">Self </span>{
+<a href=#84 id=84 data-nosnippet>84</a>        <span class="self">Self </span>{
+<a href=#85 id=85 data-nosnippet>85</a>            width: (<span class="self">self</span>.width &gt;&gt; level).max(<span class="number">1</span>),
+<a href=#86 id=86 data-nosnippet>86</a>            height: (<span class="self">self</span>.height &gt;&gt; level).max(<span class="number">1</span>),
+<a href=#87 id=87 data-nosnippet>87</a>            depth: (<span class="self">self</span>.depth &gt;&gt; level).max(<span class="number">1</span>),
+<a href=#88 id=88 data-nosnippet>88</a>        }
+<a href=#89 id=89 data-nosnippet>89</a>    }
+<a href=#90 id=90 data-nosnippet>90</a>}
 <a href=#91 id=91 data-nosnippet>91</a>
-<a href=#92 id=92 data-nosnippet>92</a>    <span class="comment">// Get the copy size at a specific mipmap level. This doesn't make most sense,
-<a href=#93 id=93 data-nosnippet>93</a>    // since the copy extents are provided *for* a mipmap level to start with.
-<a href=#94 id=94 data-nosnippet>94</a>    // But backends use `CopyExtent` more sparingly, and this piece is shared.
-<a href=#95 id=95 data-nosnippet>95</a>    </span><span class="kw">pub fn </span>at_mip_level(<span class="kw-2">&amp;</span><span class="self">self</span>, level: u32) -&gt; <span class="self">Self </span>{
-<a href=#96 id=96 data-nosnippet>96</a>        <span class="self">Self </span>{
-<a href=#97 id=97 data-nosnippet>97</a>            width: (<span class="self">self</span>.width &gt;&gt; level).max(<span class="number">1</span>),
-<a href=#98 id=98 data-nosnippet>98</a>            height: (<span class="self">self</span>.height &gt;&gt; level).max(<span class="number">1</span>),
-<a href=#99 id=99 data-nosnippet>99</a>            depth: (<span class="self">self</span>.depth &gt;&gt; level).max(<span class="number">1</span>),
-<a href=#100 id=100 data-nosnippet>100</a>        }
-<a href=#101 id=101 data-nosnippet>101</a>    }
-<a href=#102 id=102 data-nosnippet>102</a>}
-<a href=#103 id=103 data-nosnippet>103</a>
-<a href=#104 id=104 data-nosnippet>104</a><span class="kw">impl </span><span class="kw">crate</span>::TextureCopyBase {
-<a href=#105 id=105 data-nosnippet>105</a>    <span class="kw">pub fn </span>max_copy_size(<span class="kw-2">&amp;</span><span class="self">self</span>, full_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent) -&gt; <span class="kw">crate</span>::CopyExtent {
-<a href=#106 id=106 data-nosnippet>106</a>        <span class="kw">let </span>mip = full_size.at_mip_level(<span class="self">self</span>.mip_level);
-<a href=#107 id=107 data-nosnippet>107</a>        <span class="kw">crate</span>::CopyExtent {
-<a href=#108 id=108 data-nosnippet>108</a>            width: mip.width - <span class="self">self</span>.origin.x,
-<a href=#109 id=109 data-nosnippet>109</a>            height: mip.height - <span class="self">self</span>.origin.y,
-<a href=#110 id=110 data-nosnippet>110</a>            depth: mip.depth - <span class="self">self</span>.origin.z,
-<a href=#111 id=111 data-nosnippet>111</a>        }
-<a href=#112 id=112 data-nosnippet>112</a>    }
-<a href=#113 id=113 data-nosnippet>113</a>}
-<a href=#114 id=114 data-nosnippet>114</a>
-<a href=#115 id=115 data-nosnippet>115</a><span class="kw">impl </span><span class="kw">crate</span>::BufferTextureCopy {
-<a href=#116 id=116 data-nosnippet>116</a>    <span class="kw">pub fn </span>clamp_size_to_virtual(<span class="kw-2">&amp;mut </span><span class="self">self</span>, full_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent) {
-<a href=#117 id=117 data-nosnippet>117</a>        <span class="kw">let </span>max_size = <span class="self">self</span>.texture_base.max_copy_size(full_size);
-<a href=#118 id=118 data-nosnippet>118</a>        <span class="self">self</span>.size = <span class="self">self</span>.size.min(<span class="kw-2">&amp;</span>max_size);
+<a href=#92 id=92 data-nosnippet>92</a><span class="kw">impl </span><span class="kw">crate</span>::TextureCopyBase {
+<a href=#93 id=93 data-nosnippet>93</a>    <span class="kw">pub fn </span>max_copy_size(<span class="kw-2">&amp;</span><span class="self">self</span>, full_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent) -&gt; <span class="kw">crate</span>::CopyExtent {
+<a href=#94 id=94 data-nosnippet>94</a>        <span class="kw">let </span>mip = full_size.at_mip_level(<span class="self">self</span>.mip_level);
+<a href=#95 id=95 data-nosnippet>95</a>        <span class="kw">crate</span>::CopyExtent {
+<a href=#96 id=96 data-nosnippet>96</a>            width: mip.width - <span class="self">self</span>.origin.x,
+<a href=#97 id=97 data-nosnippet>97</a>            height: mip.height - <span class="self">self</span>.origin.y,
+<a href=#98 id=98 data-nosnippet>98</a>            depth: mip.depth - <span class="self">self</span>.origin.z,
+<a href=#99 id=99 data-nosnippet>99</a>        }
+<a href=#100 id=100 data-nosnippet>100</a>    }
+<a href=#101 id=101 data-nosnippet>101</a>}
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a><span class="kw">impl </span><span class="kw">crate</span>::BufferTextureCopy {
+<a href=#104 id=104 data-nosnippet>104</a>    <span class="kw">pub fn </span>clamp_size_to_virtual(<span class="kw-2">&amp;mut </span><span class="self">self</span>, full_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent) {
+<a href=#105 id=105 data-nosnippet>105</a>        <span class="kw">let </span>max_size = <span class="self">self</span>.texture_base.max_copy_size(full_size);
+<a href=#106 id=106 data-nosnippet>106</a>        <span class="self">self</span>.size = <span class="self">self</span>.size.min(<span class="kw-2">&amp;</span>max_size);
+<a href=#107 id=107 data-nosnippet>107</a>    }
+<a href=#108 id=108 data-nosnippet>108</a>}
+<a href=#109 id=109 data-nosnippet>109</a>
+<a href=#110 id=110 data-nosnippet>110</a><span class="kw">impl </span><span class="kw">crate</span>::TextureCopy {
+<a href=#111 id=111 data-nosnippet>111</a>    <span class="kw">pub fn </span>clamp_size_to_virtual(
+<a href=#112 id=112 data-nosnippet>112</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#113 id=113 data-nosnippet>113</a>        full_src_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent,
+<a href=#114 id=114 data-nosnippet>114</a>        full_dst_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent,
+<a href=#115 id=115 data-nosnippet>115</a>    ) {
+<a href=#116 id=116 data-nosnippet>116</a>        <span class="kw">let </span>max_src_size = <span class="self">self</span>.src_base.max_copy_size(full_src_size);
+<a href=#117 id=117 data-nosnippet>117</a>        <span class="kw">let </span>max_dst_size = <span class="self">self</span>.dst_base.max_copy_size(full_dst_size);
+<a href=#118 id=118 data-nosnippet>118</a>        <span class="self">self</span>.size = <span class="self">self</span>.size.min(<span class="kw-2">&amp;</span>max_src_size).min(<span class="kw-2">&amp;</span>max_dst_size);
 <a href=#119 id=119 data-nosnippet>119</a>    }
 <a href=#120 id=120 data-nosnippet>120</a>}
 <a href=#121 id=121 data-nosnippet>121</a>
-<a href=#122 id=122 data-nosnippet>122</a><span class="kw">impl </span><span class="kw">crate</span>::TextureCopy {
-<a href=#123 id=123 data-nosnippet>123</a>    <span class="kw">pub fn </span>clamp_size_to_virtual(
-<a href=#124 id=124 data-nosnippet>124</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#125 id=125 data-nosnippet>125</a>        full_src_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent,
-<a href=#126 id=126 data-nosnippet>126</a>        full_dst_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent,
-<a href=#127 id=127 data-nosnippet>127</a>    ) {
-<a href=#128 id=128 data-nosnippet>128</a>        <span class="kw">let </span>max_src_size = <span class="self">self</span>.src_base.max_copy_size(full_src_size);
-<a href=#129 id=129 data-nosnippet>129</a>        <span class="kw">let </span>max_dst_size = <span class="self">self</span>.dst_base.max_copy_size(full_dst_size);
-<a href=#130 id=130 data-nosnippet>130</a>        <span class="self">self</span>.size = <span class="self">self</span>.size.min(<span class="kw-2">&amp;</span>max_src_size).min(<span class="kw-2">&amp;</span>max_dst_size);
-<a href=#131 id=131 data-nosnippet>131</a>    }
-<a href=#132 id=132 data-nosnippet>132</a>}
+<a href=#122 id=122 data-nosnippet>122</a><span class="doccomment">/// Clamp the limits in `limits` to honor HAL-imposed maximums and WebGPU
+<a href=#123 id=123 data-nosnippet>123</a>/// alignment requirements.
+<a href=#124 id=124 data-nosnippet>124</a>///
+<a href=#125 id=125 data-nosnippet>125</a>/// Other limits are left unchanged.
+<a href=#126 id=126 data-nosnippet>126</a></span><span class="attr">#[cfg_attr(not(any_backend), allow(dead_code))]
+<a href=#127 id=127 data-nosnippet>127</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>apply_hal_limits(<span class="kw-2">mut </span>limits: wgt::Limits) -&gt; wgt::Limits {
+<a href=#128 id=128 data-nosnippet>128</a>    <span class="comment">// The Metal backend maintains two copies of many limit values (one as
+<a href=#129 id=129 data-nosnippet>129</a>    // `wgt::Limits` and one as `metal::PrivateCapabilities`). In order to avoid
+<a href=#130 id=130 data-nosnippet>130</a>    // confusing discrepancies between the two, some of the logic here is
+<a href=#131 id=131 data-nosnippet>131</a>    // duplicated in the initialization of `metal::PrivateCapabilities`.
+<a href=#132 id=132 data-nosnippet>132</a>    // See &lt;https://github.com/gfx-rs/wgpu/issues/8715&gt;.
 <a href=#133 id=133 data-nosnippet>133</a>
-<a href=#134 id=134 data-nosnippet>134</a><span class="doccomment">/// Clamp the limits in `limits` to honor HAL-imposed maximums and WebGPU
-<a href=#135 id=135 data-nosnippet>135</a>/// alignment requirements.
-<a href=#136 id=136 data-nosnippet>136</a>///
-<a href=#137 id=137 data-nosnippet>137</a>/// Other limits are left unchanged.
-<a href=#138 id=138 data-nosnippet>138</a></span><span class="attr">#[cfg_attr(not(any_backend), allow(dead_code))]
-<a href=#139 id=139 data-nosnippet>139</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>apply_hal_limits(<span class="kw-2">mut </span>limits: wgt::Limits) -&gt; wgt::Limits {
-<a href=#140 id=140 data-nosnippet>140</a>    <span class="comment">// The Metal backend maintains two copies of many limit values (one as
-<a href=#141 id=141 data-nosnippet>141</a>    // `wgt::Limits` and one as `metal::PrivateCapabilities`). In order to avoid
-<a href=#142 id=142 data-nosnippet>142</a>    // confusing discrepancies between the two, some of the logic here is
-<a href=#143 id=143 data-nosnippet>143</a>    // duplicated in the initialization of `metal::PrivateCapabilities`.
-<a href=#144 id=144 data-nosnippet>144</a>    // See &lt;https://github.com/gfx-rs/wgpu/issues/8715&gt;.
-<a href=#145 id=145 data-nosnippet>145</a>
-<a href=#146 id=146 data-nosnippet>146</a>    </span>limits.max_bind_groups = limits.max_bind_groups.min(<span class="kw">crate</span>::MAX_BIND_GROUPS <span class="kw">as </span>u32);
-<a href=#147 id=147 data-nosnippet>147</a>    limits.max_vertex_buffers = limits
-<a href=#148 id=148 data-nosnippet>148</a>        .max_vertex_buffers
-<a href=#149 id=149 data-nosnippet>149</a>        .min(<span class="kw">crate</span>::MAX_VERTEX_BUFFERS <span class="kw">as </span>u32);
-<a href=#150 id=150 data-nosnippet>150</a>    limits.max_color_attachments = limits
-<a href=#151 id=151 data-nosnippet>151</a>        .max_color_attachments
-<a href=#152 id=152 data-nosnippet>152</a>        .min(<span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS <span class="kw">as </span>u32);
-<a href=#153 id=153 data-nosnippet>153</a>
-<a href=#154 id=154 data-nosnippet>154</a>    <span class="comment">// Vulkan and DX12 sometimes report large values for the "max resources per stage"
-<a href=#155 id=155 data-nosnippet>155</a>    // limits. WebGPU requires that consuming the maximum number of resources of every type
-<a href=#156 id=156 data-nosnippet>156</a>    // in every stage cannot exceed `max_bindings_per_bind_group`. To ensure this, we clamp
-<a href=#157 id=157 data-nosnippet>157</a>    // per-stage limit at an equal division of `max_bindings_per_bind_group`.
-<a href=#158 id=158 data-nosnippet>158</a>    //
-<a href=#159 id=159 data-nosnippet>159</a>    // It is not expected that this clamping adjusts limits that are in a range where an
-<a href=#160 id=160 data-nosnippet>160</a>    // application might reach them. (The main dilemma here being how WebGPU will eventually
-<a href=#161 id=161 data-nosnippet>161</a>    // apply these or other limits to bindless. wgpu has separate `binding_array` limits for
-<a href=#162 id=162 data-nosnippet>162</a>    // its native-only extension; those are not touched here.)
-<a href=#163 id=163 data-nosnippet>163</a>    //
-<a href=#164 id=164 data-nosnippet>164</a>    // See &lt;https://gpuweb.github.io/gpuweb/#adapter-capability-guarantees&gt;.
-<a href=#165 id=165 data-nosnippet>165</a>    </span><span class="kw">const </span>BINDING_TYPE_AND_STAGE_COUNT: u32 = <span class="number">10</span>;
-<a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">let </span>max_bindings = limits.max_bindings_per_bind_group / BINDING_TYPE_AND_STAGE_COUNT;
-<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">let </span><span class="kw-2">mut </span>did_clamp = <span class="bool-val">false</span>;
-<a href=#168 id=168 data-nosnippet>168</a>    <span class="kw">let </span><span class="kw-2">mut </span>clamp = |limit: <span class="kw-2">&amp;mut </span>u32| {
-<a href=#169 id=169 data-nosnippet>169</a>        <span class="kw">if </span><span class="kw-2">*</span>limit &gt; max_bindings {
-<a href=#170 id=170 data-nosnippet>170</a>            <span class="kw-2">*</span>limit = max_bindings;
-<a href=#171 id=171 data-nosnippet>171</a>            did_clamp = <span class="bool-val">true</span>;
-<a href=#172 id=172 data-nosnippet>172</a>        }
-<a href=#173 id=173 data-nosnippet>173</a>    };
-<a href=#174 id=174 data-nosnippet>174</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_dynamic_uniform_buffers_per_pipeline_layout);
-<a href=#175 id=175 data-nosnippet>175</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_dynamic_storage_buffers_per_pipeline_layout);
-<a href=#176 id=176 data-nosnippet>176</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_sampled_textures_per_shader_stage);
-<a href=#177 id=177 data-nosnippet>177</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_samplers_per_shader_stage);
-<a href=#178 id=178 data-nosnippet>178</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_storage_buffers_per_shader_stage);
-<a href=#179 id=179 data-nosnippet>179</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_storage_textures_per_shader_stage);
-<a href=#180 id=180 data-nosnippet>180</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_uniform_buffers_per_shader_stage);
-<a href=#181 id=181 data-nosnippet>181</a>    <span class="kw">if </span>did_clamp
-<a href=#182 id=182 data-nosnippet>182</a>        &amp;&amp; limits.max_bindings_per_bind_group &lt; wgt::Limits::defaults().max_bindings_per_bind_group
-<a href=#183 id=183 data-nosnippet>183</a>    {
-<a href=#184 id=184 data-nosnippet>184</a>        <span class="comment">// This is the "adjusted limits that are in a range where an application might reach
-<a href=#185 id=185 data-nosnippet>185</a>        // them" case. (In reality, even something quite a bit less than the default
-<a href=#186 id=186 data-nosnippet>186</a>        // `max_bindings_per_bind_group` of 1000 ought to be sufficient.)
-<a href=#187 id=187 data-nosnippet>187</a>        </span><span class="macro">log::warn!</span>(
-<a href=#188 id=188 data-nosnippet>188</a>            <span class="string">"Unexpected adjustment of per-stage resource limits to fit within max_bindings_per_bind_group."
-<a href=#189 id=189 data-nosnippet>189</a>        </span>);
-<a href=#190 id=190 data-nosnippet>190</a>    }
-<a href=#191 id=191 data-nosnippet>191</a>
-<a href=#192 id=192 data-nosnippet>192</a>    <span class="comment">// Round some limits down to the WebGPU alignment requirement, to avoid
-<a href=#193 id=193 data-nosnippet>193</a>    // suggesting values that won't work. (In particular, the CTS queries limits
-<a href=#194 id=194 data-nosnippet>194</a>    // and then tests the exact limit value.)
-<a href=#195 id=195 data-nosnippet>195</a>    </span>limits.max_storage_buffer_binding_size &amp;= u64::from(!(wgt::STORAGE_BINDING_SIZE_ALIGNMENT - <span class="number">1</span>));
-<a href=#196 id=196 data-nosnippet>196</a>    limits.max_vertex_buffer_array_stride &amp;= !(wgt::VERTEX_ALIGNMENT <span class="kw">as </span>u32 - <span class="number">1</span>);
-<a href=#197 id=197 data-nosnippet>197</a>
-<a href=#198 id=198 data-nosnippet>198</a>    limits
-<a href=#199 id=199 data-nosnippet>199</a>}
+<a href=#134 id=134 data-nosnippet>134</a>    </span>limits.max_bind_groups = limits.max_bind_groups.min(<span class="kw">crate</span>::MAX_BIND_GROUPS <span class="kw">as </span>u32);
+<a href=#135 id=135 data-nosnippet>135</a>    limits.max_vertex_buffers = limits
+<a href=#136 id=136 data-nosnippet>136</a>        .max_vertex_buffers
+<a href=#137 id=137 data-nosnippet>137</a>        .min(<span class="kw">crate</span>::MAX_VERTEX_BUFFERS <span class="kw">as </span>u32);
+<a href=#138 id=138 data-nosnippet>138</a>    limits.max_color_attachments = limits
+<a href=#139 id=139 data-nosnippet>139</a>        .max_color_attachments
+<a href=#140 id=140 data-nosnippet>140</a>        .min(<span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS <span class="kw">as </span>u32);
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a>    <span class="comment">// Vulkan and DX12 sometimes report large values for the "max resources per stage"
+<a href=#143 id=143 data-nosnippet>143</a>    // limits. WebGPU requires that consuming the maximum number of resources of every type
+<a href=#144 id=144 data-nosnippet>144</a>    // in every stage cannot exceed `max_bindings_per_bind_group`. To ensure this, we clamp
+<a href=#145 id=145 data-nosnippet>145</a>    // per-stage limit at an equal division of `max_bindings_per_bind_group`.
+<a href=#146 id=146 data-nosnippet>146</a>    //
+<a href=#147 id=147 data-nosnippet>147</a>    // It is not expected that this clamping adjusts limits that are in a range where an
+<a href=#148 id=148 data-nosnippet>148</a>    // application might reach them. (The main dilemma here being how WebGPU will eventually
+<a href=#149 id=149 data-nosnippet>149</a>    // apply these or other limits to bindless. wgpu has separate `binding_array` limits for
+<a href=#150 id=150 data-nosnippet>150</a>    // its native-only extension; those are not touched here.)
+<a href=#151 id=151 data-nosnippet>151</a>    //
+<a href=#152 id=152 data-nosnippet>152</a>    // See &lt;https://gpuweb.github.io/gpuweb/#adapter-capability-guarantees&gt;.
+<a href=#153 id=153 data-nosnippet>153</a>    </span><span class="kw">const </span>BINDING_TYPE_AND_STAGE_COUNT: u32 = <span class="number">10</span>;
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="kw">let </span>max_bindings = limits.max_bindings_per_bind_group / BINDING_TYPE_AND_STAGE_COUNT;
+<a href=#155 id=155 data-nosnippet>155</a>    <span class="kw">let </span><span class="kw-2">mut </span>did_clamp = <span class="bool-val">false</span>;
+<a href=#156 id=156 data-nosnippet>156</a>    <span class="kw">let </span><span class="kw-2">mut </span>clamp = |limit: <span class="kw-2">&amp;mut </span>u32| {
+<a href=#157 id=157 data-nosnippet>157</a>        <span class="kw">if </span><span class="kw-2">*</span>limit &gt; max_bindings {
+<a href=#158 id=158 data-nosnippet>158</a>            <span class="kw-2">*</span>limit = max_bindings;
+<a href=#159 id=159 data-nosnippet>159</a>            did_clamp = <span class="bool-val">true</span>;
+<a href=#160 id=160 data-nosnippet>160</a>        }
+<a href=#161 id=161 data-nosnippet>161</a>    };
+<a href=#162 id=162 data-nosnippet>162</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_dynamic_uniform_buffers_per_pipeline_layout);
+<a href=#163 id=163 data-nosnippet>163</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_dynamic_storage_buffers_per_pipeline_layout);
+<a href=#164 id=164 data-nosnippet>164</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_sampled_textures_per_shader_stage);
+<a href=#165 id=165 data-nosnippet>165</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_samplers_per_shader_stage);
+<a href=#166 id=166 data-nosnippet>166</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_storage_buffers_per_shader_stage);
+<a href=#167 id=167 data-nosnippet>167</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_storage_textures_per_shader_stage);
+<a href=#168 id=168 data-nosnippet>168</a>    clamp(<span class="kw-2">&amp;mut </span>limits.max_uniform_buffers_per_shader_stage);
+<a href=#169 id=169 data-nosnippet>169</a>    <span class="kw">if </span>did_clamp
+<a href=#170 id=170 data-nosnippet>170</a>        &amp;&amp; limits.max_bindings_per_bind_group &lt; wgt::Limits::defaults().max_bindings_per_bind_group
+<a href=#171 id=171 data-nosnippet>171</a>    {
+<a href=#172 id=172 data-nosnippet>172</a>        <span class="comment">// This is the "adjusted limits that are in a range where an application might reach
+<a href=#173 id=173 data-nosnippet>173</a>        // them" case. (In reality, even something quite a bit less than the default
+<a href=#174 id=174 data-nosnippet>174</a>        // `max_bindings_per_bind_group` of 1000 ought to be sufficient.)
+<a href=#175 id=175 data-nosnippet>175</a>        </span><span class="macro">log::warn!</span>(
+<a href=#176 id=176 data-nosnippet>176</a>            <span class="string">"Unexpected adjustment of per-stage resource limits to fit within max_bindings_per_bind_group."
+<a href=#177 id=177 data-nosnippet>177</a>        </span>);
+<a href=#178 id=178 data-nosnippet>178</a>    }
+<a href=#179 id=179 data-nosnippet>179</a>
+<a href=#180 id=180 data-nosnippet>180</a>    <span class="comment">// Round some limits down to the WebGPU alignment requirement, to avoid
+<a href=#181 id=181 data-nosnippet>181</a>    // suggesting values that won't work. (In particular, the CTS queries limits
+<a href=#182 id=182 data-nosnippet>182</a>    // and then tests the exact limit value.)
+<a href=#183 id=183 data-nosnippet>183</a>    </span>limits.max_storage_buffer_binding_size &amp;= u64::from(!(wgt::STORAGE_BINDING_SIZE_ALIGNMENT - <span class="number">1</span>));
+<a href=#184 id=184 data-nosnippet>184</a>    limits.max_vertex_buffer_array_stride &amp;= !(wgt::VERTEX_ALIGNMENT <span class="kw">as </span>u32 - <span class="number">1</span>);
+<a href=#185 id=185 data-nosnippet>185</a>
+<a href=#186 id=186 data-nosnippet>186</a>    limits
+<a href=#187 id=187 data-nosnippet>187</a>}
 </code></pre></div></section></main></body></html>
