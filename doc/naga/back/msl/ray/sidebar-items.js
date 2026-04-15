@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["INTERSECTION_FUNCTION_NAME","RT_NAMESPACE"],"fn":["metal_intersector_ty"]};
