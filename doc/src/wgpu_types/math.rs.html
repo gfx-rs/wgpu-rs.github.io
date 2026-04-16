@@ -1,32 +1,47 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-types/src/math.rs`."><title>math.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_types" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_types/</div>math.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Utility math functions.
 <a href=#2 id=2 data-nosnippet>2</a>
-<a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span>core::ops::{Add, Rem, Sub};
-<a href=#4 id=4 data-nosnippet>4</a>
-<a href=#5 id=5 data-nosnippet>5</a><span class="doccomment">///
-<a href=#6 id=6 data-nosnippet>6</a>/// Aligns a `value` to an `alignment`.
-<a href=#7 id=7 data-nosnippet>7</a>///
-<a href=#8 id=8 data-nosnippet>8</a>/// Returns the first number greater than or equal to `value` that is also a
-<a href=#9 id=9 data-nosnippet>9</a>/// multiple of `alignment`. If `value` is already a multiple of `alignment`,
-<a href=#10 id=10 data-nosnippet>10</a>/// `value` will be returned.
-<a href=#11 id=11 data-nosnippet>11</a>///
-<a href=#12 id=12 data-nosnippet>12</a>/// # Examples
-<a href=#13 id=13 data-nosnippet>13</a>///
-<a href=#14 id=14 data-nosnippet>14</a>/// ```
-<a href=#15 id=15 data-nosnippet>15</a>/// # use wgpu_types::math::align_to;
-<a href=#16 id=16 data-nosnippet>16</a>/// assert_eq!(align_to(253, 16), 256);
-<a href=#17 id=17 data-nosnippet>17</a>/// assert_eq!(align_to(256, 16), 256);
-<a href=#18 id=18 data-nosnippet>18</a>/// assert_eq!(align_to(0, 16), 0);
-<a href=#19 id=19 data-nosnippet>19</a>/// ```
-<a href=#20 id=20 data-nosnippet>20</a>///
-<a href=#21 id=21 data-nosnippet>21</a></span><span class="kw">pub fn </span>align_to&lt;T&gt;(value: T, alignment: T) -&gt; T
-<a href=#22 id=22 data-nosnippet>22</a><span class="kw">where
-<a href=#23 id=23 data-nosnippet>23</a>    </span>T: Add&lt;Output = T&gt; + Copy + Default + PartialEq&lt;T&gt; + Rem&lt;Output = T&gt; + Sub&lt;Output = T&gt;,
-<a href=#24 id=24 data-nosnippet>24</a>{
-<a href=#25 id=25 data-nosnippet>25</a>    <span class="kw">let </span>remainder = value % alignment;
-<a href=#26 id=26 data-nosnippet>26</a>    <span class="kw">if </span>remainder == T::default() {
-<a href=#27 id=27 data-nosnippet>27</a>        value
-<a href=#28 id=28 data-nosnippet>28</a>    } <span class="kw">else </span>{
-<a href=#29 id=29 data-nosnippet>29</a>        value + alignment - remainder
-<a href=#30 id=30 data-nosnippet>30</a>    }
-<a href=#31 id=31 data-nosnippet>31</a>}
+<a href=#3 id=3 data-nosnippet>3</a>/// Trait for adjusting integers to the next multiple of an alignment.
+<a href=#4 id=4 data-nosnippet>4</a></span><span class="kw">pub trait </span>AlignTo: Copy {
+<a href=#5 id=5 data-nosnippet>5</a>    <span class="doccomment">/// Aligns `self` to `alignment`.
+<a href=#6 id=6 data-nosnippet>6</a>    ///
+<a href=#7 id=7 data-nosnippet>7</a>    /// Panics if doing so would overflow.
+<a href=#8 id=8 data-nosnippet>8</a>    </span><span class="kw">fn </span>align_to(<span class="self">self</span>, alignment: <span class="self">Self</span>) -&gt; <span class="self">Self</span>;
+<a href=#9 id=9 data-nosnippet>9</a>}
+<a href=#10 id=10 data-nosnippet>10</a>
+<a href=#11 id=11 data-nosnippet>11</a><span class="macro">macro_rules!</span> impl_align_to {
+<a href=#12 id=12 data-nosnippet>12</a>    (<span class="macro-nonterminal">$ty</span>:ty) =&gt; {
+<a href=#13 id=13 data-nosnippet>13</a>        <span class="kw">impl </span>AlignTo <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
+<a href=#14 id=14 data-nosnippet>14</a>            <span class="kw">fn </span>align_to(<span class="self">self</span>, alignment: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+<a href=#15 id=15 data-nosnippet>15</a>                <span class="self">self</span>.checked_next_multiple_of(alignment).unwrap()
+<a href=#16 id=16 data-nosnippet>16</a>            }
+<a href=#17 id=17 data-nosnippet>17</a>        }
+<a href=#18 id=18 data-nosnippet>18</a>    };
+<a href=#19 id=19 data-nosnippet>19</a>}
+<a href=#20 id=20 data-nosnippet>20</a>
+<a href=#21 id=21 data-nosnippet>21</a><span class="macro">impl_align_to!</span>(u32);
+<a href=#22 id=22 data-nosnippet>22</a><span class="macro">impl_align_to!</span>(u64);
+<a href=#23 id=23 data-nosnippet>23</a><span class="macro">impl_align_to!</span>(usize);
+<a href=#24 id=24 data-nosnippet>24</a>
+<a href=#25 id=25 data-nosnippet>25</a><span class="doccomment">/// Aligns a `value` to an `alignment`.
+<a href=#26 id=26 data-nosnippet>26</a>///
+<a href=#27 id=27 data-nosnippet>27</a>/// Returns the first number greater than or equal to `value` that is also a
+<a href=#28 id=28 data-nosnippet>28</a>/// multiple of `alignment`. If `value` is already a multiple of `alignment`,
+<a href=#29 id=29 data-nosnippet>29</a>/// `value` will be returned.
+<a href=#30 id=30 data-nosnippet>30</a>///
+<a href=#31 id=31 data-nosnippet>31</a>/// # Panics
+<a href=#32 id=32 data-nosnippet>32</a>///
+<a href=#33 id=33 data-nosnippet>33</a>/// If aligning `value` to `alignment` would overflow.
+<a href=#34 id=34 data-nosnippet>34</a>///
+<a href=#35 id=35 data-nosnippet>35</a>/// # Examples
+<a href=#36 id=36 data-nosnippet>36</a>///
+<a href=#37 id=37 data-nosnippet>37</a>/// ```
+<a href=#38 id=38 data-nosnippet>38</a>/// # use wgpu_types::math::align_to;
+<a href=#39 id=39 data-nosnippet>39</a>/// assert_eq!(align_to(253_u32, 16), 256);
+<a href=#40 id=40 data-nosnippet>40</a>/// assert_eq!(align_to(256_u32, 16), 256);
+<a href=#41 id=41 data-nosnippet>41</a>/// assert_eq!(align_to(0_u32, 16), 0);
+<a href=#42 id=42 data-nosnippet>42</a>/// ```
+<a href=#43 id=43 data-nosnippet>43</a>///
+<a href=#44 id=44 data-nosnippet>44</a></span><span class="kw">pub fn </span>align_to&lt;T: AlignTo&gt;(value: T, alignment: T) -&gt; T {
+<a href=#45 id=45 data-nosnippet>45</a>    value.align_to(alignment)
+<a href=#46 id=46 data-nosnippet>46</a>}
 </code></pre></div></section></main></body></html>

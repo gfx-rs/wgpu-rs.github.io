@@ -268,178 +268,179 @@
 <a href=#268 id=268 data-nosnippet>268</a>        <span class="kw">let </span>instance_buffer_size = <span class="self">self
 <a href=#269 id=269 data-nosnippet>269</a>            </span>.alignments
 <a href=#270 id=270 data-nosnippet>270</a>            .raw_tlas_instance_size
-<a href=#271 id=271 data-nosnippet>271</a>            .saturating_mul(desc.max_instances.max(<span class="number">1</span>));
-<a href=#272 id=272 data-nosnippet>272</a>        <span class="kw">let </span>instance_buffer = <span class="kw">unsafe </span>{
-<a href=#273 id=273 data-nosnippet>273</a>            <span class="self">self</span>.raw().create_buffer(<span class="kw-2">&amp;</span>hal::BufferDescriptor {
-<a href=#274 id=274 data-nosnippet>274</a>                label: hal_label(<span class="prelude-val">Some</span>(<span class="string">"(wgpu-core) instances_buffer"</span>), <span class="self">self</span>.instance_flags),
-<a href=#275 id=275 data-nosnippet>275</a>                size: u64::from(instance_buffer_size),
-<a href=#276 id=276 data-nosnippet>276</a>                usage: wgt::BufferUses::COPY_DST
-<a href=#277 id=277 data-nosnippet>277</a>                    | wgt::BufferUses::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT,
-<a href=#278 id=278 data-nosnippet>278</a>                memory_flags: hal::MemoryFlags::PREFER_COHERENT,
-<a href=#279 id=279 data-nosnippet>279</a>            })
-<a href=#280 id=280 data-nosnippet>280</a>        }
-<a href=#281 id=281 data-nosnippet>281</a>        .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
-<a href=#282 id=282 data-nosnippet>282</a>
-<a href=#283 id=283 data-nosnippet>283</a>        <span class="prelude-val">Ok</span>(Arc::new(resource::Tlas {
-<a href=#284 id=284 data-nosnippet>284</a>            raw: Snatchable::new(raw),
-<a href=#285 id=285 data-nosnippet>285</a>            device: <span class="self">self</span>.clone(),
-<a href=#286 id=286 data-nosnippet>286</a>            size_info,
-<a href=#287 id=287 data-nosnippet>287</a>            flags: desc.flags,
-<a href=#288 id=288 data-nosnippet>288</a>            update_mode: desc.update_mode,
-<a href=#289 id=289 data-nosnippet>289</a>            built_index: RwLock::new(rank::TLAS_BUILT_INDEX, <span class="prelude-val">None</span>),
-<a href=#290 id=290 data-nosnippet>290</a>            dependencies: RwLock::new(rank::TLAS_DEPENDENCIES, Vec::new()),
-<a href=#291 id=291 data-nosnippet>291</a>            instance_buffer: ManuallyDrop::new(instance_buffer),
-<a href=#292 id=292 data-nosnippet>292</a>            label: desc.label.to_string(),
-<a href=#293 id=293 data-nosnippet>293</a>            max_instance_count: desc.max_instances,
-<a href=#294 id=294 data-nosnippet>294</a>            tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.tlas_s.clone()),
-<a href=#295 id=295 data-nosnippet>295</a>        }))
-<a href=#296 id=296 data-nosnippet>296</a>    }
-<a href=#297 id=297 data-nosnippet>297</a>}
-<a href=#298 id=298 data-nosnippet>298</a>
-<a href=#299 id=299 data-nosnippet>299</a><span class="kw">impl </span>Global {
-<a href=#300 id=300 data-nosnippet>300</a>    <span class="kw">pub fn </span>device_create_blas(
-<a href=#301 id=301 data-nosnippet>301</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#302 id=302 data-nosnippet>302</a>        device_id: id::DeviceId,
-<a href=#303 id=303 data-nosnippet>303</a>        desc: <span class="kw-2">&amp;</span>resource::BlasDescriptor,
-<a href=#304 id=304 data-nosnippet>304</a>        sizes: wgt::BlasGeometrySizeDescriptors,
-<a href=#305 id=305 data-nosnippet>305</a>        id_in: <span class="prelude-ty">Option</span>&lt;BlasId&gt;,
-<a href=#306 id=306 data-nosnippet>306</a>    ) -&gt; (BlasId, <span class="prelude-ty">Option</span>&lt;u64&gt;, <span class="prelude-ty">Option</span>&lt;CreateBlasError&gt;) {
-<a href=#307 id=307 data-nosnippet>307</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_blas"</span>);
-<a href=#308 id=308 data-nosnippet>308</a>
-<a href=#309 id=309 data-nosnippet>309</a>        <span class="kw">let </span>fid = <span class="self">self</span>.hub.blas_s.prepare(id_in);
-<a href=#310 id=310 data-nosnippet>310</a>
-<a href=#311 id=311 data-nosnippet>311</a>        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
-<a href=#312 id=312 data-nosnippet>312</a>            <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
-<a href=#313 id=313 data-nosnippet>313</a>
-<a href=#314 id=314 data-nosnippet>314</a>            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-<a href=#315 id=315 data-nosnippet>315</a>            </span><span class="kw">let </span>trace_sizes = sizes.clone();
-<a href=#316 id=316 data-nosnippet>316</a>
-<a href=#317 id=317 data-nosnippet>317</a>            <span class="kw">let </span>blas = <span class="kw">match </span>device.create_blas(desc, sizes) {
-<a href=#318 id=318 data-nosnippet>318</a>                <span class="prelude-val">Ok</span>(blas) =&gt; blas,
-<a href=#319 id=319 data-nosnippet>319</a>                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
-<a href=#320 id=320 data-nosnippet>320</a>            };
-<a href=#321 id=321 data-nosnippet>321</a>            <span class="kw">let </span>handle = blas.handle;
-<a href=#322 id=322 data-nosnippet>322</a>
-<a href=#323 id=323 data-nosnippet>323</a>            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-<a href=#324 id=324 data-nosnippet>324</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(trace) = device.trace.lock().as_mut() {
-<a href=#325 id=325 data-nosnippet>325</a>                trace.add(Action::CreateBlas {
-<a href=#326 id=326 data-nosnippet>326</a>                    id: blas.to_trace(),
-<a href=#327 id=327 data-nosnippet>327</a>                    desc: desc.clone(),
-<a href=#328 id=328 data-nosnippet>328</a>                    sizes: trace_sizes,
-<a href=#329 id=329 data-nosnippet>329</a>                });
-<a href=#330 id=330 data-nosnippet>330</a>            }
-<a href=#331 id=331 data-nosnippet>331</a>
-<a href=#332 id=332 data-nosnippet>332</a>            <span class="kw">let </span>id = fid.assign(Fallible::Valid(blas));
-<a href=#333 id=333 data-nosnippet>333</a>            <span class="macro">api_log!</span>(<span class="string">"Device::create_blas -&gt; {id:?}"</span>);
-<a href=#334 id=334 data-nosnippet>334</a>
-<a href=#335 id=335 data-nosnippet>335</a>            <span class="kw">return </span>(id, <span class="prelude-val">Some</span>(handle), <span class="prelude-val">None</span>);
-<a href=#336 id=336 data-nosnippet>336</a>        };
-<a href=#337 id=337 data-nosnippet>337</a>
-<a href=#338 id=338 data-nosnippet>338</a>        <span class="kw">let </span>id = fid.assign(Fallible::Invalid(Arc::new(error.to_string())));
-<a href=#339 id=339 data-nosnippet>339</a>        (id, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(error))
-<a href=#340 id=340 data-nosnippet>340</a>    }
-<a href=#341 id=341 data-nosnippet>341</a>
-<a href=#342 id=342 data-nosnippet>342</a>    <span class="kw">pub fn </span>device_create_tlas(
-<a href=#343 id=343 data-nosnippet>343</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#344 id=344 data-nosnippet>344</a>        device_id: id::DeviceId,
-<a href=#345 id=345 data-nosnippet>345</a>        desc: <span class="kw-2">&amp;</span>resource::TlasDescriptor,
-<a href=#346 id=346 data-nosnippet>346</a>        id_in: <span class="prelude-ty">Option</span>&lt;TlasId&gt;,
-<a href=#347 id=347 data-nosnippet>347</a>    ) -&gt; (TlasId, <span class="prelude-ty">Option</span>&lt;CreateTlasError&gt;) {
-<a href=#348 id=348 data-nosnippet>348</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_tlas"</span>);
-<a href=#349 id=349 data-nosnippet>349</a>
-<a href=#350 id=350 data-nosnippet>350</a>        <span class="kw">let </span>fid = <span class="self">self</span>.hub.tlas_s.prepare(id_in);
-<a href=#351 id=351 data-nosnippet>351</a>
-<a href=#352 id=352 data-nosnippet>352</a>        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
-<a href=#353 id=353 data-nosnippet>353</a>            <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
-<a href=#354 id=354 data-nosnippet>354</a>
-<a href=#355 id=355 data-nosnippet>355</a>            <span class="kw">let </span>tlas = <span class="kw">match </span>device.create_tlas(desc) {
-<a href=#356 id=356 data-nosnippet>356</a>                <span class="prelude-val">Ok</span>(tlas) =&gt; tlas,
-<a href=#357 id=357 data-nosnippet>357</a>                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
-<a href=#358 id=358 data-nosnippet>358</a>            };
-<a href=#359 id=359 data-nosnippet>359</a>
-<a href=#360 id=360 data-nosnippet>360</a>            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-<a href=#361 id=361 data-nosnippet>361</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(trace) = device.trace.lock().as_mut() {
-<a href=#362 id=362 data-nosnippet>362</a>                trace.add(Action::CreateTlas {
-<a href=#363 id=363 data-nosnippet>363</a>                    id: tlas.to_trace(),
-<a href=#364 id=364 data-nosnippet>364</a>                    desc: desc.clone(),
-<a href=#365 id=365 data-nosnippet>365</a>                });
-<a href=#366 id=366 data-nosnippet>366</a>            }
-<a href=#367 id=367 data-nosnippet>367</a>
-<a href=#368 id=368 data-nosnippet>368</a>            <span class="kw">let </span>id = fid.assign(Fallible::Valid(tlas));
-<a href=#369 id=369 data-nosnippet>369</a>            <span class="macro">api_log!</span>(<span class="string">"Device::create_tlas -&gt; {id:?}"</span>);
-<a href=#370 id=370 data-nosnippet>370</a>
-<a href=#371 id=371 data-nosnippet>371</a>            <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
-<a href=#372 id=372 data-nosnippet>372</a>        };
-<a href=#373 id=373 data-nosnippet>373</a>
-<a href=#374 id=374 data-nosnippet>374</a>        <span class="kw">let </span>id = fid.assign(Fallible::Invalid(Arc::new(error.to_string())));
-<a href=#375 id=375 data-nosnippet>375</a>        (id, <span class="prelude-val">Some</span>(error))
-<a href=#376 id=376 data-nosnippet>376</a>    }
-<a href=#377 id=377 data-nosnippet>377</a>
-<a href=#378 id=378 data-nosnippet>378</a>    <span class="kw">pub fn </span>blas_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, blas_id: BlasId) {
-<a href=#379 id=379 data-nosnippet>379</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Blas::drop"</span>);
-<a href=#380 id=380 data-nosnippet>380</a>        <span class="macro">api_log!</span>(<span class="string">"Blas::drop {blas_id:?}"</span>);
-<a href=#381 id=381 data-nosnippet>381</a>
-<a href=#382 id=382 data-nosnippet>382</a>        <span class="kw">let </span>_blas = <span class="self">self</span>.hub.blas_s.remove(blas_id);
-<a href=#383 id=383 data-nosnippet>383</a>
-<a href=#384 id=384 data-nosnippet>384</a>        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-<a href=#385 id=385 data-nosnippet>385</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(blas) = _blas.get() {
-<a href=#386 id=386 data-nosnippet>386</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = blas.device.trace.lock().as_mut() {
-<a href=#387 id=387 data-nosnippet>387</a>                t.add(Action::DestroyBlas(blas.to_trace()));
-<a href=#388 id=388 data-nosnippet>388</a>            }
-<a href=#389 id=389 data-nosnippet>389</a>        }
-<a href=#390 id=390 data-nosnippet>390</a>    }
-<a href=#391 id=391 data-nosnippet>391</a>
-<a href=#392 id=392 data-nosnippet>392</a>    <span class="kw">pub fn </span>tlas_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, tlas_id: TlasId) {
-<a href=#393 id=393 data-nosnippet>393</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Tlas::drop"</span>);
-<a href=#394 id=394 data-nosnippet>394</a>        <span class="macro">api_log!</span>(<span class="string">"Tlas::drop {tlas_id:?}"</span>);
-<a href=#395 id=395 data-nosnippet>395</a>
-<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">let </span>_tlas = <span class="self">self</span>.hub.tlas_s.remove(tlas_id);
-<a href=#397 id=397 data-nosnippet>397</a>
-<a href=#398 id=398 data-nosnippet>398</a>        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-<a href=#399 id=399 data-nosnippet>399</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(tlas) = _tlas.get() {
-<a href=#400 id=400 data-nosnippet>400</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = tlas.device.trace.lock().as_mut() {
-<a href=#401 id=401 data-nosnippet>401</a>                t.add(Action::DestroyTlas(tlas.to_trace()));
-<a href=#402 id=402 data-nosnippet>402</a>            }
-<a href=#403 id=403 data-nosnippet>403</a>        }
-<a href=#404 id=404 data-nosnippet>404</a>    }
-<a href=#405 id=405 data-nosnippet>405</a>
-<a href=#406 id=406 data-nosnippet>406</a>    <span class="kw">pub fn </span>blas_prepare_compact_async(
-<a href=#407 id=407 data-nosnippet>407</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#408 id=408 data-nosnippet>408</a>        blas_id: BlasId,
-<a href=#409 id=409 data-nosnippet>409</a>        callback: <span class="prelude-ty">Option</span>&lt;BlasCompactCallback&gt;,
-<a href=#410 id=410 data-nosnippet>410</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::SubmissionIndex, BlasPrepareCompactError&gt; {
-<a href=#411 id=411 data-nosnippet>411</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Blas::prepare_compact_async"</span>);
-<a href=#412 id=412 data-nosnippet>412</a>        <span class="macro">api_log!</span>(<span class="string">"Blas::prepare_compact_async {blas_id:?}"</span>);
-<a href=#413 id=413 data-nosnippet>413</a>
-<a href=#414 id=414 data-nosnippet>414</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-<a href=#415 id=415 data-nosnippet>415</a>
-<a href=#416 id=416 data-nosnippet>416</a>        <span class="kw">let </span>compact_result = <span class="kw">match </span>hub.blas_s.get(blas_id).get() {
-<a href=#417 id=417 data-nosnippet>417</a>            <span class="prelude-val">Ok</span>(blas) =&gt; blas.prepare_compact_async(callback),
-<a href=#418 id=418 data-nosnippet>418</a>            <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>((callback, e.into())),
-<a href=#419 id=419 data-nosnippet>419</a>        };
-<a href=#420 id=420 data-nosnippet>420</a>
-<a href=#421 id=421 data-nosnippet>421</a>        <span class="kw">match </span>compact_result {
-<a href=#422 id=422 data-nosnippet>422</a>            <span class="prelude-val">Ok</span>(submission_index) =&gt; <span class="prelude-val">Ok</span>(submission_index),
-<a href=#423 id=423 data-nosnippet>423</a>            <span class="prelude-val">Err</span>((<span class="kw-2">mut </span>callback, err)) =&gt; {
-<a href=#424 id=424 data-nosnippet>424</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = callback.take() {
-<a href=#425 id=425 data-nosnippet>425</a>                    callback(<span class="prelude-val">Err</span>(err.clone()));
-<a href=#426 id=426 data-nosnippet>426</a>                }
-<a href=#427 id=427 data-nosnippet>427</a>                <span class="prelude-val">Err</span>(err)
-<a href=#428 id=428 data-nosnippet>428</a>            }
-<a href=#429 id=429 data-nosnippet>429</a>        }
-<a href=#430 id=430 data-nosnippet>430</a>    }
-<a href=#431 id=431 data-nosnippet>431</a>
-<a href=#432 id=432 data-nosnippet>432</a>    <span class="kw">pub fn </span>ready_for_compaction(<span class="kw-2">&amp;</span><span class="self">self</span>, blas_id: BlasId) -&gt; <span class="prelude-ty">Result</span>&lt;bool, InvalidResourceError&gt; {
-<a href=#433 id=433 data-nosnippet>433</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Blas::prepare_compact_async"</span>);
-<a href=#434 id=434 data-nosnippet>434</a>        <span class="macro">api_log!</span>(<span class="string">"Blas::prepare_compact_async {blas_id:?}"</span>);
-<a href=#435 id=435 data-nosnippet>435</a>
-<a href=#436 id=436 data-nosnippet>436</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-<a href=#437 id=437 data-nosnippet>437</a>
-<a href=#438 id=438 data-nosnippet>438</a>        <span class="kw">let </span>blas = hub.blas_s.get(blas_id).get()<span class="question-mark">?</span>;
-<a href=#439 id=439 data-nosnippet>439</a>
-<a href=#440 id=440 data-nosnippet>440</a>        <span class="kw">let </span>lock = blas.compacted_state.lock();
-<a href=#441 id=441 data-nosnippet>441</a>
-<a href=#442 id=442 data-nosnippet>442</a>        <span class="prelude-val">Ok</span>(<span class="macro">matches!</span>(<span class="kw-2">*</span>lock, BlasCompactState::Ready { .. }))
-<a href=#443 id=443 data-nosnippet>443</a>    }
-<a href=#444 id=444 data-nosnippet>444</a>}
+<a href=#271 id=271 data-nosnippet>271</a>            .checked_mul(desc.max_instances.max(<span class="number">1</span>))
+<a href=#272 id=272 data-nosnippet>272</a>            .expect(<span class="string">"max_tlas_instance_count should not allow excessive buffer size"</span>);
+<a href=#273 id=273 data-nosnippet>273</a>        <span class="kw">let </span>instance_buffer = <span class="kw">unsafe </span>{
+<a href=#274 id=274 data-nosnippet>274</a>            <span class="self">self</span>.raw().create_buffer(<span class="kw-2">&amp;</span>hal::BufferDescriptor {
+<a href=#275 id=275 data-nosnippet>275</a>                label: hal_label(<span class="prelude-val">Some</span>(<span class="string">"(wgpu-core) instances_buffer"</span>), <span class="self">self</span>.instance_flags),
+<a href=#276 id=276 data-nosnippet>276</a>                size: u64::from(instance_buffer_size),
+<a href=#277 id=277 data-nosnippet>277</a>                usage: wgt::BufferUses::COPY_DST
+<a href=#278 id=278 data-nosnippet>278</a>                    | wgt::BufferUses::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT,
+<a href=#279 id=279 data-nosnippet>279</a>                memory_flags: hal::MemoryFlags::PREFER_COHERENT,
+<a href=#280 id=280 data-nosnippet>280</a>            })
+<a href=#281 id=281 data-nosnippet>281</a>        }
+<a href=#282 id=282 data-nosnippet>282</a>        .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
+<a href=#283 id=283 data-nosnippet>283</a>
+<a href=#284 id=284 data-nosnippet>284</a>        <span class="prelude-val">Ok</span>(Arc::new(resource::Tlas {
+<a href=#285 id=285 data-nosnippet>285</a>            raw: Snatchable::new(raw),
+<a href=#286 id=286 data-nosnippet>286</a>            device: <span class="self">self</span>.clone(),
+<a href=#287 id=287 data-nosnippet>287</a>            size_info,
+<a href=#288 id=288 data-nosnippet>288</a>            flags: desc.flags,
+<a href=#289 id=289 data-nosnippet>289</a>            update_mode: desc.update_mode,
+<a href=#290 id=290 data-nosnippet>290</a>            built_index: RwLock::new(rank::TLAS_BUILT_INDEX, <span class="prelude-val">None</span>),
+<a href=#291 id=291 data-nosnippet>291</a>            dependencies: RwLock::new(rank::TLAS_DEPENDENCIES, Vec::new()),
+<a href=#292 id=292 data-nosnippet>292</a>            instance_buffer: ManuallyDrop::new(instance_buffer),
+<a href=#293 id=293 data-nosnippet>293</a>            label: desc.label.to_string(),
+<a href=#294 id=294 data-nosnippet>294</a>            max_instance_count: desc.max_instances,
+<a href=#295 id=295 data-nosnippet>295</a>            tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.tlas_s.clone()),
+<a href=#296 id=296 data-nosnippet>296</a>        }))
+<a href=#297 id=297 data-nosnippet>297</a>    }
+<a href=#298 id=298 data-nosnippet>298</a>}
+<a href=#299 id=299 data-nosnippet>299</a>
+<a href=#300 id=300 data-nosnippet>300</a><span class="kw">impl </span>Global {
+<a href=#301 id=301 data-nosnippet>301</a>    <span class="kw">pub fn </span>device_create_blas(
+<a href=#302 id=302 data-nosnippet>302</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#303 id=303 data-nosnippet>303</a>        device_id: id::DeviceId,
+<a href=#304 id=304 data-nosnippet>304</a>        desc: <span class="kw-2">&amp;</span>resource::BlasDescriptor,
+<a href=#305 id=305 data-nosnippet>305</a>        sizes: wgt::BlasGeometrySizeDescriptors,
+<a href=#306 id=306 data-nosnippet>306</a>        id_in: <span class="prelude-ty">Option</span>&lt;BlasId&gt;,
+<a href=#307 id=307 data-nosnippet>307</a>    ) -&gt; (BlasId, <span class="prelude-ty">Option</span>&lt;u64&gt;, <span class="prelude-ty">Option</span>&lt;CreateBlasError&gt;) {
+<a href=#308 id=308 data-nosnippet>308</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_blas"</span>);
+<a href=#309 id=309 data-nosnippet>309</a>
+<a href=#310 id=310 data-nosnippet>310</a>        <span class="kw">let </span>fid = <span class="self">self</span>.hub.blas_s.prepare(id_in);
+<a href=#311 id=311 data-nosnippet>311</a>
+<a href=#312 id=312 data-nosnippet>312</a>        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
+<a href=#313 id=313 data-nosnippet>313</a>            <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
+<a href=#314 id=314 data-nosnippet>314</a>
+<a href=#315 id=315 data-nosnippet>315</a>            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href=#316 id=316 data-nosnippet>316</a>            </span><span class="kw">let </span>trace_sizes = sizes.clone();
+<a href=#317 id=317 data-nosnippet>317</a>
+<a href=#318 id=318 data-nosnippet>318</a>            <span class="kw">let </span>blas = <span class="kw">match </span>device.create_blas(desc, sizes) {
+<a href=#319 id=319 data-nosnippet>319</a>                <span class="prelude-val">Ok</span>(blas) =&gt; blas,
+<a href=#320 id=320 data-nosnippet>320</a>                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
+<a href=#321 id=321 data-nosnippet>321</a>            };
+<a href=#322 id=322 data-nosnippet>322</a>            <span class="kw">let </span>handle = blas.handle;
+<a href=#323 id=323 data-nosnippet>323</a>
+<a href=#324 id=324 data-nosnippet>324</a>            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href=#325 id=325 data-nosnippet>325</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(trace) = device.trace.lock().as_mut() {
+<a href=#326 id=326 data-nosnippet>326</a>                trace.add(Action::CreateBlas {
+<a href=#327 id=327 data-nosnippet>327</a>                    id: blas.to_trace(),
+<a href=#328 id=328 data-nosnippet>328</a>                    desc: desc.clone(),
+<a href=#329 id=329 data-nosnippet>329</a>                    sizes: trace_sizes,
+<a href=#330 id=330 data-nosnippet>330</a>                });
+<a href=#331 id=331 data-nosnippet>331</a>            }
+<a href=#332 id=332 data-nosnippet>332</a>
+<a href=#333 id=333 data-nosnippet>333</a>            <span class="kw">let </span>id = fid.assign(Fallible::Valid(blas));
+<a href=#334 id=334 data-nosnippet>334</a>            <span class="macro">api_log!</span>(<span class="string">"Device::create_blas -&gt; {id:?}"</span>);
+<a href=#335 id=335 data-nosnippet>335</a>
+<a href=#336 id=336 data-nosnippet>336</a>            <span class="kw">return </span>(id, <span class="prelude-val">Some</span>(handle), <span class="prelude-val">None</span>);
+<a href=#337 id=337 data-nosnippet>337</a>        };
+<a href=#338 id=338 data-nosnippet>338</a>
+<a href=#339 id=339 data-nosnippet>339</a>        <span class="kw">let </span>id = fid.assign(Fallible::Invalid(Arc::new(error.to_string())));
+<a href=#340 id=340 data-nosnippet>340</a>        (id, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(error))
+<a href=#341 id=341 data-nosnippet>341</a>    }
+<a href=#342 id=342 data-nosnippet>342</a>
+<a href=#343 id=343 data-nosnippet>343</a>    <span class="kw">pub fn </span>device_create_tlas(
+<a href=#344 id=344 data-nosnippet>344</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#345 id=345 data-nosnippet>345</a>        device_id: id::DeviceId,
+<a href=#346 id=346 data-nosnippet>346</a>        desc: <span class="kw-2">&amp;</span>resource::TlasDescriptor,
+<a href=#347 id=347 data-nosnippet>347</a>        id_in: <span class="prelude-ty">Option</span>&lt;TlasId&gt;,
+<a href=#348 id=348 data-nosnippet>348</a>    ) -&gt; (TlasId, <span class="prelude-ty">Option</span>&lt;CreateTlasError&gt;) {
+<a href=#349 id=349 data-nosnippet>349</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_tlas"</span>);
+<a href=#350 id=350 data-nosnippet>350</a>
+<a href=#351 id=351 data-nosnippet>351</a>        <span class="kw">let </span>fid = <span class="self">self</span>.hub.tlas_s.prepare(id_in);
+<a href=#352 id=352 data-nosnippet>352</a>
+<a href=#353 id=353 data-nosnippet>353</a>        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
+<a href=#354 id=354 data-nosnippet>354</a>            <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
+<a href=#355 id=355 data-nosnippet>355</a>
+<a href=#356 id=356 data-nosnippet>356</a>            <span class="kw">let </span>tlas = <span class="kw">match </span>device.create_tlas(desc) {
+<a href=#357 id=357 data-nosnippet>357</a>                <span class="prelude-val">Ok</span>(tlas) =&gt; tlas,
+<a href=#358 id=358 data-nosnippet>358</a>                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
+<a href=#359 id=359 data-nosnippet>359</a>            };
+<a href=#360 id=360 data-nosnippet>360</a>
+<a href=#361 id=361 data-nosnippet>361</a>            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href=#362 id=362 data-nosnippet>362</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(trace) = device.trace.lock().as_mut() {
+<a href=#363 id=363 data-nosnippet>363</a>                trace.add(Action::CreateTlas {
+<a href=#364 id=364 data-nosnippet>364</a>                    id: tlas.to_trace(),
+<a href=#365 id=365 data-nosnippet>365</a>                    desc: desc.clone(),
+<a href=#366 id=366 data-nosnippet>366</a>                });
+<a href=#367 id=367 data-nosnippet>367</a>            }
+<a href=#368 id=368 data-nosnippet>368</a>
+<a href=#369 id=369 data-nosnippet>369</a>            <span class="kw">let </span>id = fid.assign(Fallible::Valid(tlas));
+<a href=#370 id=370 data-nosnippet>370</a>            <span class="macro">api_log!</span>(<span class="string">"Device::create_tlas -&gt; {id:?}"</span>);
+<a href=#371 id=371 data-nosnippet>371</a>
+<a href=#372 id=372 data-nosnippet>372</a>            <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
+<a href=#373 id=373 data-nosnippet>373</a>        };
+<a href=#374 id=374 data-nosnippet>374</a>
+<a href=#375 id=375 data-nosnippet>375</a>        <span class="kw">let </span>id = fid.assign(Fallible::Invalid(Arc::new(error.to_string())));
+<a href=#376 id=376 data-nosnippet>376</a>        (id, <span class="prelude-val">Some</span>(error))
+<a href=#377 id=377 data-nosnippet>377</a>    }
+<a href=#378 id=378 data-nosnippet>378</a>
+<a href=#379 id=379 data-nosnippet>379</a>    <span class="kw">pub fn </span>blas_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, blas_id: BlasId) {
+<a href=#380 id=380 data-nosnippet>380</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Blas::drop"</span>);
+<a href=#381 id=381 data-nosnippet>381</a>        <span class="macro">api_log!</span>(<span class="string">"Blas::drop {blas_id:?}"</span>);
+<a href=#382 id=382 data-nosnippet>382</a>
+<a href=#383 id=383 data-nosnippet>383</a>        <span class="kw">let </span>_blas = <span class="self">self</span>.hub.blas_s.remove(blas_id);
+<a href=#384 id=384 data-nosnippet>384</a>
+<a href=#385 id=385 data-nosnippet>385</a>        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href=#386 id=386 data-nosnippet>386</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(blas) = _blas.get() {
+<a href=#387 id=387 data-nosnippet>387</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = blas.device.trace.lock().as_mut() {
+<a href=#388 id=388 data-nosnippet>388</a>                t.add(Action::DestroyBlas(blas.to_trace()));
+<a href=#389 id=389 data-nosnippet>389</a>            }
+<a href=#390 id=390 data-nosnippet>390</a>        }
+<a href=#391 id=391 data-nosnippet>391</a>    }
+<a href=#392 id=392 data-nosnippet>392</a>
+<a href=#393 id=393 data-nosnippet>393</a>    <span class="kw">pub fn </span>tlas_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, tlas_id: TlasId) {
+<a href=#394 id=394 data-nosnippet>394</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Tlas::drop"</span>);
+<a href=#395 id=395 data-nosnippet>395</a>        <span class="macro">api_log!</span>(<span class="string">"Tlas::drop {tlas_id:?}"</span>);
+<a href=#396 id=396 data-nosnippet>396</a>
+<a href=#397 id=397 data-nosnippet>397</a>        <span class="kw">let </span>_tlas = <span class="self">self</span>.hub.tlas_s.remove(tlas_id);
+<a href=#398 id=398 data-nosnippet>398</a>
+<a href=#399 id=399 data-nosnippet>399</a>        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href=#400 id=400 data-nosnippet>400</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(tlas) = _tlas.get() {
+<a href=#401 id=401 data-nosnippet>401</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = tlas.device.trace.lock().as_mut() {
+<a href=#402 id=402 data-nosnippet>402</a>                t.add(Action::DestroyTlas(tlas.to_trace()));
+<a href=#403 id=403 data-nosnippet>403</a>            }
+<a href=#404 id=404 data-nosnippet>404</a>        }
+<a href=#405 id=405 data-nosnippet>405</a>    }
+<a href=#406 id=406 data-nosnippet>406</a>
+<a href=#407 id=407 data-nosnippet>407</a>    <span class="kw">pub fn </span>blas_prepare_compact_async(
+<a href=#408 id=408 data-nosnippet>408</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#409 id=409 data-nosnippet>409</a>        blas_id: BlasId,
+<a href=#410 id=410 data-nosnippet>410</a>        callback: <span class="prelude-ty">Option</span>&lt;BlasCompactCallback&gt;,
+<a href=#411 id=411 data-nosnippet>411</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::SubmissionIndex, BlasPrepareCompactError&gt; {
+<a href=#412 id=412 data-nosnippet>412</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Blas::prepare_compact_async"</span>);
+<a href=#413 id=413 data-nosnippet>413</a>        <span class="macro">api_log!</span>(<span class="string">"Blas::prepare_compact_async {blas_id:?}"</span>);
+<a href=#414 id=414 data-nosnippet>414</a>
+<a href=#415 id=415 data-nosnippet>415</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#416 id=416 data-nosnippet>416</a>
+<a href=#417 id=417 data-nosnippet>417</a>        <span class="kw">let </span>compact_result = <span class="kw">match </span>hub.blas_s.get(blas_id).get() {
+<a href=#418 id=418 data-nosnippet>418</a>            <span class="prelude-val">Ok</span>(blas) =&gt; blas.prepare_compact_async(callback),
+<a href=#419 id=419 data-nosnippet>419</a>            <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>((callback, e.into())),
+<a href=#420 id=420 data-nosnippet>420</a>        };
+<a href=#421 id=421 data-nosnippet>421</a>
+<a href=#422 id=422 data-nosnippet>422</a>        <span class="kw">match </span>compact_result {
+<a href=#423 id=423 data-nosnippet>423</a>            <span class="prelude-val">Ok</span>(submission_index) =&gt; <span class="prelude-val">Ok</span>(submission_index),
+<a href=#424 id=424 data-nosnippet>424</a>            <span class="prelude-val">Err</span>((<span class="kw-2">mut </span>callback, err)) =&gt; {
+<a href=#425 id=425 data-nosnippet>425</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = callback.take() {
+<a href=#426 id=426 data-nosnippet>426</a>                    callback(<span class="prelude-val">Err</span>(err.clone()));
+<a href=#427 id=427 data-nosnippet>427</a>                }
+<a href=#428 id=428 data-nosnippet>428</a>                <span class="prelude-val">Err</span>(err)
+<a href=#429 id=429 data-nosnippet>429</a>            }
+<a href=#430 id=430 data-nosnippet>430</a>        }
+<a href=#431 id=431 data-nosnippet>431</a>    }
+<a href=#432 id=432 data-nosnippet>432</a>
+<a href=#433 id=433 data-nosnippet>433</a>    <span class="kw">pub fn </span>ready_for_compaction(<span class="kw-2">&amp;</span><span class="self">self</span>, blas_id: BlasId) -&gt; <span class="prelude-ty">Result</span>&lt;bool, InvalidResourceError&gt; {
+<a href=#434 id=434 data-nosnippet>434</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Blas::prepare_compact_async"</span>);
+<a href=#435 id=435 data-nosnippet>435</a>        <span class="macro">api_log!</span>(<span class="string">"Blas::prepare_compact_async {blas_id:?}"</span>);
+<a href=#436 id=436 data-nosnippet>436</a>
+<a href=#437 id=437 data-nosnippet>437</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#438 id=438 data-nosnippet>438</a>
+<a href=#439 id=439 data-nosnippet>439</a>        <span class="kw">let </span>blas = hub.blas_s.get(blas_id).get()<span class="question-mark">?</span>;
+<a href=#440 id=440 data-nosnippet>440</a>
+<a href=#441 id=441 data-nosnippet>441</a>        <span class="kw">let </span>lock = blas.compacted_state.lock();
+<a href=#442 id=442 data-nosnippet>442</a>
+<a href=#443 id=443 data-nosnippet>443</a>        <span class="prelude-val">Ok</span>(<span class="macro">matches!</span>(<span class="kw-2">*</span>lock, BlasCompactState::Ready { .. }))
+<a href=#444 id=444 data-nosnippet>444</a>    }
+<a href=#445 id=445 data-nosnippet>445</a>}
 </code></pre></div></section></main></body></html>
