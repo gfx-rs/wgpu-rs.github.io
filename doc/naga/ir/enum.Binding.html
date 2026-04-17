@@ -32,35 +32,33 @@ outputs share the same location numbering space.</p>
 <p>Per-primitive values are not interpolated at all and are not dependent on the
 vertices or pixel location. For example, it may be used to store a
 non-interpolated normal vector.</p>
-</div></div></div></div><h2 id="implementations" class="section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Binding" class="impl"><a class="src rightside" href="../../src/naga/front/interpolator.rs.html#5-63">Source</a><a href="#impl-Binding" class="anchor">§</a><h3 class="code-header">impl <a class="enum" href="enum.Binding.html" title="enum naga::ir::Binding">Binding</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.apply_default_interpolation" class="method"><a class="src rightside" href="../../src/naga/front/interpolator.rs.html#41-62">Source</a><h4 class="code-header">pub fn <a href="#method.apply_default_interpolation" class="fn">apply_default_interpolation</a>(&amp;mut self, ty: &amp;<a class="enum" href="enum.TypeInner.html" title="enum naga::ir::TypeInner">TypeInner</a>)</h4></section></summary><div class="docblock"><p>Apply the usual default interpolation for <code>ty</code> to <code>binding</code>.</p>
+</div></div></div></div><h2 id="implementations" class="section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Binding" class="impl"><a class="src rightside" href="../../src/naga/front/interpolator.rs.html#5-54">Source</a><a href="#impl-Binding" class="anchor">§</a><h3 class="code-header">impl <a class="enum" href="enum.Binding.html" title="enum naga::ir::Binding">Binding</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.apply_default_interpolation" class="method"><a class="src rightside" href="../../src/naga/front/interpolator.rs.html#39-53">Source</a><h4 class="code-header">pub(crate) fn <a href="#method.apply_default_interpolation" class="fn">apply_default_interpolation</a>(&amp;mut self, ty: &amp;<a class="enum" href="enum.TypeInner.html" title="enum naga::ir::TypeInner">TypeInner</a>)</h4></section></summary><div class="docblock"><p>Apply default interpolation (if applicable) for <code>ty</code> to the binding.</p>
 <p>This function is a utility front ends may use to satisfy the Naga IR’s
 requirement, meant to ensure that input languages’ policies have been
 applied appropriately, that all I/O <code>Binding</code>s from the vertex shader to the
 fragment shader must have non-<code>None</code> <code>interpolation</code> values.</p>
 <p>All the shader languages Naga supports have similar rules:
 perspective-correct, center-sampled interpolation is the default for any
-binding that can vary, and everything else either defaults to flat, or
-requires an explicit flat qualifier/attribute/what-have-you.</p>
-<p>If <code>binding</code> is not a <a href="enum.Binding.html#variant.Location" title="variant naga::ir::Binding::Location"><code>Location</code></a> binding, or if its <a href="enum.Binding.html#variant.Location.field.interpolation" title="field naga::ir::Binding::interpolation"><code>interpolation</code></a> is
-already set, then make no changes. Otherwise, set <code>binding</code>’s interpolation
-and sampling to reasonable defaults depending on <code>ty</code>, the type of the value
-being interpolated:</p>
+binding that can vary, and an explicit flat qualifier/attribute/what-have-you is
+required for bindings that cannot.</p>
 <ul>
 <li>
+<p>If <code>binding</code> is not a <a href="enum.Binding.html#variant.Location" title="variant naga::ir::Binding::Location"><code>Location</code></a> binding, or if its <a href="enum.Binding.html#variant.Location.field.interpolation" title="field naga::ir::Binding::interpolation"><code>interpolation</code></a> is
+already set, then this function makes no changes.</p>
+</li>
+<li>
 <p>If <code>ty</code> is a floating-point scalar, vector, or matrix type, then
-default to <a href="enum.Interpolation.html#variant.Perspective" title="variant naga::ir::Interpolation::Perspective"><code>Perspective</code></a> interpolation and <a href="enum.Sampling.html#variant.Center" title="variant naga::ir::Sampling::Center"><code>Center</code></a> sampling.</p>
+apply the default <a href="enum.Interpolation.html#variant.Perspective" title="variant naga::ir::Interpolation::Perspective"><code>Perspective</code></a> interpolation and <a href="enum.Sampling.html#variant.Center" title="variant naga::ir::Sampling::Center"><code>Center</code></a> sampling.</p>
 </li>
 <li>
-<p>If <code>ty</code> is an integral scalar or vector, then default to <a href="enum.Interpolation.html#variant.Flat" title="variant naga::ir::Interpolation::Flat"><code>Flat</code></a>
-interpolation, which has no associated sampling.</p>
-</li>
-<li>
-<p>For any other types, make no change. Such types are not permitted as
-user-defined IO values, and will probably be flagged by the verifier</p>
+<p>If <code>ty</code> is an integral scalar or vector, make no changes; if the interpolation was
+<code>None</code>, it will remain so, and be rejected by the validator.</p>
 </li>
 </ul>
-<p>When structs appear in input or output types, each member ought to have its
-own <a href="enum.Binding.html" title="enum naga::ir::Binding"><code>Binding</code></a>, so structs are simply covered by the third case.</p>
+<p>For struct types, the bindings are defined on the members, so there is nothing to
+adjust on the struct itself.</p>
+<p>Other non-struct types are not permitted as user-defined IO values, and will be
+rejected by the validator.</p>
 </div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-Binding-1" class="impl"><a class="src rightside" href="../../src/naga/proc/mod.rs.html#401-408">Source</a><a href="#impl-Binding-1" class="anchor">§</a><h3 class="code-header">impl <a class="enum" href="enum.Binding.html" title="enum naga::ir::Binding">Binding</a></h3></section></summary><div class="impl-items"><section id="method.to_built_in" class="method"><a class="src rightside" href="../../src/naga/proc/mod.rs.html#402-407">Source</a><h4 class="code-header">pub const fn <a href="#method.to_built_in" class="fn">to_built_in</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.93.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="enum.BuiltIn.html" title="enum naga::ir::BuiltIn">BuiltIn</a>&gt;</h4></section></div></details></div><h2 id="trait-implementations" class="section-header">Trait Implementations<a href="#trait-implementations" class="anchor">§</a></h2><div id="trait-implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Arbitrary%3C'arbitrary%3E-for-Binding" class="impl"><a class="src rightside" href="../../src/naga/ir/mod.rs.html#1112">Source</a><a href="#impl-Arbitrary%3C'arbitrary%3E-for-Binding" class="anchor">§</a><h3 class="code-header">impl&lt;'arbitrary&gt; Arbitrary&lt;'arbitrary&gt; for <a class="enum" href="enum.Binding.html" title="enum naga::ir::Binding">Binding</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.arbitrary" class="method trait-impl"><a class="src rightside" href="../../src/naga/ir/mod.rs.html#1112">Source</a><a href="#method.arbitrary" class="anchor">§</a><h4 class="code-header">fn <a class="fn">arbitrary</a>(u: &amp;mut Unstructured&lt;'arbitrary&gt;) -&gt; Result&lt;Self&gt;</h4></section></summary><div class='docblock'>Generate an arbitrary value of <code>Self</code> from the given unstructured data. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.arbitrary_take_rest" class="method trait-impl"><a class="src rightside" href="../../src/naga/ir/mod.rs.html#1112">Source</a><a href="#method.arbitrary_take_rest" class="anchor">§</a><h4 class="code-header">fn <a class="fn">arbitrary_take_rest</a>(u: Unstructured&lt;'arbitrary&gt;) -&gt; Result&lt;Self&gt;</h4></section></summary><div class='docblock'>Generate an arbitrary value of <code>Self</code> from the entirety of the given
 unstructured data. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.size_hint" class="method trait-impl"><a class="src rightside" href="../../src/naga/ir/mod.rs.html#1112">Source</a><a href="#method.size_hint" class="anchor">§</a><h4 class="code-header">fn <a class="fn">size_hint</a>(depth: <a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.usize.html">usize</a>) -&gt; (<a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.usize.html">usize</a>, <a class="enum" href="https://doc.rust-lang.org/1.93.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.93.1/std/primitive.usize.html">usize</a>&gt;)</h4></section></summary><div class='docblock'>Get a size hint for how many bytes out of an <code>Unstructured</code> this type
 needs to construct itself. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.try_size_hint" class="method trait-impl"><a class="src rightside" href="../../src/naga/ir/mod.rs.html#1112">Source</a><a href="#method.try_size_hint" class="anchor">§</a><h4 class="code-header">fn <a class="fn">try_size_hint</a>(
