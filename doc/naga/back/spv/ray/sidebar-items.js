@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["query"]};
+window.SIDEBAR_ITEMS = {"fn":["write_ray_flags_contains_flags"],"mod":["pipeline","query"],"struct":["ExtractedRayDesc"]};
