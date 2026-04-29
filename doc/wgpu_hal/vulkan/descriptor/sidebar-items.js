@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["POOL_MAX_SETS","POOL_MIN_SETS"],"fn":["create_descriptor_pool"],"struct":["Bucket","BucketKey","DescriptorAllocator","DescriptorCounts","DescriptorSet","Pool"]};
