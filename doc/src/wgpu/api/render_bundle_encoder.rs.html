@@ -88,134 +88,144 @@
 <a href=#88 id=88 data-nosnippet>88</a>    ///
 <a href=#89 id=89 data-nosnippet>89</a>    /// Subsequent calls to [`draw_indexed`](RenderBundleEncoder::draw_indexed) on this [`RenderBundleEncoder`] will
 <a href=#90 id=90 data-nosnippet>90</a>    /// use `buffer` as the source index buffer.
-<a href=#91 id=91 data-nosnippet>91</a>    </span><span class="kw">pub fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">'a</span>&gt;, index_format: IndexFormat) {
-<a href=#92 id=92 data-nosnippet>92</a>        <span class="self">self</span>.inner.set_index_buffer(
-<a href=#93 id=93 data-nosnippet>93</a>            <span class="kw-2">&amp;</span>buffer_slice.buffer.inner,
-<a href=#94 id=94 data-nosnippet>94</a>            index_format,
-<a href=#95 id=95 data-nosnippet>95</a>            buffer_slice.offset,
-<a href=#96 id=96 data-nosnippet>96</a>            <span class="prelude-val">Some</span>(buffer_slice.size),
-<a href=#97 id=97 data-nosnippet>97</a>        );
-<a href=#98 id=98 data-nosnippet>98</a>    }
-<a href=#99 id=99 data-nosnippet>99</a>
-<a href=#100 id=100 data-nosnippet>100</a>    <span class="doccomment">/// Assign a vertex buffer to a slot.
-<a href=#101 id=101 data-nosnippet>101</a>    ///
-<a href=#102 id=102 data-nosnippet>102</a>    /// Subsequent calls to [`draw`] and [`draw_indexed`] on this
-<a href=#103 id=103 data-nosnippet>103</a>    /// [`RenderBundleEncoder`] will use `buffer` as one of the source vertex buffers.
-<a href=#104 id=104 data-nosnippet>104</a>    ///
-<a href=#105 id=105 data-nosnippet>105</a>    /// The `slot` refers to the index of the matching descriptor in
-<a href=#106 id=106 data-nosnippet>106</a>    /// [`VertexState::buffers`].
-<a href=#107 id=107 data-nosnippet>107</a>    ///
-<a href=#108 id=108 data-nosnippet>108</a>    /// [`draw`]: RenderBundleEncoder::draw
-<a href=#109 id=109 data-nosnippet>109</a>    /// [`draw_indexed`]: RenderBundleEncoder::draw_indexed
-<a href=#110 id=110 data-nosnippet>110</a>    </span><span class="kw">pub fn </span>set_vertex_buffer&lt;<span class="lifetime">'b</span>, B&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: B)
-<a href=#111 id=111 data-nosnippet>111</a>    <span class="kw">where
-<a href=#112 id=112 data-nosnippet>112</a>        </span><span class="prelude-ty">Option</span>&lt;BufferSlice&lt;<span class="lifetime">'b</span>&gt;&gt;: From&lt;B&gt;,
-<a href=#113 id=113 data-nosnippet>113</a>    {
-<a href=#114 id=114 data-nosnippet>114</a>        <span class="kw">let </span>buffer_slice: <span class="prelude-ty">Option</span>&lt;BufferSlice&lt;<span class="lifetime">'b</span>&gt;&gt; = buffer_slice.into();
-<a href=#115 id=115 data-nosnippet>115</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_slice) = buffer_slice {
-<a href=#116 id=116 data-nosnippet>116</a>            <span class="self">self</span>.inner.set_vertex_buffer(
-<a href=#117 id=117 data-nosnippet>117</a>                slot,
-<a href=#118 id=118 data-nosnippet>118</a>                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>buffer_slice.buffer.inner),
-<a href=#119 id=119 data-nosnippet>119</a>                buffer_slice.offset,
-<a href=#120 id=120 data-nosnippet>120</a>                <span class="prelude-val">Some</span>(buffer_slice.size),
-<a href=#121 id=121 data-nosnippet>121</a>            );
-<a href=#122 id=122 data-nosnippet>122</a>        } <span class="kw">else </span>{
-<a href=#123 id=123 data-nosnippet>123</a>            <span class="self">self</span>.inner.set_vertex_buffer(slot, <span class="prelude-val">None</span>, <span class="number">0</span>, <span class="prelude-val">None</span>);
-<a href=#124 id=124 data-nosnippet>124</a>        }
-<a href=#125 id=125 data-nosnippet>125</a>    }
-<a href=#126 id=126 data-nosnippet>126</a>
-<a href=#127 id=127 data-nosnippet>127</a>    <span class="doccomment">/// Draws primitives from the active vertex buffer(s).
-<a href=#128 id=128 data-nosnippet>128</a>    ///
-<a href=#129 id=129 data-nosnippet>129</a>    /// The active vertex buffers can be set with [`RenderBundleEncoder::set_vertex_buffer`].
-<a href=#130 id=130 data-nosnippet>130</a>    /// Does not use an Index Buffer. If you need this see [`RenderBundleEncoder::draw_indexed`]
-<a href=#131 id=131 data-nosnippet>131</a>    ///
-<a href=#132 id=132 data-nosnippet>132</a>    /// Panics if vertices Range is outside of the range of the vertices range of any set vertex buffer.
-<a href=#133 id=133 data-nosnippet>133</a>    ///
-<a href=#134 id=134 data-nosnippet>134</a>    /// vertices: The range of vertices to draw.
-<a href=#135 id=135 data-nosnippet>135</a>    /// instances: Range of Instances to draw. Use 0..1 if instance buffers are not used.
-<a href=#136 id=136 data-nosnippet>136</a>    /// E.g.of how its used internally
-<a href=#137 id=137 data-nosnippet>137</a>    /// ```rust ignore
-<a href=#138 id=138 data-nosnippet>138</a>    /// for instance_id in instance_range {
-<a href=#139 id=139 data-nosnippet>139</a>    ///     for vertex_id in vertex_range {
-<a href=#140 id=140 data-nosnippet>140</a>    ///         let vertex = vertex[vertex_id];
-<a href=#141 id=141 data-nosnippet>141</a>    ///         vertex_shader(vertex, vertex_id, instance_id);
-<a href=#142 id=142 data-nosnippet>142</a>    ///     }
-<a href=#143 id=143 data-nosnippet>143</a>    /// }
-<a href=#144 id=144 data-nosnippet>144</a>    /// ```
-<a href=#145 id=145 data-nosnippet>145</a>    </span><span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
-<a href=#146 id=146 data-nosnippet>146</a>        <span class="self">self</span>.inner.draw(vertices, instances);
-<a href=#147 id=147 data-nosnippet>147</a>    }
-<a href=#148 id=148 data-nosnippet>148</a>
-<a href=#149 id=149 data-nosnippet>149</a>    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffer(s).
-<a href=#150 id=150 data-nosnippet>150</a>    ///
-<a href=#151 id=151 data-nosnippet>151</a>    /// The active index buffer can be set with [`RenderBundleEncoder::set_index_buffer`].
-<a href=#152 id=152 data-nosnippet>152</a>    /// The active vertex buffer(s) can be set with [`RenderBundleEncoder::set_vertex_buffer`].
-<a href=#153 id=153 data-nosnippet>153</a>    ///
-<a href=#154 id=154 data-nosnippet>154</a>    /// Panics if indices Range is outside of the range of the indices range of any set index buffer.
-<a href=#155 id=155 data-nosnippet>155</a>    ///
-<a href=#156 id=156 data-nosnippet>156</a>    /// indices: The range of indices to draw.
-<a href=#157 id=157 data-nosnippet>157</a>    /// base_vertex: value added to each index value before indexing into the vertex buffers.
-<a href=#158 id=158 data-nosnippet>158</a>    /// instances: Range of Instances to draw. Use 0..1 if instance buffers are not used.
-<a href=#159 id=159 data-nosnippet>159</a>    /// E.g.of how its used internally
-<a href=#160 id=160 data-nosnippet>160</a>    /// ```rust ignore
-<a href=#161 id=161 data-nosnippet>161</a>    /// for instance_id in instance_range {
-<a href=#162 id=162 data-nosnippet>162</a>    ///     for index_index in index_range {
-<a href=#163 id=163 data-nosnippet>163</a>    ///         let vertex_id = index_buffer[index_index];
-<a href=#164 id=164 data-nosnippet>164</a>    ///         let adjusted_vertex_id = vertex_id + base_vertex;
-<a href=#165 id=165 data-nosnippet>165</a>    ///         let vertex = vertex[adjusted_vertex_id];
-<a href=#166 id=166 data-nosnippet>166</a>    ///         vertex_shader(vertex, adjusted_vertex_id, instance_id);
-<a href=#167 id=167 data-nosnippet>167</a>    ///     }
-<a href=#168 id=168 data-nosnippet>168</a>    /// }
-<a href=#169 id=169 data-nosnippet>169</a>    /// ```
-<a href=#170 id=170 data-nosnippet>170</a>    </span><span class="kw">pub fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
-<a href=#171 id=171 data-nosnippet>171</a>        <span class="self">self</span>.inner.draw_indexed(indices, base_vertex, instances);
-<a href=#172 id=172 data-nosnippet>172</a>    }
-<a href=#173 id=173 data-nosnippet>173</a>
-<a href=#174 id=174 data-nosnippet>174</a>    <span class="doccomment">/// Draws primitives from the active vertex buffer(s) based on the contents of the `indirect_buffer`.
-<a href=#175 id=175 data-nosnippet>175</a>    ///
-<a href=#176 id=176 data-nosnippet>176</a>    /// The active vertex buffers can be set with [`RenderBundleEncoder::set_vertex_buffer`].
-<a href=#177 id=177 data-nosnippet>177</a>    ///
-<a href=#178 id=178 data-nosnippet>178</a>    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirectArgs`](crate::util::DrawIndirectArgs).
-<a href=#179 id=179 data-nosnippet>179</a>    </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer, indirect_offset: BufferAddress) {
-<a href=#180 id=180 data-nosnippet>180</a>        <span class="self">self</span>.inner
-<a href=#181 id=181 data-nosnippet>181</a>            .draw_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset);
+<a href=#91 id=91 data-nosnippet>91</a>    ///
+<a href=#92 id=92 data-nosnippet>92</a>    /// # Panics
+<a href=#93 id=93 data-nosnippet>93</a>    ///
+<a href=#94 id=94 data-nosnippet>94</a>    /// - If the buffer slice length is 0.
+<a href=#95 id=95 data-nosnippet>95</a>    </span><span class="kw">pub fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">'a</span>&gt;, index_format: IndexFormat) {
+<a href=#96 id=96 data-nosnippet>96</a>        <span class="self">self</span>.inner.set_index_buffer(
+<a href=#97 id=97 data-nosnippet>97</a>            <span class="kw-2">&amp;</span>buffer_slice.buffer.inner,
+<a href=#98 id=98 data-nosnippet>98</a>            index_format,
+<a href=#99 id=99 data-nosnippet>99</a>            buffer_slice.offset,
+<a href=#100 id=100 data-nosnippet>100</a>            <span class="comment">// TODO(https://github.com/gfx-rs/wgpu/issues/3170): Empty slices should be supported here
+<a href=#101 id=101 data-nosnippet>101</a>            </span><span class="prelude-val">Some</span>(buffer_slice.size_expect_nonzero()),
+<a href=#102 id=102 data-nosnippet>102</a>        );
+<a href=#103 id=103 data-nosnippet>103</a>    }
+<a href=#104 id=104 data-nosnippet>104</a>
+<a href=#105 id=105 data-nosnippet>105</a>    <span class="doccomment">/// Assign a vertex buffer to a slot.
+<a href=#106 id=106 data-nosnippet>106</a>    ///
+<a href=#107 id=107 data-nosnippet>107</a>    /// Subsequent calls to [`draw`] and [`draw_indexed`] on this
+<a href=#108 id=108 data-nosnippet>108</a>    /// [`RenderBundleEncoder`] will use `buffer` as one of the source vertex buffers.
+<a href=#109 id=109 data-nosnippet>109</a>    ///
+<a href=#110 id=110 data-nosnippet>110</a>    /// The `slot` refers to the index of the matching descriptor in
+<a href=#111 id=111 data-nosnippet>111</a>    /// [`VertexState::buffers`].
+<a href=#112 id=112 data-nosnippet>112</a>    ///
+<a href=#113 id=113 data-nosnippet>113</a>    /// [`draw`]: RenderBundleEncoder::draw
+<a href=#114 id=114 data-nosnippet>114</a>    /// [`draw_indexed`]: RenderBundleEncoder::draw_indexed
+<a href=#115 id=115 data-nosnippet>115</a>    ///
+<a href=#116 id=116 data-nosnippet>116</a>    /// # Panics
+<a href=#117 id=117 data-nosnippet>117</a>    ///
+<a href=#118 id=118 data-nosnippet>118</a>    /// - If the buffer slice length is 0.
+<a href=#119 id=119 data-nosnippet>119</a>    </span><span class="kw">pub fn </span>set_vertex_buffer&lt;<span class="lifetime">'b</span>, B&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: B)
+<a href=#120 id=120 data-nosnippet>120</a>    <span class="kw">where
+<a href=#121 id=121 data-nosnippet>121</a>        </span><span class="prelude-ty">Option</span>&lt;BufferSlice&lt;<span class="lifetime">'b</span>&gt;&gt;: From&lt;B&gt;,
+<a href=#122 id=122 data-nosnippet>122</a>    {
+<a href=#123 id=123 data-nosnippet>123</a>        <span class="kw">let </span>buffer_slice: <span class="prelude-ty">Option</span>&lt;BufferSlice&lt;<span class="lifetime">'b</span>&gt;&gt; = buffer_slice.into();
+<a href=#124 id=124 data-nosnippet>124</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_slice) = buffer_slice {
+<a href=#125 id=125 data-nosnippet>125</a>            <span class="self">self</span>.inner.set_vertex_buffer(
+<a href=#126 id=126 data-nosnippet>126</a>                slot,
+<a href=#127 id=127 data-nosnippet>127</a>                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>buffer_slice.buffer.inner),
+<a href=#128 id=128 data-nosnippet>128</a>                buffer_slice.offset,
+<a href=#129 id=129 data-nosnippet>129</a>                <span class="comment">// TODO(https://github.com/gfx-rs/wgpu/issues/3170): Empty slices should be supported here
+<a href=#130 id=130 data-nosnippet>130</a>                </span><span class="prelude-val">Some</span>(buffer_slice.size_expect_nonzero()),
+<a href=#131 id=131 data-nosnippet>131</a>            );
+<a href=#132 id=132 data-nosnippet>132</a>        } <span class="kw">else </span>{
+<a href=#133 id=133 data-nosnippet>133</a>            <span class="self">self</span>.inner.set_vertex_buffer(slot, <span class="prelude-val">None</span>, <span class="number">0</span>, <span class="prelude-val">None</span>);
+<a href=#134 id=134 data-nosnippet>134</a>        }
+<a href=#135 id=135 data-nosnippet>135</a>    }
+<a href=#136 id=136 data-nosnippet>136</a>
+<a href=#137 id=137 data-nosnippet>137</a>    <span class="doccomment">/// Draws primitives from the active vertex buffer(s).
+<a href=#138 id=138 data-nosnippet>138</a>    ///
+<a href=#139 id=139 data-nosnippet>139</a>    /// The active vertex buffers can be set with [`RenderBundleEncoder::set_vertex_buffer`].
+<a href=#140 id=140 data-nosnippet>140</a>    /// Does not use an Index Buffer. If you need this see [`RenderBundleEncoder::draw_indexed`]
+<a href=#141 id=141 data-nosnippet>141</a>    ///
+<a href=#142 id=142 data-nosnippet>142</a>    /// Panics if vertices Range is outside of the range of the vertices range of any set vertex buffer.
+<a href=#143 id=143 data-nosnippet>143</a>    ///
+<a href=#144 id=144 data-nosnippet>144</a>    /// vertices: The range of vertices to draw.
+<a href=#145 id=145 data-nosnippet>145</a>    /// instances: Range of Instances to draw. Use 0..1 if instance buffers are not used.
+<a href=#146 id=146 data-nosnippet>146</a>    /// E.g.of how its used internally
+<a href=#147 id=147 data-nosnippet>147</a>    /// ```rust ignore
+<a href=#148 id=148 data-nosnippet>148</a>    /// for instance_id in instance_range {
+<a href=#149 id=149 data-nosnippet>149</a>    ///     for vertex_id in vertex_range {
+<a href=#150 id=150 data-nosnippet>150</a>    ///         let vertex = vertex[vertex_id];
+<a href=#151 id=151 data-nosnippet>151</a>    ///         vertex_shader(vertex, vertex_id, instance_id);
+<a href=#152 id=152 data-nosnippet>152</a>    ///     }
+<a href=#153 id=153 data-nosnippet>153</a>    /// }
+<a href=#154 id=154 data-nosnippet>154</a>    /// ```
+<a href=#155 id=155 data-nosnippet>155</a>    </span><span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
+<a href=#156 id=156 data-nosnippet>156</a>        <span class="self">self</span>.inner.draw(vertices, instances);
+<a href=#157 id=157 data-nosnippet>157</a>    }
+<a href=#158 id=158 data-nosnippet>158</a>
+<a href=#159 id=159 data-nosnippet>159</a>    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffer(s).
+<a href=#160 id=160 data-nosnippet>160</a>    ///
+<a href=#161 id=161 data-nosnippet>161</a>    /// The active index buffer can be set with [`RenderBundleEncoder::set_index_buffer`].
+<a href=#162 id=162 data-nosnippet>162</a>    /// The active vertex buffer(s) can be set with [`RenderBundleEncoder::set_vertex_buffer`].
+<a href=#163 id=163 data-nosnippet>163</a>    ///
+<a href=#164 id=164 data-nosnippet>164</a>    /// Panics if indices Range is outside of the range of the indices range of any set index buffer.
+<a href=#165 id=165 data-nosnippet>165</a>    ///
+<a href=#166 id=166 data-nosnippet>166</a>    /// indices: The range of indices to draw.
+<a href=#167 id=167 data-nosnippet>167</a>    /// base_vertex: value added to each index value before indexing into the vertex buffers.
+<a href=#168 id=168 data-nosnippet>168</a>    /// instances: Range of Instances to draw. Use 0..1 if instance buffers are not used.
+<a href=#169 id=169 data-nosnippet>169</a>    /// E.g.of how its used internally
+<a href=#170 id=170 data-nosnippet>170</a>    /// ```rust ignore
+<a href=#171 id=171 data-nosnippet>171</a>    /// for instance_id in instance_range {
+<a href=#172 id=172 data-nosnippet>172</a>    ///     for index_index in index_range {
+<a href=#173 id=173 data-nosnippet>173</a>    ///         let vertex_id = index_buffer[index_index];
+<a href=#174 id=174 data-nosnippet>174</a>    ///         let adjusted_vertex_id = vertex_id + base_vertex;
+<a href=#175 id=175 data-nosnippet>175</a>    ///         let vertex = vertex[adjusted_vertex_id];
+<a href=#176 id=176 data-nosnippet>176</a>    ///         vertex_shader(vertex, adjusted_vertex_id, instance_id);
+<a href=#177 id=177 data-nosnippet>177</a>    ///     }
+<a href=#178 id=178 data-nosnippet>178</a>    /// }
+<a href=#179 id=179 data-nosnippet>179</a>    /// ```
+<a href=#180 id=180 data-nosnippet>180</a>    </span><span class="kw">pub fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
+<a href=#181 id=181 data-nosnippet>181</a>        <span class="self">self</span>.inner.draw_indexed(indices, base_vertex, instances);
 <a href=#182 id=182 data-nosnippet>182</a>    }
 <a href=#183 id=183 data-nosnippet>183</a>
-<a href=#184 id=184 data-nosnippet>184</a>    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers,
-<a href=#185 id=185 data-nosnippet>185</a>    /// based on the contents of the `indirect_buffer`.
-<a href=#186 id=186 data-nosnippet>186</a>    ///
-<a href=#187 id=187 data-nosnippet>187</a>    /// The active index buffer can be set with [`RenderBundleEncoder::set_index_buffer`], while the active
-<a href=#188 id=188 data-nosnippet>188</a>    /// vertex buffers can be set with [`RenderBundleEncoder::set_vertex_buffer`].
-<a href=#189 id=189 data-nosnippet>189</a>    ///
-<a href=#190 id=190 data-nosnippet>190</a>    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirectArgs`](crate::util::DrawIndexedIndirectArgs).
-<a href=#191 id=191 data-nosnippet>191</a>    </span><span class="kw">pub fn </span>draw_indexed_indirect(
-<a href=#192 id=192 data-nosnippet>192</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#193 id=193 data-nosnippet>193</a>        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
-<a href=#194 id=194 data-nosnippet>194</a>        indirect_offset: BufferAddress,
-<a href=#195 id=195 data-nosnippet>195</a>    ) {
-<a href=#196 id=196 data-nosnippet>196</a>        <span class="self">self</span>.inner
-<a href=#197 id=197 data-nosnippet>197</a>            .draw_indexed_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset);
-<a href=#198 id=198 data-nosnippet>198</a>    }
-<a href=#199 id=199 data-nosnippet>199</a>
-<a href=#200 id=200 data-nosnippet>200</a>    <span class="attr">#[cfg(custom)]
-<a href=#201 id=201 data-nosnippet>201</a>    </span><span class="doccomment">/// Returns custom implementation of RenderBundleEncoder (if custom backend and is internally T)
-<a href=#202 id=202 data-nosnippet>202</a>    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::RenderBundleEncoderInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
-<a href=#203 id=203 data-nosnippet>203</a>        <span class="self">self</span>.inner.as_custom()
-<a href=#204 id=204 data-nosnippet>204</a>    }
-<a href=#205 id=205 data-nosnippet>205</a>}
-<a href=#206 id=206 data-nosnippet>206</a>
-<a href=#207 id=207 data-nosnippet>207</a><span class="doccomment">/// [`Features::IMMEDIATES`] must be enabled on the device in order to call these functions.
-<a href=#208 id=208 data-nosnippet>208</a></span><span class="kw">impl </span>RenderBundleEncoder&lt;<span class="lifetime">'_</span>&gt; {
-<a href=#209 id=209 data-nosnippet>209</a>    <span class="doccomment">/// Set immediate data for subsequent draw calls within the render bundle.
-<a href=#210 id=210 data-nosnippet>210</a>    ///
-<a href=#211 id=211 data-nosnippet>211</a>    /// Write the bytes in `data` at offset `offset` within immediate data
-<a href=#212 id=212 data-nosnippet>212</a>    /// storage. Both `offset` and the length of `data` must be
-<a href=#213 id=213 data-nosnippet>213</a>    /// multiples of [`crate::IMMEDIATE_DATA_ALIGNMENT`], which is always 4.
-<a href=#214 id=214 data-nosnippet>214</a>    ///
-<a href=#215 id=215 data-nosnippet>215</a>    /// For example, if `offset` is `4` and `data` is eight bytes long, this
-<a href=#216 id=216 data-nosnippet>216</a>    /// call will write `data` to bytes `4..12` of immediate data storage.
-<a href=#217 id=217 data-nosnippet>217</a>    </span><span class="kw">pub fn </span>set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
-<a href=#218 id=218 data-nosnippet>218</a>        <span class="self">self</span>.inner.set_immediates(offset, data);
-<a href=#219 id=219 data-nosnippet>219</a>    }
-<a href=#220 id=220 data-nosnippet>220</a>}
+<a href=#184 id=184 data-nosnippet>184</a>    <span class="doccomment">/// Draws primitives from the active vertex buffer(s) based on the contents of the `indirect_buffer`.
+<a href=#185 id=185 data-nosnippet>185</a>    ///
+<a href=#186 id=186 data-nosnippet>186</a>    /// The active vertex buffers can be set with [`RenderBundleEncoder::set_vertex_buffer`].
+<a href=#187 id=187 data-nosnippet>187</a>    ///
+<a href=#188 id=188 data-nosnippet>188</a>    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirectArgs`](crate::util::DrawIndirectArgs).
+<a href=#189 id=189 data-nosnippet>189</a>    </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer, indirect_offset: BufferAddress) {
+<a href=#190 id=190 data-nosnippet>190</a>        <span class="self">self</span>.inner
+<a href=#191 id=191 data-nosnippet>191</a>            .draw_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset);
+<a href=#192 id=192 data-nosnippet>192</a>    }
+<a href=#193 id=193 data-nosnippet>193</a>
+<a href=#194 id=194 data-nosnippet>194</a>    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers,
+<a href=#195 id=195 data-nosnippet>195</a>    /// based on the contents of the `indirect_buffer`.
+<a href=#196 id=196 data-nosnippet>196</a>    ///
+<a href=#197 id=197 data-nosnippet>197</a>    /// The active index buffer can be set with [`RenderBundleEncoder::set_index_buffer`], while the active
+<a href=#198 id=198 data-nosnippet>198</a>    /// vertex buffers can be set with [`RenderBundleEncoder::set_vertex_buffer`].
+<a href=#199 id=199 data-nosnippet>199</a>    ///
+<a href=#200 id=200 data-nosnippet>200</a>    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirectArgs`](crate::util::DrawIndexedIndirectArgs).
+<a href=#201 id=201 data-nosnippet>201</a>    </span><span class="kw">pub fn </span>draw_indexed_indirect(
+<a href=#202 id=202 data-nosnippet>202</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#203 id=203 data-nosnippet>203</a>        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
+<a href=#204 id=204 data-nosnippet>204</a>        indirect_offset: BufferAddress,
+<a href=#205 id=205 data-nosnippet>205</a>    ) {
+<a href=#206 id=206 data-nosnippet>206</a>        <span class="self">self</span>.inner
+<a href=#207 id=207 data-nosnippet>207</a>            .draw_indexed_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset);
+<a href=#208 id=208 data-nosnippet>208</a>    }
+<a href=#209 id=209 data-nosnippet>209</a>
+<a href=#210 id=210 data-nosnippet>210</a>    <span class="attr">#[cfg(custom)]
+<a href=#211 id=211 data-nosnippet>211</a>    </span><span class="doccomment">/// Returns custom implementation of RenderBundleEncoder (if custom backend and is internally T)
+<a href=#212 id=212 data-nosnippet>212</a>    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::RenderBundleEncoderInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+<a href=#213 id=213 data-nosnippet>213</a>        <span class="self">self</span>.inner.as_custom()
+<a href=#214 id=214 data-nosnippet>214</a>    }
+<a href=#215 id=215 data-nosnippet>215</a>}
+<a href=#216 id=216 data-nosnippet>216</a>
+<a href=#217 id=217 data-nosnippet>217</a><span class="doccomment">/// [`Features::IMMEDIATES`] must be enabled on the device in order to call these functions.
+<a href=#218 id=218 data-nosnippet>218</a></span><span class="kw">impl </span>RenderBundleEncoder&lt;<span class="lifetime">'_</span>&gt; {
+<a href=#219 id=219 data-nosnippet>219</a>    <span class="doccomment">/// Set immediate data for subsequent draw calls within the render bundle.
+<a href=#220 id=220 data-nosnippet>220</a>    ///
+<a href=#221 id=221 data-nosnippet>221</a>    /// Write the bytes in `data` at offset `offset` within immediate data
+<a href=#222 id=222 data-nosnippet>222</a>    /// storage. Both `offset` and the length of `data` must be
+<a href=#223 id=223 data-nosnippet>223</a>    /// multiples of [`crate::IMMEDIATE_DATA_ALIGNMENT`], which is always 4.
+<a href=#224 id=224 data-nosnippet>224</a>    ///
+<a href=#225 id=225 data-nosnippet>225</a>    /// For example, if `offset` is `4` and `data` is eight bytes long, this
+<a href=#226 id=226 data-nosnippet>226</a>    /// call will write `data` to bytes `4..12` of immediate data storage.
+<a href=#227 id=227 data-nosnippet>227</a>    </span><span class="kw">pub fn </span>set_immediates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
+<a href=#228 id=228 data-nosnippet>228</a>        <span class="self">self</span>.inner.set_immediates(offset, data);
+<a href=#229 id=229 data-nosnippet>229</a>    }
+<a href=#230 id=230 data-nosnippet>230</a>}
 </code></pre></div></section></main></body></html>
