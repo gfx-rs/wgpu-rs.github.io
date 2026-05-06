@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["init_logger","initialize_adapter","initialize_device","initialize_instance"],"struct":["SurfaceGuard"]};
+window.SIDEBAR_ITEMS = {"fn":["default_device_lost_callback","init_logger","initialize_adapter","initialize_device","initialize_instance"],"struct":["SurfaceGuard"]};
