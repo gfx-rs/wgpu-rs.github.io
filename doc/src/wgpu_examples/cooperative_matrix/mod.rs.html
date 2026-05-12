@@ -221,251 +221,268 @@
 <a href=#221 id=221 data-nosnippet>221</a>
 <a href=#222 id=222 data-nosnippet>222</a>    <span class="comment">// Initialize matrices
 <a href=#223 id=223 data-nosnippet>223</a>    // A is MxK, B is KxN, C is MxN (result)
-<a href=#224 id=224 data-nosnippet>224</a>    // Use f32 for computation, convert to f16 if needed for GPU
-<a href=#225 id=225 data-nosnippet>225</a>    </span><span class="kw">let </span>matrix_a_f32: Vec&lt;f32&gt; = (<span class="number">0</span>..M * K).map(|i| (i % <span class="number">7</span>) <span class="kw">as </span>f32 * <span class="number">0.1</span>).collect();
-<a href=#226 id=226 data-nosnippet>226</a>    <span class="kw">let </span>matrix_b_f32: Vec&lt;f32&gt; = (<span class="number">0</span>..K * N).map(|i| (i % <span class="number">11</span>) <span class="kw">as </span>f32 * <span class="number">0.1</span>).collect();
-<a href=#227 id=227 data-nosnippet>227</a>    <span class="kw">let </span>matrix_c_f32: Vec&lt;f32&gt; = <span class="macro">vec!</span>[<span class="number">0.0</span>; (M * N) <span class="kw">as </span>usize];
-<a href=#228 id=228 data-nosnippet>228</a>
-<a href=#229 id=229 data-nosnippet>229</a>    <span class="comment">// Element size depends on precision
-<a href=#230 id=230 data-nosnippet>230</a>    </span><span class="kw">let </span>element_size = <span class="kw">if </span>use_f16 { <span class="number">2usize </span>} <span class="kw">else </span>{ <span class="number">4usize </span>};
-<a href=#231 id=231 data-nosnippet>231</a>    <span class="kw">let </span>num_elements_a = (M * K) <span class="kw">as </span>usize;
-<a href=#232 id=232 data-nosnippet>232</a>    <span class="kw">let </span>num_elements_b = (K * N) <span class="kw">as </span>usize;
-<a href=#233 id=233 data-nosnippet>233</a>    <span class="kw">let </span>num_elements_c = (M * N) <span class="kw">as </span>usize;
-<a href=#234 id=234 data-nosnippet>234</a>
-<a href=#235 id=235 data-nosnippet>235</a>    <span class="comment">// Create buffers
-<a href=#236 id=236 data-nosnippet>236</a>    </span><span class="kw">let </span>buffer_a = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
-<a href=#237 id=237 data-nosnippet>237</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Matrix A"</span>),
-<a href=#238 id=238 data-nosnippet>238</a>        size: (num_elements_a * element_size) <span class="kw">as </span>u64,
-<a href=#239 id=239 data-nosnippet>239</a>        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
-<a href=#240 id=240 data-nosnippet>240</a>        mapped_at_creation: <span class="bool-val">false</span>,
-<a href=#241 id=241 data-nosnippet>241</a>    });
-<a href=#242 id=242 data-nosnippet>242</a>
-<a href=#243 id=243 data-nosnippet>243</a>    <span class="kw">let </span>buffer_b = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
-<a href=#244 id=244 data-nosnippet>244</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Matrix B"</span>),
-<a href=#245 id=245 data-nosnippet>245</a>        size: (num_elements_b * element_size) <span class="kw">as </span>u64,
-<a href=#246 id=246 data-nosnippet>246</a>        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
-<a href=#247 id=247 data-nosnippet>247</a>        mapped_at_creation: <span class="bool-val">false</span>,
-<a href=#248 id=248 data-nosnippet>248</a>    });
-<a href=#249 id=249 data-nosnippet>249</a>
-<a href=#250 id=250 data-nosnippet>250</a>    <span class="kw">let </span>buffer_c = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
-<a href=#251 id=251 data-nosnippet>251</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Matrix C"</span>),
-<a href=#252 id=252 data-nosnippet>252</a>        size: (num_elements_c * element_size) <span class="kw">as </span>u64,
-<a href=#253 id=253 data-nosnippet>253</a>        usage: wgpu::BufferUsages::STORAGE
-<a href=#254 id=254 data-nosnippet>254</a>            | wgpu::BufferUsages::COPY_DST
-<a href=#255 id=255 data-nosnippet>255</a>            | wgpu::BufferUsages::COPY_SRC,
-<a href=#256 id=256 data-nosnippet>256</a>        mapped_at_creation: <span class="bool-val">false</span>,
-<a href=#257 id=257 data-nosnippet>257</a>    });
-<a href=#258 id=258 data-nosnippet>258</a>
-<a href=#259 id=259 data-nosnippet>259</a>    <span class="kw">let </span>dimensions = Dimensions {
-<a href=#260 id=260 data-nosnippet>260</a>        m: M,
-<a href=#261 id=261 data-nosnippet>261</a>        n: N,
-<a href=#262 id=262 data-nosnippet>262</a>        k: K,
-<a href=#263 id=263 data-nosnippet>263</a>        stride: N,
-<a href=#264 id=264 data-nosnippet>264</a>    };
-<a href=#265 id=265 data-nosnippet>265</a>    <span class="kw">let </span>buffer_dims = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
-<a href=#266 id=266 data-nosnippet>266</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Dimensions"</span>),
-<a href=#267 id=267 data-nosnippet>267</a>        size: std::mem::size_of::&lt;Dimensions&gt;() <span class="kw">as </span>u64,
-<a href=#268 id=268 data-nosnippet>268</a>        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-<a href=#269 id=269 data-nosnippet>269</a>        mapped_at_creation: <span class="bool-val">false</span>,
-<a href=#270 id=270 data-nosnippet>270</a>    });
-<a href=#271 id=271 data-nosnippet>271</a>
-<a href=#272 id=272 data-nosnippet>272</a>    <span class="kw">let </span>staging_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
-<a href=#273 id=273 data-nosnippet>273</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Staging Buffer"</span>),
-<a href=#274 id=274 data-nosnippet>274</a>        size: (num_elements_c * element_size) <span class="kw">as </span>u64,
-<a href=#275 id=275 data-nosnippet>275</a>        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
-<a href=#276 id=276 data-nosnippet>276</a>        mapped_at_creation: <span class="bool-val">false</span>,
-<a href=#277 id=277 data-nosnippet>277</a>    });
-<a href=#278 id=278 data-nosnippet>278</a>
-<a href=#279 id=279 data-nosnippet>279</a>    <span class="comment">// Upload data (convert to f16 if needed)
-<a href=#280 id=280 data-nosnippet>280</a>    </span><span class="kw">if </span>use_f16 {
-<a href=#281 id=281 data-nosnippet>281</a>        <span class="kw">let </span>matrix_a_f16: Vec&lt;f16&gt; = matrix_a_f32.iter().map(|<span class="kw-2">&amp;</span>x| f16::from_f32(x)).collect();
-<a href=#282 id=282 data-nosnippet>282</a>        <span class="kw">let </span>matrix_b_f16: Vec&lt;f16&gt; = matrix_b_f32.iter().map(|<span class="kw-2">&amp;</span>x| f16::from_f32(x)).collect();
-<a href=#283 id=283 data-nosnippet>283</a>        <span class="kw">let </span>matrix_c_f16: Vec&lt;f16&gt; = matrix_c_f32.iter().map(|<span class="kw-2">&amp;</span>x| f16::from_f32(x)).collect();
-<a href=#284 id=284 data-nosnippet>284</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_a, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_a_f16));
-<a href=#285 id=285 data-nosnippet>285</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_b, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_b_f16));
-<a href=#286 id=286 data-nosnippet>286</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_c, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_c_f16));
-<a href=#287 id=287 data-nosnippet>287</a>    } <span class="kw">else </span>{
-<a href=#288 id=288 data-nosnippet>288</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_a, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_a_f32));
-<a href=#289 id=289 data-nosnippet>289</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_b, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_b_f32));
-<a href=#290 id=290 data-nosnippet>290</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_c, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_c_f32));
-<a href=#291 id=291 data-nosnippet>291</a>    }
-<a href=#292 id=292 data-nosnippet>292</a>    queue.write_buffer(<span class="kw-2">&amp;</span>buffer_dims, <span class="number">0</span>, bytemuck::bytes_of(<span class="kw-2">&amp;</span>dimensions));
-<a href=#293 id=293 data-nosnippet>293</a>
-<a href=#294 id=294 data-nosnippet>294</a>    <span class="comment">// Create bind group layout and bind group
-<a href=#295 id=295 data-nosnippet>295</a>    </span><span class="kw">let </span>bind_group_layout = device.create_bind_group_layout(<span class="kw-2">&amp;</span>wgpu::BindGroupLayoutDescriptor {
-<a href=#296 id=296 data-nosnippet>296</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Bind Group Layout"</span>),
-<a href=#297 id=297 data-nosnippet>297</a>        entries: <span class="kw-2">&amp;</span>[
-<a href=#298 id=298 data-nosnippet>298</a>            wgpu::BindGroupLayoutEntry {
-<a href=#299 id=299 data-nosnippet>299</a>                binding: <span class="number">0</span>,
-<a href=#300 id=300 data-nosnippet>300</a>                visibility: wgpu::ShaderStages::COMPUTE,
-<a href=#301 id=301 data-nosnippet>301</a>                ty: wgpu::BindingType::Buffer {
-<a href=#302 id=302 data-nosnippet>302</a>                    ty: wgpu::BufferBindingType::Storage { read_only: <span class="bool-val">true </span>},
-<a href=#303 id=303 data-nosnippet>303</a>                    has_dynamic_offset: <span class="bool-val">false</span>,
-<a href=#304 id=304 data-nosnippet>304</a>                    min_binding_size: <span class="prelude-val">None</span>,
-<a href=#305 id=305 data-nosnippet>305</a>                },
-<a href=#306 id=306 data-nosnippet>306</a>                count: <span class="prelude-val">None</span>,
-<a href=#307 id=307 data-nosnippet>307</a>            },
-<a href=#308 id=308 data-nosnippet>308</a>            wgpu::BindGroupLayoutEntry {
-<a href=#309 id=309 data-nosnippet>309</a>                binding: <span class="number">1</span>,
-<a href=#310 id=310 data-nosnippet>310</a>                visibility: wgpu::ShaderStages::COMPUTE,
-<a href=#311 id=311 data-nosnippet>311</a>                ty: wgpu::BindingType::Buffer {
-<a href=#312 id=312 data-nosnippet>312</a>                    ty: wgpu::BufferBindingType::Storage { read_only: <span class="bool-val">true </span>},
-<a href=#313 id=313 data-nosnippet>313</a>                    has_dynamic_offset: <span class="bool-val">false</span>,
-<a href=#314 id=314 data-nosnippet>314</a>                    min_binding_size: <span class="prelude-val">None</span>,
-<a href=#315 id=315 data-nosnippet>315</a>                },
-<a href=#316 id=316 data-nosnippet>316</a>                count: <span class="prelude-val">None</span>,
-<a href=#317 id=317 data-nosnippet>317</a>            },
-<a href=#318 id=318 data-nosnippet>318</a>            wgpu::BindGroupLayoutEntry {
-<a href=#319 id=319 data-nosnippet>319</a>                binding: <span class="number">2</span>,
-<a href=#320 id=320 data-nosnippet>320</a>                visibility: wgpu::ShaderStages::COMPUTE,
-<a href=#321 id=321 data-nosnippet>321</a>                ty: wgpu::BindingType::Buffer {
-<a href=#322 id=322 data-nosnippet>322</a>                    ty: wgpu::BufferBindingType::Storage { read_only: <span class="bool-val">false </span>},
-<a href=#323 id=323 data-nosnippet>323</a>                    has_dynamic_offset: <span class="bool-val">false</span>,
-<a href=#324 id=324 data-nosnippet>324</a>                    min_binding_size: <span class="prelude-val">None</span>,
-<a href=#325 id=325 data-nosnippet>325</a>                },
-<a href=#326 id=326 data-nosnippet>326</a>                count: <span class="prelude-val">None</span>,
-<a href=#327 id=327 data-nosnippet>327</a>            },
-<a href=#328 id=328 data-nosnippet>328</a>            wgpu::BindGroupLayoutEntry {
-<a href=#329 id=329 data-nosnippet>329</a>                binding: <span class="number">3</span>,
-<a href=#330 id=330 data-nosnippet>330</a>                visibility: wgpu::ShaderStages::COMPUTE,
-<a href=#331 id=331 data-nosnippet>331</a>                ty: wgpu::BindingType::Buffer {
-<a href=#332 id=332 data-nosnippet>332</a>                    ty: wgpu::BufferBindingType::Uniform,
-<a href=#333 id=333 data-nosnippet>333</a>                    has_dynamic_offset: <span class="bool-val">false</span>,
-<a href=#334 id=334 data-nosnippet>334</a>                    min_binding_size: <span class="prelude-val">None</span>,
-<a href=#335 id=335 data-nosnippet>335</a>                },
-<a href=#336 id=336 data-nosnippet>336</a>                count: <span class="prelude-val">None</span>,
-<a href=#337 id=337 data-nosnippet>337</a>            },
-<a href=#338 id=338 data-nosnippet>338</a>        ],
-<a href=#339 id=339 data-nosnippet>339</a>    });
-<a href=#340 id=340 data-nosnippet>340</a>
-<a href=#341 id=341 data-nosnippet>341</a>    <span class="kw">let </span>bind_group = device.create_bind_group(<span class="kw-2">&amp;</span>wgpu::BindGroupDescriptor {
-<a href=#342 id=342 data-nosnippet>342</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Bind Group"</span>),
-<a href=#343 id=343 data-nosnippet>343</a>        layout: <span class="kw-2">&amp;</span>bind_group_layout,
-<a href=#344 id=344 data-nosnippet>344</a>        entries: <span class="kw-2">&amp;</span>[
-<a href=#345 id=345 data-nosnippet>345</a>            wgpu::BindGroupEntry {
-<a href=#346 id=346 data-nosnippet>346</a>                binding: <span class="number">0</span>,
-<a href=#347 id=347 data-nosnippet>347</a>                resource: buffer_a.as_entire_binding(),
-<a href=#348 id=348 data-nosnippet>348</a>            },
-<a href=#349 id=349 data-nosnippet>349</a>            wgpu::BindGroupEntry {
-<a href=#350 id=350 data-nosnippet>350</a>                binding: <span class="number">1</span>,
-<a href=#351 id=351 data-nosnippet>351</a>                resource: buffer_b.as_entire_binding(),
-<a href=#352 id=352 data-nosnippet>352</a>            },
-<a href=#353 id=353 data-nosnippet>353</a>            wgpu::BindGroupEntry {
-<a href=#354 id=354 data-nosnippet>354</a>                binding: <span class="number">2</span>,
-<a href=#355 id=355 data-nosnippet>355</a>                resource: buffer_c.as_entire_binding(),
-<a href=#356 id=356 data-nosnippet>356</a>            },
-<a href=#357 id=357 data-nosnippet>357</a>            wgpu::BindGroupEntry {
-<a href=#358 id=358 data-nosnippet>358</a>                binding: <span class="number">3</span>,
-<a href=#359 id=359 data-nosnippet>359</a>                resource: buffer_dims.as_entire_binding(),
-<a href=#360 id=360 data-nosnippet>360</a>            },
-<a href=#361 id=361 data-nosnippet>361</a>        ],
-<a href=#362 id=362 data-nosnippet>362</a>    });
-<a href=#363 id=363 data-nosnippet>363</a>
-<a href=#364 id=364 data-nosnippet>364</a>    <span class="comment">// Create compute pipeline
-<a href=#365 id=365 data-nosnippet>365</a>    </span><span class="kw">let </span>pipeline_layout = device.create_pipeline_layout(<span class="kw-2">&amp;</span>wgpu::PipelineLayoutDescriptor {
-<a href=#366 id=366 data-nosnippet>366</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Pipeline Layout"</span>),
-<a href=#367 id=367 data-nosnippet>367</a>        bind_group_layouts: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>bind_group_layout)],
-<a href=#368 id=368 data-nosnippet>368</a>        immediate_size: <span class="number">0</span>,
-<a href=#369 id=369 data-nosnippet>369</a>    });
-<a href=#370 id=370 data-nosnippet>370</a>
-<a href=#371 id=371 data-nosnippet>371</a>    <span class="kw">let </span>pipeline = device.create_compute_pipeline(<span class="kw-2">&amp;</span>wgpu::ComputePipelineDescriptor {
-<a href=#372 id=372 data-nosnippet>372</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Pipeline"</span>),
-<a href=#373 id=373 data-nosnippet>373</a>        layout: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>pipeline_layout),
-<a href=#374 id=374 data-nosnippet>374</a>        module: <span class="kw-2">&amp;</span>shader,
-<a href=#375 id=375 data-nosnippet>375</a>        entry_point: <span class="prelude-val">Some</span>(<span class="string">"main"</span>),
-<a href=#376 id=376 data-nosnippet>376</a>        compilation_options: Default::default(),
-<a href=#377 id=377 data-nosnippet>377</a>        cache: <span class="prelude-val">None</span>,
-<a href=#378 id=378 data-nosnippet>378</a>    });
-<a href=#379 id=379 data-nosnippet>379</a>
-<a href=#380 id=380 data-nosnippet>380</a>    <span class="comment">// Dispatch compute
-<a href=#381 id=381 data-nosnippet>381</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>encoder = device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor {
-<a href=#382 id=382 data-nosnippet>382</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Encoder"</span>),
-<a href=#383 id=383 data-nosnippet>383</a>    });
-<a href=#384 id=384 data-nosnippet>384</a>
-<a href=#385 id=385 data-nosnippet>385</a>    {
-<a href=#386 id=386 data-nosnippet>386</a>        <span class="kw">let </span><span class="kw-2">mut </span>compute_pass = encoder.begin_compute_pass(<span class="kw-2">&amp;</span>wgpu::ComputePassDescriptor {
-<a href=#387 id=387 data-nosnippet>387</a>            label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Pass"</span>),
-<a href=#388 id=388 data-nosnippet>388</a>            timestamp_writes: <span class="prelude-val">None</span>,
-<a href=#389 id=389 data-nosnippet>389</a>        });
-<a href=#390 id=390 data-nosnippet>390</a>        compute_pass.set_pipeline(<span class="kw-2">&amp;</span>pipeline);
-<a href=#391 id=391 data-nosnippet>391</a>        compute_pass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span>bind_group, <span class="kw-2">&amp;</span>[]);
-<a href=#392 id=392 data-nosnippet>392</a>        <span class="comment">// Dispatch one workgroup per tile of the output
-<a href=#393 id=393 data-nosnippet>393</a>        </span>compute_pass.dispatch_workgroups(M / config.m_size, N / config.m_size, <span class="number">1</span>);
-<a href=#394 id=394 data-nosnippet>394</a>    }
-<a href=#395 id=395 data-nosnippet>395</a>
-<a href=#396 id=396 data-nosnippet>396</a>    <span class="comment">// Copy result to staging buffer
-<a href=#397 id=397 data-nosnippet>397</a>    </span>encoder.copy_buffer_to_buffer(<span class="kw-2">&amp;</span>buffer_c, <span class="number">0</span>, <span class="kw-2">&amp;</span>staging_buffer, <span class="number">0</span>, staging_buffer.size());
-<a href=#398 id=398 data-nosnippet>398</a>
-<a href=#399 id=399 data-nosnippet>399</a>    queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
-<a href=#400 id=400 data-nosnippet>400</a>
-<a href=#401 id=401 data-nosnippet>401</a>    <span class="comment">// Read back results
-<a href=#402 id=402 data-nosnippet>402</a>    </span><span class="kw">let </span>buffer_slice = staging_buffer.slice(..);
-<a href=#403 id=403 data-nosnippet>403</a>    <span class="kw">let </span>(sender, receiver) = flume::bounded(<span class="number">1</span>);
-<a href=#404 id=404 data-nosnippet>404</a>    buffer_slice.map_async(wgpu::MapMode::Read, <span class="kw">move </span>|r| sender.send(r).unwrap());
-<a href=#405 id=405 data-nosnippet>405</a>    device
-<a href=#406 id=406 data-nosnippet>406</a>        .poll(wgpu::PollType::wait_indefinitely())
-<a href=#407 id=407 data-nosnippet>407</a>        .expect(<span class="string">"Poll failed"</span>);
-<a href=#408 id=408 data-nosnippet>408</a>    receiver
-<a href=#409 id=409 data-nosnippet>409</a>        .recv_async()
-<a href=#410 id=410 data-nosnippet>410</a>        .<span class="kw">await
-<a href=#411 id=411 data-nosnippet>411</a>        </span>.expect(<span class="string">"Channel receive failed"</span>)
-<a href=#412 id=412 data-nosnippet>412</a>        .expect(<span class="string">"Buffer mapping failed"</span>);
-<a href=#413 id=413 data-nosnippet>413</a>
-<a href=#414 id=414 data-nosnippet>414</a>    <span class="kw">let </span>data = buffer_slice.get_mapped_range().unwrap();
+<a href=#224 id=224 data-nosnippet>224</a>    // Use f32 for computation, convert to f16 if needed for GPU.
+<a href=#225 id=225 data-nosnippet>225</a>    //
+<a href=#226 id=226 data-nosnippet>226</a>    // The init weights `i * col_stride + j * row_stride` are chosen so
+<a href=#227 id=227 data-nosnippet>227</a>    // neither A nor B is symmetric in (i, j): if the row/col index
+<a href=#228 id=228 data-nosnippet>228</a>    // weighting reduced to the same residue class modulo the divisor,
+<a href=#229 id=229 data-nosnippet>229</a>    // the matrix would become symmetric and the test would no longer
+<a href=#230 id=230 data-nosnippet>230</a>    // distinguish row-major from column-major loads. The primes here
+<a href=#231 id=231 data-nosnippet>231</a>    // (`3, 5` for A; `7, 11` for B) ensure asymmetry for any M/N/K.
+<a href=#232 id=232 data-nosnippet>232</a>    </span><span class="kw">let </span>matrix_a_f32: Vec&lt;f32&gt; = (<span class="number">0</span>..M * K)
+<a href=#233 id=233 data-nosnippet>233</a>        .map(|idx| {
+<a href=#234 id=234 data-nosnippet>234</a>            <span class="kw">let </span>(i, j) = (idx / K, idx % K);
+<a href=#235 id=235 data-nosnippet>235</a>            ((i * <span class="number">3 </span>+ j * <span class="number">5</span>) % <span class="number">11</span>) <span class="kw">as </span>f32 * <span class="number">0.1
+<a href=#236 id=236 data-nosnippet>236</a>        </span>})
+<a href=#237 id=237 data-nosnippet>237</a>        .collect();
+<a href=#238 id=238 data-nosnippet>238</a>    <span class="kw">let </span>matrix_b_f32: Vec&lt;f32&gt; = (<span class="number">0</span>..K * N)
+<a href=#239 id=239 data-nosnippet>239</a>        .map(|idx| {
+<a href=#240 id=240 data-nosnippet>240</a>            <span class="kw">let </span>(i, j) = (idx / N, idx % N);
+<a href=#241 id=241 data-nosnippet>241</a>            ((i * <span class="number">7 </span>+ j * <span class="number">11</span>) % <span class="number">13</span>) <span class="kw">as </span>f32 * <span class="number">0.1
+<a href=#242 id=242 data-nosnippet>242</a>        </span>})
+<a href=#243 id=243 data-nosnippet>243</a>        .collect();
+<a href=#244 id=244 data-nosnippet>244</a>    <span class="kw">let </span>matrix_c_f32: Vec&lt;f32&gt; = <span class="macro">vec!</span>[<span class="number">0.0</span>; (M * N) <span class="kw">as </span>usize];
+<a href=#245 id=245 data-nosnippet>245</a>
+<a href=#246 id=246 data-nosnippet>246</a>    <span class="comment">// Element size depends on precision
+<a href=#247 id=247 data-nosnippet>247</a>    </span><span class="kw">let </span>element_size = <span class="kw">if </span>use_f16 { <span class="number">2usize </span>} <span class="kw">else </span>{ <span class="number">4usize </span>};
+<a href=#248 id=248 data-nosnippet>248</a>    <span class="kw">let </span>num_elements_a = (M * K) <span class="kw">as </span>usize;
+<a href=#249 id=249 data-nosnippet>249</a>    <span class="kw">let </span>num_elements_b = (K * N) <span class="kw">as </span>usize;
+<a href=#250 id=250 data-nosnippet>250</a>    <span class="kw">let </span>num_elements_c = (M * N) <span class="kw">as </span>usize;
+<a href=#251 id=251 data-nosnippet>251</a>
+<a href=#252 id=252 data-nosnippet>252</a>    <span class="comment">// Create buffers
+<a href=#253 id=253 data-nosnippet>253</a>    </span><span class="kw">let </span>buffer_a = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
+<a href=#254 id=254 data-nosnippet>254</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Matrix A"</span>),
+<a href=#255 id=255 data-nosnippet>255</a>        size: (num_elements_a * element_size) <span class="kw">as </span>u64,
+<a href=#256 id=256 data-nosnippet>256</a>        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+<a href=#257 id=257 data-nosnippet>257</a>        mapped_at_creation: <span class="bool-val">false</span>,
+<a href=#258 id=258 data-nosnippet>258</a>    });
+<a href=#259 id=259 data-nosnippet>259</a>
+<a href=#260 id=260 data-nosnippet>260</a>    <span class="kw">let </span>buffer_b = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
+<a href=#261 id=261 data-nosnippet>261</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Matrix B"</span>),
+<a href=#262 id=262 data-nosnippet>262</a>        size: (num_elements_b * element_size) <span class="kw">as </span>u64,
+<a href=#263 id=263 data-nosnippet>263</a>        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+<a href=#264 id=264 data-nosnippet>264</a>        mapped_at_creation: <span class="bool-val">false</span>,
+<a href=#265 id=265 data-nosnippet>265</a>    });
+<a href=#266 id=266 data-nosnippet>266</a>
+<a href=#267 id=267 data-nosnippet>267</a>    <span class="kw">let </span>buffer_c = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
+<a href=#268 id=268 data-nosnippet>268</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Matrix C"</span>),
+<a href=#269 id=269 data-nosnippet>269</a>        size: (num_elements_c * element_size) <span class="kw">as </span>u64,
+<a href=#270 id=270 data-nosnippet>270</a>        usage: wgpu::BufferUsages::STORAGE
+<a href=#271 id=271 data-nosnippet>271</a>            | wgpu::BufferUsages::COPY_DST
+<a href=#272 id=272 data-nosnippet>272</a>            | wgpu::BufferUsages::COPY_SRC,
+<a href=#273 id=273 data-nosnippet>273</a>        mapped_at_creation: <span class="bool-val">false</span>,
+<a href=#274 id=274 data-nosnippet>274</a>    });
+<a href=#275 id=275 data-nosnippet>275</a>
+<a href=#276 id=276 data-nosnippet>276</a>    <span class="kw">let </span>dimensions = Dimensions {
+<a href=#277 id=277 data-nosnippet>277</a>        m: M,
+<a href=#278 id=278 data-nosnippet>278</a>        n: N,
+<a href=#279 id=279 data-nosnippet>279</a>        k: K,
+<a href=#280 id=280 data-nosnippet>280</a>        stride: N,
+<a href=#281 id=281 data-nosnippet>281</a>    };
+<a href=#282 id=282 data-nosnippet>282</a>    <span class="kw">let </span>buffer_dims = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
+<a href=#283 id=283 data-nosnippet>283</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Dimensions"</span>),
+<a href=#284 id=284 data-nosnippet>284</a>        size: std::mem::size_of::&lt;Dimensions&gt;() <span class="kw">as </span>u64,
+<a href=#285 id=285 data-nosnippet>285</a>        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+<a href=#286 id=286 data-nosnippet>286</a>        mapped_at_creation: <span class="bool-val">false</span>,
+<a href=#287 id=287 data-nosnippet>287</a>    });
+<a href=#288 id=288 data-nosnippet>288</a>
+<a href=#289 id=289 data-nosnippet>289</a>    <span class="kw">let </span>staging_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
+<a href=#290 id=290 data-nosnippet>290</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Staging Buffer"</span>),
+<a href=#291 id=291 data-nosnippet>291</a>        size: (num_elements_c * element_size) <span class="kw">as </span>u64,
+<a href=#292 id=292 data-nosnippet>292</a>        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+<a href=#293 id=293 data-nosnippet>293</a>        mapped_at_creation: <span class="bool-val">false</span>,
+<a href=#294 id=294 data-nosnippet>294</a>    });
+<a href=#295 id=295 data-nosnippet>295</a>
+<a href=#296 id=296 data-nosnippet>296</a>    <span class="comment">// Upload data (convert to f16 if needed)
+<a href=#297 id=297 data-nosnippet>297</a>    </span><span class="kw">if </span>use_f16 {
+<a href=#298 id=298 data-nosnippet>298</a>        <span class="kw">let </span>matrix_a_f16: Vec&lt;f16&gt; = matrix_a_f32.iter().map(|<span class="kw-2">&amp;</span>x| f16::from_f32(x)).collect();
+<a href=#299 id=299 data-nosnippet>299</a>        <span class="kw">let </span>matrix_b_f16: Vec&lt;f16&gt; = matrix_b_f32.iter().map(|<span class="kw-2">&amp;</span>x| f16::from_f32(x)).collect();
+<a href=#300 id=300 data-nosnippet>300</a>        <span class="kw">let </span>matrix_c_f16: Vec&lt;f16&gt; = matrix_c_f32.iter().map(|<span class="kw-2">&amp;</span>x| f16::from_f32(x)).collect();
+<a href=#301 id=301 data-nosnippet>301</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_a, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_a_f16));
+<a href=#302 id=302 data-nosnippet>302</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_b, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_b_f16));
+<a href=#303 id=303 data-nosnippet>303</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_c, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_c_f16));
+<a href=#304 id=304 data-nosnippet>304</a>    } <span class="kw">else </span>{
+<a href=#305 id=305 data-nosnippet>305</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_a, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_a_f32));
+<a href=#306 id=306 data-nosnippet>306</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_b, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_b_f32));
+<a href=#307 id=307 data-nosnippet>307</a>        queue.write_buffer(<span class="kw-2">&amp;</span>buffer_c, <span class="number">0</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>matrix_c_f32));
+<a href=#308 id=308 data-nosnippet>308</a>    }
+<a href=#309 id=309 data-nosnippet>309</a>    queue.write_buffer(<span class="kw-2">&amp;</span>buffer_dims, <span class="number">0</span>, bytemuck::bytes_of(<span class="kw-2">&amp;</span>dimensions));
+<a href=#310 id=310 data-nosnippet>310</a>
+<a href=#311 id=311 data-nosnippet>311</a>    <span class="comment">// Create bind group layout and bind group
+<a href=#312 id=312 data-nosnippet>312</a>    </span><span class="kw">let </span>bind_group_layout = device.create_bind_group_layout(<span class="kw-2">&amp;</span>wgpu::BindGroupLayoutDescriptor {
+<a href=#313 id=313 data-nosnippet>313</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Bind Group Layout"</span>),
+<a href=#314 id=314 data-nosnippet>314</a>        entries: <span class="kw-2">&amp;</span>[
+<a href=#315 id=315 data-nosnippet>315</a>            wgpu::BindGroupLayoutEntry {
+<a href=#316 id=316 data-nosnippet>316</a>                binding: <span class="number">0</span>,
+<a href=#317 id=317 data-nosnippet>317</a>                visibility: wgpu::ShaderStages::COMPUTE,
+<a href=#318 id=318 data-nosnippet>318</a>                ty: wgpu::BindingType::Buffer {
+<a href=#319 id=319 data-nosnippet>319</a>                    ty: wgpu::BufferBindingType::Storage { read_only: <span class="bool-val">true </span>},
+<a href=#320 id=320 data-nosnippet>320</a>                    has_dynamic_offset: <span class="bool-val">false</span>,
+<a href=#321 id=321 data-nosnippet>321</a>                    min_binding_size: <span class="prelude-val">None</span>,
+<a href=#322 id=322 data-nosnippet>322</a>                },
+<a href=#323 id=323 data-nosnippet>323</a>                count: <span class="prelude-val">None</span>,
+<a href=#324 id=324 data-nosnippet>324</a>            },
+<a href=#325 id=325 data-nosnippet>325</a>            wgpu::BindGroupLayoutEntry {
+<a href=#326 id=326 data-nosnippet>326</a>                binding: <span class="number">1</span>,
+<a href=#327 id=327 data-nosnippet>327</a>                visibility: wgpu::ShaderStages::COMPUTE,
+<a href=#328 id=328 data-nosnippet>328</a>                ty: wgpu::BindingType::Buffer {
+<a href=#329 id=329 data-nosnippet>329</a>                    ty: wgpu::BufferBindingType::Storage { read_only: <span class="bool-val">true </span>},
+<a href=#330 id=330 data-nosnippet>330</a>                    has_dynamic_offset: <span class="bool-val">false</span>,
+<a href=#331 id=331 data-nosnippet>331</a>                    min_binding_size: <span class="prelude-val">None</span>,
+<a href=#332 id=332 data-nosnippet>332</a>                },
+<a href=#333 id=333 data-nosnippet>333</a>                count: <span class="prelude-val">None</span>,
+<a href=#334 id=334 data-nosnippet>334</a>            },
+<a href=#335 id=335 data-nosnippet>335</a>            wgpu::BindGroupLayoutEntry {
+<a href=#336 id=336 data-nosnippet>336</a>                binding: <span class="number">2</span>,
+<a href=#337 id=337 data-nosnippet>337</a>                visibility: wgpu::ShaderStages::COMPUTE,
+<a href=#338 id=338 data-nosnippet>338</a>                ty: wgpu::BindingType::Buffer {
+<a href=#339 id=339 data-nosnippet>339</a>                    ty: wgpu::BufferBindingType::Storage { read_only: <span class="bool-val">false </span>},
+<a href=#340 id=340 data-nosnippet>340</a>                    has_dynamic_offset: <span class="bool-val">false</span>,
+<a href=#341 id=341 data-nosnippet>341</a>                    min_binding_size: <span class="prelude-val">None</span>,
+<a href=#342 id=342 data-nosnippet>342</a>                },
+<a href=#343 id=343 data-nosnippet>343</a>                count: <span class="prelude-val">None</span>,
+<a href=#344 id=344 data-nosnippet>344</a>            },
+<a href=#345 id=345 data-nosnippet>345</a>            wgpu::BindGroupLayoutEntry {
+<a href=#346 id=346 data-nosnippet>346</a>                binding: <span class="number">3</span>,
+<a href=#347 id=347 data-nosnippet>347</a>                visibility: wgpu::ShaderStages::COMPUTE,
+<a href=#348 id=348 data-nosnippet>348</a>                ty: wgpu::BindingType::Buffer {
+<a href=#349 id=349 data-nosnippet>349</a>                    ty: wgpu::BufferBindingType::Uniform,
+<a href=#350 id=350 data-nosnippet>350</a>                    has_dynamic_offset: <span class="bool-val">false</span>,
+<a href=#351 id=351 data-nosnippet>351</a>                    min_binding_size: <span class="prelude-val">None</span>,
+<a href=#352 id=352 data-nosnippet>352</a>                },
+<a href=#353 id=353 data-nosnippet>353</a>                count: <span class="prelude-val">None</span>,
+<a href=#354 id=354 data-nosnippet>354</a>            },
+<a href=#355 id=355 data-nosnippet>355</a>        ],
+<a href=#356 id=356 data-nosnippet>356</a>    });
+<a href=#357 id=357 data-nosnippet>357</a>
+<a href=#358 id=358 data-nosnippet>358</a>    <span class="kw">let </span>bind_group = device.create_bind_group(<span class="kw-2">&amp;</span>wgpu::BindGroupDescriptor {
+<a href=#359 id=359 data-nosnippet>359</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Bind Group"</span>),
+<a href=#360 id=360 data-nosnippet>360</a>        layout: <span class="kw-2">&amp;</span>bind_group_layout,
+<a href=#361 id=361 data-nosnippet>361</a>        entries: <span class="kw-2">&amp;</span>[
+<a href=#362 id=362 data-nosnippet>362</a>            wgpu::BindGroupEntry {
+<a href=#363 id=363 data-nosnippet>363</a>                binding: <span class="number">0</span>,
+<a href=#364 id=364 data-nosnippet>364</a>                resource: buffer_a.as_entire_binding(),
+<a href=#365 id=365 data-nosnippet>365</a>            },
+<a href=#366 id=366 data-nosnippet>366</a>            wgpu::BindGroupEntry {
+<a href=#367 id=367 data-nosnippet>367</a>                binding: <span class="number">1</span>,
+<a href=#368 id=368 data-nosnippet>368</a>                resource: buffer_b.as_entire_binding(),
+<a href=#369 id=369 data-nosnippet>369</a>            },
+<a href=#370 id=370 data-nosnippet>370</a>            wgpu::BindGroupEntry {
+<a href=#371 id=371 data-nosnippet>371</a>                binding: <span class="number">2</span>,
+<a href=#372 id=372 data-nosnippet>372</a>                resource: buffer_c.as_entire_binding(),
+<a href=#373 id=373 data-nosnippet>373</a>            },
+<a href=#374 id=374 data-nosnippet>374</a>            wgpu::BindGroupEntry {
+<a href=#375 id=375 data-nosnippet>375</a>                binding: <span class="number">3</span>,
+<a href=#376 id=376 data-nosnippet>376</a>                resource: buffer_dims.as_entire_binding(),
+<a href=#377 id=377 data-nosnippet>377</a>            },
+<a href=#378 id=378 data-nosnippet>378</a>        ],
+<a href=#379 id=379 data-nosnippet>379</a>    });
+<a href=#380 id=380 data-nosnippet>380</a>
+<a href=#381 id=381 data-nosnippet>381</a>    <span class="comment">// Create compute pipeline
+<a href=#382 id=382 data-nosnippet>382</a>    </span><span class="kw">let </span>pipeline_layout = device.create_pipeline_layout(<span class="kw-2">&amp;</span>wgpu::PipelineLayoutDescriptor {
+<a href=#383 id=383 data-nosnippet>383</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Pipeline Layout"</span>),
+<a href=#384 id=384 data-nosnippet>384</a>        bind_group_layouts: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>bind_group_layout)],
+<a href=#385 id=385 data-nosnippet>385</a>        immediate_size: <span class="number">0</span>,
+<a href=#386 id=386 data-nosnippet>386</a>    });
+<a href=#387 id=387 data-nosnippet>387</a>
+<a href=#388 id=388 data-nosnippet>388</a>    <span class="kw">let </span>pipeline = device.create_compute_pipeline(<span class="kw-2">&amp;</span>wgpu::ComputePipelineDescriptor {
+<a href=#389 id=389 data-nosnippet>389</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Pipeline"</span>),
+<a href=#390 id=390 data-nosnippet>390</a>        layout: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>pipeline_layout),
+<a href=#391 id=391 data-nosnippet>391</a>        module: <span class="kw-2">&amp;</span>shader,
+<a href=#392 id=392 data-nosnippet>392</a>        entry_point: <span class="prelude-val">Some</span>(<span class="string">"main"</span>),
+<a href=#393 id=393 data-nosnippet>393</a>        compilation_options: Default::default(),
+<a href=#394 id=394 data-nosnippet>394</a>        cache: <span class="prelude-val">None</span>,
+<a href=#395 id=395 data-nosnippet>395</a>    });
+<a href=#396 id=396 data-nosnippet>396</a>
+<a href=#397 id=397 data-nosnippet>397</a>    <span class="comment">// Dispatch compute
+<a href=#398 id=398 data-nosnippet>398</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>encoder = device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor {
+<a href=#399 id=399 data-nosnippet>399</a>        label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Encoder"</span>),
+<a href=#400 id=400 data-nosnippet>400</a>    });
+<a href=#401 id=401 data-nosnippet>401</a>
+<a href=#402 id=402 data-nosnippet>402</a>    {
+<a href=#403 id=403 data-nosnippet>403</a>        <span class="kw">let </span><span class="kw-2">mut </span>compute_pass = encoder.begin_compute_pass(<span class="kw-2">&amp;</span>wgpu::ComputePassDescriptor {
+<a href=#404 id=404 data-nosnippet>404</a>            label: <span class="prelude-val">Some</span>(<span class="string">"Cooperative Matrix Pass"</span>),
+<a href=#405 id=405 data-nosnippet>405</a>            timestamp_writes: <span class="prelude-val">None</span>,
+<a href=#406 id=406 data-nosnippet>406</a>        });
+<a href=#407 id=407 data-nosnippet>407</a>        compute_pass.set_pipeline(<span class="kw-2">&amp;</span>pipeline);
+<a href=#408 id=408 data-nosnippet>408</a>        compute_pass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span>bind_group, <span class="kw-2">&amp;</span>[]);
+<a href=#409 id=409 data-nosnippet>409</a>        <span class="comment">// Dispatch one workgroup per tile of the output
+<a href=#410 id=410 data-nosnippet>410</a>        </span>compute_pass.dispatch_workgroups(M / config.m_size, N / config.m_size, <span class="number">1</span>);
+<a href=#411 id=411 data-nosnippet>411</a>    }
+<a href=#412 id=412 data-nosnippet>412</a>
+<a href=#413 id=413 data-nosnippet>413</a>    <span class="comment">// Copy result to staging buffer
+<a href=#414 id=414 data-nosnippet>414</a>    </span>encoder.copy_buffer_to_buffer(<span class="kw-2">&amp;</span>buffer_c, <span class="number">0</span>, <span class="kw-2">&amp;</span>staging_buffer, <span class="number">0</span>, staging_buffer.size());
 <a href=#415 id=415 data-nosnippet>415</a>
-<a href=#416 id=416 data-nosnippet>416</a>    <span class="comment">// Convert result back to f32 for comparison
-<a href=#417 id=417 data-nosnippet>417</a>    </span><span class="kw">let </span>result: Vec&lt;f32&gt; = <span class="kw">if </span>use_f16 {
-<a href=#418 id=418 data-nosnippet>418</a>        <span class="kw">let </span>result_f16: Vec&lt;f16&gt; = bytemuck::allocation::pod_collect_to_vec(<span class="kw-2">&amp;</span>data);
-<a href=#419 id=419 data-nosnippet>419</a>        result_f16.iter().map(|x| x.to_f32()).collect()
-<a href=#420 id=420 data-nosnippet>420</a>    } <span class="kw">else </span>{
-<a href=#421 id=421 data-nosnippet>421</a>        bytemuck::allocation::pod_collect_to_vec(<span class="kw-2">&amp;</span>data)
-<a href=#422 id=422 data-nosnippet>422</a>    };
-<a href=#423 id=423 data-nosnippet>423</a>
-<a href=#424 id=424 data-nosnippet>424</a>    <span class="comment">// Compute reference result on CPU for verification
-<a href=#425 id=425 data-nosnippet>425</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>reference = <span class="macro">vec!</span>[<span class="number">0.0f32</span>; (M * N) <span class="kw">as </span>usize];
-<a href=#426 id=426 data-nosnippet>426</a>    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..M {
-<a href=#427 id=427 data-nosnippet>427</a>        <span class="kw">for </span>j <span class="kw">in </span><span class="number">0</span>..N {
-<a href=#428 id=428 data-nosnippet>428</a>            <span class="kw">let </span><span class="kw-2">mut </span>sum = <span class="number">0.0f32</span>;
-<a href=#429 id=429 data-nosnippet>429</a>            <span class="kw">for </span>k <span class="kw">in </span><span class="number">0</span>..K {
-<a href=#430 id=430 data-nosnippet>430</a>                sum += matrix_a_f32[(i * K + k) <span class="kw">as </span>usize] * matrix_b_f32[(k * N + j) <span class="kw">as </span>usize];
-<a href=#431 id=431 data-nosnippet>431</a>            }
-<a href=#432 id=432 data-nosnippet>432</a>            reference[(i * N + j) <span class="kw">as </span>usize] = sum;
-<a href=#433 id=433 data-nosnippet>433</a>        }
-<a href=#434 id=434 data-nosnippet>434</a>    }
-<a href=#435 id=435 data-nosnippet>435</a>
-<a href=#436 id=436 data-nosnippet>436</a>    <span class="comment">// Verify results (use larger tolerance for f16)
-<a href=#437 id=437 data-nosnippet>437</a>    </span><span class="kw">let </span>tolerance = <span class="kw">if </span>use_f16 { <span class="number">0.1 </span>} <span class="kw">else </span>{ <span class="number">0.01 </span>};
-<a href=#438 id=438 data-nosnippet>438</a>    <span class="kw">let </span><span class="kw-2">mut </span>max_error = <span class="number">0.0f32</span>;
-<a href=#439 id=439 data-nosnippet>439</a>    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..(M * N) <span class="kw">as </span>usize {
-<a href=#440 id=440 data-nosnippet>440</a>        <span class="kw">let </span>error = (result[i] - reference[i]).abs();
-<a href=#441 id=441 data-nosnippet>441</a>        max_error = max_error.max(error);
-<a href=#442 id=442 data-nosnippet>442</a>    }
-<a href=#443 id=443 data-nosnippet>443</a>
-<a href=#444 id=444 data-nosnippet>444</a>    ExecuteResults {
-<a href=#445 id=445 data-nosnippet>445</a>        max_error,
-<a href=#446 id=446 data-nosnippet>446</a>        tolerance,
-<a href=#447 id=447 data-nosnippet>447</a>        matrix: result,
-<a href=#448 id=448 data-nosnippet>448</a>    }
-<a href=#449 id=449 data-nosnippet>449</a>}
-<a href=#450 id=450 data-nosnippet>450</a>
-<a href=#451 id=451 data-nosnippet>451</a><span class="kw">pub fn </span>main() {
-<a href=#452 id=452 data-nosnippet>452</a>    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
-<a href=#453 id=453 data-nosnippet>453</a>    </span>{
-<a href=#454 id=454 data-nosnippet>454</a>        env_logger::builder()
-<a href=#455 id=455 data-nosnippet>455</a>            .filter_level(log::LevelFilter::Info)
-<a href=#456 id=456 data-nosnippet>456</a>            .format_timestamp_nanos()
-<a href=#457 id=457 data-nosnippet>457</a>            .init();
-<a href=#458 id=458 data-nosnippet>458</a>        pollster::block_on(run());
+<a href=#416 id=416 data-nosnippet>416</a>    queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
+<a href=#417 id=417 data-nosnippet>417</a>
+<a href=#418 id=418 data-nosnippet>418</a>    <span class="comment">// Read back results
+<a href=#419 id=419 data-nosnippet>419</a>    </span><span class="kw">let </span>buffer_slice = staging_buffer.slice(..);
+<a href=#420 id=420 data-nosnippet>420</a>    <span class="kw">let </span>(sender, receiver) = flume::bounded(<span class="number">1</span>);
+<a href=#421 id=421 data-nosnippet>421</a>    buffer_slice.map_async(wgpu::MapMode::Read, <span class="kw">move </span>|r| sender.send(r).unwrap());
+<a href=#422 id=422 data-nosnippet>422</a>    device
+<a href=#423 id=423 data-nosnippet>423</a>        .poll(wgpu::PollType::wait_indefinitely())
+<a href=#424 id=424 data-nosnippet>424</a>        .expect(<span class="string">"Poll failed"</span>);
+<a href=#425 id=425 data-nosnippet>425</a>    receiver
+<a href=#426 id=426 data-nosnippet>426</a>        .recv_async()
+<a href=#427 id=427 data-nosnippet>427</a>        .<span class="kw">await
+<a href=#428 id=428 data-nosnippet>428</a>        </span>.expect(<span class="string">"Channel receive failed"</span>)
+<a href=#429 id=429 data-nosnippet>429</a>        .expect(<span class="string">"Buffer mapping failed"</span>);
+<a href=#430 id=430 data-nosnippet>430</a>
+<a href=#431 id=431 data-nosnippet>431</a>    <span class="kw">let </span>data = buffer_slice.get_mapped_range().unwrap();
+<a href=#432 id=432 data-nosnippet>432</a>
+<a href=#433 id=433 data-nosnippet>433</a>    <span class="comment">// Convert result back to f32 for comparison
+<a href=#434 id=434 data-nosnippet>434</a>    </span><span class="kw">let </span>result: Vec&lt;f32&gt; = <span class="kw">if </span>use_f16 {
+<a href=#435 id=435 data-nosnippet>435</a>        <span class="kw">let </span>result_f16: Vec&lt;f16&gt; = bytemuck::allocation::pod_collect_to_vec(<span class="kw-2">&amp;</span>data);
+<a href=#436 id=436 data-nosnippet>436</a>        result_f16.iter().map(|x| x.to_f32()).collect()
+<a href=#437 id=437 data-nosnippet>437</a>    } <span class="kw">else </span>{
+<a href=#438 id=438 data-nosnippet>438</a>        bytemuck::allocation::pod_collect_to_vec(<span class="kw-2">&amp;</span>data)
+<a href=#439 id=439 data-nosnippet>439</a>    };
+<a href=#440 id=440 data-nosnippet>440</a>
+<a href=#441 id=441 data-nosnippet>441</a>    <span class="comment">// Compute reference result on CPU for verification
+<a href=#442 id=442 data-nosnippet>442</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>reference = <span class="macro">vec!</span>[<span class="number">0.0f32</span>; (M * N) <span class="kw">as </span>usize];
+<a href=#443 id=443 data-nosnippet>443</a>    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..M {
+<a href=#444 id=444 data-nosnippet>444</a>        <span class="kw">for </span>j <span class="kw">in </span><span class="number">0</span>..N {
+<a href=#445 id=445 data-nosnippet>445</a>            <span class="kw">let </span><span class="kw-2">mut </span>sum = <span class="number">0.0f32</span>;
+<a href=#446 id=446 data-nosnippet>446</a>            <span class="kw">for </span>k <span class="kw">in </span><span class="number">0</span>..K {
+<a href=#447 id=447 data-nosnippet>447</a>                sum += matrix_a_f32[(i * K + k) <span class="kw">as </span>usize] * matrix_b_f32[(k * N + j) <span class="kw">as </span>usize];
+<a href=#448 id=448 data-nosnippet>448</a>            }
+<a href=#449 id=449 data-nosnippet>449</a>            reference[(i * N + j) <span class="kw">as </span>usize] = sum;
+<a href=#450 id=450 data-nosnippet>450</a>        }
+<a href=#451 id=451 data-nosnippet>451</a>    }
+<a href=#452 id=452 data-nosnippet>452</a>
+<a href=#453 id=453 data-nosnippet>453</a>    <span class="comment">// Verify results (use larger tolerance for f16)
+<a href=#454 id=454 data-nosnippet>454</a>    </span><span class="kw">let </span>tolerance = <span class="kw">if </span>use_f16 { <span class="number">0.1 </span>} <span class="kw">else </span>{ <span class="number">0.01 </span>};
+<a href=#455 id=455 data-nosnippet>455</a>    <span class="kw">let </span><span class="kw-2">mut </span>max_error = <span class="number">0.0f32</span>;
+<a href=#456 id=456 data-nosnippet>456</a>    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..(M * N) <span class="kw">as </span>usize {
+<a href=#457 id=457 data-nosnippet>457</a>        <span class="kw">let </span>error = (result[i] - reference[i]).abs();
+<a href=#458 id=458 data-nosnippet>458</a>        max_error = max_error.max(error);
 <a href=#459 id=459 data-nosnippet>459</a>    }
-<a href=#460 id=460 data-nosnippet>460</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
-<a href=#461 id=461 data-nosnippet>461</a>    </span>{
-<a href=#462 id=462 data-nosnippet>462</a>        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-<a href=#463 id=463 data-nosnippet>463</a>        console_log::init_with_level(log::Level::Info).expect(<span class="string">"could not initialize logger"</span>);
-<a href=#464 id=464 data-nosnippet>464</a>        <span class="kw">crate</span>::utils::add_web_nothing_to_see_msg();
-<a href=#465 id=465 data-nosnippet>465</a>        wasm_bindgen_futures::spawn_local(run());
-<a href=#466 id=466 data-nosnippet>466</a>    }
-<a href=#467 id=467 data-nosnippet>467</a>}
-<a href=#468 id=468 data-nosnippet>468</a>
-<a href=#469 id=469 data-nosnippet>469</a><span class="attr">#[cfg(test)]
-<a href=#470 id=470 data-nosnippet>470</a></span><span class="kw">pub mod </span>tests;
+<a href=#460 id=460 data-nosnippet>460</a>
+<a href=#461 id=461 data-nosnippet>461</a>    ExecuteResults {
+<a href=#462 id=462 data-nosnippet>462</a>        max_error,
+<a href=#463 id=463 data-nosnippet>463</a>        tolerance,
+<a href=#464 id=464 data-nosnippet>464</a>        matrix: result,
+<a href=#465 id=465 data-nosnippet>465</a>    }
+<a href=#466 id=466 data-nosnippet>466</a>}
+<a href=#467 id=467 data-nosnippet>467</a>
+<a href=#468 id=468 data-nosnippet>468</a><span class="kw">pub fn </span>main() {
+<a href=#469 id=469 data-nosnippet>469</a>    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
+<a href=#470 id=470 data-nosnippet>470</a>    </span>{
+<a href=#471 id=471 data-nosnippet>471</a>        env_logger::builder()
+<a href=#472 id=472 data-nosnippet>472</a>            .filter_level(log::LevelFilter::Info)
+<a href=#473 id=473 data-nosnippet>473</a>            .format_timestamp_nanos()
+<a href=#474 id=474 data-nosnippet>474</a>            .init();
+<a href=#475 id=475 data-nosnippet>475</a>        pollster::block_on(run());
+<a href=#476 id=476 data-nosnippet>476</a>    }
+<a href=#477 id=477 data-nosnippet>477</a>    <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
+<a href=#478 id=478 data-nosnippet>478</a>    </span>{
+<a href=#479 id=479 data-nosnippet>479</a>        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+<a href=#480 id=480 data-nosnippet>480</a>        console_log::init_with_level(log::Level::Info).expect(<span class="string">"could not initialize logger"</span>);
+<a href=#481 id=481 data-nosnippet>481</a>        <span class="kw">crate</span>::utils::add_web_nothing_to_see_msg();
+<a href=#482 id=482 data-nosnippet>482</a>        wasm_bindgen_futures::spawn_local(run());
+<a href=#483 id=483 data-nosnippet>483</a>    }
+<a href=#484 id=484 data-nosnippet>484</a>}
+<a href=#485 id=485 data-nosnippet>485</a>
+<a href=#486 id=486 data-nosnippet>486</a><span class="attr">#[cfg(test)]
+<a href=#487 id=487 data-nosnippet>487</a></span><span class="kw">pub mod </span>tests;
 </code></pre></div></section></main></body></html>
