@@ -4588,42 +4588,43 @@
 <a href=#4588 id=4588 data-nosnippet>4588</a>                items.push(ImmediateItem {
 <a href=#4589 id=4589 data-nosnippet>4589</a>                    access_path: name,
 <a href=#4590 id=4590 data-nosnippet>4590</a>                    offset: <span class="kw-2">*</span>offset,
-<a href=#4591 id=4591 data-nosnippet>4591</a>                    ty,
-<a href=#4592 id=4592 data-nosnippet>4592</a>                });
-<a href=#4593 id=4593 data-nosnippet>4593</a>                <span class="kw-2">*</span>offset += layout.size;
-<a href=#4594 id=4594 data-nosnippet>4594</a>            }
-<a href=#4595 id=4595 data-nosnippet>4595</a>            <span class="comment">// Arrays are recursed into.
-<a href=#4596 id=4596 data-nosnippet>4596</a>            </span>TypeInner::Array { base, size, .. } =&gt; {
-<a href=#4597 id=4597 data-nosnippet>4597</a>                <span class="kw">let </span><span class="kw">crate</span>::ArraySize::Constant(count) = size <span class="kw">else </span>{
-<a href=#4598 id=4598 data-nosnippet>4598</a>                    <span class="macro">unreachable!</span>(<span class="string">"Cannot have dynamic arrays in immediates"</span>);
-<a href=#4599 id=4599 data-nosnippet>4599</a>                };
-<a href=#4600 id=4600 data-nosnippet>4600</a>
-<a href=#4601 id=4601 data-nosnippet>4601</a>                <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..count.get() {
-<a href=#4602 id=4602 data-nosnippet>4602</a>                    <span class="comment">// Add the array accessor and recurse.
-<a href=#4603 id=4603 data-nosnippet>4603</a>                    </span>segments.push(<span class="macro">format!</span>(<span class="string">"[{i}]"</span>));
-<a href=#4604 id=4604 data-nosnippet>4604</a>                    <span class="self">self</span>.collect_immediates_items(base, segments, layouter, offset, items);
-<a href=#4605 id=4605 data-nosnippet>4605</a>                    segments.pop();
-<a href=#4606 id=4606 data-nosnippet>4606</a>                }
-<a href=#4607 id=4607 data-nosnippet>4607</a>
-<a href=#4608 id=4608 data-nosnippet>4608</a>                <span class="comment">// Ensure the stride is kept by rounding up to the alignment.
-<a href=#4609 id=4609 data-nosnippet>4609</a>                </span><span class="kw-2">*</span>offset = layout.alignment.round_up(<span class="kw-2">*</span>offset)
-<a href=#4610 id=4610 data-nosnippet>4610</a>            }
-<a href=#4611 id=4611 data-nosnippet>4611</a>            TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
-<a href=#4612 id=4612 data-nosnippet>4612</a>                <span class="kw">for </span>(index, member) <span class="kw">in </span>members.iter().enumerate() {
-<a href=#4613 id=4613 data-nosnippet>4613</a>                    <span class="comment">// Add struct accessor and recurse.
-<a href=#4614 id=4614 data-nosnippet>4614</a>                    </span>segments.push(<span class="macro">format!</span>(
-<a href=#4615 id=4615 data-nosnippet>4615</a>                        <span class="string">".{}"</span>,
-<a href=#4616 id=4616 data-nosnippet>4616</a>                        <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::StructMember(ty, index <span class="kw">as </span>u32)]
-<a href=#4617 id=4617 data-nosnippet>4617</a>                    ));
-<a href=#4618 id=4618 data-nosnippet>4618</a>                    <span class="self">self</span>.collect_immediates_items(member.ty, segments, layouter, offset, items);
-<a href=#4619 id=4619 data-nosnippet>4619</a>                    segments.pop();
-<a href=#4620 id=4620 data-nosnippet>4620</a>                }
-<a href=#4621 id=4621 data-nosnippet>4621</a>
-<a href=#4622 id=4622 data-nosnippet>4622</a>                <span class="comment">// Ensure ending padding is kept by rounding up to the alignment.
-<a href=#4623 id=4623 data-nosnippet>4623</a>                </span><span class="kw-2">*</span>offset = layout.alignment.round_up(<span class="kw-2">*</span>offset)
-<a href=#4624 id=4624 data-nosnippet>4624</a>            }
-<a href=#4625 id=4625 data-nosnippet>4625</a>            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-<a href=#4626 id=4626 data-nosnippet>4626</a>        }
-<a href=#4627 id=4627 data-nosnippet>4627</a>    }
-<a href=#4628 id=4628 data-nosnippet>4628</a>}
+<a href=#4591 id=4591 data-nosnippet>4591</a>                    ty: <span class="self">self</span>.module.types[ty].inner.clone(),
+<a href=#4592 id=4592 data-nosnippet>4592</a>                    size_bytes: layout.size,
+<a href=#4593 id=4593 data-nosnippet>4593</a>                });
+<a href=#4594 id=4594 data-nosnippet>4594</a>                <span class="kw-2">*</span>offset += layout.size;
+<a href=#4595 id=4595 data-nosnippet>4595</a>            }
+<a href=#4596 id=4596 data-nosnippet>4596</a>            <span class="comment">// Arrays are recursed into.
+<a href=#4597 id=4597 data-nosnippet>4597</a>            </span>TypeInner::Array { base, size, .. } =&gt; {
+<a href=#4598 id=4598 data-nosnippet>4598</a>                <span class="kw">let </span><span class="kw">crate</span>::ArraySize::Constant(count) = size <span class="kw">else </span>{
+<a href=#4599 id=4599 data-nosnippet>4599</a>                    <span class="macro">unreachable!</span>(<span class="string">"Cannot have dynamic arrays in immediates"</span>);
+<a href=#4600 id=4600 data-nosnippet>4600</a>                };
+<a href=#4601 id=4601 data-nosnippet>4601</a>
+<a href=#4602 id=4602 data-nosnippet>4602</a>                <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..count.get() {
+<a href=#4603 id=4603 data-nosnippet>4603</a>                    <span class="comment">// Add the array accessor and recurse.
+<a href=#4604 id=4604 data-nosnippet>4604</a>                    </span>segments.push(<span class="macro">format!</span>(<span class="string">"[{i}]"</span>));
+<a href=#4605 id=4605 data-nosnippet>4605</a>                    <span class="self">self</span>.collect_immediates_items(base, segments, layouter, offset, items);
+<a href=#4606 id=4606 data-nosnippet>4606</a>                    segments.pop();
+<a href=#4607 id=4607 data-nosnippet>4607</a>                }
+<a href=#4608 id=4608 data-nosnippet>4608</a>
+<a href=#4609 id=4609 data-nosnippet>4609</a>                <span class="comment">// Ensure the stride is kept by rounding up to the alignment.
+<a href=#4610 id=4610 data-nosnippet>4610</a>                </span><span class="kw-2">*</span>offset = layout.alignment.round_up(<span class="kw-2">*</span>offset)
+<a href=#4611 id=4611 data-nosnippet>4611</a>            }
+<a href=#4612 id=4612 data-nosnippet>4612</a>            TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
+<a href=#4613 id=4613 data-nosnippet>4613</a>                <span class="kw">for </span>(index, member) <span class="kw">in </span>members.iter().enumerate() {
+<a href=#4614 id=4614 data-nosnippet>4614</a>                    <span class="comment">// Add struct accessor and recurse.
+<a href=#4615 id=4615 data-nosnippet>4615</a>                    </span>segments.push(<span class="macro">format!</span>(
+<a href=#4616 id=4616 data-nosnippet>4616</a>                        <span class="string">".{}"</span>,
+<a href=#4617 id=4617 data-nosnippet>4617</a>                        <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::StructMember(ty, index <span class="kw">as </span>u32)]
+<a href=#4618 id=4618 data-nosnippet>4618</a>                    ));
+<a href=#4619 id=4619 data-nosnippet>4619</a>                    <span class="self">self</span>.collect_immediates_items(member.ty, segments, layouter, offset, items);
+<a href=#4620 id=4620 data-nosnippet>4620</a>                    segments.pop();
+<a href=#4621 id=4621 data-nosnippet>4621</a>                }
+<a href=#4622 id=4622 data-nosnippet>4622</a>
+<a href=#4623 id=4623 data-nosnippet>4623</a>                <span class="comment">// Ensure ending padding is kept by rounding up to the alignment.
+<a href=#4624 id=4624 data-nosnippet>4624</a>                </span><span class="kw-2">*</span>offset = layout.alignment.round_up(<span class="kw-2">*</span>offset)
+<a href=#4625 id=4625 data-nosnippet>4625</a>            }
+<a href=#4626 id=4626 data-nosnippet>4626</a>            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+<a href=#4627 id=4627 data-nosnippet>4627</a>        }
+<a href=#4628 id=4628 data-nosnippet>4628</a>    }
+<a href=#4629 id=4629 data-nosnippet>4629</a>}
 </code></pre></div></section></main></body></html>
