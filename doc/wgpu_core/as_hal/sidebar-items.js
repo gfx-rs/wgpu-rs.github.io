@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["FenceGuard","SimpleResourceGuard","SnatchableResourceGuard"]};
+window.SIDEBAR_ITEMS = {"struct":["SimpleResourceGuard","SnatchableResourceGuard"]};
