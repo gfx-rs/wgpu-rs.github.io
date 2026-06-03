@@ -1370,165 +1370,219 @@
 <a href=#1370 id=1370 data-nosnippet>1370</a>    dst_texture.same_device(state.device)<span class="question-mark">?</span>;
 <a href=#1371 id=1371 data-nosnippet>1371</a>
 <a href=#1372 id=1372 data-nosnippet>1372</a>    <span class="comment">// src and dst texture format must be copy-compatible
-<a href=#1373 id=1373 data-nosnippet>1373</a>    // https://gpuweb.github.io/gpuweb/#copy-compatible
-<a href=#1374 id=1374 data-nosnippet>1374</a>    </span><span class="kw">if </span>src_texture.desc.format.remove_srgb_suffix() != dst_texture.desc.format.remove_srgb_suffix()
-<a href=#1375 id=1375 data-nosnippet>1375</a>    {
-<a href=#1376 id=1376 data-nosnippet>1376</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::TextureFormatsNotCopyCompatible {
-<a href=#1377 id=1377 data-nosnippet>1377</a>            src_format: src_texture.desc.format,
-<a href=#1378 id=1378 data-nosnippet>1378</a>            dst_format: dst_texture.desc.format,
-<a href=#1379 id=1379 data-nosnippet>1379</a>        }
-<a href=#1380 id=1380 data-nosnippet>1380</a>        .into());
-<a href=#1381 id=1381 data-nosnippet>1381</a>    }
-<a href=#1382 id=1382 data-nosnippet>1382</a>
-<a href=#1383 id=1383 data-nosnippet>1383</a>    <span class="kw">let </span>(src_copy_size, array_layer_count) =
-<a href=#1384 id=1384 data-nosnippet>1384</a>        validate_texture_copy_range(source, <span class="kw-2">&amp;</span>src_texture.desc, CopySide::Source, copy_size)<span class="question-mark">?</span>;
-<a href=#1385 id=1385 data-nosnippet>1385</a>    <span class="kw">let </span>(dst_copy_size, <span class="kw">_</span>) = validate_texture_copy_range(
-<a href=#1386 id=1386 data-nosnippet>1386</a>        destination,
-<a href=#1387 id=1387 data-nosnippet>1387</a>        <span class="kw-2">&amp;</span>dst_texture.desc,
-<a href=#1388 id=1388 data-nosnippet>1388</a>        CopySide::Destination,
-<a href=#1389 id=1389 data-nosnippet>1389</a>        copy_size,
-<a href=#1390 id=1390 data-nosnippet>1390</a>    )<span class="question-mark">?</span>;
-<a href=#1391 id=1391 data-nosnippet>1391</a>
-<a href=#1392 id=1392 data-nosnippet>1392</a>    <span class="kw">if </span>Arc::as_ptr(src_texture) == Arc::as_ptr(dst_texture) {
-<a href=#1393 id=1393 data-nosnippet>1393</a>        validate_copy_within_same_texture(
-<a href=#1394 id=1394 data-nosnippet>1394</a>            source,
-<a href=#1395 id=1395 data-nosnippet>1395</a>            destination,
-<a href=#1396 id=1396 data-nosnippet>1396</a>            src_texture.desc.format,
-<a href=#1397 id=1397 data-nosnippet>1397</a>            array_layer_count,
-<a href=#1398 id=1398 data-nosnippet>1398</a>        )<span class="question-mark">?</span>;
-<a href=#1399 id=1399 data-nosnippet>1399</a>    }
-<a href=#1400 id=1400 data-nosnippet>1400</a>
-<a href=#1401 id=1401 data-nosnippet>1401</a>    <span class="kw">let </span>(src_range, src_tex_base) = extract_texture_selector(source, copy_size, src_texture)<span class="question-mark">?</span>;
-<a href=#1402 id=1402 data-nosnippet>1402</a>    <span class="kw">let </span>(dst_range, dst_tex_base) = extract_texture_selector(destination, copy_size, dst_texture)<span class="question-mark">?</span>;
-<a href=#1403 id=1403 data-nosnippet>1403</a>    <span class="kw">let </span>src_texture_aspects = hal::FormatAspects::from(src_texture.desc.format);
-<a href=#1404 id=1404 data-nosnippet>1404</a>    <span class="kw">let </span>dst_texture_aspects = hal::FormatAspects::from(dst_texture.desc.format);
-<a href=#1405 id=1405 data-nosnippet>1405</a>    <span class="kw">if </span>src_tex_base.<span class="macro">aspect !</span>= src_texture_aspects {
-<a href=#1406 id=1406 data-nosnippet>1406</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::CopySrcMissingAspects.into());
-<a href=#1407 id=1407 data-nosnippet>1407</a>    }
-<a href=#1408 id=1408 data-nosnippet>1408</a>    <span class="kw">if </span>dst_tex_base.<span class="macro">aspect !</span>= dst_texture_aspects {
-<a href=#1409 id=1409 data-nosnippet>1409</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::CopyDstMissingAspects.into());
-<a href=#1410 id=1410 data-nosnippet>1410</a>    }
-<a href=#1411 id=1411 data-nosnippet>1411</a>
-<a href=#1412 id=1412 data-nosnippet>1412</a>    <span class="kw">if </span>src_texture.desc.<span class="macro">sample_count !</span>= dst_texture.desc.sample_count {
-<a href=#1413 id=1413 data-nosnippet>1413</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::SampleCountNotEqual {
-<a href=#1414 id=1414 data-nosnippet>1414</a>            src_sample_count: src_texture.desc.sample_count,
-<a href=#1415 id=1415 data-nosnippet>1415</a>            dst_sample_count: dst_texture.desc.sample_count,
-<a href=#1416 id=1416 data-nosnippet>1416</a>        }
-<a href=#1417 id=1417 data-nosnippet>1417</a>        .into());
-<a href=#1418 id=1418 data-nosnippet>1418</a>    }
-<a href=#1419 id=1419 data-nosnippet>1419</a>
-<a href=#1420 id=1420 data-nosnippet>1420</a>    <span class="kw">let </span>src_raw = src_texture.try_raw(state.snatch_guard)<span class="question-mark">?</span>;
-<a href=#1421 id=1421 data-nosnippet>1421</a>    src_texture
-<a href=#1422 id=1422 data-nosnippet>1422</a>        .check_usage(TextureUsages::COPY_SRC)
-<a href=#1423 id=1423 data-nosnippet>1423</a>        .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
-<a href=#1424 id=1424 data-nosnippet>1424</a>    <span class="kw">let </span>dst_raw = dst_texture.try_raw(state.snatch_guard)<span class="question-mark">?</span>;
-<a href=#1425 id=1425 data-nosnippet>1425</a>    dst_texture
-<a href=#1426 id=1426 data-nosnippet>1426</a>        .check_usage(TextureUsages::COPY_DST)
-<a href=#1427 id=1427 data-nosnippet>1427</a>        .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
-<a href=#1428 id=1428 data-nosnippet>1428</a>
-<a href=#1429 id=1429 data-nosnippet>1429</a>    <span class="comment">// This must happen after parameter validation (so that errors are reported
-<a href=#1430 id=1430 data-nosnippet>1430</a>    // as required by the spec), but before any side effects.
-<a href=#1431 id=1431 data-nosnippet>1431</a>    </span><span class="kw">if </span>copy_size.width == <span class="number">0 </span>|| copy_size.height == <span class="number">0 </span>|| copy_size.depth_or_array_layers == <span class="number">0 </span>{
-<a href=#1432 id=1432 data-nosnippet>1432</a>        <span class="macro">log::trace!</span>(<span class="string">"Ignoring copy_texture_to_texture of size 0"</span>);
-<a href=#1433 id=1433 data-nosnippet>1433</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-<a href=#1434 id=1434 data-nosnippet>1434</a>    }
-<a href=#1435 id=1435 data-nosnippet>1435</a>
-<a href=#1436 id=1436 data-nosnippet>1436</a>    <span class="comment">// Handle texture init *before* dealing with barrier transitions so we
-<a href=#1437 id=1437 data-nosnippet>1437</a>    // have an easier time inserting "immediate-inits" that may be required
-<a href=#1438 id=1438 data-nosnippet>1438</a>    // by prior discards in rare cases.
-<a href=#1439 id=1439 data-nosnippet>1439</a>    </span>handle_src_texture_init(state, source, copy_size, src_texture)<span class="question-mark">?</span>;
-<a href=#1440 id=1440 data-nosnippet>1440</a>    handle_dst_texture_init(state, destination, copy_size, dst_texture)<span class="question-mark">?</span>;
-<a href=#1441 id=1441 data-nosnippet>1441</a>
-<a href=#1442 id=1442 data-nosnippet>1442</a>    <span class="kw">let </span>src_pending =
-<a href=#1443 id=1443 data-nosnippet>1443</a>        state
-<a href=#1444 id=1444 data-nosnippet>1444</a>            .tracker
-<a href=#1445 id=1445 data-nosnippet>1445</a>            .textures
-<a href=#1446 id=1446 data-nosnippet>1446</a>            .set_single(src_texture, src_range, wgt::TextureUses::COPY_SRC);
-<a href=#1447 id=1447 data-nosnippet>1447</a>
-<a href=#1448 id=1448 data-nosnippet>1448</a>    <span class="comment">//TODO: try to avoid this the collection. It's needed because both
-<a href=#1449 id=1449 data-nosnippet>1449</a>    // `src_pending` and `dst_pending` try to hold `trackers.textures` mutably.
-<a href=#1450 id=1450 data-nosnippet>1450</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>barriers: ArrayVec&lt;<span class="kw">_</span>, <span class="number">2</span>&gt; = src_pending
-<a href=#1451 id=1451 data-nosnippet>1451</a>        .map(|pending| pending.into_hal(src_raw))
-<a href=#1452 id=1452 data-nosnippet>1452</a>        .collect();
+<a href=#1373 id=1373 data-nosnippet>1373</a>    // (https://gpuweb.github.io/gpuweb/#copy-compatible), with an
+<a href=#1374 id=1374 data-nosnippet>1374</a>    // extension allowing one plane of a planar source to be copied
+<a href=#1375 id=1375 data-nosnippet>1375</a>    // into a single-plane destination of the matching format
+<a href=#1376 id=1376 data-nosnippet>1376</a>    // (e.g. NV12 Plane0 -&gt; R8Unorm, NV12 Plane1 -&gt; Rg8Unorm).
+<a href=#1377 id=1377 data-nosnippet>1377</a>    //
+<a href=#1378 id=1378 data-nosnippet>1378</a>    // When taking this path, `copy_size` and `source.origin` are
+<a href=#1379 id=1379 data-nosnippet>1379</a>    // interpreted in *plane* texels, not luma texels: copying NV12
+<a href=#1380 id=1380 data-nosnippet>1380</a>    // Plane1 into an Rg8Unorm of size (W/2, H/2) requires
+<a href=#1381 id=1381 data-nosnippet>1381</a>    // `copy_size = (W/2, H/2)`. The plane-extent check further down
+<a href=#1382 id=1382 data-nosnippet>1382</a>    // enforces this against the subsampled plane extent, so a caller
+<a href=#1383 id=1383 data-nosnippet>1383</a>    // passing luma-sized values gets a source-side error pointing at
+<a href=#1384 id=1384 data-nosnippet>1384</a>    // the actual mistake rather than an opaque destination overrun.
+<a href=#1385 id=1385 data-nosnippet>1385</a>    </span><span class="kw">let </span>src_fmt_no_srgb = src_texture.desc.format.remove_srgb_suffix();
+<a href=#1386 id=1386 data-nosnippet>1386</a>    <span class="kw">let </span>dst_fmt_no_srgb = dst_texture.desc.format.remove_srgb_suffix();
+<a href=#1387 id=1387 data-nosnippet>1387</a>    <span class="kw">let </span>planar_split_ok = src_fmt_no_srgb.is_multi_planar_format()
+<a href=#1388 id=1388 data-nosnippet>1388</a>        &amp;&amp; src_fmt_no_srgb.aspect_specific_format(source.aspect) == <span class="prelude-val">Some</span>(dst_fmt_no_srgb);
+<a href=#1389 id=1389 data-nosnippet>1389</a>    <span class="kw">if </span><span class="macro">src_fmt_no_srgb !</span>= dst_fmt_no_srgb &amp;&amp; !planar_split_ok {
+<a href=#1390 id=1390 data-nosnippet>1390</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::TextureFormatsNotCopyCompatible {
+<a href=#1391 id=1391 data-nosnippet>1391</a>            src_format: src_texture.desc.format,
+<a href=#1392 id=1392 data-nosnippet>1392</a>            dst_format: dst_texture.desc.format,
+<a href=#1393 id=1393 data-nosnippet>1393</a>        }
+<a href=#1394 id=1394 data-nosnippet>1394</a>        .into());
+<a href=#1395 id=1395 data-nosnippet>1395</a>    }
+<a href=#1396 id=1396 data-nosnippet>1396</a>
+<a href=#1397 id=1397 data-nosnippet>1397</a>    <span class="kw">let </span>(src_copy_size, array_layer_count) =
+<a href=#1398 id=1398 data-nosnippet>1398</a>        validate_texture_copy_range(source, <span class="kw-2">&amp;</span>src_texture.desc, CopySide::Source, copy_size)<span class="question-mark">?</span>;
+<a href=#1399 id=1399 data-nosnippet>1399</a>    <span class="kw">let </span>(dst_copy_size, <span class="kw">_</span>) = validate_texture_copy_range(
+<a href=#1400 id=1400 data-nosnippet>1400</a>        destination,
+<a href=#1401 id=1401 data-nosnippet>1401</a>        <span class="kw-2">&amp;</span>dst_texture.desc,
+<a href=#1402 id=1402 data-nosnippet>1402</a>        CopySide::Destination,
+<a href=#1403 id=1403 data-nosnippet>1403</a>        copy_size,
+<a href=#1404 id=1404 data-nosnippet>1404</a>    )<span class="question-mark">?</span>;
+<a href=#1405 id=1405 data-nosnippet>1405</a>
+<a href=#1406 id=1406 data-nosnippet>1406</a>    <span class="comment">// For planar -&gt; single-plane copies, re-check the source extent
+<a href=#1407 id=1407 data-nosnippet>1407</a>    // in plane coordinates. `validate_texture_copy_range` above used
+<a href=#1408 id=1408 data-nosnippet>1408</a>    // the full luma extent of the planar source, so it does not
+<a href=#1409 id=1409 data-nosnippet>1409</a>    // catch a caller treating `copy_size` / `origin` as luma-sized
+<a href=#1410 id=1410 data-nosnippet>1410</a>    // when targeting a subsampled plane (NV12/P010 plane 1).
+<a href=#1411 id=1411 data-nosnippet>1411</a>    </span><span class="kw">if </span>planar_split_ok {
+<a href=#1412 id=1412 data-nosnippet>1412</a>        <span class="comment">// `planar_split_ok` implies `aspect_specific_format(source.aspect)`
+<a href=#1413 id=1413 data-nosnippet>1413</a>        // returned `Some`, which is only true for `Plane{0,1,2}`.
+<a href=#1414 id=1414 data-nosnippet>1414</a>        </span><span class="kw">let </span>plane = source.aspect.to_plane().expect(<span class="string">"planar_split_ok aspect"</span>);
+<a href=#1415 id=1415 data-nosnippet>1415</a>        <span class="kw">let </span>plane_extent = src_texture
+<a href=#1416 id=1416 data-nosnippet>1416</a>            .desc
+<a href=#1417 id=1417 data-nosnippet>1417</a>            .compute_render_extent(source.mip_level, <span class="prelude-val">Some</span>(plane));
+<a href=#1418 id=1418 data-nosnippet>1418</a>        <span class="kw">let </span>check = |dimension, start: u32, size: u32, plane_size: u32| {
+<a href=#1419 id=1419 data-nosnippet>1419</a>            <span class="kw">if </span>start &gt; plane_size || plane_size - start &lt; size {
+<a href=#1420 id=1420 data-nosnippet>1420</a>                <span class="prelude-val">Err</span>(TransferError::TextureOverrun {
+<a href=#1421 id=1421 data-nosnippet>1421</a>                    start_offset: start,
+<a href=#1422 id=1422 data-nosnippet>1422</a>                    end_offset: start.wrapping_add(size),
+<a href=#1423 id=1423 data-nosnippet>1423</a>                    texture_size: plane_size,
+<a href=#1424 id=1424 data-nosnippet>1424</a>                    dimension,
+<a href=#1425 id=1425 data-nosnippet>1425</a>                    side: CopySide::Source,
+<a href=#1426 id=1426 data-nosnippet>1426</a>                })
+<a href=#1427 id=1427 data-nosnippet>1427</a>            } <span class="kw">else </span>{
+<a href=#1428 id=1428 data-nosnippet>1428</a>                <span class="prelude-val">Ok</span>(())
+<a href=#1429 id=1429 data-nosnippet>1429</a>            }
+<a href=#1430 id=1430 data-nosnippet>1430</a>        };
+<a href=#1431 id=1431 data-nosnippet>1431</a>        check(
+<a href=#1432 id=1432 data-nosnippet>1432</a>            TextureErrorDimension::X,
+<a href=#1433 id=1433 data-nosnippet>1433</a>            source.origin.x,
+<a href=#1434 id=1434 data-nosnippet>1434</a>            copy_size.width,
+<a href=#1435 id=1435 data-nosnippet>1435</a>            plane_extent.width,
+<a href=#1436 id=1436 data-nosnippet>1436</a>        )<span class="question-mark">?</span>;
+<a href=#1437 id=1437 data-nosnippet>1437</a>        check(
+<a href=#1438 id=1438 data-nosnippet>1438</a>            TextureErrorDimension::Y,
+<a href=#1439 id=1439 data-nosnippet>1439</a>            source.origin.y,
+<a href=#1440 id=1440 data-nosnippet>1440</a>            copy_size.height,
+<a href=#1441 id=1441 data-nosnippet>1441</a>            plane_extent.height,
+<a href=#1442 id=1442 data-nosnippet>1442</a>        )<span class="question-mark">?</span>;
+<a href=#1443 id=1443 data-nosnippet>1443</a>    }
+<a href=#1444 id=1444 data-nosnippet>1444</a>
+<a href=#1445 id=1445 data-nosnippet>1445</a>    <span class="kw">if </span>Arc::as_ptr(src_texture) == Arc::as_ptr(dst_texture) {
+<a href=#1446 id=1446 data-nosnippet>1446</a>        validate_copy_within_same_texture(
+<a href=#1447 id=1447 data-nosnippet>1447</a>            source,
+<a href=#1448 id=1448 data-nosnippet>1448</a>            destination,
+<a href=#1449 id=1449 data-nosnippet>1449</a>            src_texture.desc.format,
+<a href=#1450 id=1450 data-nosnippet>1450</a>            array_layer_count,
+<a href=#1451 id=1451 data-nosnippet>1451</a>        )<span class="question-mark">?</span>;
+<a href=#1452 id=1452 data-nosnippet>1452</a>    }
 <a href=#1453 id=1453 data-nosnippet>1453</a>
-<a href=#1454 id=1454 data-nosnippet>1454</a>    <span class="kw">let </span>dst_pending =
-<a href=#1455 id=1455 data-nosnippet>1455</a>        state
-<a href=#1456 id=1456 data-nosnippet>1456</a>            .tracker
-<a href=#1457 id=1457 data-nosnippet>1457</a>            .textures
-<a href=#1458 id=1458 data-nosnippet>1458</a>            .set_single(dst_texture, dst_range, wgt::TextureUses::COPY_DST);
-<a href=#1459 id=1459 data-nosnippet>1459</a>    barriers.extend(dst_pending.map(|pending| pending.into_hal(dst_raw)));
-<a href=#1460 id=1460 data-nosnippet>1460</a>
-<a href=#1461 id=1461 data-nosnippet>1461</a>    <span class="kw">let </span>hal_copy_size = hal::CopyExtent {
-<a href=#1462 id=1462 data-nosnippet>1462</a>        width: src_copy_size.width.min(dst_copy_size.width),
-<a href=#1463 id=1463 data-nosnippet>1463</a>        height: src_copy_size.height.min(dst_copy_size.height),
-<a href=#1464 id=1464 data-nosnippet>1464</a>        depth: src_copy_size.depth.min(dst_copy_size.depth),
-<a href=#1465 id=1465 data-nosnippet>1465</a>    };
-<a href=#1466 id=1466 data-nosnippet>1466</a>
-<a href=#1467 id=1467 data-nosnippet>1467</a>    <span class="kw">let </span>dst_format = dst_texture.desc.format;
-<a href=#1468 id=1468 data-nosnippet>1468</a>
-<a href=#1469 id=1469 data-nosnippet>1469</a>    <span class="kw">let </span>regions = (<span class="number">0</span>..array_layer_count).map(|rel_array_layer| {
-<a href=#1470 id=1470 data-nosnippet>1470</a>        <span class="kw">let </span><span class="kw-2">mut </span>src_base = src_tex_base.clone();
-<a href=#1471 id=1471 data-nosnippet>1471</a>        <span class="kw">let </span><span class="kw-2">mut </span>dst_base = dst_tex_base.clone();
-<a href=#1472 id=1472 data-nosnippet>1472</a>        src_base.array_layer += rel_array_layer;
-<a href=#1473 id=1473 data-nosnippet>1473</a>        dst_base.array_layer += rel_array_layer;
-<a href=#1474 id=1474 data-nosnippet>1474</a>        hal::TextureCopy {
-<a href=#1475 id=1475 data-nosnippet>1475</a>            src_base,
-<a href=#1476 id=1476 data-nosnippet>1476</a>            dst_base,
-<a href=#1477 id=1477 data-nosnippet>1477</a>            size: hal_copy_size,
-<a href=#1478 id=1478 data-nosnippet>1478</a>        }
-<a href=#1479 id=1479 data-nosnippet>1479</a>    });
-<a href=#1480 id=1480 data-nosnippet>1480</a>
-<a href=#1481 id=1481 data-nosnippet>1481</a>    <span class="kw">let </span>regions = <span class="kw">if </span>dst_tex_base.aspect == hal::FormatAspects::DEPTH_STENCIL {
-<a href=#1482 id=1482 data-nosnippet>1482</a>        regions
-<a href=#1483 id=1483 data-nosnippet>1483</a>            .flat_map(|region| {
-<a href=#1484 id=1484 data-nosnippet>1484</a>                <span class="kw">let </span>(<span class="kw-2">mut </span>depth, <span class="kw-2">mut </span>stencil) = (region.clone(), region);
-<a href=#1485 id=1485 data-nosnippet>1485</a>                depth.src_base.aspect = hal::FormatAspects::DEPTH;
-<a href=#1486 id=1486 data-nosnippet>1486</a>                depth.dst_base.aspect = hal::FormatAspects::DEPTH;
-<a href=#1487 id=1487 data-nosnippet>1487</a>                stencil.src_base.aspect = hal::FormatAspects::STENCIL;
-<a href=#1488 id=1488 data-nosnippet>1488</a>                stencil.dst_base.aspect = hal::FormatAspects::STENCIL;
-<a href=#1489 id=1489 data-nosnippet>1489</a>                [depth, stencil]
-<a href=#1490 id=1490 data-nosnippet>1490</a>            })
-<a href=#1491 id=1491 data-nosnippet>1491</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
-<a href=#1492 id=1492 data-nosnippet>1492</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(plane_count) = dst_format.planes() {
-<a href=#1493 id=1493 data-nosnippet>1493</a>        regions
-<a href=#1494 id=1494 data-nosnippet>1494</a>            .into_iter()
-<a href=#1495 id=1495 data-nosnippet>1495</a>            .flat_map(|region| {
-<a href=#1496 id=1496 data-nosnippet>1496</a>                (<span class="number">0</span>..plane_count).map(<span class="kw">move </span>|plane| {
-<a href=#1497 id=1497 data-nosnippet>1497</a>                    <span class="kw">let </span><span class="kw-2">mut </span>plane_region = region.clone();
-<a href=#1498 id=1498 data-nosnippet>1498</a>
-<a href=#1499 id=1499 data-nosnippet>1499</a>                    <span class="kw">let </span>plane_aspect = wgt::TextureAspect::from_plane(plane)
-<a href=#1500 id=1500 data-nosnippet>1500</a>                        .expect(<span class="string">"expected texture aspect to exist for the plane"</span>);
-<a href=#1501 id=1501 data-nosnippet>1501</a>                    <span class="kw">let </span>plane_aspect = hal::FormatAspects::new(dst_format, plane_aspect);
-<a href=#1502 id=1502 data-nosnippet>1502</a>                    plane_region.src_base.aspect = plane_aspect;
-<a href=#1503 id=1503 data-nosnippet>1503</a>                    plane_region.dst_base.aspect = plane_aspect;
-<a href=#1504 id=1504 data-nosnippet>1504</a>
-<a href=#1505 id=1505 data-nosnippet>1505</a>                    <span class="kw">let </span>(w_subsampling, h_subsampling) =
-<a href=#1506 id=1506 data-nosnippet>1506</a>                        dst_format.subsampling_factors(<span class="prelude-val">Some</span>(plane));
-<a href=#1507 id=1507 data-nosnippet>1507</a>                    plane_region.src_base.origin.x /= w_subsampling;
-<a href=#1508 id=1508 data-nosnippet>1508</a>                    plane_region.src_base.origin.y /= h_subsampling;
-<a href=#1509 id=1509 data-nosnippet>1509</a>                    plane_region.dst_base.origin.x /= w_subsampling;
-<a href=#1510 id=1510 data-nosnippet>1510</a>                    plane_region.dst_base.origin.y /= h_subsampling;
-<a href=#1511 id=1511 data-nosnippet>1511</a>
-<a href=#1512 id=1512 data-nosnippet>1512</a>                    plane_region.size.width /= w_subsampling;
-<a href=#1513 id=1513 data-nosnippet>1513</a>                    plane_region.size.height /= h_subsampling;
+<a href=#1454 id=1454 data-nosnippet>1454</a>    <span class="kw">let </span>(src_range, src_tex_base) = extract_texture_selector(source, copy_size, src_texture)<span class="question-mark">?</span>;
+<a href=#1455 id=1455 data-nosnippet>1455</a>    <span class="kw">let </span>(dst_range, dst_tex_base) = extract_texture_selector(destination, copy_size, dst_texture)<span class="question-mark">?</span>;
+<a href=#1456 id=1456 data-nosnippet>1456</a>    <span class="kw">let </span>src_texture_aspects = hal::FormatAspects::from(src_texture.desc.format);
+<a href=#1457 id=1457 data-nosnippet>1457</a>    <span class="kw">let </span>dst_texture_aspects = hal::FormatAspects::from(dst_texture.desc.format);
+<a href=#1458 id=1458 data-nosnippet>1458</a>    <span class="comment">// `planar_split_ok` already constrains `source.aspect` to a single plane.
+<a href=#1459 id=1459 data-nosnippet>1459</a>    </span><span class="kw">if </span>src_tex_base.<span class="macro">aspect !</span>= src_texture_aspects &amp;&amp; !planar_split_ok {
+<a href=#1460 id=1460 data-nosnippet>1460</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::CopySrcMissingAspects.into());
+<a href=#1461 id=1461 data-nosnippet>1461</a>    }
+<a href=#1462 id=1462 data-nosnippet>1462</a>    <span class="kw">if </span>dst_tex_base.<span class="macro">aspect !</span>= dst_texture_aspects {
+<a href=#1463 id=1463 data-nosnippet>1463</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::CopyDstMissingAspects.into());
+<a href=#1464 id=1464 data-nosnippet>1464</a>    }
+<a href=#1465 id=1465 data-nosnippet>1465</a>
+<a href=#1466 id=1466 data-nosnippet>1466</a>    <span class="kw">if </span>src_texture.desc.<span class="macro">sample_count !</span>= dst_texture.desc.sample_count {
+<a href=#1467 id=1467 data-nosnippet>1467</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::SampleCountNotEqual {
+<a href=#1468 id=1468 data-nosnippet>1468</a>            src_sample_count: src_texture.desc.sample_count,
+<a href=#1469 id=1469 data-nosnippet>1469</a>            dst_sample_count: dst_texture.desc.sample_count,
+<a href=#1470 id=1470 data-nosnippet>1470</a>        }
+<a href=#1471 id=1471 data-nosnippet>1471</a>        .into());
+<a href=#1472 id=1472 data-nosnippet>1472</a>    }
+<a href=#1473 id=1473 data-nosnippet>1473</a>
+<a href=#1474 id=1474 data-nosnippet>1474</a>    <span class="kw">let </span>src_raw = src_texture.try_raw(state.snatch_guard)<span class="question-mark">?</span>;
+<a href=#1475 id=1475 data-nosnippet>1475</a>    src_texture
+<a href=#1476 id=1476 data-nosnippet>1476</a>        .check_usage(TextureUsages::COPY_SRC)
+<a href=#1477 id=1477 data-nosnippet>1477</a>        .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
+<a href=#1478 id=1478 data-nosnippet>1478</a>    <span class="kw">let </span>dst_raw = dst_texture.try_raw(state.snatch_guard)<span class="question-mark">?</span>;
+<a href=#1479 id=1479 data-nosnippet>1479</a>    dst_texture
+<a href=#1480 id=1480 data-nosnippet>1480</a>        .check_usage(TextureUsages::COPY_DST)
+<a href=#1481 id=1481 data-nosnippet>1481</a>        .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
+<a href=#1482 id=1482 data-nosnippet>1482</a>
+<a href=#1483 id=1483 data-nosnippet>1483</a>    <span class="comment">// This must happen after parameter validation (so that errors are reported
+<a href=#1484 id=1484 data-nosnippet>1484</a>    // as required by the spec), but before any side effects.
+<a href=#1485 id=1485 data-nosnippet>1485</a>    </span><span class="kw">if </span>copy_size.width == <span class="number">0 </span>|| copy_size.height == <span class="number">0 </span>|| copy_size.depth_or_array_layers == <span class="number">0 </span>{
+<a href=#1486 id=1486 data-nosnippet>1486</a>        <span class="macro">log::trace!</span>(<span class="string">"Ignoring copy_texture_to_texture of size 0"</span>);
+<a href=#1487 id=1487 data-nosnippet>1487</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+<a href=#1488 id=1488 data-nosnippet>1488</a>    }
+<a href=#1489 id=1489 data-nosnippet>1489</a>
+<a href=#1490 id=1490 data-nosnippet>1490</a>    <span class="comment">// Handle texture init *before* dealing with barrier transitions so we
+<a href=#1491 id=1491 data-nosnippet>1491</a>    // have an easier time inserting "immediate-inits" that may be required
+<a href=#1492 id=1492 data-nosnippet>1492</a>    // by prior discards in rare cases.
+<a href=#1493 id=1493 data-nosnippet>1493</a>    </span>handle_src_texture_init(state, source, copy_size, src_texture)<span class="question-mark">?</span>;
+<a href=#1494 id=1494 data-nosnippet>1494</a>    handle_dst_texture_init(state, destination, copy_size, dst_texture)<span class="question-mark">?</span>;
+<a href=#1495 id=1495 data-nosnippet>1495</a>
+<a href=#1496 id=1496 data-nosnippet>1496</a>    <span class="kw">let </span>src_pending =
+<a href=#1497 id=1497 data-nosnippet>1497</a>        state
+<a href=#1498 id=1498 data-nosnippet>1498</a>            .tracker
+<a href=#1499 id=1499 data-nosnippet>1499</a>            .textures
+<a href=#1500 id=1500 data-nosnippet>1500</a>            .set_single(src_texture, src_range, wgt::TextureUses::COPY_SRC);
+<a href=#1501 id=1501 data-nosnippet>1501</a>
+<a href=#1502 id=1502 data-nosnippet>1502</a>    <span class="comment">//TODO: try to avoid this the collection. It's needed because both
+<a href=#1503 id=1503 data-nosnippet>1503</a>    // `src_pending` and `dst_pending` try to hold `trackers.textures` mutably.
+<a href=#1504 id=1504 data-nosnippet>1504</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>barriers: ArrayVec&lt;<span class="kw">_</span>, <span class="number">2</span>&gt; = src_pending
+<a href=#1505 id=1505 data-nosnippet>1505</a>        .map(|pending| pending.into_hal(src_raw))
+<a href=#1506 id=1506 data-nosnippet>1506</a>        .collect();
+<a href=#1507 id=1507 data-nosnippet>1507</a>
+<a href=#1508 id=1508 data-nosnippet>1508</a>    <span class="kw">let </span>dst_pending =
+<a href=#1509 id=1509 data-nosnippet>1509</a>        state
+<a href=#1510 id=1510 data-nosnippet>1510</a>            .tracker
+<a href=#1511 id=1511 data-nosnippet>1511</a>            .textures
+<a href=#1512 id=1512 data-nosnippet>1512</a>            .set_single(dst_texture, dst_range, wgt::TextureUses::COPY_DST);
+<a href=#1513 id=1513 data-nosnippet>1513</a>    barriers.extend(dst_pending.map(|pending| pending.into_hal(dst_raw)));
 <a href=#1514 id=1514 data-nosnippet>1514</a>
-<a href=#1515 id=1515 data-nosnippet>1515</a>                    plane_region
-<a href=#1516 id=1516 data-nosnippet>1516</a>                })
-<a href=#1517 id=1517 data-nosnippet>1517</a>            })
-<a href=#1518 id=1518 data-nosnippet>1518</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
-<a href=#1519 id=1519 data-nosnippet>1519</a>    } <span class="kw">else </span>{
-<a href=#1520 id=1520 data-nosnippet>1520</a>        regions.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
-<a href=#1521 id=1521 data-nosnippet>1521</a>    };
-<a href=#1522 id=1522 data-nosnippet>1522</a>    <span class="kw">unsafe </span>{
-<a href=#1523 id=1523 data-nosnippet>1523</a>        state.raw_encoder.transition_textures(<span class="kw-2">&amp;</span>barriers);
-<a href=#1524 id=1524 data-nosnippet>1524</a>        state.raw_encoder.copy_texture_to_texture(
-<a href=#1525 id=1525 data-nosnippet>1525</a>            src_raw,
-<a href=#1526 id=1526 data-nosnippet>1526</a>            wgt::TextureUses::COPY_SRC,
-<a href=#1527 id=1527 data-nosnippet>1527</a>            dst_raw,
-<a href=#1528 id=1528 data-nosnippet>1528</a>            <span class="kw-2">&amp;</span>regions,
-<a href=#1529 id=1529 data-nosnippet>1529</a>        );
-<a href=#1530 id=1530 data-nosnippet>1530</a>    }
-<a href=#1531 id=1531 data-nosnippet>1531</a>
-<a href=#1532 id=1532 data-nosnippet>1532</a>    <span class="prelude-val">Ok</span>(())
-<a href=#1533 id=1533 data-nosnippet>1533</a>}
+<a href=#1515 id=1515 data-nosnippet>1515</a>    <span class="kw">let </span>hal_copy_size = hal::CopyExtent {
+<a href=#1516 id=1516 data-nosnippet>1516</a>        width: src_copy_size.width.min(dst_copy_size.width),
+<a href=#1517 id=1517 data-nosnippet>1517</a>        height: src_copy_size.height.min(dst_copy_size.height),
+<a href=#1518 id=1518 data-nosnippet>1518</a>        depth: src_copy_size.depth.min(dst_copy_size.depth),
+<a href=#1519 id=1519 data-nosnippet>1519</a>    };
+<a href=#1520 id=1520 data-nosnippet>1520</a>
+<a href=#1521 id=1521 data-nosnippet>1521</a>    <span class="kw">let </span>dst_format = dst_texture.desc.format;
+<a href=#1522 id=1522 data-nosnippet>1522</a>
+<a href=#1523 id=1523 data-nosnippet>1523</a>    <span class="kw">let </span>regions = (<span class="number">0</span>..array_layer_count).map(|rel_array_layer| {
+<a href=#1524 id=1524 data-nosnippet>1524</a>        <span class="kw">let </span><span class="kw-2">mut </span>src_base = src_tex_base.clone();
+<a href=#1525 id=1525 data-nosnippet>1525</a>        <span class="kw">let </span><span class="kw-2">mut </span>dst_base = dst_tex_base.clone();
+<a href=#1526 id=1526 data-nosnippet>1526</a>        src_base.array_layer += rel_array_layer;
+<a href=#1527 id=1527 data-nosnippet>1527</a>        dst_base.array_layer += rel_array_layer;
+<a href=#1528 id=1528 data-nosnippet>1528</a>        hal::TextureCopy {
+<a href=#1529 id=1529 data-nosnippet>1529</a>            src_base,
+<a href=#1530 id=1530 data-nosnippet>1530</a>            dst_base,
+<a href=#1531 id=1531 data-nosnippet>1531</a>            size: hal_copy_size,
+<a href=#1532 id=1532 data-nosnippet>1532</a>        }
+<a href=#1533 id=1533 data-nosnippet>1533</a>    });
+<a href=#1534 id=1534 data-nosnippet>1534</a>
+<a href=#1535 id=1535 data-nosnippet>1535</a>    <span class="kw">let </span>regions = <span class="kw">if </span>dst_tex_base.aspect == hal::FormatAspects::DEPTH_STENCIL {
+<a href=#1536 id=1536 data-nosnippet>1536</a>        regions
+<a href=#1537 id=1537 data-nosnippet>1537</a>            .flat_map(|region| {
+<a href=#1538 id=1538 data-nosnippet>1538</a>                <span class="kw">let </span>(<span class="kw-2">mut </span>depth, <span class="kw-2">mut </span>stencil) = (region.clone(), region);
+<a href=#1539 id=1539 data-nosnippet>1539</a>                depth.src_base.aspect = hal::FormatAspects::DEPTH;
+<a href=#1540 id=1540 data-nosnippet>1540</a>                depth.dst_base.aspect = hal::FormatAspects::DEPTH;
+<a href=#1541 id=1541 data-nosnippet>1541</a>                stencil.src_base.aspect = hal::FormatAspects::STENCIL;
+<a href=#1542 id=1542 data-nosnippet>1542</a>                stencil.dst_base.aspect = hal::FormatAspects::STENCIL;
+<a href=#1543 id=1543 data-nosnippet>1543</a>                [depth, stencil]
+<a href=#1544 id=1544 data-nosnippet>1544</a>            })
+<a href=#1545 id=1545 data-nosnippet>1545</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+<a href=#1546 id=1546 data-nosnippet>1546</a>    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(plane_count) = dst_format.planes() {
+<a href=#1547 id=1547 data-nosnippet>1547</a>        regions
+<a href=#1548 id=1548 data-nosnippet>1548</a>            .into_iter()
+<a href=#1549 id=1549 data-nosnippet>1549</a>            .flat_map(|region| {
+<a href=#1550 id=1550 data-nosnippet>1550</a>                (<span class="number">0</span>..plane_count).map(<span class="kw">move </span>|plane| {
+<a href=#1551 id=1551 data-nosnippet>1551</a>                    <span class="kw">let </span><span class="kw-2">mut </span>plane_region = region.clone();
+<a href=#1552 id=1552 data-nosnippet>1552</a>
+<a href=#1553 id=1553 data-nosnippet>1553</a>                    <span class="kw">let </span>plane_aspect = wgt::TextureAspect::from_plane(plane)
+<a href=#1554 id=1554 data-nosnippet>1554</a>                        .expect(<span class="string">"expected texture aspect to exist for the plane"</span>);
+<a href=#1555 id=1555 data-nosnippet>1555</a>                    <span class="kw">let </span>plane_aspect = hal::FormatAspects::new(dst_format, plane_aspect);
+<a href=#1556 id=1556 data-nosnippet>1556</a>                    plane_region.src_base.aspect = plane_aspect;
+<a href=#1557 id=1557 data-nosnippet>1557</a>                    plane_region.dst_base.aspect = plane_aspect;
+<a href=#1558 id=1558 data-nosnippet>1558</a>
+<a href=#1559 id=1559 data-nosnippet>1559</a>                    <span class="kw">let </span>(w_subsampling, h_subsampling) =
+<a href=#1560 id=1560 data-nosnippet>1560</a>                        dst_format.subsampling_factors(<span class="prelude-val">Some</span>(plane));
+<a href=#1561 id=1561 data-nosnippet>1561</a>                    plane_region.src_base.origin.x /= w_subsampling;
+<a href=#1562 id=1562 data-nosnippet>1562</a>                    plane_region.src_base.origin.y /= h_subsampling;
+<a href=#1563 id=1563 data-nosnippet>1563</a>                    plane_region.dst_base.origin.x /= w_subsampling;
+<a href=#1564 id=1564 data-nosnippet>1564</a>                    plane_region.dst_base.origin.y /= h_subsampling;
+<a href=#1565 id=1565 data-nosnippet>1565</a>
+<a href=#1566 id=1566 data-nosnippet>1566</a>                    plane_region.size.width /= w_subsampling;
+<a href=#1567 id=1567 data-nosnippet>1567</a>                    plane_region.size.height /= h_subsampling;
+<a href=#1568 id=1568 data-nosnippet>1568</a>
+<a href=#1569 id=1569 data-nosnippet>1569</a>                    plane_region
+<a href=#1570 id=1570 data-nosnippet>1570</a>                })
+<a href=#1571 id=1571 data-nosnippet>1571</a>            })
+<a href=#1572 id=1572 data-nosnippet>1572</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+<a href=#1573 id=1573 data-nosnippet>1573</a>    } <span class="kw">else </span>{
+<a href=#1574 id=1574 data-nosnippet>1574</a>        regions.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+<a href=#1575 id=1575 data-nosnippet>1575</a>    };
+<a href=#1576 id=1576 data-nosnippet>1576</a>    <span class="kw">unsafe </span>{
+<a href=#1577 id=1577 data-nosnippet>1577</a>        state.raw_encoder.transition_textures(<span class="kw-2">&amp;</span>barriers);
+<a href=#1578 id=1578 data-nosnippet>1578</a>        state.raw_encoder.copy_texture_to_texture(
+<a href=#1579 id=1579 data-nosnippet>1579</a>            src_raw,
+<a href=#1580 id=1580 data-nosnippet>1580</a>            wgt::TextureUses::COPY_SRC,
+<a href=#1581 id=1581 data-nosnippet>1581</a>            dst_raw,
+<a href=#1582 id=1582 data-nosnippet>1582</a>            <span class="kw-2">&amp;</span>regions,
+<a href=#1583 id=1583 data-nosnippet>1583</a>        );
+<a href=#1584 id=1584 data-nosnippet>1584</a>    }
+<a href=#1585 id=1585 data-nosnippet>1585</a>
+<a href=#1586 id=1586 data-nosnippet>1586</a>    <span class="prelude-val">Ok</span>(())
+<a href=#1587 id=1587 data-nosnippet>1587</a>}
 </code></pre></div></section></main></body></html>
