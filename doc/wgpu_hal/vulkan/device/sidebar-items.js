@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["CompiledStage","ImageWithoutMemory"]};
+window.SIDEBAR_ITEMS = {"struct":["CompiledStage","ImageWithoutMemory","MemoryProperties"]};
