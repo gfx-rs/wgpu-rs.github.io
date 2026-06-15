@@ -305,109 +305,105 @@
 <a href=#305 id=305 data-nosnippet>305</a>        <span class="macro">profiling::scope!</span>(<span class="string">"triage_submissions"</span>);
 <a href=#306 id=306 data-nosnippet>306</a>
 <a href=#307 id=307 data-nosnippet>307</a>        <span class="macro">debug_assert!</span>(<span class="self">self</span>.active.is_sorted_by_key(|a| a.index));
-<a href=#308 id=308 data-nosnippet>308</a>        <span class="kw">let </span>done_count = <span class="self">self
-<a href=#309 id=309 data-nosnippet>309</a>            </span>.active
-<a href=#310 id=310 data-nosnippet>310</a>            .iter()
-<a href=#311 id=311 data-nosnippet>311</a>            .position(|a| a.index &gt; last_done)
-<a href=#312 id=312 data-nosnippet>312</a>            .unwrap_or(<span class="self">self</span>.active.len());
-<a href=#313 id=313 data-nosnippet>313</a>
-<a href=#314 id=314 data-nosnippet>314</a>        <span class="kw">let </span><span class="kw-2">mut </span>work_done_closures: SmallVec&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.work_done_closures.drain(..).collect();
-<a href=#315 id=315 data-nosnippet>315</a>        <span class="kw">for </span>a <span class="kw">in </span><span class="self">self</span>.active.drain(..done_count) {
-<a href=#316 id=316 data-nosnippet>316</a>            <span class="self">self</span>.ready_to_map.extend(a.mapped);
-<a href=#317 id=317 data-nosnippet>317</a>            <span class="self">self</span>.ready_to_compact.extend(a.compact_read_back);
-<a href=#318 id=318 data-nosnippet>318</a>            <span class="kw">for </span>encoder <span class="kw">in </span>a.encoders {
-<a href=#319 id=319 data-nosnippet>319</a>                <span class="comment">// This involves actually decrementing the ref count of all command buffer
-<a href=#320 id=320 data-nosnippet>320</a>                // resources, so can be _very_ expensive.
-<a href=#321 id=321 data-nosnippet>321</a>                </span><span class="macro">profiling::scope!</span>(<span class="string">"drop command buffer trackers"</span>);
-<a href=#322 id=322 data-nosnippet>322</a>                drop(encoder);
-<a href=#323 id=323 data-nosnippet>323</a>            }
-<a href=#324 id=324 data-nosnippet>324</a>            work_done_closures.extend(a.work_done_closures);
-<a href=#325 id=325 data-nosnippet>325</a>        }
-<a href=#326 id=326 data-nosnippet>326</a>        work_done_closures
-<a href=#327 id=327 data-nosnippet>327</a>    }
-<a href=#328 id=328 data-nosnippet>328</a>
-<a href=#329 id=329 data-nosnippet>329</a>    <span class="kw">pub fn </span>schedule_resource_destruction(
-<a href=#330 id=330 data-nosnippet>330</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#331 id=331 data-nosnippet>331</a>        temp_resource: TempResource,
-<a href=#332 id=332 data-nosnippet>332</a>        last_submit_index: SubmissionIndex,
-<a href=#333 id=333 data-nosnippet>333</a>    ) {
-<a href=#334 id=334 data-nosnippet>334</a>        <span class="kw">let </span>resources = <span class="self">self
-<a href=#335 id=335 data-nosnippet>335</a>            </span>.active
-<a href=#336 id=336 data-nosnippet>336</a>            .iter_mut()
-<a href=#337 id=337 data-nosnippet>337</a>            .find(|a| a.index == last_submit_index)
-<a href=#338 id=338 data-nosnippet>338</a>            .map(|a| {
-<a href=#339 id=339 data-nosnippet>339</a>                <span class="comment">// Because this resource's `last_submit_index` matches `a.index`,
-<a href=#340 id=340 data-nosnippet>340</a>                // we know that we must have done something with the resource,
-<a href=#341 id=341 data-nosnippet>341</a>                // so `a.encoders` should not be empty.
-<a href=#342 id=342 data-nosnippet>342</a>                </span><span class="kw-2">&amp;mut </span>a.encoders.last_mut().unwrap().temp_resources
-<a href=#343 id=343 data-nosnippet>343</a>            });
-<a href=#344 id=344 data-nosnippet>344</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(resources) = resources {
-<a href=#345 id=345 data-nosnippet>345</a>            resources.push(temp_resource);
-<a href=#346 id=346 data-nosnippet>346</a>        }
-<a href=#347 id=347 data-nosnippet>347</a>    }
-<a href=#348 id=348 data-nosnippet>348</a>
-<a href=#349 id=349 data-nosnippet>349</a>    <span class="kw">pub fn </span>add_work_done_closure(
-<a href=#350 id=350 data-nosnippet>350</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#351 id=351 data-nosnippet>351</a>        closure: SubmittedWorkDoneClosure,
-<a href=#352 id=352 data-nosnippet>352</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;SubmissionIndex&gt; {
-<a href=#353 id=353 data-nosnippet>353</a>        <span class="kw">match </span><span class="self">self</span>.active.last_mut() {
-<a href=#354 id=354 data-nosnippet>354</a>            <span class="prelude-val">Some</span>(active) =&gt; {
-<a href=#355 id=355 data-nosnippet>355</a>                active.work_done_closures.push(closure);
-<a href=#356 id=356 data-nosnippet>356</a>                <span class="prelude-val">Some</span>(active.index)
-<a href=#357 id=357 data-nosnippet>357</a>            }
-<a href=#358 id=358 data-nosnippet>358</a>            <span class="comment">// We must defer the closure until all previously occurring map_async closures
-<a href=#359 id=359 data-nosnippet>359</a>            // have fired. This is required by the spec.
-<a href=#360 id=360 data-nosnippet>360</a>            </span><span class="prelude-val">None </span>=&gt; {
-<a href=#361 id=361 data-nosnippet>361</a>                <span class="self">self</span>.work_done_closures.push(closure);
-<a href=#362 id=362 data-nosnippet>362</a>                <span class="prelude-val">None
-<a href=#363 id=363 data-nosnippet>363</a>            </span>}
-<a href=#364 id=364 data-nosnippet>364</a>        }
-<a href=#365 id=365 data-nosnippet>365</a>    }
-<a href=#366 id=366 data-nosnippet>366</a>
-<a href=#367 id=367 data-nosnippet>367</a>    <span class="doccomment">/// Map the buffers in `self.ready_to_map`.
-<a href=#368 id=368 data-nosnippet>368</a>    ///
-<a href=#369 id=369 data-nosnippet>369</a>    /// Return a list of mapping notifications to send.
-<a href=#370 id=370 data-nosnippet>370</a>    ///
-<a href=#371 id=371 data-nosnippet>371</a>    /// See the documentation for [`LifetimeTracker`] for details.
-<a href=#372 id=372 data-nosnippet>372</a>    </span><span class="attr">#[must_use]
-<a href=#373 id=373 data-nosnippet>373</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>handle_mapping(
-<a href=#374 id=374 data-nosnippet>374</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#375 id=375 data-nosnippet>375</a>        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
-<a href=#376 id=376 data-nosnippet>376</a>    ) -&gt; Vec&lt;<span class="kw">super</span>::BufferMapPendingClosure&gt; {
-<a href=#377 id=377 data-nosnippet>377</a>        <span class="kw">if </span><span class="self">self</span>.ready_to_map.is_empty() {
-<a href=#378 id=378 data-nosnippet>378</a>            <span class="kw">return </span>Vec::new();
-<a href=#379 id=379 data-nosnippet>379</a>        }
-<a href=#380 id=380 data-nosnippet>380</a>        <span class="kw">let </span><span class="kw-2">mut </span>pending_callbacks: Vec&lt;<span class="kw">super</span>::BufferMapPendingClosure&gt; =
-<a href=#381 id=381 data-nosnippet>381</a>            Vec::with_capacity(<span class="self">self</span>.ready_to_map.len());
-<a href=#382 id=382 data-nosnippet>382</a>
-<a href=#383 id=383 data-nosnippet>383</a>        <span class="kw">for </span>buffer <span class="kw">in </span><span class="self">self</span>.ready_to_map.drain(..) {
-<a href=#384 id=384 data-nosnippet>384</a>            <span class="kw">match </span>buffer.map(snatch_guard) {
-<a href=#385 id=385 data-nosnippet>385</a>                <span class="prelude-val">Some</span>(cb) =&gt; pending_callbacks.push(cb),
-<a href=#386 id=386 data-nosnippet>386</a>                <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
-<a href=#387 id=387 data-nosnippet>387</a>            }
-<a href=#388 id=388 data-nosnippet>388</a>        }
-<a href=#389 id=389 data-nosnippet>389</a>        pending_callbacks
-<a href=#390 id=390 data-nosnippet>390</a>    }
-<a href=#391 id=391 data-nosnippet>391</a>    <span class="doccomment">/// Read back compact sizes from the BLASes in `self.ready_to_compact`.
-<a href=#392 id=392 data-nosnippet>392</a>    ///
-<a href=#393 id=393 data-nosnippet>393</a>    /// Return a list of mapping notifications to send.
-<a href=#394 id=394 data-nosnippet>394</a>    ///
-<a href=#395 id=395 data-nosnippet>395</a>    /// See the documentation for [`LifetimeTracker`] for details.
-<a href=#396 id=396 data-nosnippet>396</a>    </span><span class="attr">#[must_use]
-<a href=#397 id=397 data-nosnippet>397</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>handle_compact_read_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Vec&lt;BlasCompactReadyPendingClosure&gt; {
-<a href=#398 id=398 data-nosnippet>398</a>        <span class="kw">if </span><span class="self">self</span>.ready_to_compact.is_empty() {
-<a href=#399 id=399 data-nosnippet>399</a>            <span class="kw">return </span>Vec::new();
-<a href=#400 id=400 data-nosnippet>400</a>        }
-<a href=#401 id=401 data-nosnippet>401</a>        <span class="kw">let </span><span class="kw-2">mut </span>pending_callbacks: Vec&lt;BlasCompactReadyPendingClosure&gt; =
-<a href=#402 id=402 data-nosnippet>402</a>            Vec::with_capacity(<span class="self">self</span>.ready_to_compact.len());
-<a href=#403 id=403 data-nosnippet>403</a>
-<a href=#404 id=404 data-nosnippet>404</a>        <span class="kw">for </span>blas <span class="kw">in </span><span class="self">self</span>.ready_to_compact.drain(..) {
-<a href=#405 id=405 data-nosnippet>405</a>            <span class="kw">match </span>blas.read_back_compact_size() {
-<a href=#406 id=406 data-nosnippet>406</a>                <span class="prelude-val">Some</span>(cb) =&gt; pending_callbacks.push(cb),
-<a href=#407 id=407 data-nosnippet>407</a>                <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
-<a href=#408 id=408 data-nosnippet>408</a>            }
-<a href=#409 id=409 data-nosnippet>409</a>        }
-<a href=#410 id=410 data-nosnippet>410</a>        pending_callbacks
-<a href=#411 id=411 data-nosnippet>411</a>    }
-<a href=#412 id=412 data-nosnippet>412</a>}
+<a href=#308 id=308 data-nosnippet>308</a>        <span class="kw">let </span>done_count = <span class="self">self</span>.active.partition_point(|a| a.index &lt;= last_done);
+<a href=#309 id=309 data-nosnippet>309</a>
+<a href=#310 id=310 data-nosnippet>310</a>        <span class="kw">let </span><span class="kw-2">mut </span>work_done_closures: SmallVec&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.work_done_closures.drain(..).collect();
+<a href=#311 id=311 data-nosnippet>311</a>        <span class="kw">for </span>a <span class="kw">in </span><span class="self">self</span>.active.drain(..done_count) {
+<a href=#312 id=312 data-nosnippet>312</a>            <span class="self">self</span>.ready_to_map.extend(a.mapped);
+<a href=#313 id=313 data-nosnippet>313</a>            <span class="self">self</span>.ready_to_compact.extend(a.compact_read_back);
+<a href=#314 id=314 data-nosnippet>314</a>            <span class="kw">for </span>encoder <span class="kw">in </span>a.encoders {
+<a href=#315 id=315 data-nosnippet>315</a>                <span class="comment">// This involves actually decrementing the ref count of all command buffer
+<a href=#316 id=316 data-nosnippet>316</a>                // resources, so can be _very_ expensive.
+<a href=#317 id=317 data-nosnippet>317</a>                </span><span class="macro">profiling::scope!</span>(<span class="string">"drop command buffer trackers"</span>);
+<a href=#318 id=318 data-nosnippet>318</a>                drop(encoder);
+<a href=#319 id=319 data-nosnippet>319</a>            }
+<a href=#320 id=320 data-nosnippet>320</a>            work_done_closures.extend(a.work_done_closures);
+<a href=#321 id=321 data-nosnippet>321</a>        }
+<a href=#322 id=322 data-nosnippet>322</a>        work_done_closures
+<a href=#323 id=323 data-nosnippet>323</a>    }
+<a href=#324 id=324 data-nosnippet>324</a>
+<a href=#325 id=325 data-nosnippet>325</a>    <span class="kw">pub fn </span>schedule_resource_destruction(
+<a href=#326 id=326 data-nosnippet>326</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#327 id=327 data-nosnippet>327</a>        temp_resource: TempResource,
+<a href=#328 id=328 data-nosnippet>328</a>        last_submit_index: SubmissionIndex,
+<a href=#329 id=329 data-nosnippet>329</a>    ) {
+<a href=#330 id=330 data-nosnippet>330</a>        <span class="kw">let </span>resources = <span class="self">self
+<a href=#331 id=331 data-nosnippet>331</a>            </span>.active
+<a href=#332 id=332 data-nosnippet>332</a>            .iter_mut()
+<a href=#333 id=333 data-nosnippet>333</a>            .find(|a| a.index == last_submit_index)
+<a href=#334 id=334 data-nosnippet>334</a>            .map(|a| {
+<a href=#335 id=335 data-nosnippet>335</a>                <span class="comment">// Because this resource's `last_submit_index` matches `a.index`,
+<a href=#336 id=336 data-nosnippet>336</a>                // we know that we must have done something with the resource,
+<a href=#337 id=337 data-nosnippet>337</a>                // so `a.encoders` should not be empty.
+<a href=#338 id=338 data-nosnippet>338</a>                </span><span class="kw-2">&amp;mut </span>a.encoders.last_mut().unwrap().temp_resources
+<a href=#339 id=339 data-nosnippet>339</a>            });
+<a href=#340 id=340 data-nosnippet>340</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(resources) = resources {
+<a href=#341 id=341 data-nosnippet>341</a>            resources.push(temp_resource);
+<a href=#342 id=342 data-nosnippet>342</a>        }
+<a href=#343 id=343 data-nosnippet>343</a>    }
+<a href=#344 id=344 data-nosnippet>344</a>
+<a href=#345 id=345 data-nosnippet>345</a>    <span class="kw">pub fn </span>add_work_done_closure(
+<a href=#346 id=346 data-nosnippet>346</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#347 id=347 data-nosnippet>347</a>        closure: SubmittedWorkDoneClosure,
+<a href=#348 id=348 data-nosnippet>348</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;SubmissionIndex&gt; {
+<a href=#349 id=349 data-nosnippet>349</a>        <span class="kw">match </span><span class="self">self</span>.active.last_mut() {
+<a href=#350 id=350 data-nosnippet>350</a>            <span class="prelude-val">Some</span>(active) =&gt; {
+<a href=#351 id=351 data-nosnippet>351</a>                active.work_done_closures.push(closure);
+<a href=#352 id=352 data-nosnippet>352</a>                <span class="prelude-val">Some</span>(active.index)
+<a href=#353 id=353 data-nosnippet>353</a>            }
+<a href=#354 id=354 data-nosnippet>354</a>            <span class="comment">// We must defer the closure until all previously occurring map_async closures
+<a href=#355 id=355 data-nosnippet>355</a>            // have fired. This is required by the spec.
+<a href=#356 id=356 data-nosnippet>356</a>            </span><span class="prelude-val">None </span>=&gt; {
+<a href=#357 id=357 data-nosnippet>357</a>                <span class="self">self</span>.work_done_closures.push(closure);
+<a href=#358 id=358 data-nosnippet>358</a>                <span class="prelude-val">None
+<a href=#359 id=359 data-nosnippet>359</a>            </span>}
+<a href=#360 id=360 data-nosnippet>360</a>        }
+<a href=#361 id=361 data-nosnippet>361</a>    }
+<a href=#362 id=362 data-nosnippet>362</a>
+<a href=#363 id=363 data-nosnippet>363</a>    <span class="doccomment">/// Map the buffers in `self.ready_to_map`.
+<a href=#364 id=364 data-nosnippet>364</a>    ///
+<a href=#365 id=365 data-nosnippet>365</a>    /// Return a list of mapping notifications to send.
+<a href=#366 id=366 data-nosnippet>366</a>    ///
+<a href=#367 id=367 data-nosnippet>367</a>    /// See the documentation for [`LifetimeTracker`] for details.
+<a href=#368 id=368 data-nosnippet>368</a>    </span><span class="attr">#[must_use]
+<a href=#369 id=369 data-nosnippet>369</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>handle_mapping(
+<a href=#370 id=370 data-nosnippet>370</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#371 id=371 data-nosnippet>371</a>        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
+<a href=#372 id=372 data-nosnippet>372</a>    ) -&gt; Vec&lt;<span class="kw">super</span>::BufferMapPendingClosure&gt; {
+<a href=#373 id=373 data-nosnippet>373</a>        <span class="kw">if </span><span class="self">self</span>.ready_to_map.is_empty() {
+<a href=#374 id=374 data-nosnippet>374</a>            <span class="kw">return </span>Vec::new();
+<a href=#375 id=375 data-nosnippet>375</a>        }
+<a href=#376 id=376 data-nosnippet>376</a>        <span class="kw">let </span><span class="kw-2">mut </span>pending_callbacks: Vec&lt;<span class="kw">super</span>::BufferMapPendingClosure&gt; =
+<a href=#377 id=377 data-nosnippet>377</a>            Vec::with_capacity(<span class="self">self</span>.ready_to_map.len());
+<a href=#378 id=378 data-nosnippet>378</a>
+<a href=#379 id=379 data-nosnippet>379</a>        <span class="kw">for </span>buffer <span class="kw">in </span><span class="self">self</span>.ready_to_map.drain(..) {
+<a href=#380 id=380 data-nosnippet>380</a>            <span class="kw">match </span>buffer.map(snatch_guard) {
+<a href=#381 id=381 data-nosnippet>381</a>                <span class="prelude-val">Some</span>(cb) =&gt; pending_callbacks.push(cb),
+<a href=#382 id=382 data-nosnippet>382</a>                <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
+<a href=#383 id=383 data-nosnippet>383</a>            }
+<a href=#384 id=384 data-nosnippet>384</a>        }
+<a href=#385 id=385 data-nosnippet>385</a>        pending_callbacks
+<a href=#386 id=386 data-nosnippet>386</a>    }
+<a href=#387 id=387 data-nosnippet>387</a>    <span class="doccomment">/// Read back compact sizes from the BLASes in `self.ready_to_compact`.
+<a href=#388 id=388 data-nosnippet>388</a>    ///
+<a href=#389 id=389 data-nosnippet>389</a>    /// Return a list of mapping notifications to send.
+<a href=#390 id=390 data-nosnippet>390</a>    ///
+<a href=#391 id=391 data-nosnippet>391</a>    /// See the documentation for [`LifetimeTracker`] for details.
+<a href=#392 id=392 data-nosnippet>392</a>    </span><span class="attr">#[must_use]
+<a href=#393 id=393 data-nosnippet>393</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>handle_compact_read_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Vec&lt;BlasCompactReadyPendingClosure&gt; {
+<a href=#394 id=394 data-nosnippet>394</a>        <span class="kw">if </span><span class="self">self</span>.ready_to_compact.is_empty() {
+<a href=#395 id=395 data-nosnippet>395</a>            <span class="kw">return </span>Vec::new();
+<a href=#396 id=396 data-nosnippet>396</a>        }
+<a href=#397 id=397 data-nosnippet>397</a>        <span class="kw">let </span><span class="kw-2">mut </span>pending_callbacks: Vec&lt;BlasCompactReadyPendingClosure&gt; =
+<a href=#398 id=398 data-nosnippet>398</a>            Vec::with_capacity(<span class="self">self</span>.ready_to_compact.len());
+<a href=#399 id=399 data-nosnippet>399</a>
+<a href=#400 id=400 data-nosnippet>400</a>        <span class="kw">for </span>blas <span class="kw">in </span><span class="self">self</span>.ready_to_compact.drain(..) {
+<a href=#401 id=401 data-nosnippet>401</a>            <span class="kw">match </span>blas.read_back_compact_size() {
+<a href=#402 id=402 data-nosnippet>402</a>                <span class="prelude-val">Some</span>(cb) =&gt; pending_callbacks.push(cb),
+<a href=#403 id=403 data-nosnippet>403</a>                <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
+<a href=#404 id=404 data-nosnippet>404</a>            }
+<a href=#405 id=405 data-nosnippet>405</a>        }
+<a href=#406 id=406 data-nosnippet>406</a>        pending_callbacks
+<a href=#407 id=407 data-nosnippet>407</a>    }
+<a href=#408 id=408 data-nosnippet>408</a>}
 </code></pre></div></section></main></body></html>
