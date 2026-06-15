@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["VertexFormat","VertexStepMode"],"struct":["VertexAttribute"]};
+window.SIDEBAR_ITEMS = {"enum":["VertexStepMode"],"struct":["VertexAttribute"]};
