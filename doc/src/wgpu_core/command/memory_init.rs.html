@@ -7,7 +7,7 @@
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>hashbrown::hash_map::Entry;
 <a href=#8 id=8 data-nosnippet>8</a>
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use crate</span>::{
-<a href=#10 id=10 data-nosnippet>10</a>    device::Device,
+<a href=#10 id=10 data-nosnippet>10</a>    device::{Device, DeviceError},
 <a href=#11 id=11 data-nosnippet>11</a>    init_tracker::<span class="kw-2">*</span>,
 <a href=#12 id=12 data-nosnippet>12</a>    resource::{DestroyedResourceError, ParentDevice, RawResourceAccess, Texture, Trackable},
 <a href=#13 id=13 data-nosnippet>13</a>    snatch::SnatchGuard,
@@ -335,5 +335,75 @@
 <a href=#335 id=335 data-nosnippet>335</a>
 <a href=#336 id=336 data-nosnippet>336</a>        <span class="prelude-val">Ok</span>(())
 <a href=#337 id=337 data-nosnippet>337</a>    }
-<a href=#338 id=338 data-nosnippet>338</a>}
+<a href=#338 id=338 data-nosnippet>338</a>
+<a href=#339 id=339 data-nosnippet>339</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>process_deferred_query_set_resolves(
+<a href=#340 id=340 data-nosnippet>340</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#341 id=341 data-nosnippet>341</a>        device: <span class="kw-2">&amp;</span>Device,
+<a href=#342 id=342 data-nosnippet>342</a>        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#343 id=343 data-nosnippet>343</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
+<a href=#344 id=344 data-nosnippet>344</a>        <span class="macro">profiling::scope!</span>(<span class="string">"process_deferred_query_set_resolves"</span>);
+<a href=#345 id=345 data-nosnippet>345</a>
+<a href=#346 id=346 data-nosnippet>346</a>        <span class="kw">for </span><span class="kw-2">mut </span>resolve <span class="kw">in </span><span class="self">self</span>.deferred_query_set_resolves.drain(..).rev() {
+<a href=#347 id=347 data-nosnippet>347</a>            <span class="kw">let </span>raw_dst = resolve.dst_buffer.try_raw(snatch_guard).unwrap();
+<a href=#348 id=348 data-nosnippet>348</a>            <span class="kw">let </span>raw_query_set = resolve.query_set.try_raw(snatch_guard).unwrap();
+<a href=#349 id=349 data-nosnippet>349</a>
+<a href=#350 id=350 data-nosnippet>350</a>            <span class="kw">let </span>raw_encoder = <span class="self">self</span>.encoder.open_pass(<span class="kw">crate</span>::hal_label(
+<a href=#351 id=351 data-nosnippet>351</a>                <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Deferred query set resolve"</span>),
+<a href=#352 id=352 data-nosnippet>352</a>                device.instance_flags,
+<a href=#353 id=353 data-nosnippet>353</a>            ))<span class="question-mark">?</span>;
+<a href=#354 id=354 data-nosnippet>354</a>
+<a href=#355 id=355 data-nosnippet>355</a>            <span class="kw">let </span>initialized_slots_guard = resolve.query_set.initialized_slots.lock();
+<a href=#356 id=356 data-nosnippet>356</a>            <span class="kw">let </span>initialized_slots =
+<a href=#357 id=357 data-nosnippet>357</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(query_set_writes) = resolve.query_set_writes.as_mut() {
+<a href=#358 id=358 data-nosnippet>358</a>                    query_set_writes.or(<span class="kw-2">&amp;</span>initialized_slots_guard);
+<a href=#359 id=359 data-nosnippet>359</a>                    <span class="kw-2">&amp;*</span>query_set_writes
+<a href=#360 id=360 data-nosnippet>360</a>                } <span class="kw">else </span>{
+<a href=#361 id=361 data-nosnippet>361</a>                    <span class="kw-2">&amp;*</span>initialized_slots_guard
+<a href=#362 id=362 data-nosnippet>362</a>                };
+<a href=#363 id=363 data-nosnippet>363</a>
+<a href=#364 id=364 data-nosnippet>364</a>            <span class="kw">let </span><span class="kw-2">mut </span>start = resolve.start_query;
+<a href=#365 id=365 data-nosnippet>365</a>            <span class="kw">while </span>start &lt; resolve.end_query {
+<a href=#366 id=366 data-nosnippet>366</a>                <span class="kw">let </span>is_initialized = initialized_slots[start <span class="kw">as </span>usize];
+<a href=#367 id=367 data-nosnippet>367</a>                <span class="kw">let </span>end = (start + <span class="number">1</span>..resolve.end_query)
+<a href=#368 id=368 data-nosnippet>368</a>                    .find(|<span class="kw-2">&amp;</span>i| initialized_slots[i <span class="kw">as </span>usize] != is_initialized)
+<a href=#369 id=369 data-nosnippet>369</a>                    .unwrap_or(resolve.end_query);
+<a href=#370 id=370 data-nosnippet>370</a>
+<a href=#371 id=371 data-nosnippet>371</a>                <span class="kw">let </span>byte_offset = resolve.destination_offset
+<a href=#372 id=372 data-nosnippet>372</a>                    + (start - resolve.start_query) <span class="kw">as </span>u64 * resolve.stride;
+<a href=#373 id=373 data-nosnippet>373</a>                <span class="kw">let </span>byte_len = (end - start) <span class="kw">as </span>u64 * resolve.stride;
+<a href=#374 id=374 data-nosnippet>374</a>
+<a href=#375 id=375 data-nosnippet>375</a>                <span class="kw">if </span>is_initialized {
+<a href=#376 id=376 data-nosnippet>376</a>                    <span class="kw">unsafe </span>{
+<a href=#377 id=377 data-nosnippet>377</a>                        raw_encoder.copy_query_results(
+<a href=#378 id=378 data-nosnippet>378</a>                            raw_query_set,
+<a href=#379 id=379 data-nosnippet>379</a>                            start..end,
+<a href=#380 id=380 data-nosnippet>380</a>                            raw_dst,
+<a href=#381 id=381 data-nosnippet>381</a>                            byte_offset,
+<a href=#382 id=382 data-nosnippet>382</a>                            wgt::BufferSize::new_unchecked(resolve.stride),
+<a href=#383 id=383 data-nosnippet>383</a>                        );
+<a href=#384 id=384 data-nosnippet>384</a>                    }
+<a href=#385 id=385 data-nosnippet>385</a>                } <span class="kw">else </span>{
+<a href=#386 id=386 data-nosnippet>386</a>                    <span class="kw">unsafe </span>{
+<a href=#387 id=387 data-nosnippet>387</a>                        raw_encoder.clear_buffer(raw_dst, byte_offset..byte_offset + byte_len);
+<a href=#388 id=388 data-nosnippet>388</a>                    }
+<a href=#389 id=389 data-nosnippet>389</a>                }
+<a href=#390 id=390 data-nosnippet>390</a>
+<a href=#391 id=391 data-nosnippet>391</a>                start = end;
+<a href=#392 id=392 data-nosnippet>392</a>            }
+<a href=#393 id=393 data-nosnippet>393</a>            drop(initialized_slots_guard);
+<a href=#394 id=394 data-nosnippet>394</a>
+<a href=#395 id=395 data-nosnippet>395</a>            <span class="self">self</span>.encoder.close_and_insert_at(resolve.insertion_point)<span class="question-mark">?</span>;
+<a href=#396 id=396 data-nosnippet>396</a>        }
+<a href=#397 id=397 data-nosnippet>397</a>
+<a href=#398 id=398 data-nosnippet>398</a>        <span class="comment">// Update query set initialization state.
+<a href=#399 id=399 data-nosnippet>399</a>        </span><span class="kw">for </span>query_set <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.trackers.query_sets {
+<a href=#400 id=400 data-nosnippet>400</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(slots) = <span class="self">self</span>.query_set_writes.get(<span class="kw-2">&amp;</span>query_set.tracker_index()) {
+<a href=#401 id=401 data-nosnippet>401</a>                <span class="kw">let </span><span class="kw-2">mut </span>initialized = query_set.initialized_slots.lock();
+<a href=#402 id=402 data-nosnippet>402</a>                initialized.or(slots);
+<a href=#403 id=403 data-nosnippet>403</a>            }
+<a href=#404 id=404 data-nosnippet>404</a>        }
+<a href=#405 id=405 data-nosnippet>405</a>
+<a href=#406 id=406 data-nosnippet>406</a>        <span class="prelude-val">Ok</span>(())
+<a href=#407 id=407 data-nosnippet>407</a>    }
+<a href=#408 id=408 data-nosnippet>408</a>}
 </code></pre></div></section></main></body></html>
