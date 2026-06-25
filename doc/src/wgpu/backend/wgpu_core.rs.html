@@ -4035,53 +4035,63 @@
 <a href=#4035 id=4035 data-nosnippet>4035</a>            }
 <a href=#4036 id=4036 data-nosnippet>4036</a>        }
 <a href=#4037 id=4037 data-nosnippet>4037</a>    }
-<a href=#4038 id=4038 data-nosnippet>4038</a>}
-<a href=#4039 id=4039 data-nosnippet>4039</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreSurfaceOutputDetail {
-<a href=#4040 id=4040 data-nosnippet>4040</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#4041 id=4041 data-nosnippet>4041</a>        <span class="comment">// Discard gets called by the api struct
-<a href=#4042 id=4042 data-nosnippet>4042</a>
-<a href=#4043 id=4043 data-nosnippet>4043</a>        // no-op
-<a href=#4044 id=4044 data-nosnippet>4044</a>    </span>}
-<a href=#4045 id=4045 data-nosnippet>4045</a>}
-<a href=#4046 id=4046 data-nosnippet>4046</a>
-<a href=#4047 id=4047 data-nosnippet>4047</a><span class="kw">impl </span>dispatch::QueueWriteBufferInterface <span class="kw">for </span>CoreQueueWriteBuffer {
-<a href=#4048 id=4048 data-nosnippet>4048</a>    <span class="attr">#[inline]
-<a href=#4049 id=4049 data-nosnippet>4049</a>    </span><span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-<a href=#4050 id=4050 data-nosnippet>4050</a>        <span class="self">self</span>.mapping.len()
-<a href=#4051 id=4051 data-nosnippet>4051</a>    }
+<a href=#4038 id=4038 data-nosnippet>4038</a>
+<a href=#4039 id=4039 data-nosnippet>4039</a>    <span class="kw">fn </span>texture_release(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+<a href=#4040 id=4040 data-nosnippet>4040</a>        <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.surface_texture_release(<span class="self">self</span>.surface_id) {
+<a href=#4041 id=4041 data-nosnippet>4041</a>            <span class="prelude-val">Ok</span>(_status) =&gt; (),
+<a href=#4042 id=4042 data-nosnippet>4042</a>            <span class="prelude-val">Err</span>(err) =&gt; {
+<a href=#4043 id=4043 data-nosnippet>4043</a>                <span class="self">self</span>.context
+<a href=#4044 id=4044 data-nosnippet>4044</a>                    .handle_error_nolabel(<span class="kw-2">&amp;</span><span class="self">self</span>.error_sink, err, <span class="string">"Surface::release_texture"</span>)
+<a href=#4045 id=4045 data-nosnippet>4045</a>            }
+<a href=#4046 id=4046 data-nosnippet>4046</a>        }
+<a href=#4047 id=4047 data-nosnippet>4047</a>    }
+<a href=#4048 id=4048 data-nosnippet>4048</a>}
+<a href=#4049 id=4049 data-nosnippet>4049</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreSurfaceOutputDetail {
+<a href=#4050 id=4050 data-nosnippet>4050</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#4051 id=4051 data-nosnippet>4051</a>        <span class="comment">// Discard gets called by the api struct
 <a href=#4052 id=4052 data-nosnippet>4052</a>
-<a href=#4053 id=4053 data-nosnippet>4053</a>    <span class="attr">#[inline]
-<a href=#4054 id=4054 data-nosnippet>4054</a>    </span><span class="kw">unsafe fn </span>write_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; WriteOnly&lt;<span class="lifetime">'_</span>, [u8]&gt; {
-<a href=#4055 id=4055 data-nosnippet>4055</a>        <span class="kw">unsafe </span>{ <span class="self">self</span>.mapping.write_slice() }
-<a href=#4056 id=4056 data-nosnippet>4056</a>    }
-<a href=#4057 id=4057 data-nosnippet>4057</a>}
-<a href=#4058 id=4058 data-nosnippet>4058</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreQueueWriteBuffer {
-<a href=#4059 id=4059 data-nosnippet>4059</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#4060 id=4060 data-nosnippet>4060</a>        <span class="comment">// The api struct calls queue.write_staging_buffer
-<a href=#4061 id=4061 data-nosnippet>4061</a>
-<a href=#4062 id=4062 data-nosnippet>4062</a>        // no-op
-<a href=#4063 id=4063 data-nosnippet>4063</a>    </span>}
-<a href=#4064 id=4064 data-nosnippet>4064</a>}
-<a href=#4065 id=4065 data-nosnippet>4065</a>
-<a href=#4066 id=4066 data-nosnippet>4066</a><span class="kw">impl </span>dispatch::BufferMappedRangeInterface <span class="kw">for </span>CoreBufferMappedRange {
-<a href=#4067 id=4067 data-nosnippet>4067</a>    <span class="attr">#[inline]
-<a href=#4068 id=4068 data-nosnippet>4068</a>    </span><span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-<a href=#4069 id=4069 data-nosnippet>4069</a>        <span class="self">self</span>.size
-<a href=#4070 id=4070 data-nosnippet>4070</a>    }
+<a href=#4053 id=4053 data-nosnippet>4053</a>        // no-op
+<a href=#4054 id=4054 data-nosnippet>4054</a>    </span>}
+<a href=#4055 id=4055 data-nosnippet>4055</a>}
+<a href=#4056 id=4056 data-nosnippet>4056</a>
+<a href=#4057 id=4057 data-nosnippet>4057</a><span class="kw">impl </span>dispatch::QueueWriteBufferInterface <span class="kw">for </span>CoreQueueWriteBuffer {
+<a href=#4058 id=4058 data-nosnippet>4058</a>    <span class="attr">#[inline]
+<a href=#4059 id=4059 data-nosnippet>4059</a>    </span><span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+<a href=#4060 id=4060 data-nosnippet>4060</a>        <span class="self">self</span>.mapping.len()
+<a href=#4061 id=4061 data-nosnippet>4061</a>    }
+<a href=#4062 id=4062 data-nosnippet>4062</a>
+<a href=#4063 id=4063 data-nosnippet>4063</a>    <span class="attr">#[inline]
+<a href=#4064 id=4064 data-nosnippet>4064</a>    </span><span class="kw">unsafe fn </span>write_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; WriteOnly&lt;<span class="lifetime">'_</span>, [u8]&gt; {
+<a href=#4065 id=4065 data-nosnippet>4065</a>        <span class="kw">unsafe </span>{ <span class="self">self</span>.mapping.write_slice() }
+<a href=#4066 id=4066 data-nosnippet>4066</a>    }
+<a href=#4067 id=4067 data-nosnippet>4067</a>}
+<a href=#4068 id=4068 data-nosnippet>4068</a><span class="kw">impl </span>Drop <span class="kw">for </span>CoreQueueWriteBuffer {
+<a href=#4069 id=4069 data-nosnippet>4069</a>    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#4070 id=4070 data-nosnippet>4070</a>        <span class="comment">// The api struct calls queue.write_staging_buffer
 <a href=#4071 id=4071 data-nosnippet>4071</a>
-<a href=#4072 id=4072 data-nosnippet>4072</a>    <span class="attr">#[inline]
-<a href=#4073 id=4073 data-nosnippet>4073</a>    </span><span class="kw">unsafe fn </span>read_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-<a href=#4074 id=4074 data-nosnippet>4074</a>        <span class="kw">unsafe </span>{ slice::from_raw_parts(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size) }
-<a href=#4075 id=4075 data-nosnippet>4075</a>    }
-<a href=#4076 id=4076 data-nosnippet>4076</a>
+<a href=#4072 id=4072 data-nosnippet>4072</a>        // no-op
+<a href=#4073 id=4073 data-nosnippet>4073</a>    </span>}
+<a href=#4074 id=4074 data-nosnippet>4074</a>}
+<a href=#4075 id=4075 data-nosnippet>4075</a>
+<a href=#4076 id=4076 data-nosnippet>4076</a><span class="kw">impl </span>dispatch::BufferMappedRangeInterface <span class="kw">for </span>CoreBufferMappedRange {
 <a href=#4077 id=4077 data-nosnippet>4077</a>    <span class="attr">#[inline]
-<a href=#4078 id=4078 data-nosnippet>4078</a>    </span><span class="kw">unsafe fn </span>write_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; WriteOnly&lt;<span class="lifetime">'_</span>, [u8]&gt; {
-<a href=#4079 id=4079 data-nosnippet>4079</a>        <span class="kw">unsafe </span>{ WriteOnly::new(NonNull::slice_from_raw_parts(<span class="self">self</span>.ptr, <span class="self">self</span>.size)) }
+<a href=#4078 id=4078 data-nosnippet>4078</a>    </span><span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+<a href=#4079 id=4079 data-nosnippet>4079</a>        <span class="self">self</span>.size
 <a href=#4080 id=4080 data-nosnippet>4080</a>    }
 <a href=#4081 id=4081 data-nosnippet>4081</a>
-<a href=#4082 id=4082 data-nosnippet>4082</a>    <span class="attr">#[cfg(webgpu)]
-<a href=#4083 id=4083 data-nosnippet>4083</a>    </span><span class="kw">fn </span>as_uint8array(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>js_sys::Uint8Array {
-<a href=#4084 id=4084 data-nosnippet>4084</a>        <span class="macro">panic!</span>(<span class="string">"Only available on WebGPU"</span>)
+<a href=#4082 id=4082 data-nosnippet>4082</a>    <span class="attr">#[inline]
+<a href=#4083 id=4083 data-nosnippet>4083</a>    </span><span class="kw">unsafe fn </span>read_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+<a href=#4084 id=4084 data-nosnippet>4084</a>        <span class="kw">unsafe </span>{ slice::from_raw_parts(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size) }
 <a href=#4085 id=4085 data-nosnippet>4085</a>    }
-<a href=#4086 id=4086 data-nosnippet>4086</a>}
+<a href=#4086 id=4086 data-nosnippet>4086</a>
+<a href=#4087 id=4087 data-nosnippet>4087</a>    <span class="attr">#[inline]
+<a href=#4088 id=4088 data-nosnippet>4088</a>    </span><span class="kw">unsafe fn </span>write_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; WriteOnly&lt;<span class="lifetime">'_</span>, [u8]&gt; {
+<a href=#4089 id=4089 data-nosnippet>4089</a>        <span class="kw">unsafe </span>{ WriteOnly::new(NonNull::slice_from_raw_parts(<span class="self">self</span>.ptr, <span class="self">self</span>.size)) }
+<a href=#4090 id=4090 data-nosnippet>4090</a>    }
+<a href=#4091 id=4091 data-nosnippet>4091</a>
+<a href=#4092 id=4092 data-nosnippet>4092</a>    <span class="attr">#[cfg(webgpu)]
+<a href=#4093 id=4093 data-nosnippet>4093</a>    </span><span class="kw">fn </span>as_uint8array(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>js_sys::Uint8Array {
+<a href=#4094 id=4094 data-nosnippet>4094</a>        <span class="macro">panic!</span>(<span class="string">"Only available on WebGPU"</span>)
+<a href=#4095 id=4095 data-nosnippet>4095</a>    }
+<a href=#4096 id=4096 data-nosnippet>4096</a>}
 </code></pre></div></section></main></body></html>
