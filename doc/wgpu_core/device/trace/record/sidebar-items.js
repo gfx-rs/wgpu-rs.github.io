@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["action_to_owned","new_render_bundle_encoder_descriptor","owned_label","to_trace"],"struct":["DiskTrace","MemoryTrace"],"trait":["IntoTrace","Trace"]};
+window.SIDEBAR_ITEMS = {"fn":["action_to_owned","new_render_bundle_encoder_descriptor","owned_label","owned_stage","to_trace"],"struct":["DiskTrace","MemoryTrace"],"trait":["IntoTrace","Trace"]};

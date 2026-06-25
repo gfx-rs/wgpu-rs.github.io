@@ -870,137 +870,326 @@
 <a href=#870 id=870 data-nosnippet>870</a>    }
 <a href=#871 id=871 data-nosnippet>871</a>}
 <a href=#872 id=872 data-nosnippet>872</a>
-<a href=#873 id=873 data-nosnippet>873</a><span class="doccomment">/// For selected `Action`s (mostly actions containing only owned data), return a
-<a href=#874 id=874 data-nosnippet>874</a>/// copy with `'static` lifetime.
-<a href=#875 id=875 data-nosnippet>875</a>///
-<a href=#876 id=876 data-nosnippet>876</a>/// This is used for in-memory tracing.
-<a href=#877 id=877 data-nosnippet>877</a>///
-<a href=#878 id=878 data-nosnippet>878</a>/// # Panics
-<a href=#879 id=879 data-nosnippet>879</a>///
-<a href=#880 id=880 data-nosnippet>880</a>/// If `action` is not supported for in-memory tracing (likely because it
-<a href=#881 id=881 data-nosnippet>881</a>/// contains borrowed data).
-<a href=#882 id=882 data-nosnippet>882</a></span><span class="kw">fn </span>action_to_owned(action: Action&lt;<span class="lifetime">'_</span>, PointerReferences&gt;) -&gt; Action&lt;<span class="lifetime">'static</span>, PointerReferences&gt; {
-<a href=#883 id=883 data-nosnippet>883</a>    <span class="kw">use </span>Action <span class="kw">as </span>A;
-<a href=#884 id=884 data-nosnippet>884</a>    <span class="kw">match </span>action {
-<a href=#885 id=885 data-nosnippet>885</a>        A::Init { desc, backend } =&gt; A::Init {
-<a href=#886 id=886 data-nosnippet>886</a>            desc: wgt::DeviceDescriptor {
-<a href=#887 id=887 data-nosnippet>887</a>                label: desc.label.map(|l| Cow::Owned(l.into_owned())),
-<a href=#888 id=888 data-nosnippet>888</a>                required_features: desc.required_features,
-<a href=#889 id=889 data-nosnippet>889</a>                required_limits: desc.required_limits,
-<a href=#890 id=890 data-nosnippet>890</a>                experimental_features: desc.experimental_features,
-<a href=#891 id=891 data-nosnippet>891</a>                memory_hints: desc.memory_hints,
-<a href=#892 id=892 data-nosnippet>892</a>                trace: desc.trace,
-<a href=#893 id=893 data-nosnippet>893</a>            },
-<a href=#894 id=894 data-nosnippet>894</a>            backend,
-<a href=#895 id=895 data-nosnippet>895</a>        },
-<a href=#896 id=896 data-nosnippet>896</a>        A::ConfigureSurface(surface, config) =&gt; A::ConfigureSurface(surface, config),
-<a href=#897 id=897 data-nosnippet>897</a>        A::CreateBuffer(buffer, desc) =&gt; A::CreateBuffer(
-<a href=#898 id=898 data-nosnippet>898</a>            buffer,
-<a href=#899 id=899 data-nosnippet>899</a>            wgt::BufferDescriptor {
-<a href=#900 id=900 data-nosnippet>900</a>                label: desc.label.map(|l| Cow::Owned(l.into_owned())),
-<a href=#901 id=901 data-nosnippet>901</a>                size: desc.size,
-<a href=#902 id=902 data-nosnippet>902</a>                usage: desc.usage,
-<a href=#903 id=903 data-nosnippet>903</a>                mapped_at_creation: desc.mapped_at_creation,
-<a href=#904 id=904 data-nosnippet>904</a>            },
-<a href=#905 id=905 data-nosnippet>905</a>        ),
-<a href=#906 id=906 data-nosnippet>906</a>        A::DestroyBuffer(buffer) =&gt; A::DestroyBuffer(buffer),
-<a href=#907 id=907 data-nosnippet>907</a>        A::DropBuffer(buffer) =&gt; A::DropBuffer(buffer),
-<a href=#908 id=908 data-nosnippet>908</a>        A::DestroyTexture(texture) =&gt; A::DestroyTexture(texture),
-<a href=#909 id=909 data-nosnippet>909</a>        A::DropTexture(texture) =&gt; A::DropTexture(texture),
-<a href=#910 id=910 data-nosnippet>910</a>        A::DropTextureView(texture_view) =&gt; A::DropTextureView(texture_view),
-<a href=#911 id=911 data-nosnippet>911</a>        A::DestroyExternalTexture(external_texture) =&gt; A::DestroyExternalTexture(external_texture),
-<a href=#912 id=912 data-nosnippet>912</a>        A::DropExternalTexture(external_texture) =&gt; A::DropExternalTexture(external_texture),
-<a href=#913 id=913 data-nosnippet>913</a>        A::DropSampler(sampler) =&gt; A::DropSampler(sampler),
-<a href=#914 id=914 data-nosnippet>914</a>        A::GetSurfaceTexture { id, parent } =&gt; A::GetSurfaceTexture { id, parent },
-<a href=#915 id=915 data-nosnippet>915</a>        A::Present(surface) =&gt; A::Present(surface),
-<a href=#916 id=916 data-nosnippet>916</a>        A::DiscardSurfaceTexture(surface) =&gt; A::DiscardSurfaceTexture(surface),
-<a href=#917 id=917 data-nosnippet>917</a>        A::ReleaseSurfaceTexture(surface) =&gt; A::ReleaseSurfaceTexture(surface),
-<a href=#918 id=918 data-nosnippet>918</a>        A::DropBindGroupLayout(layout) =&gt; A::DropBindGroupLayout(layout),
-<a href=#919 id=919 data-nosnippet>919</a>        A::GetRenderPipelineBindGroupLayout {
-<a href=#920 id=920 data-nosnippet>920</a>            id,
-<a href=#921 id=921 data-nosnippet>921</a>            pipeline,
-<a href=#922 id=922 data-nosnippet>922</a>            index,
-<a href=#923 id=923 data-nosnippet>923</a>        } =&gt; A::GetRenderPipelineBindGroupLayout {
-<a href=#924 id=924 data-nosnippet>924</a>            id,
-<a href=#925 id=925 data-nosnippet>925</a>            pipeline,
-<a href=#926 id=926 data-nosnippet>926</a>            index,
-<a href=#927 id=927 data-nosnippet>927</a>        },
-<a href=#928 id=928 data-nosnippet>928</a>        A::GetComputePipelineBindGroupLayout {
-<a href=#929 id=929 data-nosnippet>929</a>            id,
-<a href=#930 id=930 data-nosnippet>930</a>            pipeline,
-<a href=#931 id=931 data-nosnippet>931</a>            index,
-<a href=#932 id=932 data-nosnippet>932</a>        } =&gt; A::GetComputePipelineBindGroupLayout {
-<a href=#933 id=933 data-nosnippet>933</a>            id,
-<a href=#934 id=934 data-nosnippet>934</a>            pipeline,
-<a href=#935 id=935 data-nosnippet>935</a>            index,
-<a href=#936 id=936 data-nosnippet>936</a>        },
-<a href=#937 id=937 data-nosnippet>937</a>        A::DropPipelineLayout(layout) =&gt; A::DropPipelineLayout(layout),
-<a href=#938 id=938 data-nosnippet>938</a>        A::DropBindGroup(bind_group) =&gt; A::DropBindGroup(bind_group),
-<a href=#939 id=939 data-nosnippet>939</a>        A::DropShaderModule(shader_module) =&gt; A::DropShaderModule(shader_module),
-<a href=#940 id=940 data-nosnippet>940</a>        A::DropComputePipeline(pipeline) =&gt; A::DropComputePipeline(pipeline),
-<a href=#941 id=941 data-nosnippet>941</a>        A::DropRenderPipeline(pipeline) =&gt; A::DropRenderPipeline(pipeline),
-<a href=#942 id=942 data-nosnippet>942</a>        A::DropPipelineCache(cache) =&gt; A::DropPipelineCache(cache),
-<a href=#943 id=943 data-nosnippet>943</a>        A::DropRenderBundle(render_bundle) =&gt; A::DropRenderBundle(render_bundle),
-<a href=#944 id=944 data-nosnippet>944</a>        A::DestroyQuerySet(query_set) =&gt; A::DestroyQuerySet(query_set),
-<a href=#945 id=945 data-nosnippet>945</a>        A::DropQuerySet(query_set) =&gt; A::DropQuerySet(query_set),
-<a href=#946 id=946 data-nosnippet>946</a>        A::WriteBuffer {
-<a href=#947 id=947 data-nosnippet>947</a>            id,
-<a href=#948 id=948 data-nosnippet>948</a>            data,
-<a href=#949 id=949 data-nosnippet>949</a>            offset,
-<a href=#950 id=950 data-nosnippet>950</a>            size,
-<a href=#951 id=951 data-nosnippet>951</a>            queued,
-<a href=#952 id=952 data-nosnippet>952</a>        } =&gt; A::WriteBuffer {
-<a href=#953 id=953 data-nosnippet>953</a>            id,
-<a href=#954 id=954 data-nosnippet>954</a>            data,
-<a href=#955 id=955 data-nosnippet>955</a>            offset,
-<a href=#956 id=956 data-nosnippet>956</a>            size,
-<a href=#957 id=957 data-nosnippet>957</a>            queued,
+<a href=#873 id=873 data-nosnippet>873</a><span class="doccomment">/// Return a copy of [`Action`] with `'static` lifetime.
+<a href=#874 id=874 data-nosnippet>874</a>///
+<a href=#875 id=875 data-nosnippet>875</a>/// This is used for in-memory tracing.
+<a href=#876 id=876 data-nosnippet>876</a></span><span class="kw">fn </span>action_to_owned(action: Action&lt;<span class="lifetime">'_</span>, PointerReferences&gt;) -&gt; Action&lt;<span class="lifetime">'static</span>, PointerReferences&gt; {
+<a href=#877 id=877 data-nosnippet>877</a>    <span class="kw">use </span>Action <span class="kw">as </span>A;
+<a href=#878 id=878 data-nosnippet>878</a>    <span class="kw">match </span>action {
+<a href=#879 id=879 data-nosnippet>879</a>        A::Init { desc, backend } =&gt; A::Init {
+<a href=#880 id=880 data-nosnippet>880</a>            desc: desc.map_label(owned_label),
+<a href=#881 id=881 data-nosnippet>881</a>            backend,
+<a href=#882 id=882 data-nosnippet>882</a>        },
+<a href=#883 id=883 data-nosnippet>883</a>        A::ConfigureSurface(surface, config) =&gt; A::ConfigureSurface(surface, config),
+<a href=#884 id=884 data-nosnippet>884</a>        A::CreateBuffer(buffer, desc) =&gt; A::CreateBuffer(buffer, desc.map_label(owned_label)),
+<a href=#885 id=885 data-nosnippet>885</a>        A::DestroyBuffer(buffer) =&gt; A::DestroyBuffer(buffer),
+<a href=#886 id=886 data-nosnippet>886</a>        A::DropBuffer(buffer) =&gt; A::DropBuffer(buffer),
+<a href=#887 id=887 data-nosnippet>887</a>        A::DestroyTexture(texture) =&gt; A::DestroyTexture(texture),
+<a href=#888 id=888 data-nosnippet>888</a>        A::DropTexture(texture) =&gt; A::DropTexture(texture),
+<a href=#889 id=889 data-nosnippet>889</a>        A::DropTextureView(texture_view) =&gt; A::DropTextureView(texture_view),
+<a href=#890 id=890 data-nosnippet>890</a>        A::DestroyExternalTexture(external_texture) =&gt; A::DestroyExternalTexture(external_texture),
+<a href=#891 id=891 data-nosnippet>891</a>        A::DropExternalTexture(external_texture) =&gt; A::DropExternalTexture(external_texture),
+<a href=#892 id=892 data-nosnippet>892</a>        A::DropSampler(sampler) =&gt; A::DropSampler(sampler),
+<a href=#893 id=893 data-nosnippet>893</a>        A::GetSurfaceTexture { id, parent } =&gt; A::GetSurfaceTexture { id, parent },
+<a href=#894 id=894 data-nosnippet>894</a>        A::Present(surface) =&gt; A::Present(surface),
+<a href=#895 id=895 data-nosnippet>895</a>        A::DiscardSurfaceTexture(surface) =&gt; A::DiscardSurfaceTexture(surface),
+<a href=#896 id=896 data-nosnippet>896</a>        A::ReleaseSurfaceTexture(surface) =&gt; A::ReleaseSurfaceTexture(surface),
+<a href=#897 id=897 data-nosnippet>897</a>        A::DropBindGroupLayout(layout) =&gt; A::DropBindGroupLayout(layout),
+<a href=#898 id=898 data-nosnippet>898</a>        A::GetRenderPipelineBindGroupLayout {
+<a href=#899 id=899 data-nosnippet>899</a>            id,
+<a href=#900 id=900 data-nosnippet>900</a>            pipeline,
+<a href=#901 id=901 data-nosnippet>901</a>            index,
+<a href=#902 id=902 data-nosnippet>902</a>        } =&gt; A::GetRenderPipelineBindGroupLayout {
+<a href=#903 id=903 data-nosnippet>903</a>            id,
+<a href=#904 id=904 data-nosnippet>904</a>            pipeline,
+<a href=#905 id=905 data-nosnippet>905</a>            index,
+<a href=#906 id=906 data-nosnippet>906</a>        },
+<a href=#907 id=907 data-nosnippet>907</a>        A::GetComputePipelineBindGroupLayout {
+<a href=#908 id=908 data-nosnippet>908</a>            id,
+<a href=#909 id=909 data-nosnippet>909</a>            pipeline,
+<a href=#910 id=910 data-nosnippet>910</a>            index,
+<a href=#911 id=911 data-nosnippet>911</a>        } =&gt; A::GetComputePipelineBindGroupLayout {
+<a href=#912 id=912 data-nosnippet>912</a>            id,
+<a href=#913 id=913 data-nosnippet>913</a>            pipeline,
+<a href=#914 id=914 data-nosnippet>914</a>            index,
+<a href=#915 id=915 data-nosnippet>915</a>        },
+<a href=#916 id=916 data-nosnippet>916</a>        A::DropPipelineLayout(layout) =&gt; A::DropPipelineLayout(layout),
+<a href=#917 id=917 data-nosnippet>917</a>        A::DropBindGroup(bind_group) =&gt; A::DropBindGroup(bind_group),
+<a href=#918 id=918 data-nosnippet>918</a>        A::DropShaderModule(shader_module) =&gt; A::DropShaderModule(shader_module),
+<a href=#919 id=919 data-nosnippet>919</a>        A::DropComputePipeline(pipeline) =&gt; A::DropComputePipeline(pipeline),
+<a href=#920 id=920 data-nosnippet>920</a>        A::DropRenderPipeline(pipeline) =&gt; A::DropRenderPipeline(pipeline),
+<a href=#921 id=921 data-nosnippet>921</a>        A::DropPipelineCache(cache) =&gt; A::DropPipelineCache(cache),
+<a href=#922 id=922 data-nosnippet>922</a>        A::DropRenderBundle(render_bundle) =&gt; A::DropRenderBundle(render_bundle),
+<a href=#923 id=923 data-nosnippet>923</a>        A::DestroyQuerySet(query_set) =&gt; A::DestroyQuerySet(query_set),
+<a href=#924 id=924 data-nosnippet>924</a>        A::DropQuerySet(query_set) =&gt; A::DropQuerySet(query_set),
+<a href=#925 id=925 data-nosnippet>925</a>        A::WriteBuffer {
+<a href=#926 id=926 data-nosnippet>926</a>            id,
+<a href=#927 id=927 data-nosnippet>927</a>            data,
+<a href=#928 id=928 data-nosnippet>928</a>            offset,
+<a href=#929 id=929 data-nosnippet>929</a>            size,
+<a href=#930 id=930 data-nosnippet>930</a>            queued,
+<a href=#931 id=931 data-nosnippet>931</a>        } =&gt; A::WriteBuffer {
+<a href=#932 id=932 data-nosnippet>932</a>            id,
+<a href=#933 id=933 data-nosnippet>933</a>            data,
+<a href=#934 id=934 data-nosnippet>934</a>            offset,
+<a href=#935 id=935 data-nosnippet>935</a>            size,
+<a href=#936 id=936 data-nosnippet>936</a>            queued,
+<a href=#937 id=937 data-nosnippet>937</a>        },
+<a href=#938 id=938 data-nosnippet>938</a>        A::WriteTexture {
+<a href=#939 id=939 data-nosnippet>939</a>            to,
+<a href=#940 id=940 data-nosnippet>940</a>            data,
+<a href=#941 id=941 data-nosnippet>941</a>            layout,
+<a href=#942 id=942 data-nosnippet>942</a>            size,
+<a href=#943 id=943 data-nosnippet>943</a>        } =&gt; A::WriteTexture {
+<a href=#944 id=944 data-nosnippet>944</a>            to,
+<a href=#945 id=945 data-nosnippet>945</a>            data,
+<a href=#946 id=946 data-nosnippet>946</a>            layout,
+<a href=#947 id=947 data-nosnippet>947</a>            size,
+<a href=#948 id=948 data-nosnippet>948</a>        },
+<a href=#949 id=949 data-nosnippet>949</a>        A::Submit(index, commands) =&gt; A::Submit(index, commands),
+<a href=#950 id=950 data-nosnippet>950</a>        A::FailedCommands {
+<a href=#951 id=951 data-nosnippet>951</a>            commands,
+<a href=#952 id=952 data-nosnippet>952</a>            failed_at_submit,
+<a href=#953 id=953 data-nosnippet>953</a>            error,
+<a href=#954 id=954 data-nosnippet>954</a>        } =&gt; A::FailedCommands {
+<a href=#955 id=955 data-nosnippet>955</a>            commands,
+<a href=#956 id=956 data-nosnippet>956</a>            failed_at_submit,
+<a href=#957 id=957 data-nosnippet>957</a>            error,
 <a href=#958 id=958 data-nosnippet>958</a>        },
-<a href=#959 id=959 data-nosnippet>959</a>        A::WriteTexture {
-<a href=#960 id=960 data-nosnippet>960</a>            to,
-<a href=#961 id=961 data-nosnippet>961</a>            data,
-<a href=#962 id=962 data-nosnippet>962</a>            layout,
-<a href=#963 id=963 data-nosnippet>963</a>            size,
-<a href=#964 id=964 data-nosnippet>964</a>        } =&gt; A::WriteTexture {
-<a href=#965 id=965 data-nosnippet>965</a>            to,
-<a href=#966 id=966 data-nosnippet>966</a>            data,
-<a href=#967 id=967 data-nosnippet>967</a>            layout,
-<a href=#968 id=968 data-nosnippet>968</a>            size,
-<a href=#969 id=969 data-nosnippet>969</a>        },
-<a href=#970 id=970 data-nosnippet>970</a>        A::Submit(index, commands) =&gt; A::Submit(index, commands),
-<a href=#971 id=971 data-nosnippet>971</a>        A::FailedCommands {
-<a href=#972 id=972 data-nosnippet>972</a>            commands,
-<a href=#973 id=973 data-nosnippet>973</a>            failed_at_submit,
-<a href=#974 id=974 data-nosnippet>974</a>            error,
-<a href=#975 id=975 data-nosnippet>975</a>        } =&gt; A::FailedCommands {
-<a href=#976 id=976 data-nosnippet>976</a>            commands,
-<a href=#977 id=977 data-nosnippet>977</a>            failed_at_submit,
-<a href=#978 id=978 data-nosnippet>978</a>            error,
+<a href=#959 id=959 data-nosnippet>959</a>        A::DropBlas(blas) =&gt; A::DropBlas(blas),
+<a href=#960 id=960 data-nosnippet>960</a>        A::DropTlas(tlas) =&gt; A::DropTlas(tlas),
+<a href=#961 id=961 data-nosnippet>961</a>
+<a href=#962 id=962 data-nosnippet>962</a>        A::CreateTexture(id, desc) =&gt; A::CreateTexture(id, desc.map_label(owned_label)),
+<a href=#963 id=963 data-nosnippet>963</a>        A::CreateTextureError(id, desc) =&gt; A::CreateTextureError(id, desc.map_label(owned_label)),
+<a href=#964 id=964 data-nosnippet>964</a>        A::CreateTextureView { id, parent, desc } =&gt; A::CreateTextureView {
+<a href=#965 id=965 data-nosnippet>965</a>            id,
+<a href=#966 id=966 data-nosnippet>966</a>            parent,
+<a href=#967 id=967 data-nosnippet>967</a>            desc: <span class="kw">crate</span>::resource::TextureViewDescriptor {
+<a href=#968 id=968 data-nosnippet>968</a>                label: owned_label(<span class="kw-2">&amp;</span>desc.label),
+<a href=#969 id=969 data-nosnippet>969</a>                format: desc.format,
+<a href=#970 id=970 data-nosnippet>970</a>                dimension: desc.dimension,
+<a href=#971 id=971 data-nosnippet>971</a>                usage: desc.usage,
+<a href=#972 id=972 data-nosnippet>972</a>                range: desc.range,
+<a href=#973 id=973 data-nosnippet>973</a>            },
+<a href=#974 id=974 data-nosnippet>974</a>        },
+<a href=#975 id=975 data-nosnippet>975</a>        A::CreateExternalTexture { id, desc, planes } =&gt; A::CreateExternalTexture {
+<a href=#976 id=976 data-nosnippet>976</a>            id,
+<a href=#977 id=977 data-nosnippet>977</a>            desc: desc.map_label(owned_label),
+<a href=#978 id=978 data-nosnippet>978</a>            planes,
 <a href=#979 id=979 data-nosnippet>979</a>        },
-<a href=#980 id=980 data-nosnippet>980</a>        A::DropBlas(blas) =&gt; A::DropBlas(blas),
-<a href=#981 id=981 data-nosnippet>981</a>        A::DropTlas(tlas) =&gt; A::DropTlas(tlas),
-<a href=#982 id=982 data-nosnippet>982</a>
-<a href=#983 id=983 data-nosnippet>983</a>        A::CreateTexture(id, desc) =&gt; A::CreateTexture(id, desc.map_label(owned_label)),
-<a href=#984 id=984 data-nosnippet>984</a>        A::CreateTextureError(id, desc) =&gt; A::CreateTextureError(id, desc.map_label(owned_label)),
-<a href=#985 id=985 data-nosnippet>985</a>        A::CreateTextureView { .. }
-<a href=#986 id=986 data-nosnippet>986</a>        | A::CreateExternalTexture { .. }
-<a href=#987 id=987 data-nosnippet>987</a>        | A::CreateSampler(..)
-<a href=#988 id=988 data-nosnippet>988</a>        | A::CreateBindGroupLayout(..)
-<a href=#989 id=989 data-nosnippet>989</a>        | A::CreatePipelineLayout(..)
-<a href=#990 id=990 data-nosnippet>990</a>        | A::CreateBindGroup(..)
-<a href=#991 id=991 data-nosnippet>991</a>        | A::CreateShaderModule { .. }
-<a href=#992 id=992 data-nosnippet>992</a>        | A::CreateShaderModulePassthrough { .. }
-<a href=#993 id=993 data-nosnippet>993</a>        | A::CreateComputePipeline { .. }
-<a href=#994 id=994 data-nosnippet>994</a>        | A::CreateGeneralRenderPipeline { .. }
-<a href=#995 id=995 data-nosnippet>995</a>        | A::CreatePipelineCache { .. }
-<a href=#996 id=996 data-nosnippet>996</a>        | A::CreateRenderBundle { .. }
-<a href=#997 id=997 data-nosnippet>997</a>        | A::CreateQuerySet { .. }
-<a href=#998 id=998 data-nosnippet>998</a>        | A::CreateBlas { .. }
-<a href=#999 id=999 data-nosnippet>999</a>        | A::CreateTlas { .. } =&gt; <span class="macro">panic!</span>(<span class="string">"Unsupported action for tracing: {action:?}"</span>),
-<a href=#1000 id=1000 data-nosnippet>1000</a>    }
-<a href=#1001 id=1001 data-nosnippet>1001</a>}
-<a href=#1002 id=1002 data-nosnippet>1002</a>
-<a href=#1003 id=1003 data-nosnippet>1003</a><span class="kw">fn </span>owned_label(l: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'_</span>, str&gt;&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt; {
-<a href=#1004 id=1004 data-nosnippet>1004</a>    l.as_ref().map(|l| Cow::Owned(l.to_string()))
-<a href=#1005 id=1005 data-nosnippet>1005</a>}
+<a href=#980 id=980 data-nosnippet>980</a>        A::CreateSampler(id, desc) =&gt; A::CreateSampler(
+<a href=#981 id=981 data-nosnippet>981</a>            id,
+<a href=#982 id=982 data-nosnippet>982</a>            <span class="kw">crate</span>::resource::SamplerDescriptor {
+<a href=#983 id=983 data-nosnippet>983</a>                label: owned_label(<span class="kw-2">&amp;</span>desc.label),
+<a href=#984 id=984 data-nosnippet>984</a>                address_modes: desc.address_modes,
+<a href=#985 id=985 data-nosnippet>985</a>                mag_filter: desc.mag_filter,
+<a href=#986 id=986 data-nosnippet>986</a>                min_filter: desc.min_filter,
+<a href=#987 id=987 data-nosnippet>987</a>                mipmap_filter: desc.mipmap_filter,
+<a href=#988 id=988 data-nosnippet>988</a>                lod_min_clamp: desc.lod_min_clamp,
+<a href=#989 id=989 data-nosnippet>989</a>                lod_max_clamp: desc.lod_max_clamp,
+<a href=#990 id=990 data-nosnippet>990</a>                compare: desc.compare,
+<a href=#991 id=991 data-nosnippet>991</a>                anisotropy_clamp: desc.anisotropy_clamp,
+<a href=#992 id=992 data-nosnippet>992</a>                border_color: desc.border_color,
+<a href=#993 id=993 data-nosnippet>993</a>            },
+<a href=#994 id=994 data-nosnippet>994</a>        ),
+<a href=#995 id=995 data-nosnippet>995</a>        A::CreateBindGroupLayout(id, desc) =&gt; A::CreateBindGroupLayout(
+<a href=#996 id=996 data-nosnippet>996</a>            id,
+<a href=#997 id=997 data-nosnippet>997</a>            <span class="kw">crate</span>::binding_model::BindGroupLayoutDescriptor {
+<a href=#998 id=998 data-nosnippet>998</a>                label: owned_label(<span class="kw-2">&amp;</span>desc.label),
+<a href=#999 id=999 data-nosnippet>999</a>                entries: Cow::Owned(desc.entries.into_owned()),
+<a href=#1000 id=1000 data-nosnippet>1000</a>            },
+<a href=#1001 id=1001 data-nosnippet>1001</a>        ),
+<a href=#1002 id=1002 data-nosnippet>1002</a>        A::CreatePipelineLayout(id, desc) =&gt; A::CreatePipelineLayout(
+<a href=#1003 id=1003 data-nosnippet>1003</a>            id,
+<a href=#1004 id=1004 data-nosnippet>1004</a>            <span class="kw">crate</span>::binding_model::PipelineLayoutDescriptor {
+<a href=#1005 id=1005 data-nosnippet>1005</a>                label: owned_label(<span class="kw-2">&amp;</span>desc.label),
+<a href=#1006 id=1006 data-nosnippet>1006</a>                bind_group_layouts: Cow::Owned(desc.bind_group_layouts.into_owned()),
+<a href=#1007 id=1007 data-nosnippet>1007</a>                immediate_size: desc.immediate_size,
+<a href=#1008 id=1008 data-nosnippet>1008</a>            },
+<a href=#1009 id=1009 data-nosnippet>1009</a>        ),
+<a href=#1010 id=1010 data-nosnippet>1010</a>        A::CreateBindGroup(id, desc) =&gt; A::CreateBindGroup(
+<a href=#1011 id=1011 data-nosnippet>1011</a>            id,
+<a href=#1012 id=1012 data-nosnippet>1012</a>            <span class="kw">crate</span>::binding_model::BindGroupDescriptor {
+<a href=#1013 id=1013 data-nosnippet>1013</a>                label: owned_label(<span class="kw-2">&amp;</span>desc.label),
+<a href=#1014 id=1014 data-nosnippet>1014</a>                layout: desc.layout,
+<a href=#1015 id=1015 data-nosnippet>1015</a>                entries: desc
+<a href=#1016 id=1016 data-nosnippet>1016</a>                    .entries
+<a href=#1017 id=1017 data-nosnippet>1017</a>                    .iter()
+<a href=#1018 id=1018 data-nosnippet>1018</a>                    .map(|e| <span class="kw">crate</span>::binding_model::BindGroupEntry {
+<a href=#1019 id=1019 data-nosnippet>1019</a>                        binding: e.binding,
+<a href=#1020 id=1020 data-nosnippet>1020</a>                        resource: <span class="kw">match </span><span class="kw-2">&amp;</span>e.resource {
+<a href=#1021 id=1021 data-nosnippet>1021</a>                            <span class="kw">crate</span>::binding_model::BindingResource::Buffer(buffer_binding) =&gt; {
+<a href=#1022 id=1022 data-nosnippet>1022</a>                                <span class="kw">crate</span>::binding_model::BindingResource::Buffer(
+<a href=#1023 id=1023 data-nosnippet>1023</a>                                    buffer_binding.clone(),
+<a href=#1024 id=1024 data-nosnippet>1024</a>                                )
+<a href=#1025 id=1025 data-nosnippet>1025</a>                            }
+<a href=#1026 id=1026 data-nosnippet>1026</a>                            <span class="kw">crate</span>::binding_model::BindingResource::BufferArray(cow) =&gt; {
+<a href=#1027 id=1027 data-nosnippet>1027</a>                                <span class="kw">crate</span>::binding_model::BindingResource::BufferArray(Cow::Owned(
+<a href=#1028 id=1028 data-nosnippet>1028</a>                                    cow.clone().into_owned(),
+<a href=#1029 id=1029 data-nosnippet>1029</a>                                ))
+<a href=#1030 id=1030 data-nosnippet>1030</a>                            }
+<a href=#1031 id=1031 data-nosnippet>1031</a>                            <span class="kw">crate</span>::binding_model::BindingResource::Sampler(sampler) =&gt; {
+<a href=#1032 id=1032 data-nosnippet>1032</a>                                <span class="kw">crate</span>::binding_model::BindingResource::Sampler(<span class="kw-2">*</span>sampler)
+<a href=#1033 id=1033 data-nosnippet>1033</a>                            }
+<a href=#1034 id=1034 data-nosnippet>1034</a>                            <span class="kw">crate</span>::binding_model::BindingResource::SamplerArray(cow) =&gt; {
+<a href=#1035 id=1035 data-nosnippet>1035</a>                                <span class="kw">crate</span>::binding_model::BindingResource::SamplerArray(Cow::Owned(
+<a href=#1036 id=1036 data-nosnippet>1036</a>                                    cow.clone().into_owned(),
+<a href=#1037 id=1037 data-nosnippet>1037</a>                                ))
+<a href=#1038 id=1038 data-nosnippet>1038</a>                            }
+<a href=#1039 id=1039 data-nosnippet>1039</a>                            <span class="kw">crate</span>::binding_model::BindingResource::TextureView(texture_view) =&gt; {
+<a href=#1040 id=1040 data-nosnippet>1040</a>                                <span class="kw">crate</span>::binding_model::BindingResource::TextureView(<span class="kw-2">*</span>texture_view)
+<a href=#1041 id=1041 data-nosnippet>1041</a>                            }
+<a href=#1042 id=1042 data-nosnippet>1042</a>                            <span class="kw">crate</span>::binding_model::BindingResource::TextureViewArray(cow) =&gt; {
+<a href=#1043 id=1043 data-nosnippet>1043</a>                                <span class="kw">crate</span>::binding_model::BindingResource::TextureViewArray(Cow::Owned(
+<a href=#1044 id=1044 data-nosnippet>1044</a>                                    cow.clone().into_owned(),
+<a href=#1045 id=1045 data-nosnippet>1045</a>                                ))
+<a href=#1046 id=1046 data-nosnippet>1046</a>                            }
+<a href=#1047 id=1047 data-nosnippet>1047</a>                            <span class="kw">crate</span>::binding_model::BindingResource::AccelerationStructure(
+<a href=#1048 id=1048 data-nosnippet>1048</a>                                acceleration_structure,
+<a href=#1049 id=1049 data-nosnippet>1049</a>                            ) =&gt; <span class="kw">crate</span>::binding_model::BindingResource::AccelerationStructure(
+<a href=#1050 id=1050 data-nosnippet>1050</a>                                <span class="kw-2">*</span>acceleration_structure,
+<a href=#1051 id=1051 data-nosnippet>1051</a>                            ),
+<a href=#1052 id=1052 data-nosnippet>1052</a>                            <span class="kw">crate</span>::binding_model::BindingResource::AccelerationStructureArray(
+<a href=#1053 id=1053 data-nosnippet>1053</a>                                cow,
+<a href=#1054 id=1054 data-nosnippet>1054</a>                            ) =&gt; <span class="kw">crate</span>::binding_model::BindingResource::AccelerationStructureArray(
+<a href=#1055 id=1055 data-nosnippet>1055</a>                                Cow::Owned(cow.clone().into_owned()),
+<a href=#1056 id=1056 data-nosnippet>1056</a>                            ),
+<a href=#1057 id=1057 data-nosnippet>1057</a>                            <span class="kw">crate</span>::binding_model::BindingResource::ExternalTexture(
+<a href=#1058 id=1058 data-nosnippet>1058</a>                                external_texture,
+<a href=#1059 id=1059 data-nosnippet>1059</a>                            ) =&gt; <span class="kw">crate</span>::binding_model::BindingResource::ExternalTexture(
+<a href=#1060 id=1060 data-nosnippet>1060</a>                                <span class="kw-2">*</span>external_texture,
+<a href=#1061 id=1061 data-nosnippet>1061</a>                            ),
+<a href=#1062 id=1062 data-nosnippet>1062</a>                        },
+<a href=#1063 id=1063 data-nosnippet>1063</a>                    })
+<a href=#1064 id=1064 data-nosnippet>1064</a>                    .collect(),
+<a href=#1065 id=1065 data-nosnippet>1065</a>            },
+<a href=#1066 id=1066 data-nosnippet>1066</a>        ),
+<a href=#1067 id=1067 data-nosnippet>1067</a>        A::CreateShaderModule { id, desc, data } =&gt; A::CreateShaderModule {
+<a href=#1068 id=1068 data-nosnippet>1068</a>            id,
+<a href=#1069 id=1069 data-nosnippet>1069</a>            desc: <span class="kw">crate</span>::pipeline::ShaderModuleDescriptor {
+<a href=#1070 id=1070 data-nosnippet>1070</a>                label: owned_label(<span class="kw-2">&amp;</span>desc.label),
+<a href=#1071 id=1071 data-nosnippet>1071</a>                runtime_checks: desc.runtime_checks,
+<a href=#1072 id=1072 data-nosnippet>1072</a>            },
+<a href=#1073 id=1073 data-nosnippet>1073</a>            data,
+<a href=#1074 id=1074 data-nosnippet>1074</a>        },
+<a href=#1075 id=1075 data-nosnippet>1075</a>        A::CreateShaderModulePassthrough {
+<a href=#1076 id=1076 data-nosnippet>1076</a>            id,
+<a href=#1077 id=1077 data-nosnippet>1077</a>            data,
+<a href=#1078 id=1078 data-nosnippet>1078</a>            label,
+<a href=#1079 id=1079 data-nosnippet>1079</a>            entry_points,
+<a href=#1080 id=1080 data-nosnippet>1080</a>        } =&gt; A::CreateShaderModulePassthrough {
+<a href=#1081 id=1081 data-nosnippet>1081</a>            id,
+<a href=#1082 id=1082 data-nosnippet>1082</a>            data,
+<a href=#1083 id=1083 data-nosnippet>1083</a>            label: owned_label(<span class="kw-2">&amp;</span>label),
+<a href=#1084 id=1084 data-nosnippet>1084</a>            entry_points: entry_points
+<a href=#1085 id=1085 data-nosnippet>1085</a>                .iter()
+<a href=#1086 id=1086 data-nosnippet>1086</a>                .map(|ep| wgt::PassthroughShaderEntryPoint {
+<a href=#1087 id=1087 data-nosnippet>1087</a>                    name: Cow::Owned(ep.name.to_string()),
+<a href=#1088 id=1088 data-nosnippet>1088</a>                    workgroup_size: ep.workgroup_size,
+<a href=#1089 id=1089 data-nosnippet>1089</a>                })
+<a href=#1090 id=1090 data-nosnippet>1090</a>                .collect(),
+<a href=#1091 id=1091 data-nosnippet>1091</a>        },
+<a href=#1092 id=1092 data-nosnippet>1092</a>        A::CreateComputePipeline { id, desc } =&gt; A::CreateComputePipeline {
+<a href=#1093 id=1093 data-nosnippet>1093</a>            id,
+<a href=#1094 id=1094 data-nosnippet>1094</a>            desc: <span class="kw">crate</span>::pipeline::ComputePipelineDescriptor {
+<a href=#1095 id=1095 data-nosnippet>1095</a>                label: owned_label(<span class="kw-2">&amp;</span>desc.label),
+<a href=#1096 id=1096 data-nosnippet>1096</a>                layout: desc.layout,
+<a href=#1097 id=1097 data-nosnippet>1097</a>                stage: owned_stage(desc.stage),
+<a href=#1098 id=1098 data-nosnippet>1098</a>                cache: desc.cache,
+<a href=#1099 id=1099 data-nosnippet>1099</a>            },
+<a href=#1100 id=1100 data-nosnippet>1100</a>        },
+<a href=#1101 id=1101 data-nosnippet>1101</a>        A::CreateGeneralRenderPipeline { id, desc } =&gt; A::CreateGeneralRenderPipeline {
+<a href=#1102 id=1102 data-nosnippet>1102</a>            id,
+<a href=#1103 id=1103 data-nosnippet>1103</a>            desc: <span class="kw">crate</span>::pipeline::GeneralRenderPipelineDescriptor {
+<a href=#1104 id=1104 data-nosnippet>1104</a>                label: owned_label(<span class="kw-2">&amp;</span>desc.label),
+<a href=#1105 id=1105 data-nosnippet>1105</a>                layout: desc.layout,
+<a href=#1106 id=1106 data-nosnippet>1106</a>                vertex: <span class="kw">match </span>desc.vertex {
+<a href=#1107 id=1107 data-nosnippet>1107</a>                    <span class="kw">crate</span>::pipeline::RenderPipelineVertexProcessor::Vertex(
+<a href=#1108 id=1108 data-nosnippet>1108</a>                        <span class="kw">crate</span>::pipeline::VertexState { stage, buffers },
+<a href=#1109 id=1109 data-nosnippet>1109</a>                    ) =&gt; <span class="kw">crate</span>::pipeline::RenderPipelineVertexProcessor::Vertex(
+<a href=#1110 id=1110 data-nosnippet>1110</a>                        <span class="kw">crate</span>::pipeline::VertexState {
+<a href=#1111 id=1111 data-nosnippet>1111</a>                            stage: owned_stage(stage),
+<a href=#1112 id=1112 data-nosnippet>1112</a>                            buffers: buffers
+<a href=#1113 id=1113 data-nosnippet>1113</a>                                .iter()
+<a href=#1114 id=1114 data-nosnippet>1114</a>                                .map(|b| {
+<a href=#1115 id=1115 data-nosnippet>1115</a>                                    b.clone().map(|buffer| <span class="kw">crate</span>::pipeline::VertexBufferLayout {
+<a href=#1116 id=1116 data-nosnippet>1116</a>                                        array_stride: buffer.array_stride,
+<a href=#1117 id=1117 data-nosnippet>1117</a>                                        step_mode: buffer.step_mode,
+<a href=#1118 id=1118 data-nosnippet>1118</a>                                        attributes: Cow::Owned(buffer.attributes.into_owned()),
+<a href=#1119 id=1119 data-nosnippet>1119</a>                                    })
+<a href=#1120 id=1120 data-nosnippet>1120</a>                                })
+<a href=#1121 id=1121 data-nosnippet>1121</a>                                .collect(),
+<a href=#1122 id=1122 data-nosnippet>1122</a>                        },
+<a href=#1123 id=1123 data-nosnippet>1123</a>                    ),
+<a href=#1124 id=1124 data-nosnippet>1124</a>                    <span class="kw">crate</span>::pipeline::RenderPipelineVertexProcessor::Mesh(task, mesh) =&gt; {
+<a href=#1125 id=1125 data-nosnippet>1125</a>                        <span class="kw">crate</span>::pipeline::RenderPipelineVertexProcessor::Mesh(
+<a href=#1126 id=1126 data-nosnippet>1126</a>                            task.map(|t| <span class="kw">crate</span>::pipeline::TaskState {
+<a href=#1127 id=1127 data-nosnippet>1127</a>                                stage: owned_stage(t.stage),
+<a href=#1128 id=1128 data-nosnippet>1128</a>                            }),
+<a href=#1129 id=1129 data-nosnippet>1129</a>                            <span class="kw">crate</span>::pipeline::MeshState {
+<a href=#1130 id=1130 data-nosnippet>1130</a>                                stage: owned_stage(mesh.stage),
+<a href=#1131 id=1131 data-nosnippet>1131</a>                            },
+<a href=#1132 id=1132 data-nosnippet>1132</a>                        )
+<a href=#1133 id=1133 data-nosnippet>1133</a>                    }
+<a href=#1134 id=1134 data-nosnippet>1134</a>                },
+<a href=#1135 id=1135 data-nosnippet>1135</a>                primitive: desc.primitive,
+<a href=#1136 id=1136 data-nosnippet>1136</a>                depth_stencil: desc.depth_stencil,
+<a href=#1137 id=1137 data-nosnippet>1137</a>                multisample: desc.multisample,
+<a href=#1138 id=1138 data-nosnippet>1138</a>                fragment: desc.fragment.map(|f| <span class="kw">crate</span>::pipeline::FragmentState {
+<a href=#1139 id=1139 data-nosnippet>1139</a>                    stage: owned_stage(f.stage),
+<a href=#1140 id=1140 data-nosnippet>1140</a>                    targets: Cow::Owned(f.targets.into_owned()),
+<a href=#1141 id=1141 data-nosnippet>1141</a>                }),
+<a href=#1142 id=1142 data-nosnippet>1142</a>                multiview_mask: desc.multiview_mask,
+<a href=#1143 id=1143 data-nosnippet>1143</a>                cache: desc.cache,
+<a href=#1144 id=1144 data-nosnippet>1144</a>            },
+<a href=#1145 id=1145 data-nosnippet>1145</a>        },
+<a href=#1146 id=1146 data-nosnippet>1146</a>        A::CreatePipelineCache { id, desc } =&gt; A::CreatePipelineCache {
+<a href=#1147 id=1147 data-nosnippet>1147</a>            id,
+<a href=#1148 id=1148 data-nosnippet>1148</a>            desc: <span class="kw">crate</span>::pipeline::PipelineCacheDescriptor {
+<a href=#1149 id=1149 data-nosnippet>1149</a>                label: owned_label(<span class="kw-2">&amp;</span>desc.label),
+<a href=#1150 id=1150 data-nosnippet>1150</a>                data: desc.data.map(|d| Cow::Owned(d.to_vec())),
+<a href=#1151 id=1151 data-nosnippet>1151</a>                fallback: desc.fallback,
+<a href=#1152 id=1152 data-nosnippet>1152</a>            },
+<a href=#1153 id=1153 data-nosnippet>1153</a>        },
+<a href=#1154 id=1154 data-nosnippet>1154</a>        A::CreateRenderBundle { id, desc, base } =&gt; A::CreateRenderBundle {
+<a href=#1155 id=1155 data-nosnippet>1155</a>            id,
+<a href=#1156 id=1156 data-nosnippet>1156</a>            desc: <span class="kw">crate</span>::command::RenderBundleEncoderDescriptor {
+<a href=#1157 id=1157 data-nosnippet>1157</a>                label: owned_label(<span class="kw-2">&amp;</span>desc.label),
+<a href=#1158 id=1158 data-nosnippet>1158</a>                color_formats: Cow::Owned(desc.color_formats.into_owned()),
+<a href=#1159 id=1159 data-nosnippet>1159</a>                depth_stencil: desc.depth_stencil,
+<a href=#1160 id=1160 data-nosnippet>1160</a>                sample_count: desc.sample_count,
+<a href=#1161 id=1161 data-nosnippet>1161</a>                multiview: desc.multiview,
+<a href=#1162 id=1162 data-nosnippet>1162</a>            },
+<a href=#1163 id=1163 data-nosnippet>1163</a>            base,
+<a href=#1164 id=1164 data-nosnippet>1164</a>        },
+<a href=#1165 id=1165 data-nosnippet>1165</a>        A::CreateQuerySet { id, desc } =&gt; A::CreateQuerySet {
+<a href=#1166 id=1166 data-nosnippet>1166</a>            id,
+<a href=#1167 id=1167 data-nosnippet>1167</a>            desc: desc.map_label(owned_label),
+<a href=#1168 id=1168 data-nosnippet>1168</a>        },
+<a href=#1169 id=1169 data-nosnippet>1169</a>        A::CreateBlas { id, desc, sizes } =&gt; A::CreateBlas {
+<a href=#1170 id=1170 data-nosnippet>1170</a>            id,
+<a href=#1171 id=1171 data-nosnippet>1171</a>            desc: desc.map_label(owned_label),
+<a href=#1172 id=1172 data-nosnippet>1172</a>            sizes,
+<a href=#1173 id=1173 data-nosnippet>1173</a>        },
+<a href=#1174 id=1174 data-nosnippet>1174</a>        A::CreateTlas { id, desc } =&gt; A::CreateTlas {
+<a href=#1175 id=1175 data-nosnippet>1175</a>            id,
+<a href=#1176 id=1176 data-nosnippet>1176</a>            desc: desc.map_label(owned_label),
+<a href=#1177 id=1177 data-nosnippet>1177</a>        },
+<a href=#1178 id=1178 data-nosnippet>1178</a>    }
+<a href=#1179 id=1179 data-nosnippet>1179</a>}
+<a href=#1180 id=1180 data-nosnippet>1180</a>
+<a href=#1181 id=1181 data-nosnippet>1181</a><span class="kw">fn </span>owned_stage&lt;SM&gt;(
+<a href=#1182 id=1182 data-nosnippet>1182</a>    stage: <span class="kw">crate</span>::pipeline::ProgrammableStageDescriptor&lt;<span class="lifetime">'_</span>, SM&gt;,
+<a href=#1183 id=1183 data-nosnippet>1183</a>) -&gt; <span class="kw">crate</span>::pipeline::ProgrammableStageDescriptor&lt;<span class="lifetime">'static</span>, SM&gt; {
+<a href=#1184 id=1184 data-nosnippet>1184</a>    <span class="kw">crate</span>::pipeline::ProgrammableStageDescriptor {
+<a href=#1185 id=1185 data-nosnippet>1185</a>        module: stage.module,
+<a href=#1186 id=1186 data-nosnippet>1186</a>        entry_point: owned_label(<span class="kw-2">&amp;</span>stage.entry_point),
+<a href=#1187 id=1187 data-nosnippet>1187</a>        constants: stage.constants,
+<a href=#1188 id=1188 data-nosnippet>1188</a>        zero_initialize_workgroup_memory: stage.zero_initialize_workgroup_memory,
+<a href=#1189 id=1189 data-nosnippet>1189</a>    }
+<a href=#1190 id=1190 data-nosnippet>1190</a>}
+<a href=#1191 id=1191 data-nosnippet>1191</a>
+<a href=#1192 id=1192 data-nosnippet>1192</a><span class="kw">fn </span>owned_label(l: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'_</span>, str&gt;&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt; {
+<a href=#1193 id=1193 data-nosnippet>1193</a>    l.as_ref().map(|l| Cow::Owned(l.to_string()))
+<a href=#1194 id=1194 data-nosnippet>1194</a>}
 </code></pre></div></section></main></body></html>
