@@ -700,66 +700,67 @@
 <a href=#700 id=700 data-nosnippet>700</a>                    <span class="kw-2">&amp;</span>wgpu::SurfaceConfiguration {
 <a href=#701 id=701 data-nosnippet>701</a>                        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
 <a href=#702 id=702 data-nosnippet>702</a>                        format,
-<a href=#703 id=703 data-nosnippet>703</a>                        width: params.width,
-<a href=#704 id=704 data-nosnippet>704</a>                        height: params.height,
-<a href=#705 id=705 data-nosnippet>705</a>                        desired_maximum_frame_latency: <span class="number">2</span>,
-<a href=#706 id=706 data-nosnippet>706</a>                        <span class="comment">// Fifo corresponds to traditional VSync. It's supported everywhere.
-<a href=#707 id=707 data-nosnippet>707</a>                        </span>present_mode: wgpu::PresentMode::Fifo,
-<a href=#708 id=708 data-nosnippet>708</a>                        alpha_mode: wgpu::CompositeAlphaMode::Auto,
-<a href=#709 id=709 data-nosnippet>709</a>                        view_formats: <span class="macro">vec!</span>[format],
-<a href=#710 id=710 data-nosnippet>710</a>                    },
-<a href=#711 id=711 data-nosnippet>711</a>                    <span class="kw-2">&amp;</span>ctx.adapter,
-<a href=#712 id=712 data-nosnippet>712</a>                    <span class="kw-2">&amp;</span>ctx.device,
-<a href=#713 id=713 data-nosnippet>713</a>                    <span class="kw-2">&amp;</span>ctx.queue,
-<a href=#714 id=714 data-nosnippet>714</a>                );
-<a href=#715 id=715 data-nosnippet>715</a>
-<a href=#716 id=716 data-nosnippet>716</a>                example.render(<span class="kw-2">&amp;</span>dst_view, <span class="kw-2">&amp;</span>ctx.device, <span class="kw-2">&amp;</span>ctx.queue);
-<a href=#717 id=717 data-nosnippet>717</a>
-<a href=#718 id=718 data-nosnippet>718</a>                <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf = ctx
-<a href=#719 id=719 data-nosnippet>719</a>                    .device
-<a href=#720 id=720 data-nosnippet>720</a>                    .create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor::default());
-<a href=#721 id=721 data-nosnippet>721</a>
-<a href=#722 id=722 data-nosnippet>722</a>                cmd_buf.copy_texture_to_buffer(
-<a href=#723 id=723 data-nosnippet>723</a>                    wgpu::TexelCopyTextureInfo {
-<a href=#724 id=724 data-nosnippet>724</a>                        texture: <span class="kw-2">&amp;</span>dst_texture,
-<a href=#725 id=725 data-nosnippet>725</a>                        mip_level: <span class="number">0</span>,
-<a href=#726 id=726 data-nosnippet>726</a>                        origin: wgpu::Origin3d::ZERO,
-<a href=#727 id=727 data-nosnippet>727</a>                        aspect: wgpu::TextureAspect::All,
-<a href=#728 id=728 data-nosnippet>728</a>                    },
-<a href=#729 id=729 data-nosnippet>729</a>                    wgpu::TexelCopyBufferInfo {
-<a href=#730 id=730 data-nosnippet>730</a>                        buffer: <span class="kw-2">&amp;</span>dst_buffer,
-<a href=#731 id=731 data-nosnippet>731</a>                        layout: wgpu::TexelCopyBufferLayout {
-<a href=#732 id=732 data-nosnippet>732</a>                            offset: <span class="number">0</span>,
-<a href=#733 id=733 data-nosnippet>733</a>                            bytes_per_row: <span class="prelude-val">Some</span>(params.width * <span class="number">4</span>),
-<a href=#734 id=734 data-nosnippet>734</a>                            rows_per_image: <span class="prelude-val">None</span>,
-<a href=#735 id=735 data-nosnippet>735</a>                        },
-<a href=#736 id=736 data-nosnippet>736</a>                    },
-<a href=#737 id=737 data-nosnippet>737</a>                    wgpu::Extent3d {
-<a href=#738 id=738 data-nosnippet>738</a>                        width: params.width,
-<a href=#739 id=739 data-nosnippet>739</a>                        height: params.height,
-<a href=#740 id=740 data-nosnippet>740</a>                        depth_or_array_layers: <span class="number">1</span>,
-<a href=#741 id=741 data-nosnippet>741</a>                    },
-<a href=#742 id=742 data-nosnippet>742</a>                );
-<a href=#743 id=743 data-nosnippet>743</a>
-<a href=#744 id=744 data-nosnippet>744</a>                ctx.queue.submit(<span class="prelude-val">Some</span>(cmd_buf.finish()));
-<a href=#745 id=745 data-nosnippet>745</a>
-<a href=#746 id=746 data-nosnippet>746</a>                <span class="kw">let </span>dst_buffer_slice = dst_buffer.slice(..);
-<a href=#747 id=747 data-nosnippet>747</a>                dst_buffer_slice.map_async(wgpu::MapMode::Read, |<span class="kw">_</span>| ());
-<a href=#748 id=748 data-nosnippet>748</a>                ctx.async_poll(wgpu::PollType::wait_indefinitely())
-<a href=#749 id=749 data-nosnippet>749</a>                    .<span class="kw">await
-<a href=#750 id=750 data-nosnippet>750</a>                    </span>.unwrap();
-<a href=#751 id=751 data-nosnippet>751</a>                <span class="kw">let </span>bytes = dst_buffer_slice.get_mapped_range().unwrap().to_vec();
-<a href=#752 id=752 data-nosnippet>752</a>
-<a href=#753 id=753 data-nosnippet>753</a>                wgpu_test::image::compare_image_output(
-<a href=#754 id=754 data-nosnippet>754</a>                    <span class="macro">dbg!</span>(<span class="macro">env!</span>(<span class="string">"CARGO_MANIFEST_DIR"</span>).to_string() + <span class="string">"/../../" </span>+ params.image_path),
-<a href=#755 id=755 data-nosnippet>755</a>                    <span class="kw-2">&amp;</span>ctx.adapter_info,
-<a href=#756 id=756 data-nosnippet>756</a>                    params.width,
-<a href=#757 id=757 data-nosnippet>757</a>                    params.height,
-<a href=#758 id=758 data-nosnippet>758</a>                    <span class="kw-2">&amp;</span>bytes,
-<a href=#759 id=759 data-nosnippet>759</a>                    params.comparisons,
-<a href=#760 id=760 data-nosnippet>760</a>                )
-<a href=#761 id=761 data-nosnippet>761</a>                .<span class="kw">await</span>;
-<a href=#762 id=762 data-nosnippet>762</a>            })
-<a href=#763 id=763 data-nosnippet>763</a>    }
-<a href=#764 id=764 data-nosnippet>764</a>}
+<a href=#703 id=703 data-nosnippet>703</a>                        color_space: wgpu::SurfaceColorSpace::Auto,
+<a href=#704 id=704 data-nosnippet>704</a>                        width: params.width,
+<a href=#705 id=705 data-nosnippet>705</a>                        height: params.height,
+<a href=#706 id=706 data-nosnippet>706</a>                        desired_maximum_frame_latency: <span class="number">2</span>,
+<a href=#707 id=707 data-nosnippet>707</a>                        <span class="comment">// Fifo corresponds to traditional VSync. It's supported everywhere.
+<a href=#708 id=708 data-nosnippet>708</a>                        </span>present_mode: wgpu::PresentMode::Fifo,
+<a href=#709 id=709 data-nosnippet>709</a>                        alpha_mode: wgpu::CompositeAlphaMode::Auto,
+<a href=#710 id=710 data-nosnippet>710</a>                        view_formats: <span class="macro">vec!</span>[format],
+<a href=#711 id=711 data-nosnippet>711</a>                    },
+<a href=#712 id=712 data-nosnippet>712</a>                    <span class="kw-2">&amp;</span>ctx.adapter,
+<a href=#713 id=713 data-nosnippet>713</a>                    <span class="kw-2">&amp;</span>ctx.device,
+<a href=#714 id=714 data-nosnippet>714</a>                    <span class="kw-2">&amp;</span>ctx.queue,
+<a href=#715 id=715 data-nosnippet>715</a>                );
+<a href=#716 id=716 data-nosnippet>716</a>
+<a href=#717 id=717 data-nosnippet>717</a>                example.render(<span class="kw-2">&amp;</span>dst_view, <span class="kw-2">&amp;</span>ctx.device, <span class="kw-2">&amp;</span>ctx.queue);
+<a href=#718 id=718 data-nosnippet>718</a>
+<a href=#719 id=719 data-nosnippet>719</a>                <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf = ctx
+<a href=#720 id=720 data-nosnippet>720</a>                    .device
+<a href=#721 id=721 data-nosnippet>721</a>                    .create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor::default());
+<a href=#722 id=722 data-nosnippet>722</a>
+<a href=#723 id=723 data-nosnippet>723</a>                cmd_buf.copy_texture_to_buffer(
+<a href=#724 id=724 data-nosnippet>724</a>                    wgpu::TexelCopyTextureInfo {
+<a href=#725 id=725 data-nosnippet>725</a>                        texture: <span class="kw-2">&amp;</span>dst_texture,
+<a href=#726 id=726 data-nosnippet>726</a>                        mip_level: <span class="number">0</span>,
+<a href=#727 id=727 data-nosnippet>727</a>                        origin: wgpu::Origin3d::ZERO,
+<a href=#728 id=728 data-nosnippet>728</a>                        aspect: wgpu::TextureAspect::All,
+<a href=#729 id=729 data-nosnippet>729</a>                    },
+<a href=#730 id=730 data-nosnippet>730</a>                    wgpu::TexelCopyBufferInfo {
+<a href=#731 id=731 data-nosnippet>731</a>                        buffer: <span class="kw-2">&amp;</span>dst_buffer,
+<a href=#732 id=732 data-nosnippet>732</a>                        layout: wgpu::TexelCopyBufferLayout {
+<a href=#733 id=733 data-nosnippet>733</a>                            offset: <span class="number">0</span>,
+<a href=#734 id=734 data-nosnippet>734</a>                            bytes_per_row: <span class="prelude-val">Some</span>(params.width * <span class="number">4</span>),
+<a href=#735 id=735 data-nosnippet>735</a>                            rows_per_image: <span class="prelude-val">None</span>,
+<a href=#736 id=736 data-nosnippet>736</a>                        },
+<a href=#737 id=737 data-nosnippet>737</a>                    },
+<a href=#738 id=738 data-nosnippet>738</a>                    wgpu::Extent3d {
+<a href=#739 id=739 data-nosnippet>739</a>                        width: params.width,
+<a href=#740 id=740 data-nosnippet>740</a>                        height: params.height,
+<a href=#741 id=741 data-nosnippet>741</a>                        depth_or_array_layers: <span class="number">1</span>,
+<a href=#742 id=742 data-nosnippet>742</a>                    },
+<a href=#743 id=743 data-nosnippet>743</a>                );
+<a href=#744 id=744 data-nosnippet>744</a>
+<a href=#745 id=745 data-nosnippet>745</a>                ctx.queue.submit(<span class="prelude-val">Some</span>(cmd_buf.finish()));
+<a href=#746 id=746 data-nosnippet>746</a>
+<a href=#747 id=747 data-nosnippet>747</a>                <span class="kw">let </span>dst_buffer_slice = dst_buffer.slice(..);
+<a href=#748 id=748 data-nosnippet>748</a>                dst_buffer_slice.map_async(wgpu::MapMode::Read, |<span class="kw">_</span>| ());
+<a href=#749 id=749 data-nosnippet>749</a>                ctx.async_poll(wgpu::PollType::wait_indefinitely())
+<a href=#750 id=750 data-nosnippet>750</a>                    .<span class="kw">await
+<a href=#751 id=751 data-nosnippet>751</a>                    </span>.unwrap();
+<a href=#752 id=752 data-nosnippet>752</a>                <span class="kw">let </span>bytes = dst_buffer_slice.get_mapped_range().unwrap().to_vec();
+<a href=#753 id=753 data-nosnippet>753</a>
+<a href=#754 id=754 data-nosnippet>754</a>                wgpu_test::image::compare_image_output(
+<a href=#755 id=755 data-nosnippet>755</a>                    <span class="macro">dbg!</span>(<span class="macro">env!</span>(<span class="string">"CARGO_MANIFEST_DIR"</span>).to_string() + <span class="string">"/../../" </span>+ params.image_path),
+<a href=#756 id=756 data-nosnippet>756</a>                    <span class="kw-2">&amp;</span>ctx.adapter_info,
+<a href=#757 id=757 data-nosnippet>757</a>                    params.width,
+<a href=#758 id=758 data-nosnippet>758</a>                    params.height,
+<a href=#759 id=759 data-nosnippet>759</a>                    <span class="kw-2">&amp;</span>bytes,
+<a href=#760 id=760 data-nosnippet>760</a>                    params.comparisons,
+<a href=#761 id=761 data-nosnippet>761</a>                )
+<a href=#762 id=762 data-nosnippet>762</a>                .<span class="kw">await</span>;
+<a href=#763 id=763 data-nosnippet>763</a>            })
+<a href=#764 id=764 data-nosnippet>764</a>    }
+<a href=#765 id=765 data-nosnippet>765</a>}
 </code></pre></div></section></main></body></html>
