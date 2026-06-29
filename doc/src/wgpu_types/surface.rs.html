@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-types/src/surface.rs`."><title>surface.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_types" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_types/</div>surface.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Surface presentation configuration: present modes, alpha compositing, and
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-types/src/surface.rs`."><title>surface.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_types" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_types/</div>surface.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Surface presentation configuration: present modes, alpha compositing, and
 <a href=#2 id=2 data-nosnippet>2</a>//! color-space types (HDR and wide-gamut output).
 <a href=#3 id=3 data-nosnippet>3</a>//!
 <a href=#4 id=4 data-nosnippet>4</a>//! This module is re-exported flatly from `wgpu-types`; the user-facing color
@@ -193,7 +193,7 @@
 <a href=#193 id=193 data-nosnippet>193</a>/// *`0.0` is black and `1.0` is SDR reference white. [`Srgb`](Self::Srgb) and
 <a href=#194 id=194 data-nosnippet>194</a>/// [`DisplayP3`](Self::DisplayP3) clamp above `1.0`; the extended-range and HDR
 <a href=#195 id=195 data-nosnippet>195</a>/// color spaces drive values above `1.0` as brighter-than-SDR output, up to the
-<a href=#196 id=196 data-nosnippet>196</a>/// display's headroom.*
+<a href=#196 id=196 data-nosnippet>196</a>/// display's headroom (query it via [`DisplayHdrInfo::tone_map_headroom`]).*
 <a href=#197 id=197 data-nosnippet>197</a>///
 <a href=#198 id=198 data-nosnippet>198</a>/// # Extended-range variants: linear vs encoded
 <a href=#199 id=199 data-nosnippet>199</a>///
@@ -441,8 +441,8 @@
 <a href=#441 id=441 data-nosnippet>441</a>    /// space if you need certainty.
 <a href=#442 id=442 data-nosnippet>442</a>    ///
 <a href=#443 id=443 data-nosnippet>443</a>    /// Use this to branch after picking a color space from
-<a href=#444 id=444 data-nosnippet>444</a>    /// [`SurfaceCapabilities`]: only an HDR result drives highlights above SDR
-<a href=#445 id=445 data-nosnippet>445</a>    /// white (`1.0`).
+<a href=#444 id=444 data-nosnippet>444</a>    /// [`SurfaceCapabilities`]: an HDR result is the one whose highlights you
+<a href=#445 id=445 data-nosnippet>445</a>    /// scale by [`DisplayHdrInfo::tone_map_headroom`].
 <a href=#446 id=446 data-nosnippet>446</a>    </span><span class="attr">#[must_use]
 <a href=#447 id=447 data-nosnippet>447</a>    </span><span class="kw">pub const fn </span>is_hdr(<span class="self">self</span>) -&gt; bool {
 <a href=#448 id=448 data-nosnippet>448</a>        <span class="kw">match </span><span class="self">self </span>{
@@ -494,246 +494,576 @@
 <a href=#494 id=494 data-nosnippet>494</a>    <span class="doccomment">/// The set of color spaces the surface supports for this format.
 <a href=#495 id=495 data-nosnippet>495</a>    ///
 <a href=#496 id=496 data-nosnippet>496</a>    /// This reports which color spaces the surface can be *configured* with; it
-<a href=#497 id=497 data-nosnippet>497</a>    /// does not reflect whether the display is currently in HDR mode.
-<a href=#498 id=498 data-nosnippet>498</a>    ///
-<a href=#499 id=499 data-nosnippet>499</a>    /// Guaranteed to be non-empty.
-<a href=#500 id=500 data-nosnippet>500</a>    </span><span class="kw">pub </span>color_spaces: SurfaceColorSpaces,
-<a href=#501 id=501 data-nosnippet>501</a>}
-<a href=#502 id=502 data-nosnippet>502</a>
-<a href=#503 id=503 data-nosnippet>503</a><span class="doccomment">/// Defines the capabilities of a given surface and adapter.
-<a href=#504 id=504 data-nosnippet>504</a></span><span class="attr">#[derive(Debug)]
-<a href=#505 id=505 data-nosnippet>505</a></span><span class="kw">pub struct </span>SurfaceCapabilities {
-<a href=#506 id=506 data-nosnippet>506</a>    <span class="doccomment">/// List of supported formats to use with the given adapter. The first format in the vector is preferred.
-<a href=#507 id=507 data-nosnippet>507</a>    ///
-<a href=#508 id=508 data-nosnippet>508</a>    /// Only contains formats that can be configured with the default
-<a href=#509 id=509 data-nosnippet>509</a>    /// [`SurfaceColorSpace::Auto`]; formats available exclusively in
-<a href=#510 id=510 data-nosnippet>510</a>    /// explicit-opt-in (wide-gamut / HDR) color spaces appear only in
-<a href=#511 id=511 data-nosnippet>511</a>    /// [`format_capabilities`](Self::format_capabilities).
-<a href=#512 id=512 data-nosnippet>512</a>    ///
-<a href=#513 id=513 data-nosnippet>513</a>    /// Returns an empty vector if the surface is incompatible with the adapter.
-<a href=#514 id=514 data-nosnippet>514</a>    </span><span class="kw">pub </span>formats: Vec&lt;TextureFormat&gt;,
-<a href=#515 id=515 data-nosnippet>515</a>    <span class="doccomment">/// List of supported formats together with the color spaces supported for
-<a href=#516 id=516 data-nosnippet>516</a>    /// each format, in the same preference order as
-<a href=#517 id=517 data-nosnippet>517</a>    /// [`formats`](Self::formats), of which it is a superset.
-<a href=#518 id=518 data-nosnippet>518</a>    ///
-<a href=#519 id=519 data-nosnippet>519</a>    /// Returns an empty vector if the surface is incompatible with the adapter.
-<a href=#520 id=520 data-nosnippet>520</a>    </span><span class="kw">pub </span>format_capabilities: Vec&lt;SurfaceFormatCapabilities&gt;,
-<a href=#521 id=521 data-nosnippet>521</a>    <span class="doccomment">/// List of supported presentation modes to use with the given adapter.
-<a href=#522 id=522 data-nosnippet>522</a>    ///
-<a href=#523 id=523 data-nosnippet>523</a>    /// Returns an empty vector if the surface is incompatible with the adapter.
-<a href=#524 id=524 data-nosnippet>524</a>    </span><span class="kw">pub </span>present_modes: Vec&lt;PresentMode&gt;,
-<a href=#525 id=525 data-nosnippet>525</a>    <span class="doccomment">/// List of supported alpha modes to use with the given adapter.
-<a href=#526 id=526 data-nosnippet>526</a>    ///
-<a href=#527 id=527 data-nosnippet>527</a>    /// Will return at least one element, [`CompositeAlphaMode::Opaque`] or [`CompositeAlphaMode::Inherit`].
-<a href=#528 id=528 data-nosnippet>528</a>    </span><span class="kw">pub </span>alpha_modes: Vec&lt;CompositeAlphaMode&gt;,
-<a href=#529 id=529 data-nosnippet>529</a>    <span class="doccomment">/// Bitflag of supported texture usages for the surface to use with the given adapter.
-<a href=#530 id=530 data-nosnippet>530</a>    ///
-<a href=#531 id=531 data-nosnippet>531</a>    /// The usage [`TextureUsages::RENDER_ATTACHMENT`] is guaranteed.
-<a href=#532 id=532 data-nosnippet>532</a>    </span><span class="kw">pub </span>usages: TextureUsages,
-<a href=#533 id=533 data-nosnippet>533</a>}
-<a href=#534 id=534 data-nosnippet>534</a>
-<a href=#535 id=535 data-nosnippet>535</a><span class="kw">impl </span>SurfaceCapabilities {
-<a href=#536 id=536 data-nosnippet>536</a>    <span class="doccomment">/// Returns the set of color spaces supported for the given format, or an
-<a href=#537 id=537 data-nosnippet>537</a>    /// empty set if the format is not supported.
-<a href=#538 id=538 data-nosnippet>538</a>    ///
-<a href=#539 id=539 data-nosnippet>539</a>    /// This is a convenience lookup over
-<a href=#540 id=540 data-nosnippet>540</a>    /// [`format_capabilities`](Self::format_capabilities): an empty result
-<a href=#541 id=541 data-nosnippet>541</a>    /// means `format` is absent from that list.
-<a href=#542 id=542 data-nosnippet>542</a>    </span><span class="attr">#[must_use]
-<a href=#543 id=543 data-nosnippet>543</a>    </span><span class="kw">pub fn </span>color_spaces(<span class="kw-2">&amp;</span><span class="self">self</span>, format: TextureFormat) -&gt; SurfaceColorSpaces {
-<a href=#544 id=544 data-nosnippet>544</a>        <span class="self">self</span>.format_capabilities
-<a href=#545 id=545 data-nosnippet>545</a>            .iter()
-<a href=#546 id=546 data-nosnippet>546</a>            .filter(|fc| fc.format == format)
-<a href=#547 id=547 data-nosnippet>547</a>            .fold(SurfaceColorSpaces::empty(), |acc, fc| acc | fc.color_spaces)
-<a href=#548 id=548 data-nosnippet>548</a>    }
-<a href=#549 id=549 data-nosnippet>549</a>}
-<a href=#550 id=550 data-nosnippet>550</a>
-<a href=#551 id=551 data-nosnippet>551</a><span class="kw">impl </span>Default <span class="kw">for </span>SurfaceCapabilities {
-<a href=#552 id=552 data-nosnippet>552</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-<a href=#553 id=553 data-nosnippet>553</a>        <span class="self">Self </span>{
-<a href=#554 id=554 data-nosnippet>554</a>            formats: Vec::new(),
-<a href=#555 id=555 data-nosnippet>555</a>            format_capabilities: Vec::new(),
-<a href=#556 id=556 data-nosnippet>556</a>            present_modes: Vec::new(),
-<a href=#557 id=557 data-nosnippet>557</a>            alpha_modes: <span class="macro">vec!</span>[CompositeAlphaMode::Opaque],
-<a href=#558 id=558 data-nosnippet>558</a>            usages: TextureUsages::RENDER_ATTACHMENT,
-<a href=#559 id=559 data-nosnippet>559</a>        }
-<a href=#560 id=560 data-nosnippet>560</a>    }
-<a href=#561 id=561 data-nosnippet>561</a>}
-<a href=#562 id=562 data-nosnippet>562</a>
-<a href=#563 id=563 data-nosnippet>563</a><span class="doccomment">/// Configures a [`Surface`] for presentation.
-<a href=#564 id=564 data-nosnippet>564</a>///
-<a href=#565 id=565 data-nosnippet>565</a></span><span class="attr">#[doc = <span class="macro">link_to_wgpu_item!</span>(<span class="kw">struct </span>Surface)]
-<a href=#566 id=566 data-nosnippet>566</a>#[repr(C)]
-<a href=#567 id=567 data-nosnippet>567</a>#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-<a href=#568 id=568 data-nosnippet>568</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#569 id=569 data-nosnippet>569</a></span><span class="kw">pub struct </span>SurfaceConfiguration&lt;V&gt; {
-<a href=#570 id=570 data-nosnippet>570</a>    <span class="doccomment">/// The usage of the swap chain. The only usage guaranteed to be supported is [`TextureUsages::RENDER_ATTACHMENT`].
-<a href=#571 id=571 data-nosnippet>571</a>    </span><span class="kw">pub </span>usage: TextureUsages,
-<a href=#572 id=572 data-nosnippet>572</a>    <span class="doccomment">/// The texture format of the swap chain. The only formats that are guaranteed are
-<a href=#573 id=573 data-nosnippet>573</a>    /// [`TextureFormat::Bgra8Unorm`] and [`TextureFormat::Bgra8UnormSrgb`].
-<a href=#574 id=574 data-nosnippet>574</a>    </span><span class="kw">pub </span>format: TextureFormat,
-<a href=#575 id=575 data-nosnippet>575</a>    <span class="doccomment">/// The color space in which the presentation engine interprets the values
-<a href=#576 id=576 data-nosnippet>576</a>    /// written to the swap chain.
-<a href=#577 id=577 data-nosnippet>577</a>    ///
-<a href=#578 id=578 data-nosnippet>578</a>    /// The supported color spaces for each format are listed in
-<a href=#579 id=579 data-nosnippet>579</a>    /// [`SurfaceCapabilities::format_capabilities`].
-<a href=#580 id=580 data-nosnippet>580</a>    /// [`SurfaceColorSpace::Auto`] (the default) is supported for every
-<a href=#581 id=581 data-nosnippet>581</a>    /// format in [`SurfaceCapabilities::formats`]; any other value must be
-<a href=#582 id=582 data-nosnippet>582</a>    /// present in the format's
-<a href=#583 id=583 data-nosnippet>583</a>    /// [`color_spaces`](SurfaceFormatCapabilities::color_spaces) set.
-<a href=#584 id=584 data-nosnippet>584</a>    </span><span class="kw">pub </span>color_space: SurfaceColorSpace,
-<a href=#585 id=585 data-nosnippet>585</a>    <span class="doccomment">/// Width of the swap chain. Must be the same size as the surface, and nonzero.
-<a href=#586 id=586 data-nosnippet>586</a>    ///
-<a href=#587 id=587 data-nosnippet>587</a>    /// If this is not the same size as the underlying surface (e.g. if it is
-<a href=#588 id=588 data-nosnippet>588</a>    /// set once, and the window is later resized), the behaviour is defined
-<a href=#589 id=589 data-nosnippet>589</a>    /// but platform-specific, and may change in the future (currently macOS
-<a href=#590 id=590 data-nosnippet>590</a>    /// scales the surface, other platforms may do something else).
-<a href=#591 id=591 data-nosnippet>591</a>    </span><span class="kw">pub </span>width: u32,
-<a href=#592 id=592 data-nosnippet>592</a>    <span class="doccomment">/// Height of the swap chain. Must be the same size as the surface, and nonzero.
-<a href=#593 id=593 data-nosnippet>593</a>    ///
-<a href=#594 id=594 data-nosnippet>594</a>    /// If this is not the same size as the underlying surface (e.g. if it is
-<a href=#595 id=595 data-nosnippet>595</a>    /// set once, and the window is later resized), the behaviour is defined
-<a href=#596 id=596 data-nosnippet>596</a>    /// but platform-specific, and may change in the future (currently macOS
-<a href=#597 id=597 data-nosnippet>597</a>    /// scales the surface, other platforms may do something else).
-<a href=#598 id=598 data-nosnippet>598</a>    </span><span class="kw">pub </span>height: u32,
-<a href=#599 id=599 data-nosnippet>599</a>    <span class="doccomment">/// Presentation mode of the swap chain. Fifo is the only mode guaranteed to be supported.
-<a href=#600 id=600 data-nosnippet>600</a>    /// `FifoRelaxed`, `Immediate`, and `Mailbox` will crash if unsupported, while `AutoVsync` and
-<a href=#601 id=601 data-nosnippet>601</a>    /// `AutoNoVsync` will gracefully do a designed sets of fallbacks if their primary modes are
-<a href=#602 id=602 data-nosnippet>602</a>    /// unsupported.
-<a href=#603 id=603 data-nosnippet>603</a>    </span><span class="kw">pub </span>present_mode: PresentMode,
-<a href=#604 id=604 data-nosnippet>604</a>    <span class="doccomment">/// Desired maximum number of monitor refreshes between a [`Surface::get_current_texture`] call and the
-<a href=#605 id=605 data-nosnippet>605</a>    /// texture being presented to the screen. This is sometimes called "Frames in Flight".
-<a href=#606 id=606 data-nosnippet>606</a>    ///
-<a href=#607 id=607 data-nosnippet>607</a>    /// Defaults to `2` when created via [`Surface::get_default_config`] as this is a reasonable default.
-<a href=#608 id=608 data-nosnippet>608</a>    ///
-<a href=#609 id=609 data-nosnippet>609</a>    /// This is ultimately a hint to the backend implementation and will always be clamped
-<a href=#610 id=610 data-nosnippet>610</a>    /// to the supported range.
-<a href=#611 id=611 data-nosnippet>611</a>    ///
-<a href=#612 id=612 data-nosnippet>612</a>    /// Typical values are `1` to `3`, but higher values are valid, though likely to be clamped.
-<a href=#613 id=613 data-nosnippet>613</a>    /// * Choose `1` to minimize latency above all else. This only gives a single monitor refresh for all of
-<a href=#614 id=614 data-nosnippet>614</a>    ///   the CPU and GPU work to complete. ⚠️ As a result of these short swapchains, the CPU and GPU
-<a href=#615 id=615 data-nosnippet>615</a>    ///   cannot run in parallel, prioritizing latency over throughput. For applications like GUIs doing
-<a href=#616 id=616 data-nosnippet>616</a>    ///   a small amount of GPU work each frame that need low latency, this is a reasonable choice.
-<a href=#617 id=617 data-nosnippet>617</a>    /// * Choose `2` for a balance between latency and throughput. The CPU and GPU both can each use
-<a href=#618 id=618 data-nosnippet>618</a>    ///   a full monitor refresh to do their computations. This is a reasonable default for most applications.
-<a href=#619 id=619 data-nosnippet>619</a>    /// * Choose `3` or higher to maximize throughput, sacrificing latency when the CPU and GPU
-<a href=#620 id=620 data-nosnippet>620</a>    ///   are using less than a full monitor refresh each. For applications that use CPU-side pipelining
-<a href=#621 id=621 data-nosnippet>621</a>    ///   of frames this may be a reasonable choice. ⚠️ On 60hz displays the latency can be very noticeable.
-<a href=#622 id=622 data-nosnippet>622</a>    ///
-<a href=#623 id=623 data-nosnippet>623</a>    /// This maps to the backend in the following ways:
-<a href=#624 id=624 data-nosnippet>624</a>    /// - Vulkan: Number of frames in the swapchain is `desired_maximum_frame_latency + 1`,
-<a href=#625 id=625 data-nosnippet>625</a>    ///   clamped to the supported range.
-<a href=#626 id=626 data-nosnippet>626</a>    /// - DX12: Calls [`IDXGISwapChain2::SetMaximumFrameLatency(desired_maximum_frame_latency)`][SMFL].
-<a href=#627 id=627 data-nosnippet>627</a>    /// - Metal: Sets the `maximumDrawableCount` of the underlying `CAMetalLayer` to
-<a href=#628 id=628 data-nosnippet>628</a>    ///   `desired_maximum_frame_latency + 1`, clamped to the supported range.
-<a href=#629 id=629 data-nosnippet>629</a>    /// - OpenGL: Ignored
-<a href=#630 id=630 data-nosnippet>630</a>    ///
-<a href=#631 id=631 data-nosnippet>631</a>    /// It also has various subtle interactions with various present modes and APIs.
-<a href=#632 id=632 data-nosnippet>632</a>    /// - DX12 + Mailbox: Limits framerate to `desired_maximum_frame_latency * Monitor Hz` fps.
-<a href=#633 id=633 data-nosnippet>633</a>    /// - Vulkan/Metal + Mailbox: If this is set to `2`, limits framerate to `2 * Monitor Hz` fps. `3` or higher is unlimited.
-<a href=#634 id=634 data-nosnippet>634</a>    ///
-<a href=#635 id=635 data-nosnippet>635</a>    </span><span class="attr">#[doc = <span class="macro">link_to_wgpu_docs!</span>([<span class="string">"`Surface::get_current_texture`"</span>]</span>: <span class="string">"struct.Surface.html#method.get_current_texture"</span>)]
-<a href=#636 id=636 data-nosnippet>636</a>    <span class="attr">#[doc = <span class="macro">link_to_wgpu_docs!</span>([<span class="string">"`Surface::get_default_config`"</span>]</span>: <span class="string">"struct.Surface.html#method.get_default_config"</span>)]
-<a href=#637 id=637 data-nosnippet>637</a>    <span class="doccomment">/// [SMFL]: https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency
-<a href=#638 id=638 data-nosnippet>638</a>    </span><span class="kw">pub </span>desired_maximum_frame_latency: u32,
-<a href=#639 id=639 data-nosnippet>639</a>    <span class="doccomment">/// Specifies how the alpha channel of the textures should be handled during compositing.
-<a href=#640 id=640 data-nosnippet>640</a>    </span><span class="kw">pub </span>alpha_mode: CompositeAlphaMode,
-<a href=#641 id=641 data-nosnippet>641</a>    <span class="doccomment">/// Specifies what view formats will be allowed when calling `Texture::create_view` on the texture returned by `Surface::get_current_texture`.
-<a href=#642 id=642 data-nosnippet>642</a>    ///
-<a href=#643 id=643 data-nosnippet>643</a>    /// View formats of the same format as the texture are always allowed.
-<a href=#644 id=644 data-nosnippet>644</a>    ///
-<a href=#645 id=645 data-nosnippet>645</a>    /// Note: currently, only the srgb-ness is allowed to change. (ex: `Rgba8Unorm` texture + `Rgba8UnormSrgb` view)
-<a href=#646 id=646 data-nosnippet>646</a>    </span><span class="kw">pub </span>view_formats: V,
-<a href=#647 id=647 data-nosnippet>647</a>}
-<a href=#648 id=648 data-nosnippet>648</a>
-<a href=#649 id=649 data-nosnippet>649</a><span class="kw">impl</span>&lt;V: Clone&gt; SurfaceConfiguration&lt;V&gt; {
-<a href=#650 id=650 data-nosnippet>650</a>    <span class="doccomment">/// Map `view_formats` of the texture descriptor into another.
-<a href=#651 id=651 data-nosnippet>651</a>    </span><span class="kw">pub fn </span>map_view_formats&lt;<span class="lifetime">'a</span>, M&gt;(
-<a href=#652 id=652 data-nosnippet>652</a>        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
-<a href=#653 id=653 data-nosnippet>653</a>        fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>V) -&gt; M,
-<a href=#654 id=654 data-nosnippet>654</a>    ) -&gt; SurfaceConfiguration&lt;M&gt; {
-<a href=#655 id=655 data-nosnippet>655</a>        SurfaceConfiguration {
-<a href=#656 id=656 data-nosnippet>656</a>            usage: <span class="self">self</span>.usage,
-<a href=#657 id=657 data-nosnippet>657</a>            format: <span class="self">self</span>.format,
-<a href=#658 id=658 data-nosnippet>658</a>            color_space: <span class="self">self</span>.color_space,
-<a href=#659 id=659 data-nosnippet>659</a>            width: <span class="self">self</span>.width,
-<a href=#660 id=660 data-nosnippet>660</a>            height: <span class="self">self</span>.height,
-<a href=#661 id=661 data-nosnippet>661</a>            present_mode: <span class="self">self</span>.present_mode,
-<a href=#662 id=662 data-nosnippet>662</a>            desired_maximum_frame_latency: <span class="self">self</span>.desired_maximum_frame_latency,
-<a href=#663 id=663 data-nosnippet>663</a>            alpha_mode: <span class="self">self</span>.alpha_mode,
-<a href=#664 id=664 data-nosnippet>664</a>            view_formats: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.view_formats),
-<a href=#665 id=665 data-nosnippet>665</a>        }
-<a href=#666 id=666 data-nosnippet>666</a>    }
-<a href=#667 id=667 data-nosnippet>667</a>}
-<a href=#668 id=668 data-nosnippet>668</a>
-<a href=#669 id=669 data-nosnippet>669</a><span class="doccomment">/// Status of the received surface image.
-<a href=#670 id=670 data-nosnippet>670</a></span><span class="attr">#[repr(C)]
-<a href=#671 id=671 data-nosnippet>671</a>#[derive(Debug)]
-<a href=#672 id=672 data-nosnippet>672</a></span><span class="kw">pub enum </span>SurfaceStatus {
-<a href=#673 id=673 data-nosnippet>673</a>    <span class="doccomment">/// No issues.
-<a href=#674 id=674 data-nosnippet>674</a>    </span>Good,
-<a href=#675 id=675 data-nosnippet>675</a>    <span class="doccomment">/// The swap chain is operational, but it does no longer perfectly
-<a href=#676 id=676 data-nosnippet>676</a>    /// match the surface. A re-configuration is needed.
-<a href=#677 id=677 data-nosnippet>677</a>    </span>Suboptimal,
-<a href=#678 id=678 data-nosnippet>678</a>    <span class="doccomment">/// Unable to get the next frame, timed out.
-<a href=#679 id=679 data-nosnippet>679</a>    ///
-<a href=#680 id=680 data-nosnippet>680</a>    /// Try reconfiguring your surface.
-<a href=#681 id=681 data-nosnippet>681</a>    </span>Timeout,
-<a href=#682 id=682 data-nosnippet>682</a>    <span class="doccomment">/// The window is occluded (e.g. minimized or behind another window).
-<a href=#683 id=683 data-nosnippet>683</a>    ///
-<a href=#684 id=684 data-nosnippet>684</a>    /// Try again once the window is no longer occluded.
-<a href=#685 id=685 data-nosnippet>685</a>    </span>Occluded,
-<a href=#686 id=686 data-nosnippet>686</a>    <span class="doccomment">/// The surface under the swap chain has changed.
-<a href=#687 id=687 data-nosnippet>687</a>    ///
-<a href=#688 id=688 data-nosnippet>688</a>    /// Try reconfiguring your surface.
-<a href=#689 id=689 data-nosnippet>689</a>    </span>Outdated,
-<a href=#690 id=690 data-nosnippet>690</a>    <span class="doccomment">/// The surface under the swap chain is lost.
-<a href=#691 id=691 data-nosnippet>691</a>    </span>Lost,
-<a href=#692 id=692 data-nosnippet>692</a>    <span class="doccomment">/// `Surface::get_current_texture` has hit a validation error which was caught
-<a href=#693 id=693 data-nosnippet>693</a>    /// by a error scope.
-<a href=#694 id=694 data-nosnippet>694</a>    </span>Validation,
-<a href=#695 id=695 data-nosnippet>695</a>}
-<a href=#696 id=696 data-nosnippet>696</a>
-<a href=#697 id=697 data-nosnippet>697</a><span class="doccomment">/// Nanosecond timestamp used by the presentation engine.
-<a href=#698 id=698 data-nosnippet>698</a>///
-<a href=#699 id=699 data-nosnippet>699</a>/// The specific clock depends on the window system integration (WSI) API used.
-<a href=#700 id=700 data-nosnippet>700</a>///
-<a href=#701 id=701 data-nosnippet>701</a>/// &lt;table&gt;
-<a href=#702 id=702 data-nosnippet>702</a>/// &lt;tr&gt;
-<a href=#703 id=703 data-nosnippet>703</a>///     &lt;td&gt;WSI&lt;/td&gt;
-<a href=#704 id=704 data-nosnippet>704</a>///     &lt;td&gt;Clock&lt;/td&gt;
-<a href=#705 id=705 data-nosnippet>705</a>/// &lt;/tr&gt;
-<a href=#706 id=706 data-nosnippet>706</a>/// &lt;tr&gt;
-<a href=#707 id=707 data-nosnippet>707</a>///     &lt;td&gt;IDXGISwapchain&lt;/td&gt;
-<a href=#708 id=708 data-nosnippet>708</a>///     &lt;td&gt;&lt;a href="https://docs.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancecounter"&gt;QueryPerformanceCounter&lt;/a&gt;&lt;/td&gt;
-<a href=#709 id=709 data-nosnippet>709</a>/// &lt;/tr&gt;
-<a href=#710 id=710 data-nosnippet>710</a>/// &lt;tr&gt;
-<a href=#711 id=711 data-nosnippet>711</a>///     &lt;td&gt;IPresentationManager&lt;/td&gt;
-<a href=#712 id=712 data-nosnippet>712</a>///     &lt;td&gt;&lt;a href="https://docs.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryinterrupttimeprecise"&gt;QueryInterruptTimePrecise&lt;/a&gt;&lt;/td&gt;
-<a href=#713 id=713 data-nosnippet>713</a>/// &lt;/tr&gt;
-<a href=#714 id=714 data-nosnippet>714</a>/// &lt;tr&gt;
-<a href=#715 id=715 data-nosnippet>715</a>///     &lt;td&gt;CAMetalLayer&lt;/td&gt;
-<a href=#716 id=716 data-nosnippet>716</a>///     &lt;td&gt;&lt;a href="https://developer.apple.com/documentation/kernel/1462446-mach_absolute_time"&gt;mach_absolute_time&lt;/a&gt;&lt;/td&gt;
-<a href=#717 id=717 data-nosnippet>717</a>/// &lt;/tr&gt;
-<a href=#718 id=718 data-nosnippet>718</a>/// &lt;tr&gt;
-<a href=#719 id=719 data-nosnippet>719</a>///     &lt;td&gt;VK_GOOGLE_display_timing&lt;/td&gt;
-<a href=#720 id=720 data-nosnippet>720</a>///     &lt;td&gt;&lt;a href="https://linux.die.net/man/3/clock_gettime"&gt;clock_gettime(CLOCK_MONOTONIC)&lt;/a&gt;&lt;/td&gt;
-<a href=#721 id=721 data-nosnippet>721</a>/// &lt;/tr&gt;
-<a href=#722 id=722 data-nosnippet>722</a>/// &lt;/table&gt;
-<a href=#723 id=723 data-nosnippet>723</a></span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-<a href=#724 id=724 data-nosnippet>724</a></span><span class="kw">pub struct </span>PresentationTimestamp(
-<a href=#725 id=725 data-nosnippet>725</a>    <span class="doccomment">/// Timestamp in nanoseconds.
-<a href=#726 id=726 data-nosnippet>726</a>    </span><span class="kw">pub </span>u128,
-<a href=#727 id=727 data-nosnippet>727</a>);
-<a href=#728 id=728 data-nosnippet>728</a>
-<a href=#729 id=729 data-nosnippet>729</a><span class="kw">impl </span>PresentationTimestamp {
-<a href=#730 id=730 data-nosnippet>730</a>    <span class="doccomment">/// A timestamp that is invalid due to the platform not having a timestamp system.
-<a href=#731 id=731 data-nosnippet>731</a>    </span><span class="kw">pub const </span>INVALID_TIMESTAMP: <span class="self">Self </span>= <span class="self">Self</span>(u128::MAX);
-<a href=#732 id=732 data-nosnippet>732</a>
-<a href=#733 id=733 data-nosnippet>733</a>    <span class="doccomment">/// Returns true if this timestamp is the invalid timestamp.
-<a href=#734 id=734 data-nosnippet>734</a>    </span><span class="attr">#[must_use]
-<a href=#735 id=735 data-nosnippet>735</a>    </span><span class="kw">pub fn </span>is_invalid(<span class="self">self</span>) -&gt; bool {
-<a href=#736 id=736 data-nosnippet>736</a>        <span class="self">self </span>== <span class="self">Self</span>::INVALID_TIMESTAMP
-<a href=#737 id=737 data-nosnippet>737</a>    }
-<a href=#738 id=738 data-nosnippet>738</a>}
+<a href=#497 id=497 data-nosnippet>497</a>    /// does not reflect whether the display is currently in HDR mode. For the
+<a href=#498 id=498 data-nosnippet>498</a>    /// display's live HDR state, see [`DisplayHdrInfo`].
+<a href=#499 id=499 data-nosnippet>499</a>    ///
+<a href=#500 id=500 data-nosnippet>500</a>    /// Guaranteed to be non-empty.
+<a href=#501 id=501 data-nosnippet>501</a>    </span><span class="kw">pub </span>color_spaces: SurfaceColorSpaces,
+<a href=#502 id=502 data-nosnippet>502</a>}
+<a href=#503 id=503 data-nosnippet>503</a>
+<a href=#504 id=504 data-nosnippet>504</a><span class="doccomment">/// Defines the capabilities of a given surface and adapter.
+<a href=#505 id=505 data-nosnippet>505</a></span><span class="attr">#[derive(Debug)]
+<a href=#506 id=506 data-nosnippet>506</a></span><span class="kw">pub struct </span>SurfaceCapabilities {
+<a href=#507 id=507 data-nosnippet>507</a>    <span class="doccomment">/// List of supported formats to use with the given adapter. The first format in the vector is preferred.
+<a href=#508 id=508 data-nosnippet>508</a>    ///
+<a href=#509 id=509 data-nosnippet>509</a>    /// Only contains formats that can be configured with the default
+<a href=#510 id=510 data-nosnippet>510</a>    /// [`SurfaceColorSpace::Auto`]; formats available exclusively in
+<a href=#511 id=511 data-nosnippet>511</a>    /// explicit-opt-in (wide-gamut / HDR) color spaces appear only in
+<a href=#512 id=512 data-nosnippet>512</a>    /// [`format_capabilities`](Self::format_capabilities).
+<a href=#513 id=513 data-nosnippet>513</a>    ///
+<a href=#514 id=514 data-nosnippet>514</a>    /// Returns an empty vector if the surface is incompatible with the adapter.
+<a href=#515 id=515 data-nosnippet>515</a>    </span><span class="kw">pub </span>formats: Vec&lt;TextureFormat&gt;,
+<a href=#516 id=516 data-nosnippet>516</a>    <span class="doccomment">/// List of supported formats together with the color spaces supported for
+<a href=#517 id=517 data-nosnippet>517</a>    /// each format, in the same preference order as
+<a href=#518 id=518 data-nosnippet>518</a>    /// [`formats`](Self::formats), of which it is a superset.
+<a href=#519 id=519 data-nosnippet>519</a>    ///
+<a href=#520 id=520 data-nosnippet>520</a>    /// Returns an empty vector if the surface is incompatible with the adapter.
+<a href=#521 id=521 data-nosnippet>521</a>    </span><span class="kw">pub </span>format_capabilities: Vec&lt;SurfaceFormatCapabilities&gt;,
+<a href=#522 id=522 data-nosnippet>522</a>    <span class="doccomment">/// List of supported presentation modes to use with the given adapter.
+<a href=#523 id=523 data-nosnippet>523</a>    ///
+<a href=#524 id=524 data-nosnippet>524</a>    /// Returns an empty vector if the surface is incompatible with the adapter.
+<a href=#525 id=525 data-nosnippet>525</a>    </span><span class="kw">pub </span>present_modes: Vec&lt;PresentMode&gt;,
+<a href=#526 id=526 data-nosnippet>526</a>    <span class="doccomment">/// List of supported alpha modes to use with the given adapter.
+<a href=#527 id=527 data-nosnippet>527</a>    ///
+<a href=#528 id=528 data-nosnippet>528</a>    /// Will return at least one element, [`CompositeAlphaMode::Opaque`] or [`CompositeAlphaMode::Inherit`].
+<a href=#529 id=529 data-nosnippet>529</a>    </span><span class="kw">pub </span>alpha_modes: Vec&lt;CompositeAlphaMode&gt;,
+<a href=#530 id=530 data-nosnippet>530</a>    <span class="doccomment">/// Bitflag of supported texture usages for the surface to use with the given adapter.
+<a href=#531 id=531 data-nosnippet>531</a>    ///
+<a href=#532 id=532 data-nosnippet>532</a>    /// The usage [`TextureUsages::RENDER_ATTACHMENT`] is guaranteed.
+<a href=#533 id=533 data-nosnippet>533</a>    </span><span class="kw">pub </span>usages: TextureUsages,
+<a href=#534 id=534 data-nosnippet>534</a>}
+<a href=#535 id=535 data-nosnippet>535</a>
+<a href=#536 id=536 data-nosnippet>536</a><span class="kw">impl </span>SurfaceCapabilities {
+<a href=#537 id=537 data-nosnippet>537</a>    <span class="doccomment">/// Returns the set of color spaces supported for the given format, or an
+<a href=#538 id=538 data-nosnippet>538</a>    /// empty set if the format is not supported.
+<a href=#539 id=539 data-nosnippet>539</a>    ///
+<a href=#540 id=540 data-nosnippet>540</a>    /// This is a convenience lookup over
+<a href=#541 id=541 data-nosnippet>541</a>    /// [`format_capabilities`](Self::format_capabilities): an empty result
+<a href=#542 id=542 data-nosnippet>542</a>    /// means `format` is absent from that list.
+<a href=#543 id=543 data-nosnippet>543</a>    </span><span class="attr">#[must_use]
+<a href=#544 id=544 data-nosnippet>544</a>    </span><span class="kw">pub fn </span>color_spaces(<span class="kw-2">&amp;</span><span class="self">self</span>, format: TextureFormat) -&gt; SurfaceColorSpaces {
+<a href=#545 id=545 data-nosnippet>545</a>        <span class="self">self</span>.format_capabilities
+<a href=#546 id=546 data-nosnippet>546</a>            .iter()
+<a href=#547 id=547 data-nosnippet>547</a>            .filter(|fc| fc.format == format)
+<a href=#548 id=548 data-nosnippet>548</a>            .fold(SurfaceColorSpaces::empty(), |acc, fc| acc | fc.color_spaces)
+<a href=#549 id=549 data-nosnippet>549</a>    }
+<a href=#550 id=550 data-nosnippet>550</a>}
+<a href=#551 id=551 data-nosnippet>551</a>
+<a href=#552 id=552 data-nosnippet>552</a><span class="kw">impl </span>Default <span class="kw">for </span>SurfaceCapabilities {
+<a href=#553 id=553 data-nosnippet>553</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#554 id=554 data-nosnippet>554</a>        <span class="self">Self </span>{
+<a href=#555 id=555 data-nosnippet>555</a>            formats: Vec::new(),
+<a href=#556 id=556 data-nosnippet>556</a>            format_capabilities: Vec::new(),
+<a href=#557 id=557 data-nosnippet>557</a>            present_modes: Vec::new(),
+<a href=#558 id=558 data-nosnippet>558</a>            alpha_modes: <span class="macro">vec!</span>[CompositeAlphaMode::Opaque],
+<a href=#559 id=559 data-nosnippet>559</a>            usages: TextureUsages::RENDER_ATTACHMENT,
+<a href=#560 id=560 data-nosnippet>560</a>        }
+<a href=#561 id=561 data-nosnippet>561</a>    }
+<a href=#562 id=562 data-nosnippet>562</a>}
+<a href=#563 id=563 data-nosnippet>563</a>
+<a href=#564 id=564 data-nosnippet>564</a><span class="doccomment">/// HDR and luminance characteristics of the display backing a [`Surface`], as
+<a href=#565 id=565 data-nosnippet>565</a>/// reported by the platform at query time.
+<a href=#566 id=566 data-nosnippet>566</a>///
+<a href=#567 id=567 data-nosnippet>567</a>/// This describes the display; it does not configure it. Set the output color
+<a href=#568 id=568 data-nosnippet>568</a>/// space through [`SurfaceConfiguration::color_space`]; wgpu does not write HDR
+<a href=#569 id=569 data-nosnippet>569</a>/// metadata (`vkSetHdrMetadataEXT` / DXGI `SetHDRMetaData`).
+<a href=#570 id=570 data-nosnippet>570</a>///
+<a href=#571 id=571 data-nosnippet>571</a>/// Use it for tone mapping, not to decide whether to enable HDR - that is a
+<a href=#572 id=572 data-nosnippet>572</a>/// capability question for [`SurfaceCapabilities`], and holds even when the panel
+<a href=#573 id=573 data-nosnippet>573</a>/// has no headroom right now. The live highlight multiplier is
+<a href=#574 id=574 data-nosnippet>574</a>/// [`tone_map_headroom`](Self::tone_map_headroom).
+<a href=#575 id=575 data-nosnippet>575</a>///
+<a href=#576 id=576 data-nosnippet>576</a>/// The values change as the display does, so re-query after the surface moves or
+<a href=#577 id=577 data-nosnippet>577</a>/// resizes or the display configuration changes.
+<a href=#578 id=578 data-nosnippet>578</a>///
+<a href=#579 id=579 data-nosnippet>579</a>/// Every field is [`Option`] and no platform reports them all; `None` means
+<a href=#580 id=580 data-nosnippet>580</a>/// unknown, never zero and never SDR (Windows reports nits, macOS only a headroom
+<a href=#581 id=581 data-nosnippet>581</a>/// multiplier). The numbers are advisory hints, not contracts: OS/EDID figures run
+<a href=#582 id=582 data-nosnippet>582</a>/// optimistic and report the panel's claim, not what survives the compositor.
+<a href=#583 id=583 data-nosnippet>583</a>///
+<a href=#584 id=584 data-nosnippet>584</a></span><span class="attr">#[doc = <span class="macro">link_to_wgpu_item!</span>(<span class="kw">struct </span>Surface)]
+<a href=#585 id=585 data-nosnippet>585</a>#[derive(Clone, Debug, Default, PartialEq)]
+<a href=#586 id=586 data-nosnippet>586</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#587 id=587 data-nosnippet>587</a></span><span class="kw">pub struct </span>DisplayHdrInfo {
+<a href=#588 id=588 data-nosnippet>588</a>    <span class="doccomment">/// Absolute-nit luminance levels. `Some` only on platforms that report
+<a href=#589 id=589 data-nosnippet>589</a>    /// absolute nits (Windows, via DXGI). `None` on Apple EDR, the web, Vulkan
+<a href=#590 id=590 data-nosnippet>590</a>    /// on non-Windows, and GLES.
+<a href=#591 id=591 data-nosnippet>591</a>    </span><span class="kw">pub </span>luminance: <span class="prelude-ty">Option</span>&lt;DisplayLuminance&gt;,
+<a href=#592 id=592 data-nosnippet>592</a>
+<a href=#593 id=593 data-nosnippet>593</a>    <span class="doccomment">/// Relative EDR-headroom multipliers. `Some` only on Apple. `None`
+<a href=#594 id=594 data-nosnippet>594</a>    /// elsewhere.
+<a href=#595 id=595 data-nosnippet>595</a>    </span><span class="kw">pub </span>headroom: <span class="prelude-ty">Option</span>&lt;DisplayHeadroom&gt;,
+<a href=#596 id=596 data-nosnippet>596</a>
+<a href=#597 id=597 data-nosnippet>597</a>    <span class="doccomment">/// Chromaticity of the display's primaries and white point (CIE 1931 xy).
+<a href=#598 id=598 data-nosnippet>598</a>    /// `Some` only on Windows (via DXGI). `None` on Apple (which exposes no
+<a href=#599 id=599 data-nosnippet>599</a>    /// primaries), the web (boolean-only), Vulkan on non-Windows, and GLES.
+<a href=#600 id=600 data-nosnippet>600</a>    /// Advisory (often EDID-sourced).
+<a href=#601 id=601 data-nosnippet>601</a>    </span><span class="kw">pub </span>chromaticity: <span class="prelude-ty">Option</span>&lt;DisplayChromaticity&gt;,
+<a href=#602 id=602 data-nosnippet>602</a>
+<a href=#603 id=603 data-nosnippet>603</a>    <span class="doccomment">/// Coarse, boolean dynamic-range + gamut bucket. The only luminance-adjacent
+<a href=#604 id=604 data-nosnippet>604</a>    /// data the web exposes (CSS `dynamic-range` / `color-gamut`), and a useful
+<a href=#605 id=605 data-nosnippet>605</a>    /// cross-check elsewhere. `None` only when nothing at all is known.
+<a href=#606 id=606 data-nosnippet>606</a>    </span><span class="kw">pub </span>coarse: <span class="prelude-ty">Option</span>&lt;DisplayCoarseRange&gt;,
+<a href=#607 id=607 data-nosnippet>607</a>
+<a href=#608 id=608 data-nosnippet>608</a>    <span class="doccomment">/// Output signal bit depth, e.g. `8` / `10` / `12` (DXGI `BitsPerColor`).
+<a href=#609 id=609 data-nosnippet>609</a>    /// Advisory and often unreliable (may report `8` on a 10-bit panel). `None`
+<a href=#610 id=610 data-nosnippet>610</a>    /// if unreported.
+<a href=#611 id=611 data-nosnippet>611</a>    </span><span class="kw">pub </span>bits_per_color: <span class="prelude-ty">Option</span>&lt;u8&gt;,
+<a href=#612 id=612 data-nosnippet>612</a>}
+<a href=#613 id=613 data-nosnippet>613</a>
+<a href=#614 id=614 data-nosnippet>614</a><span class="doccomment">/// Absolute luminance levels in nits (cd/m²). Populated only on Windows (via
+<a href=#615 id=615 data-nosnippet>615</a>/// DXGI); `None` on every other platform.
+<a href=#616 id=616 data-nosnippet>616</a>///
+<a href=#617 id=617 data-nosnippet>617</a>/// Advisory: OS/EDID figures run optimistic. A `0.0` from the OS stays
+<a href=#618 id=618 data-nosnippet>618</a>/// `Some(0.0)`; absence is `None`. These are achromatic (luminance = CIE Y), not a
+<a href=#619 id=619 data-nosnippet>619</a>/// per-color ceiling: a display can't reach [`max_nits`](Self::max_nits) at a
+<a href=#620 id=620 data-nosnippet>620</a>/// saturated chromaticity. Pair them with [`DisplayChromaticity`] for gamut mapping.
+<a href=#621 id=621 data-nosnippet>621</a></span><span class="attr">#[derive(Clone, Copy, Debug, Default, PartialEq)]
+<a href=#622 id=622 data-nosnippet>622</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#623 id=623 data-nosnippet>623</a></span><span class="kw">pub struct </span>DisplayLuminance {
+<a href=#624 id=624 data-nosnippet>624</a>    <span class="doccomment">/// Peak luminance of a small patch, nits. DXGI `MaxLuminance`.
+<a href=#625 id=625 data-nosnippet>625</a>    </span><span class="kw">pub </span>max_nits: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#626 id=626 data-nosnippet>626</a>    <span class="doccomment">/// Sustained full-white-frame luminance, nits: the ceiling for a fully-lit
+<a href=#627 id=627 data-nosnippet>627</a>    /// frame, which power/thermal limits can hold below the small-patch peak
+<a href=#628 id=628 data-nosnippet>628</a>    /// [`max_nits`](Self::max_nits). May equal `max_nits` if the OS reports no
+<a href=#629 id=629 data-nosnippet>629</a>    /// distinct limit. Prefer it over `max_nits` for large bright regions; don't
+<a href=#630 id=630 data-nosnippet>630</a>    /// derive it from `max_nits`. DXGI `MaxFullFrameLuminance`.
+<a href=#631 id=631 data-nosnippet>631</a>    </span><span class="kw">pub </span>max_full_frame_nits: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#632 id=632 data-nosnippet>632</a>    <span class="doccomment">/// Minimum (black) luminance, nits. DXGI `MinLuminance`.
+<a href=#633 id=633 data-nosnippet>633</a>    </span><span class="kw">pub </span>min_nits: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#634 id=634 data-nosnippet>634</a>    <span class="doccomment">/// Luminance the OS maps SDR reference white to, nits; moves with the
+<a href=#635 id=635 data-nosnippet>635</a>    /// brightness slider. Converts between absolute nits and relative EDR headroom
+<a href=#636 id=636 data-nosnippet>636</a>    /// (`max_nits / sdr_white_nits`). Read via the `DISPLAYCONFIG_SDR_WHITE_LEVEL`
+<a href=#637 id=637 data-nosnippet>637</a>    /// query, separate from the other nits, so `None` only if that query fails.
+<a href=#638 id=638 data-nosnippet>638</a>    </span><span class="kw">pub </span>sdr_white_nits: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#639 id=639 data-nosnippet>639</a>}
+<a href=#640 id=640 data-nosnippet>640</a>
+<a href=#641 id=641 data-nosnippet>641</a><span class="doccomment">/// Relative EDR headroom (Apple): unitless multipliers over current SDR white,
+<a href=#642 id=642 data-nosnippet>642</a>/// where `1.0` means no headroom. Moves with brightness, ambient light, battery,
+<a href=#643 id=643 data-nosnippet>643</a>/// and which display the window is on. Apple exposes no absolute-nit equivalent,
+<a href=#644 id=644 data-nosnippet>644</a>/// so this is separate from [`DisplayLuminance`] and can't be converted to nits.
+<a href=#645 id=645 data-nosnippet>645</a>///
+<a href=#646 id=646 data-nosnippet>646</a>/// Populated only on macOS; `None` on iOS, tvOS, and visionOS.
+<a href=#647 id=647 data-nosnippet>647</a></span><span class="attr">#[derive(Clone, Copy, Debug, Default, PartialEq)]
+<a href=#648 id=648 data-nosnippet>648</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#649 id=649 data-nosnippet>649</a></span><span class="kw">pub struct </span>DisplayHeadroom {
+<a href=#650 id=650 data-nosnippet>650</a>    <span class="doccomment">/// Headroom available *right now* (`maximumExtendedDynamicRangeColorComponentValue`
+<a href=#651 id=651 data-nosnippet>651</a>    /// / iOS `UIScreen.currentEDRHeadroom`). `1.0` means no headroom at this
+<a href=#652 id=652 data-nosnippet>652</a>    /// instant, even on an HDR-capable panel.
+<a href=#653 id=653 data-nosnippet>653</a>    </span><span class="kw">pub </span>current: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#654 id=654 data-nosnippet>654</a>    <span class="doccomment">/// Headroom the display could reach under ideal conditions
+<a href=#655 id=655 data-nosnippet>655</a>    /// (`maximumPotentialExtendedDynamicRangeColorComponentValue` /
+<a href=#656 id=656 data-nosnippet>656</a>    /// `UIScreen.potentialEDRHeadroom`).
+<a href=#657 id=657 data-nosnippet>657</a>    </span><span class="kw">pub </span>potential: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#658 id=658 data-nosnippet>658</a>    <span class="doccomment">/// Headroom for reference-white content
+<a href=#659 id=659 data-nosnippet>659</a>    /// (`maximumReferenceExtendedDynamicRangeColorComponentValue`). `None` if
+<a href=#660 id=660 data-nosnippet>660</a>    /// unreported.
+<a href=#661 id=661 data-nosnippet>661</a>    </span><span class="kw">pub </span>reference: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+<a href=#662 id=662 data-nosnippet>662</a>}
+<a href=#663 id=663 data-nosnippet>663</a>
+<a href=#664 id=664 data-nosnippet>664</a><span class="doccomment">/// CIE 1931 xy chromaticity of a display's primaries and white point. Each
+<a href=#665 id=665 data-nosnippet>665</a>/// coordinate is `[x, y]`; a coordinate the platform omits is `None`.
+<a href=#666 id=666 data-nosnippet>666</a></span><span class="attr">#[derive(Clone, Copy, Debug, Default, PartialEq)]
+<a href=#667 id=667 data-nosnippet>667</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#668 id=668 data-nosnippet>668</a></span><span class="kw">pub struct </span>DisplayChromaticity {
+<a href=#669 id=669 data-nosnippet>669</a>    <span class="doccomment">/// xy of the red primary.
+<a href=#670 id=670 data-nosnippet>670</a>    </span><span class="kw">pub </span>red: <span class="prelude-ty">Option</span>&lt;[f32; <span class="number">2</span>]&gt;,
+<a href=#671 id=671 data-nosnippet>671</a>    <span class="doccomment">/// xy of the green primary.
+<a href=#672 id=672 data-nosnippet>672</a>    </span><span class="kw">pub </span>green: <span class="prelude-ty">Option</span>&lt;[f32; <span class="number">2</span>]&gt;,
+<a href=#673 id=673 data-nosnippet>673</a>    <span class="doccomment">/// xy of the blue primary.
+<a href=#674 id=674 data-nosnippet>674</a>    </span><span class="kw">pub </span>blue: <span class="prelude-ty">Option</span>&lt;[f32; <span class="number">2</span>]&gt;,
+<a href=#675 id=675 data-nosnippet>675</a>    <span class="doccomment">/// xy of the white point.
+<a href=#676 id=676 data-nosnippet>676</a>    </span><span class="kw">pub </span>white: <span class="prelude-ty">Option</span>&lt;[f32; <span class="number">2</span>]&gt;,
+<a href=#677 id=677 data-nosnippet>677</a>}
+<a href=#678 id=678 data-nosnippet>678</a>
+<a href=#679 id=679 data-nosnippet>679</a><span class="doccomment">/// Coarse, boolean dynamic-range and gamut signal.
+<a href=#680 id=680 data-nosnippet>680</a>///
+<a href=#681 id=681 data-nosnippet>681</a>/// This is the only luminance-adjacent data the web exposes, and a useful
+<a href=#682 id=682 data-nosnippet>682</a>/// cross-check on other platforms.
+<a href=#683 id=683 data-nosnippet>683</a></span><span class="attr">#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+<a href=#684 id=684 data-nosnippet>684</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#685 id=685 data-nosnippet>685</a></span><span class="kw">pub struct </span>DisplayCoarseRange {
+<a href=#686 id=686 data-nosnippet>686</a>    <span class="doccomment">/// CSS `@media (dynamic-range: high)`: the display *can* present HDR-range
+<a href=#687 id=687 data-nosnippet>687</a>    /// content. Best-effort and platform-defined — "capable", not "an HDR mode is
+<a href=#688 id=688 data-nosnippet>688</a>    /// active". It feeds [`tone_map_headroom`](DisplayHdrInfo::tone_map_headroom):
+<a href=#689 id=689 data-nosnippet>689</a>    /// `Some(false)` marks a definitively-SDR display, collapsing the headroom to
+<a href=#690 id=690 data-nosnippet>690</a>    /// `1.0`.
+<a href=#691 id=691 data-nosnippet>691</a>    </span><span class="kw">pub </span>high_dynamic_range: <span class="prelude-ty">Option</span>&lt;bool&gt;,
+<a href=#692 id=692 data-nosnippet>692</a>    <span class="doccomment">/// Best gamut bucket the display covers (CSS `color-gamut`).
+<a href=#693 id=693 data-nosnippet>693</a>    </span><span class="kw">pub </span>gamut: <span class="prelude-ty">Option</span>&lt;DisplayGamut&gt;,
+<a href=#694 id=694 data-nosnippet>694</a>}
+<a href=#695 id=695 data-nosnippet>695</a>
+<a href=#696 id=696 data-nosnippet>696</a><span class="doccomment">/// Coarse gamut classification, mirroring CSS `color-gamut`.
+<a href=#697 id=697 data-nosnippet>697</a>///
+<a href=#698 id=698 data-nosnippet>698</a>/// These variants are **not** ordered by containment; do not rely on their
+<a href=#699 id=699 data-nosnippet>699</a>/// declaration order to compare gamut sizes.
+<a href=#700 id=700 data-nosnippet>700</a></span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+<a href=#701 id=701 data-nosnippet>701</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#702 id=702 data-nosnippet>702</a>#[non_exhaustive]
+<a href=#703 id=703 data-nosnippet>703</a></span><span class="kw">pub enum </span>DisplayGamut {
+<a href=#704 id=704 data-nosnippet>704</a>    <span class="doccomment">/// Approximately sRGB / Rec.709.
+<a href=#705 id=705 data-nosnippet>705</a>    </span>Srgb,
+<a href=#706 id=706 data-nosnippet>706</a>    <span class="doccomment">/// Approximately Display-P3.
+<a href=#707 id=707 data-nosnippet>707</a>    </span>DisplayP3,
+<a href=#708 id=708 data-nosnippet>708</a>    <span class="doccomment">/// Approximately Rec.2020.
+<a href=#709 id=709 data-nosnippet>709</a>    </span>Rec2020,
+<a href=#710 id=710 data-nosnippet>710</a>}
+<a href=#711 id=711 data-nosnippet>711</a>
+<a href=#712 id=712 data-nosnippet>712</a><span class="kw">impl </span>DisplayHdrInfo {
+<a href=#713 id=713 data-nosnippet>713</a>    <span class="doccomment">/// Best-effort tone-map headroom: the linear multiplier of SDR white the
+<a href=#714 id=714 data-nosnippet>714</a>    /// display can drive before clipping. This is the single value most
+<a href=#715 id=715 data-nosnippet>715</a>    /// tone-mappers want, with the subjective parts left to the application.
+<a href=#716 id=716 data-nosnippet>716</a>    ///
+<a href=#717 id=717 data-nosnippet>717</a>    /// Resolution order, first match wins:
+<a href=#718 id=718 data-nosnippet>718</a>    /// 1. Apple EDR: [`DisplayHeadroom::current`] (already a multiplier).
+<a href=#719 id=719 data-nosnippet>719</a>    /// 2. `Some(1.0)` when [`DisplayCoarseRange::high_dynamic_range`] is
+<a href=#720 id=720 data-nosnippet>720</a>    ///    `Some(false)` — a definitively-SDR display (Windows and the web both set
+<a href=#721 id=721 data-nosnippet>721</a>    ///    this flag for an SDR output). Its panel peak may sit above its SDR white,
+<a href=#722 id=722 data-nosnippet>722</a>    ///    but that ratio isn't headroom you can drive, so it isn't reported as
+<a href=#723 id=723 data-nosnippet>723</a>    ///    such.
+<a href=#724 id=724 data-nosnippet>724</a>    /// 3. Absolute nits: `max_nits / sdr_white_nits`, when both are known and
+<a href=#725 id=725 data-nosnippet>725</a>    ///    `sdr_white_nits &gt; 0.0`.
+<a href=#726 id=726 data-nosnippet>726</a>    /// 4. Otherwise `None`: the available figures don't pin a multiplier (e.g.
+<a href=#727 id=727 data-nosnippet>727</a>    ///    `max_nits` known but `sdr_white_nits` unknown).
+<a href=#728 id=728 data-nosnippet>728</a>    ///
+<a href=#729 id=729 data-nosnippet>729</a>    /// Use `unwrap_or(1.0)` on the result for the SDR fallback. Never returns a
+<a href=#730 id=730 data-nosnippet>730</a>    /// non-finite value.
+<a href=#731 id=731 data-nosnippet>731</a>    </span><span class="attr">#[must_use]
+<a href=#732 id=732 data-nosnippet>732</a>    </span><span class="kw">pub fn </span>tone_map_headroom(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;f32&gt; {
+<a href=#733 id=733 data-nosnippet>733</a>        <span class="comment">// Apple EDR reports a multiplier directly.
+<a href=#734 id=734 data-nosnippet>734</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(h) = <span class="self">self
+<a href=#735 id=735 data-nosnippet>735</a>            </span>.headroom
+<a href=#736 id=736 data-nosnippet>736</a>            .and_then(|h| h.current)
+<a href=#737 id=737 data-nosnippet>737</a>            .filter(|h| h.is_finite())
+<a href=#738 id=738 data-nosnippet>738</a>        {
+<a href=#739 id=739 data-nosnippet>739</a>            <span class="kw">return </span><span class="prelude-val">Some</span>(h);
+<a href=#740 id=740 data-nosnippet>740</a>        }
+<a href=#741 id=741 data-nosnippet>741</a>        <span class="comment">// A definitively-SDR display still reports a physical peak against a
+<a href=#742 id=742 data-nosnippet>742</a>        // default SDR white; checked before the nit ratio so that unusable ratio
+<a href=#743 id=743 data-nosnippet>743</a>        // can't surface as phantom headroom.
+<a href=#744 id=744 data-nosnippet>744</a>        </span><span class="kw">if </span><span class="self">self</span>.coarse.and_then(|c| c.high_dynamic_range) == <span class="prelude-val">Some</span>(<span class="bool-val">false</span>) {
+<a href=#745 id=745 data-nosnippet>745</a>            <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="number">1.0</span>);
+<a href=#746 id=746 data-nosnippet>746</a>        }
+<a href=#747 id=747 data-nosnippet>747</a>        <span class="comment">// Otherwise derive the multiplier from absolute nits, when both the peak
+<a href=#748 id=748 data-nosnippet>748</a>        // and the SDR white level are known.
+<a href=#749 id=749 data-nosnippet>749</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>((max, sdr)) = <span class="self">self
+<a href=#750 id=750 data-nosnippet>750</a>            </span>.luminance
+<a href=#751 id=751 data-nosnippet>751</a>            .and_then(|l| l.max_nits.zip(l.sdr_white_nits))
+<a href=#752 id=752 data-nosnippet>752</a>            .filter(|<span class="kw-2">&amp;</span>(max, sdr)| sdr &gt; <span class="number">0.0 </span>&amp;&amp; max.is_finite() &amp;&amp; sdr.is_finite())
+<a href=#753 id=753 data-nosnippet>753</a>        {
+<a href=#754 id=754 data-nosnippet>754</a>            <span class="kw">return </span><span class="prelude-val">Some</span>(max / sdr);
+<a href=#755 id=755 data-nosnippet>755</a>        }
+<a href=#756 id=756 data-nosnippet>756</a>        <span class="prelude-val">None
+<a href=#757 id=757 data-nosnippet>757</a>    </span>}
+<a href=#758 id=758 data-nosnippet>758</a>}
+<a href=#759 id=759 data-nosnippet>759</a>
+<a href=#760 id=760 data-nosnippet>760</a><span class="attr">#[cfg(test)]
+<a href=#761 id=761 data-nosnippet>761</a></span><span class="kw">mod </span>display_hdr_info_tests {
+<a href=#762 id=762 data-nosnippet>762</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#763 id=763 data-nosnippet>763</a>
+<a href=#764 id=764 data-nosnippet>764</a>    <span class="attr">#[test]
+<a href=#765 id=765 data-nosnippet>765</a>    </span><span class="kw">fn </span>default_is_unknown() {
+<a href=#766 id=766 data-nosnippet>766</a>        <span class="comment">// Nothing known, so no headroom is derived — it never guesses SDR vs HDR.
+<a href=#767 id=767 data-nosnippet>767</a>        </span><span class="macro">assert_eq!</span>(DisplayHdrInfo::default().tone_map_headroom(), <span class="prelude-val">None</span>);
+<a href=#768 id=768 data-nosnippet>768</a>    }
+<a href=#769 id=769 data-nosnippet>769</a>
+<a href=#770 id=770 data-nosnippet>770</a>    <span class="attr">#[test]
+<a href=#771 id=771 data-nosnippet>771</a>    </span><span class="kw">fn </span>apple_headroom_is_used_directly() {
+<a href=#772 id=772 data-nosnippet>772</a>        <span class="comment">// Apple reports a live multiplier; it's returned as-is.
+<a href=#773 id=773 data-nosnippet>773</a>        </span><span class="kw">let </span>info = DisplayHdrInfo {
+<a href=#774 id=774 data-nosnippet>774</a>            headroom: <span class="prelude-val">Some</span>(DisplayHeadroom {
+<a href=#775 id=775 data-nosnippet>775</a>                current: <span class="prelude-val">Some</span>(<span class="number">3.0</span>),
+<a href=#776 id=776 data-nosnippet>776</a>                potential: <span class="prelude-val">Some</span>(<span class="number">5.0</span>),
+<a href=#777 id=777 data-nosnippet>777</a>                reference: <span class="prelude-val">None</span>,
+<a href=#778 id=778 data-nosnippet>778</a>            }),
+<a href=#779 id=779 data-nosnippet>779</a>            ..Default::default()
+<a href=#780 id=780 data-nosnippet>780</a>        };
+<a href=#781 id=781 data-nosnippet>781</a>        <span class="macro">assert_eq!</span>(info.tone_map_headroom(), <span class="prelude-val">Some</span>(<span class="number">3.0</span>));
+<a href=#782 id=782 data-nosnippet>782</a>    }
+<a href=#783 id=783 data-nosnippet>783</a>
+<a href=#784 id=784 data-nosnippet>784</a>    <span class="attr">#[test]
+<a href=#785 id=785 data-nosnippet>785</a>    </span><span class="kw">fn </span>apple_uses_current_not_potential() {
+<a href=#786 id=786 data-nosnippet>786</a>        <span class="comment">// A capable panel with no headroom right now (current 1.0, potential 16.0
+<a href=#787 id=787 data-nosnippet>787</a>        // — e.g. macOS at full brightness). The live value wins; the potential
+<a href=#788 id=788 data-nosnippet>788</a>        // ceiling is never tone-mapped against.
+<a href=#789 id=789 data-nosnippet>789</a>        </span><span class="kw">let </span>info = DisplayHdrInfo {
+<a href=#790 id=790 data-nosnippet>790</a>            headroom: <span class="prelude-val">Some</span>(DisplayHeadroom {
+<a href=#791 id=791 data-nosnippet>791</a>                current: <span class="prelude-val">Some</span>(<span class="number">1.0</span>),
+<a href=#792 id=792 data-nosnippet>792</a>                potential: <span class="prelude-val">Some</span>(<span class="number">16.0</span>),
+<a href=#793 id=793 data-nosnippet>793</a>                reference: <span class="prelude-val">None</span>,
+<a href=#794 id=794 data-nosnippet>794</a>            }),
+<a href=#795 id=795 data-nosnippet>795</a>            ..Default::default()
+<a href=#796 id=796 data-nosnippet>796</a>        };
+<a href=#797 id=797 data-nosnippet>797</a>        <span class="macro">assert_eq!</span>(info.tone_map_headroom(), <span class="prelude-val">Some</span>(<span class="number">1.0</span>));
+<a href=#798 id=798 data-nosnippet>798</a>    }
+<a href=#799 id=799 data-nosnippet>799</a>
+<a href=#800 id=800 data-nosnippet>800</a>    <span class="attr">#[test]
+<a href=#801 id=801 data-nosnippet>801</a>    </span><span class="kw">fn </span>windows_nits_derive_headroom_only_with_sdr_white() {
+<a href=#802 id=802 data-nosnippet>802</a>        <span class="comment">// Both nits present and sdr_white &gt; 0, so it returns the ratio.
+<a href=#803 id=803 data-nosnippet>803</a>        </span><span class="kw">let </span>info = DisplayHdrInfo {
+<a href=#804 id=804 data-nosnippet>804</a>            luminance: <span class="prelude-val">Some</span>(DisplayLuminance {
+<a href=#805 id=805 data-nosnippet>805</a>                max_nits: <span class="prelude-val">Some</span>(<span class="number">800.0</span>),
+<a href=#806 id=806 data-nosnippet>806</a>                sdr_white_nits: <span class="prelude-val">Some</span>(<span class="number">200.0</span>),
+<a href=#807 id=807 data-nosnippet>807</a>                ..Default::default()
+<a href=#808 id=808 data-nosnippet>808</a>            }),
+<a href=#809 id=809 data-nosnippet>809</a>            ..Default::default()
+<a href=#810 id=810 data-nosnippet>810</a>        };
+<a href=#811 id=811 data-nosnippet>811</a>        <span class="macro">assert_eq!</span>(info.tone_map_headroom(), <span class="prelude-val">Some</span>(<span class="number">4.0</span>));
+<a href=#812 id=812 data-nosnippet>812</a>
+<a href=#813 id=813 data-nosnippet>813</a>        <span class="comment">// max_nits known but sdr_white unknown, so it won't guess across frames.
+<a href=#814 id=814 data-nosnippet>814</a>        </span><span class="kw">let </span>info = DisplayHdrInfo {
+<a href=#815 id=815 data-nosnippet>815</a>            luminance: <span class="prelude-val">Some</span>(DisplayLuminance {
+<a href=#816 id=816 data-nosnippet>816</a>                max_nits: <span class="prelude-val">Some</span>(<span class="number">800.0</span>),
+<a href=#817 id=817 data-nosnippet>817</a>                sdr_white_nits: <span class="prelude-val">None</span>,
+<a href=#818 id=818 data-nosnippet>818</a>                ..Default::default()
+<a href=#819 id=819 data-nosnippet>819</a>            }),
+<a href=#820 id=820 data-nosnippet>820</a>            ..Default::default()
+<a href=#821 id=821 data-nosnippet>821</a>        };
+<a href=#822 id=822 data-nosnippet>822</a>        <span class="macro">assert_eq!</span>(info.tone_map_headroom(), <span class="prelude-val">None</span>);
+<a href=#823 id=823 data-nosnippet>823</a>    }
+<a href=#824 id=824 data-nosnippet>824</a>
+<a href=#825 id=825 data-nosnippet>825</a>    <span class="attr">#[test]
+<a href=#826 id=826 data-nosnippet>826</a>    </span><span class="kw">fn </span>sdr_display_collapses_to_unity() {
+<a href=#827 id=827 data-nosnippet>827</a>        <span class="comment">// A definitively-SDR display (`dynamic-range: standard`) has no usable
+<a href=#828 id=828 data-nosnippet>828</a>        // headroom, even with no luminance figures at all.
+<a href=#829 id=829 data-nosnippet>829</a>        </span><span class="kw">let </span>info = DisplayHdrInfo {
+<a href=#830 id=830 data-nosnippet>830</a>            coarse: <span class="prelude-val">Some</span>(DisplayCoarseRange {
+<a href=#831 id=831 data-nosnippet>831</a>                high_dynamic_range: <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
+<a href=#832 id=832 data-nosnippet>832</a>                gamut: <span class="prelude-val">Some</span>(DisplayGamut::Srgb),
+<a href=#833 id=833 data-nosnippet>833</a>            }),
+<a href=#834 id=834 data-nosnippet>834</a>            ..Default::default()
+<a href=#835 id=835 data-nosnippet>835</a>        };
+<a href=#836 id=836 data-nosnippet>836</a>        <span class="macro">assert_eq!</span>(info.tone_map_headroom(), <span class="prelude-val">Some</span>(<span class="number">1.0</span>));
+<a href=#837 id=837 data-nosnippet>837</a>    }
+<a href=#838 id=838 data-nosnippet>838</a>
+<a href=#839 id=839 data-nosnippet>839</a>    <span class="attr">#[test]
+<a href=#840 id=840 data-nosnippet>840</a>    </span><span class="kw">fn </span>sdr_display_overrides_panel_nits() {
+<a href=#841 id=841 data-nosnippet>841</a>        <span class="comment">// An SDR-mode output still reports its EDID peak (270 nits) against a
+<a href=#842 id=842 data-nosnippet>842</a>        // default 80-nit SDR white. That 270/80 ratio is unusable, so the SDR flag
+<a href=#843 id=843 data-nosnippet>843</a>        // wins and the headroom collapses to 1.0 rather than 3.375.
+<a href=#844 id=844 data-nosnippet>844</a>        </span><span class="kw">let </span>info = DisplayHdrInfo {
+<a href=#845 id=845 data-nosnippet>845</a>            luminance: <span class="prelude-val">Some</span>(DisplayLuminance {
+<a href=#846 id=846 data-nosnippet>846</a>                max_nits: <span class="prelude-val">Some</span>(<span class="number">270.0</span>),
+<a href=#847 id=847 data-nosnippet>847</a>                sdr_white_nits: <span class="prelude-val">Some</span>(<span class="number">80.0</span>),
+<a href=#848 id=848 data-nosnippet>848</a>                ..Default::default()
+<a href=#849 id=849 data-nosnippet>849</a>            }),
+<a href=#850 id=850 data-nosnippet>850</a>            coarse: <span class="prelude-val">Some</span>(DisplayCoarseRange {
+<a href=#851 id=851 data-nosnippet>851</a>                high_dynamic_range: <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
+<a href=#852 id=852 data-nosnippet>852</a>                gamut: <span class="prelude-val">Some</span>(DisplayGamut::DisplayP3),
+<a href=#853 id=853 data-nosnippet>853</a>            }),
+<a href=#854 id=854 data-nosnippet>854</a>            ..Default::default()
+<a href=#855 id=855 data-nosnippet>855</a>        };
+<a href=#856 id=856 data-nosnippet>856</a>        <span class="macro">assert_eq!</span>(info.tone_map_headroom(), <span class="prelude-val">Some</span>(<span class="number">1.0</span>));
+<a href=#857 id=857 data-nosnippet>857</a>    }
+<a href=#858 id=858 data-nosnippet>858</a>
+<a href=#859 id=859 data-nosnippet>859</a>    <span class="attr">#[test]
+<a href=#860 id=860 data-nosnippet>860</a>    </span><span class="kw">fn </span>coarse_hdr_capable_alone_derives_nothing() {
+<a href=#861 id=861 data-nosnippet>861</a>        <span class="comment">// `dynamic-range: high` (the web's only signal) means the display is
+<a href=#862 id=862 data-nosnippet>862</a>        // HDR-capable, not that headroom is available — and it carries no
+<a href=#863 id=863 data-nosnippet>863</a>        // luminance to derive one from, so the headroom stays unknown.
+<a href=#864 id=864 data-nosnippet>864</a>        </span><span class="kw">let </span>info = DisplayHdrInfo {
+<a href=#865 id=865 data-nosnippet>865</a>            coarse: <span class="prelude-val">Some</span>(DisplayCoarseRange {
+<a href=#866 id=866 data-nosnippet>866</a>                high_dynamic_range: <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
+<a href=#867 id=867 data-nosnippet>867</a>                gamut: <span class="prelude-val">Some</span>(DisplayGamut::Rec2020),
+<a href=#868 id=868 data-nosnippet>868</a>            }),
+<a href=#869 id=869 data-nosnippet>869</a>            ..Default::default()
+<a href=#870 id=870 data-nosnippet>870</a>        };
+<a href=#871 id=871 data-nosnippet>871</a>        <span class="macro">assert_eq!</span>(info.tone_map_headroom(), <span class="prelude-val">None</span>);
+<a href=#872 id=872 data-nosnippet>872</a>    }
+<a href=#873 id=873 data-nosnippet>873</a>
+<a href=#874 id=874 data-nosnippet>874</a>    <span class="attr">#[test]
+<a href=#875 id=875 data-nosnippet>875</a>    </span><span class="kw">fn </span>non_finite_current_falls_through_to_nits() {
+<a href=#876 id=876 data-nosnippet>876</a>        <span class="comment">// A non-finite EDR read is skipped, not leaked; the nit ratio answers.
+<a href=#877 id=877 data-nosnippet>877</a>        </span><span class="kw">let </span>info = DisplayHdrInfo {
+<a href=#878 id=878 data-nosnippet>878</a>            headroom: <span class="prelude-val">Some</span>(DisplayHeadroom {
+<a href=#879 id=879 data-nosnippet>879</a>                current: <span class="prelude-val">Some</span>(f32::INFINITY),
+<a href=#880 id=880 data-nosnippet>880</a>                ..Default::default()
+<a href=#881 id=881 data-nosnippet>881</a>            }),
+<a href=#882 id=882 data-nosnippet>882</a>            luminance: <span class="prelude-val">Some</span>(DisplayLuminance {
+<a href=#883 id=883 data-nosnippet>883</a>                max_nits: <span class="prelude-val">Some</span>(<span class="number">1000.0</span>),
+<a href=#884 id=884 data-nosnippet>884</a>                sdr_white_nits: <span class="prelude-val">Some</span>(<span class="number">100.0</span>),
+<a href=#885 id=885 data-nosnippet>885</a>                ..Default::default()
+<a href=#886 id=886 data-nosnippet>886</a>            }),
+<a href=#887 id=887 data-nosnippet>887</a>            ..Default::default()
+<a href=#888 id=888 data-nosnippet>888</a>        };
+<a href=#889 id=889 data-nosnippet>889</a>        <span class="macro">assert_eq!</span>(info.tone_map_headroom(), <span class="prelude-val">Some</span>(<span class="number">10.0</span>));
+<a href=#890 id=890 data-nosnippet>890</a>    }
+<a href=#891 id=891 data-nosnippet>891</a>}
+<a href=#892 id=892 data-nosnippet>892</a>
+<a href=#893 id=893 data-nosnippet>893</a><span class="doccomment">/// Configures a [`Surface`] for presentation.
+<a href=#894 id=894 data-nosnippet>894</a>///
+<a href=#895 id=895 data-nosnippet>895</a></span><span class="attr">#[doc = <span class="macro">link_to_wgpu_item!</span>(<span class="kw">struct </span>Surface)]
+<a href=#896 id=896 data-nosnippet>896</a>#[repr(C)]
+<a href=#897 id=897 data-nosnippet>897</a>#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+<a href=#898 id=898 data-nosnippet>898</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#899 id=899 data-nosnippet>899</a></span><span class="kw">pub struct </span>SurfaceConfiguration&lt;V&gt; {
+<a href=#900 id=900 data-nosnippet>900</a>    <span class="doccomment">/// The usage of the swap chain. The only usage guaranteed to be supported is [`TextureUsages::RENDER_ATTACHMENT`].
+<a href=#901 id=901 data-nosnippet>901</a>    </span><span class="kw">pub </span>usage: TextureUsages,
+<a href=#902 id=902 data-nosnippet>902</a>    <span class="doccomment">/// The texture format of the swap chain. The only formats that are guaranteed are
+<a href=#903 id=903 data-nosnippet>903</a>    /// [`TextureFormat::Bgra8Unorm`] and [`TextureFormat::Bgra8UnormSrgb`].
+<a href=#904 id=904 data-nosnippet>904</a>    </span><span class="kw">pub </span>format: TextureFormat,
+<a href=#905 id=905 data-nosnippet>905</a>    <span class="doccomment">/// The color space in which the presentation engine interprets the values
+<a href=#906 id=906 data-nosnippet>906</a>    /// written to the swap chain.
+<a href=#907 id=907 data-nosnippet>907</a>    ///
+<a href=#908 id=908 data-nosnippet>908</a>    /// The supported color spaces for each format are listed in
+<a href=#909 id=909 data-nosnippet>909</a>    /// [`SurfaceCapabilities::format_capabilities`].
+<a href=#910 id=910 data-nosnippet>910</a>    /// [`SurfaceColorSpace::Auto`] (the default) is supported for every
+<a href=#911 id=911 data-nosnippet>911</a>    /// format in [`SurfaceCapabilities::formats`]; any other value must be
+<a href=#912 id=912 data-nosnippet>912</a>    /// present in the format's
+<a href=#913 id=913 data-nosnippet>913</a>    /// [`color_spaces`](SurfaceFormatCapabilities::color_spaces) set.
+<a href=#914 id=914 data-nosnippet>914</a>    </span><span class="kw">pub </span>color_space: SurfaceColorSpace,
+<a href=#915 id=915 data-nosnippet>915</a>    <span class="doccomment">/// Width of the swap chain. Must be the same size as the surface, and nonzero.
+<a href=#916 id=916 data-nosnippet>916</a>    ///
+<a href=#917 id=917 data-nosnippet>917</a>    /// If this is not the same size as the underlying surface (e.g. if it is
+<a href=#918 id=918 data-nosnippet>918</a>    /// set once, and the window is later resized), the behaviour is defined
+<a href=#919 id=919 data-nosnippet>919</a>    /// but platform-specific, and may change in the future (currently macOS
+<a href=#920 id=920 data-nosnippet>920</a>    /// scales the surface, other platforms may do something else).
+<a href=#921 id=921 data-nosnippet>921</a>    </span><span class="kw">pub </span>width: u32,
+<a href=#922 id=922 data-nosnippet>922</a>    <span class="doccomment">/// Height of the swap chain. Must be the same size as the surface, and nonzero.
+<a href=#923 id=923 data-nosnippet>923</a>    ///
+<a href=#924 id=924 data-nosnippet>924</a>    /// If this is not the same size as the underlying surface (e.g. if it is
+<a href=#925 id=925 data-nosnippet>925</a>    /// set once, and the window is later resized), the behaviour is defined
+<a href=#926 id=926 data-nosnippet>926</a>    /// but platform-specific, and may change in the future (currently macOS
+<a href=#927 id=927 data-nosnippet>927</a>    /// scales the surface, other platforms may do something else).
+<a href=#928 id=928 data-nosnippet>928</a>    </span><span class="kw">pub </span>height: u32,
+<a href=#929 id=929 data-nosnippet>929</a>    <span class="doccomment">/// Presentation mode of the swap chain. Fifo is the only mode guaranteed to be supported.
+<a href=#930 id=930 data-nosnippet>930</a>    /// `FifoRelaxed`, `Immediate`, and `Mailbox` will crash if unsupported, while `AutoVsync` and
+<a href=#931 id=931 data-nosnippet>931</a>    /// `AutoNoVsync` will gracefully do a designed sets of fallbacks if their primary modes are
+<a href=#932 id=932 data-nosnippet>932</a>    /// unsupported.
+<a href=#933 id=933 data-nosnippet>933</a>    </span><span class="kw">pub </span>present_mode: PresentMode,
+<a href=#934 id=934 data-nosnippet>934</a>    <span class="doccomment">/// Desired maximum number of monitor refreshes between a [`Surface::get_current_texture`] call and the
+<a href=#935 id=935 data-nosnippet>935</a>    /// texture being presented to the screen. This is sometimes called "Frames in Flight".
+<a href=#936 id=936 data-nosnippet>936</a>    ///
+<a href=#937 id=937 data-nosnippet>937</a>    /// Defaults to `2` when created via [`Surface::get_default_config`] as this is a reasonable default.
+<a href=#938 id=938 data-nosnippet>938</a>    ///
+<a href=#939 id=939 data-nosnippet>939</a>    /// This is ultimately a hint to the backend implementation and will always be clamped
+<a href=#940 id=940 data-nosnippet>940</a>    /// to the supported range.
+<a href=#941 id=941 data-nosnippet>941</a>    ///
+<a href=#942 id=942 data-nosnippet>942</a>    /// Typical values are `1` to `3`, but higher values are valid, though likely to be clamped.
+<a href=#943 id=943 data-nosnippet>943</a>    /// * Choose `1` to minimize latency above all else. This only gives a single monitor refresh for all of
+<a href=#944 id=944 data-nosnippet>944</a>    ///   the CPU and GPU work to complete. ⚠️ As a result of these short swapchains, the CPU and GPU
+<a href=#945 id=945 data-nosnippet>945</a>    ///   cannot run in parallel, prioritizing latency over throughput. For applications like GUIs doing
+<a href=#946 id=946 data-nosnippet>946</a>    ///   a small amount of GPU work each frame that need low latency, this is a reasonable choice.
+<a href=#947 id=947 data-nosnippet>947</a>    /// * Choose `2` for a balance between latency and throughput. The CPU and GPU both can each use
+<a href=#948 id=948 data-nosnippet>948</a>    ///   a full monitor refresh to do their computations. This is a reasonable default for most applications.
+<a href=#949 id=949 data-nosnippet>949</a>    /// * Choose `3` or higher to maximize throughput, sacrificing latency when the CPU and GPU
+<a href=#950 id=950 data-nosnippet>950</a>    ///   are using less than a full monitor refresh each. For applications that use CPU-side pipelining
+<a href=#951 id=951 data-nosnippet>951</a>    ///   of frames this may be a reasonable choice. ⚠️ On 60hz displays the latency can be very noticeable.
+<a href=#952 id=952 data-nosnippet>952</a>    ///
+<a href=#953 id=953 data-nosnippet>953</a>    /// This maps to the backend in the following ways:
+<a href=#954 id=954 data-nosnippet>954</a>    /// - Vulkan: Number of frames in the swapchain is `desired_maximum_frame_latency + 1`,
+<a href=#955 id=955 data-nosnippet>955</a>    ///   clamped to the supported range.
+<a href=#956 id=956 data-nosnippet>956</a>    /// - DX12: Calls [`IDXGISwapChain2::SetMaximumFrameLatency(desired_maximum_frame_latency)`][SMFL].
+<a href=#957 id=957 data-nosnippet>957</a>    /// - Metal: Sets the `maximumDrawableCount` of the underlying `CAMetalLayer` to
+<a href=#958 id=958 data-nosnippet>958</a>    ///   `desired_maximum_frame_latency + 1`, clamped to the supported range.
+<a href=#959 id=959 data-nosnippet>959</a>    /// - OpenGL: Ignored
+<a href=#960 id=960 data-nosnippet>960</a>    ///
+<a href=#961 id=961 data-nosnippet>961</a>    /// It also has various subtle interactions with various present modes and APIs.
+<a href=#962 id=962 data-nosnippet>962</a>    /// - DX12 + Mailbox: Limits framerate to `desired_maximum_frame_latency * Monitor Hz` fps.
+<a href=#963 id=963 data-nosnippet>963</a>    /// - Vulkan/Metal + Mailbox: If this is set to `2`, limits framerate to `2 * Monitor Hz` fps. `3` or higher is unlimited.
+<a href=#964 id=964 data-nosnippet>964</a>    ///
+<a href=#965 id=965 data-nosnippet>965</a>    </span><span class="attr">#[doc = <span class="macro">link_to_wgpu_docs!</span>([<span class="string">"`Surface::get_current_texture`"</span>]</span>: <span class="string">"struct.Surface.html#method.get_current_texture"</span>)]
+<a href=#966 id=966 data-nosnippet>966</a>    <span class="attr">#[doc = <span class="macro">link_to_wgpu_docs!</span>([<span class="string">"`Surface::get_default_config`"</span>]</span>: <span class="string">"struct.Surface.html#method.get_default_config"</span>)]
+<a href=#967 id=967 data-nosnippet>967</a>    <span class="doccomment">/// [SMFL]: https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setmaximumframelatency
+<a href=#968 id=968 data-nosnippet>968</a>    </span><span class="kw">pub </span>desired_maximum_frame_latency: u32,
+<a href=#969 id=969 data-nosnippet>969</a>    <span class="doccomment">/// Specifies how the alpha channel of the textures should be handled during compositing.
+<a href=#970 id=970 data-nosnippet>970</a>    </span><span class="kw">pub </span>alpha_mode: CompositeAlphaMode,
+<a href=#971 id=971 data-nosnippet>971</a>    <span class="doccomment">/// Specifies what view formats will be allowed when calling `Texture::create_view` on the texture returned by `Surface::get_current_texture`.
+<a href=#972 id=972 data-nosnippet>972</a>    ///
+<a href=#973 id=973 data-nosnippet>973</a>    /// View formats of the same format as the texture are always allowed.
+<a href=#974 id=974 data-nosnippet>974</a>    ///
+<a href=#975 id=975 data-nosnippet>975</a>    /// Note: currently, only the srgb-ness is allowed to change. (ex: `Rgba8Unorm` texture + `Rgba8UnormSrgb` view)
+<a href=#976 id=976 data-nosnippet>976</a>    </span><span class="kw">pub </span>view_formats: V,
+<a href=#977 id=977 data-nosnippet>977</a>}
+<a href=#978 id=978 data-nosnippet>978</a>
+<a href=#979 id=979 data-nosnippet>979</a><span class="kw">impl</span>&lt;V: Clone&gt; SurfaceConfiguration&lt;V&gt; {
+<a href=#980 id=980 data-nosnippet>980</a>    <span class="doccomment">/// Map `view_formats` of the texture descriptor into another.
+<a href=#981 id=981 data-nosnippet>981</a>    </span><span class="kw">pub fn </span>map_view_formats&lt;<span class="lifetime">'a</span>, M&gt;(
+<a href=#982 id=982 data-nosnippet>982</a>        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
+<a href=#983 id=983 data-nosnippet>983</a>        fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>V) -&gt; M,
+<a href=#984 id=984 data-nosnippet>984</a>    ) -&gt; SurfaceConfiguration&lt;M&gt; {
+<a href=#985 id=985 data-nosnippet>985</a>        SurfaceConfiguration {
+<a href=#986 id=986 data-nosnippet>986</a>            usage: <span class="self">self</span>.usage,
+<a href=#987 id=987 data-nosnippet>987</a>            format: <span class="self">self</span>.format,
+<a href=#988 id=988 data-nosnippet>988</a>            color_space: <span class="self">self</span>.color_space,
+<a href=#989 id=989 data-nosnippet>989</a>            width: <span class="self">self</span>.width,
+<a href=#990 id=990 data-nosnippet>990</a>            height: <span class="self">self</span>.height,
+<a href=#991 id=991 data-nosnippet>991</a>            present_mode: <span class="self">self</span>.present_mode,
+<a href=#992 id=992 data-nosnippet>992</a>            desired_maximum_frame_latency: <span class="self">self</span>.desired_maximum_frame_latency,
+<a href=#993 id=993 data-nosnippet>993</a>            alpha_mode: <span class="self">self</span>.alpha_mode,
+<a href=#994 id=994 data-nosnippet>994</a>            view_formats: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.view_formats),
+<a href=#995 id=995 data-nosnippet>995</a>        }
+<a href=#996 id=996 data-nosnippet>996</a>    }
+<a href=#997 id=997 data-nosnippet>997</a>}
+<a href=#998 id=998 data-nosnippet>998</a>
+<a href=#999 id=999 data-nosnippet>999</a><span class="doccomment">/// Status of the received surface image.
+<a href=#1000 id=1000 data-nosnippet>1000</a></span><span class="attr">#[repr(C)]
+<a href=#1001 id=1001 data-nosnippet>1001</a>#[derive(Debug)]
+<a href=#1002 id=1002 data-nosnippet>1002</a></span><span class="kw">pub enum </span>SurfaceStatus {
+<a href=#1003 id=1003 data-nosnippet>1003</a>    <span class="doccomment">/// No issues.
+<a href=#1004 id=1004 data-nosnippet>1004</a>    </span>Good,
+<a href=#1005 id=1005 data-nosnippet>1005</a>    <span class="doccomment">/// The swap chain is operational, but it does no longer perfectly
+<a href=#1006 id=1006 data-nosnippet>1006</a>    /// match the surface. A re-configuration is needed.
+<a href=#1007 id=1007 data-nosnippet>1007</a>    </span>Suboptimal,
+<a href=#1008 id=1008 data-nosnippet>1008</a>    <span class="doccomment">/// Unable to get the next frame, timed out.
+<a href=#1009 id=1009 data-nosnippet>1009</a>    ///
+<a href=#1010 id=1010 data-nosnippet>1010</a>    /// Try reconfiguring your surface.
+<a href=#1011 id=1011 data-nosnippet>1011</a>    </span>Timeout,
+<a href=#1012 id=1012 data-nosnippet>1012</a>    <span class="doccomment">/// The window is occluded (e.g. minimized or behind another window).
+<a href=#1013 id=1013 data-nosnippet>1013</a>    ///
+<a href=#1014 id=1014 data-nosnippet>1014</a>    /// Try again once the window is no longer occluded.
+<a href=#1015 id=1015 data-nosnippet>1015</a>    </span>Occluded,
+<a href=#1016 id=1016 data-nosnippet>1016</a>    <span class="doccomment">/// The surface under the swap chain has changed.
+<a href=#1017 id=1017 data-nosnippet>1017</a>    ///
+<a href=#1018 id=1018 data-nosnippet>1018</a>    /// Try reconfiguring your surface.
+<a href=#1019 id=1019 data-nosnippet>1019</a>    </span>Outdated,
+<a href=#1020 id=1020 data-nosnippet>1020</a>    <span class="doccomment">/// The surface under the swap chain is lost.
+<a href=#1021 id=1021 data-nosnippet>1021</a>    </span>Lost,
+<a href=#1022 id=1022 data-nosnippet>1022</a>    <span class="doccomment">/// `Surface::get_current_texture` has hit a validation error which was caught
+<a href=#1023 id=1023 data-nosnippet>1023</a>    /// by a error scope.
+<a href=#1024 id=1024 data-nosnippet>1024</a>    </span>Validation,
+<a href=#1025 id=1025 data-nosnippet>1025</a>}
+<a href=#1026 id=1026 data-nosnippet>1026</a>
+<a href=#1027 id=1027 data-nosnippet>1027</a><span class="doccomment">/// Nanosecond timestamp used by the presentation engine.
+<a href=#1028 id=1028 data-nosnippet>1028</a>///
+<a href=#1029 id=1029 data-nosnippet>1029</a>/// The specific clock depends on the window system integration (WSI) API used.
+<a href=#1030 id=1030 data-nosnippet>1030</a>///
+<a href=#1031 id=1031 data-nosnippet>1031</a>/// &lt;table&gt;
+<a href=#1032 id=1032 data-nosnippet>1032</a>/// &lt;tr&gt;
+<a href=#1033 id=1033 data-nosnippet>1033</a>///     &lt;td&gt;WSI&lt;/td&gt;
+<a href=#1034 id=1034 data-nosnippet>1034</a>///     &lt;td&gt;Clock&lt;/td&gt;
+<a href=#1035 id=1035 data-nosnippet>1035</a>/// &lt;/tr&gt;
+<a href=#1036 id=1036 data-nosnippet>1036</a>/// &lt;tr&gt;
+<a href=#1037 id=1037 data-nosnippet>1037</a>///     &lt;td&gt;IDXGISwapchain&lt;/td&gt;
+<a href=#1038 id=1038 data-nosnippet>1038</a>///     &lt;td&gt;&lt;a href="https://docs.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancecounter"&gt;QueryPerformanceCounter&lt;/a&gt;&lt;/td&gt;
+<a href=#1039 id=1039 data-nosnippet>1039</a>/// &lt;/tr&gt;
+<a href=#1040 id=1040 data-nosnippet>1040</a>/// &lt;tr&gt;
+<a href=#1041 id=1041 data-nosnippet>1041</a>///     &lt;td&gt;IPresentationManager&lt;/td&gt;
+<a href=#1042 id=1042 data-nosnippet>1042</a>///     &lt;td&gt;&lt;a href="https://docs.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryinterrupttimeprecise"&gt;QueryInterruptTimePrecise&lt;/a&gt;&lt;/td&gt;
+<a href=#1043 id=1043 data-nosnippet>1043</a>/// &lt;/tr&gt;
+<a href=#1044 id=1044 data-nosnippet>1044</a>/// &lt;tr&gt;
+<a href=#1045 id=1045 data-nosnippet>1045</a>///     &lt;td&gt;CAMetalLayer&lt;/td&gt;
+<a href=#1046 id=1046 data-nosnippet>1046</a>///     &lt;td&gt;&lt;a href="https://developer.apple.com/documentation/kernel/1462446-mach_absolute_time"&gt;mach_absolute_time&lt;/a&gt;&lt;/td&gt;
+<a href=#1047 id=1047 data-nosnippet>1047</a>/// &lt;/tr&gt;
+<a href=#1048 id=1048 data-nosnippet>1048</a>/// &lt;tr&gt;
+<a href=#1049 id=1049 data-nosnippet>1049</a>///     &lt;td&gt;VK_GOOGLE_display_timing&lt;/td&gt;
+<a href=#1050 id=1050 data-nosnippet>1050</a>///     &lt;td&gt;&lt;a href="https://linux.die.net/man/3/clock_gettime"&gt;clock_gettime(CLOCK_MONOTONIC)&lt;/a&gt;&lt;/td&gt;
+<a href=#1051 id=1051 data-nosnippet>1051</a>/// &lt;/tr&gt;
+<a href=#1052 id=1052 data-nosnippet>1052</a>/// &lt;/table&gt;
+<a href=#1053 id=1053 data-nosnippet>1053</a></span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+<a href=#1054 id=1054 data-nosnippet>1054</a></span><span class="kw">pub struct </span>PresentationTimestamp(
+<a href=#1055 id=1055 data-nosnippet>1055</a>    <span class="doccomment">/// Timestamp in nanoseconds.
+<a href=#1056 id=1056 data-nosnippet>1056</a>    </span><span class="kw">pub </span>u128,
+<a href=#1057 id=1057 data-nosnippet>1057</a>);
+<a href=#1058 id=1058 data-nosnippet>1058</a>
+<a href=#1059 id=1059 data-nosnippet>1059</a><span class="kw">impl </span>PresentationTimestamp {
+<a href=#1060 id=1060 data-nosnippet>1060</a>    <span class="doccomment">/// A timestamp that is invalid due to the platform not having a timestamp system.
+<a href=#1061 id=1061 data-nosnippet>1061</a>    </span><span class="kw">pub const </span>INVALID_TIMESTAMP: <span class="self">Self </span>= <span class="self">Self</span>(u128::MAX);
+<a href=#1062 id=1062 data-nosnippet>1062</a>
+<a href=#1063 id=1063 data-nosnippet>1063</a>    <span class="doccomment">/// Returns true if this timestamp is the invalid timestamp.
+<a href=#1064 id=1064 data-nosnippet>1064</a>    </span><span class="attr">#[must_use]
+<a href=#1065 id=1065 data-nosnippet>1065</a>    </span><span class="kw">pub fn </span>is_invalid(<span class="self">self</span>) -&gt; bool {
+<a href=#1066 id=1066 data-nosnippet>1066</a>        <span class="self">self </span>== <span class="self">Self</span>::INVALID_TIMESTAMP
+<a href=#1067 id=1067 data-nosnippet>1067</a>    }
+<a href=#1068 id=1068 data-nosnippet>1068</a>}
 </code></pre></div></section></main></body></html>

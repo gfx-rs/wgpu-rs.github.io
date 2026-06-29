@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["CompositeAlphaMode","PresentMode","SurfaceColorSpace","SurfaceStatus"],"struct":["PresentationTimestamp","SurfaceCapabilities","SurfaceColorSpaces","SurfaceConfiguration","SurfaceFormatCapabilities"]};
+window.SIDEBAR_ITEMS = {"enum":["CompositeAlphaMode","DisplayGamut","PresentMode","SurfaceColorSpace","SurfaceStatus"],"struct":["DisplayChromaticity","DisplayCoarseRange","DisplayHdrInfo","DisplayHeadroom","DisplayLuminance","PresentationTimestamp","SurfaceCapabilities","SurfaceColorSpaces","SurfaceConfiguration","SurfaceFormatCapabilities"]};
