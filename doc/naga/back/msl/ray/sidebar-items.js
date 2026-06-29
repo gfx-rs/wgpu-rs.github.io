@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["INTERSECTION_FUNCTION_NAME","RT_NAMESPACE"],"fn":["metal_intersector_ty"]};
+window.SIDEBAR_ITEMS = {"constant":["INTERSECTION_FUNCTION_NAME","RAY_QUERY_TRACKER_VARIABLE_PREFIX","RAY_QUERY_T_MAX_TRACKER_VARIABLE_PREFIX","RT_NAMESPACE"],"fn":["metal_intersector_ty"]};
