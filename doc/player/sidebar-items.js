@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["process_result"],"struct":["Player"]};
+window.SIDEBAR_ITEMS = {"struct":["Player"]};
