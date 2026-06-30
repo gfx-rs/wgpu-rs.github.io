@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/api/texture_view.rs`."><title>texture_view.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu/api/</div>texture_view.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#[cfg(wgpu_core)]
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/api/texture_view.rs`."><title>texture_view.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu/api/</div>texture_view.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#[cfg(wgpu_core)]
 <a href=#2 id=2 data-nosnippet>2</a></span><span class="kw">use </span>core::ops::Deref;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -58,36 +58,46 @@
 <a href=#58 id=58 data-nosnippet>58</a>    ///
 <a href=#59 id=59 data-nosnippet>59</a>    /// This method will return None if:
 <a href=#60 id=60 data-nosnippet>60</a>    /// - The texture view is not from the backend specified by `A`.
-<a href=#61 id=61 data-nosnippet>61</a>    /// - The texture view is from the `webgpu` or `custom` backend.
-<a href=#62 id=62 data-nosnippet>62</a>    /// - The texture this view points to has had [`Texture::destroy()`] called on it.
-<a href=#63 id=63 data-nosnippet>63</a>    ///
-<a href=#64 id=64 data-nosnippet>64</a>    /// # Safety
-<a href=#65 id=65 data-nosnippet>65</a>    ///
-<a href=#66 id=66 data-nosnippet>66</a>    /// - The returned resource must not be destroyed unless the guard
-<a href=#67 id=67 data-nosnippet>67</a>    ///   is the last reference to it and it is not in use by the GPU.
-<a href=#68 id=68 data-nosnippet>68</a>    ///   The guard and handle may be dropped at any time however.
-<a href=#69 id=69 data-nosnippet>69</a>    /// - All the safety requirements of wgpu-hal must be upheld.
-<a href=#70 id=70 data-nosnippet>70</a>    ///
-<a href=#71 id=71 data-nosnippet>71</a>    /// [`A::TextureView`]: hal::Api::TextureView
-<a href=#72 id=72 data-nosnippet>72</a>    </span><span class="attr">#[cfg(wgpu_core)]
-<a href=#73 id=73 data-nosnippet>73</a>    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: hal::Api&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::TextureView&gt;&gt; {
-<a href=#74 id=74 data-nosnippet>74</a>        <span class="kw">let </span>view = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
-<a href=#75 id=75 data-nosnippet>75</a>        <span class="kw">unsafe </span>{ view.context.texture_view_as_hal::&lt;A&gt;(view) }
-<a href=#76 id=76 data-nosnippet>76</a>    }
-<a href=#77 id=77 data-nosnippet>77</a>
-<a href=#78 id=78 data-nosnippet>78</a>    <span class="attr">#[cfg(custom)]
-<a href=#79 id=79 data-nosnippet>79</a>    </span><span class="doccomment">/// Returns custom implementation of TextureView (if custom backend and is internally T)
-<a href=#80 id=80 data-nosnippet>80</a>    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::TextureViewInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
-<a href=#81 id=81 data-nosnippet>81</a>        <span class="self">self</span>.inner.as_custom()
-<a href=#82 id=82 data-nosnippet>82</a>    }
-<a href=#83 id=83 data-nosnippet>83</a>}
-<a href=#84 id=84 data-nosnippet>84</a>
-<a href=#85 id=85 data-nosnippet>85</a><span class="doccomment">/// Describes a [`TextureView`].
-<a href=#86 id=86 data-nosnippet>86</a>///
-<a href=#87 id=87 data-nosnippet>87</a>/// For use with [`Texture::create_view`].
-<a href=#88 id=88 data-nosnippet>88</a>///
-<a href=#89 id=89 data-nosnippet>89</a>/// Corresponds to [WebGPU `GPUTextureViewDescriptor`](
-<a href=#90 id=90 data-nosnippet>90</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gputextureviewdescriptor).
-<a href=#91 id=91 data-nosnippet>91</a></span><span class="kw">pub type </span>TextureViewDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::TextureViewDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
-<a href=#92 id=92 data-nosnippet>92</a><span class="macro">static_assertions::assert_impl_all!</span>(TextureViewDescriptor&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
+<a href=#61 id=61 data-nosnippet>61</a>    /// - The texture view is from [`Backend::BrowserWebGpu`].
+<a href=#62 id=62 data-nosnippet>62</a>    ///   (Use `TextureView::as_webgpu()` instead.)
+<a href=#63 id=63 data-nosnippet>63</a>    /// - The texture view is from a custom backend.
+<a href=#64 id=64 data-nosnippet>64</a>    ///
+<a href=#65 id=65 data-nosnippet>65</a>    /// # Safety
+<a href=#66 id=66 data-nosnippet>66</a>    ///
+<a href=#67 id=67 data-nosnippet>67</a>    /// - The returned resource must not be destroyed unless the guard
+<a href=#68 id=68 data-nosnippet>68</a>    ///   is the last reference to it and it is not in use by the GPU.
+<a href=#69 id=69 data-nosnippet>69</a>    ///   The guard and handle may be dropped at any time however.
+<a href=#70 id=70 data-nosnippet>70</a>    /// - All the safety requirements of wgpu-hal must be upheld.
+<a href=#71 id=71 data-nosnippet>71</a>    ///
+<a href=#72 id=72 data-nosnippet>72</a>    /// [`A::TextureView`]: hal::Api::TextureView
+<a href=#73 id=73 data-nosnippet>73</a>    </span><span class="attr">#[cfg(wgpu_core)]
+<a href=#74 id=74 data-nosnippet>74</a>    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: hal::Api&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Deref&lt;Target = A::TextureView&gt;&gt; {
+<a href=#75 id=75 data-nosnippet>75</a>        <span class="kw">let </span>view = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
+<a href=#76 id=76 data-nosnippet>76</a>        <span class="kw">unsafe </span>{ view.context.texture_view_as_hal::&lt;A&gt;(view) }
+<a href=#77 id=77 data-nosnippet>77</a>    }
+<a href=#78 id=78 data-nosnippet>78</a>
+<a href=#79 id=79 data-nosnippet>79</a>    <span class="doccomment">/// Returns the underlying [`webgpu::GpuTextureView`] handle if this view
+<a href=#80 id=80 data-nosnippet>80</a>    /// is on the WebGPU backend, otherwise `None`.
+<a href=#81 id=81 data-nosnippet>81</a>    ///
+<a href=#82 id=82 data-nosnippet>82</a>    /// [`webgpu::GpuTextureView`]: crate::webgpu::GpuTextureView
+<a href=#83 id=83 data-nosnippet>83</a>    </span><span class="attr">#[cfg(webgpu)]
+<a href=#84 id=84 data-nosnippet>84</a>    </span><span class="kw">pub fn </span>as_webgpu(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>webgpu::GpuTextureView&gt; {
+<a href=#85 id=85 data-nosnippet>85</a>        <span class="self">self</span>.inner.as_webgpu_opt().map(|wv| <span class="kw-2">&amp;</span>wv.inner)
+<a href=#86 id=86 data-nosnippet>86</a>    }
+<a href=#87 id=87 data-nosnippet>87</a>
+<a href=#88 id=88 data-nosnippet>88</a>    <span class="attr">#[cfg(custom)]
+<a href=#89 id=89 data-nosnippet>89</a>    </span><span class="doccomment">/// Returns custom implementation of TextureView (if custom backend and is internally T)
+<a href=#90 id=90 data-nosnippet>90</a>    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::TextureViewInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+<a href=#91 id=91 data-nosnippet>91</a>        <span class="self">self</span>.inner.as_custom()
+<a href=#92 id=92 data-nosnippet>92</a>    }
+<a href=#93 id=93 data-nosnippet>93</a>}
+<a href=#94 id=94 data-nosnippet>94</a>
+<a href=#95 id=95 data-nosnippet>95</a><span class="doccomment">/// Describes a [`TextureView`].
+<a href=#96 id=96 data-nosnippet>96</a>///
+<a href=#97 id=97 data-nosnippet>97</a>/// For use with [`Texture::create_view`].
+<a href=#98 id=98 data-nosnippet>98</a>///
+<a href=#99 id=99 data-nosnippet>99</a>/// Corresponds to [WebGPU `GPUTextureViewDescriptor`](
+<a href=#100 id=100 data-nosnippet>100</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gputextureviewdescriptor).
+<a href=#101 id=101 data-nosnippet>101</a></span><span class="kw">pub type </span>TextureViewDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::TextureViewDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
+<a href=#102 id=102 data-nosnippet>102</a><span class="macro">static_assertions::assert_impl_all!</span>(TextureViewDescriptor&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
 </code></pre></div></section></main></body></html>
