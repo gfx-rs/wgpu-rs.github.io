@@ -33,7 +33,7 @@
 <a href=#33 id=33 data-nosnippet>33</a>    init_tracker::MemoryInitKind,
 <a href=#34 id=34 data-nosnippet>34</a>    pipeline::ComputePipeline,
 <a href=#35 id=35 data-nosnippet>35</a>    resource::{
-<a href=#36 id=36 data-nosnippet>36</a>        <span class="self">self</span>, Buffer, DestroyedResourceError, Fallible, InvalidResourceError, Labeled,
+<a href=#36 id=36 data-nosnippet>36</a>        <span class="self">self</span>, Buffer, DestroyedResourceError, InvalidResourceError, Labeled,
 <a href=#37 id=37 data-nosnippet>37</a>        MissingBufferUsageError, ParentDevice, RawResourceAccess, TextureView, Trackable,
 <a href=#38 id=38 data-nosnippet>38</a>    },
 <a href=#39 id=39 data-nosnippet>39</a>    track::{ResourceUsageCompatibilityError, TextureViewBindGroupState, Tracker},
@@ -458,7 +458,7 @@
 <a href=#458 id=458 data-nosnippet>458</a><span class="kw">impl </span>CommandEncoder {
 <a href=#459 id=459 data-nosnippet>459</a>    <span class="kw">fn </span>begin_compute_pass(
 <a href=#460 id=460 data-nosnippet>460</a>        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-<a href=#461 id=461 data-nosnippet>461</a>        desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;<span class="lifetime">'_</span>, PassTimestampWrites&lt;Fallible&lt;resource::QuerySet&gt;&gt;&gt;,
+<a href=#461 id=461 data-nosnippet>461</a>        desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;<span class="lifetime">'_</span>, PassTimestampWrites&lt;Arc&lt;resource::QuerySet&gt;&gt;&gt;,
 <a href=#462 id=462 data-nosnippet>462</a>    ) -&gt; (ComputePass, <span class="prelude-ty">Option</span>&lt;CommandEncoderError&gt;) {
 <a href=#463 id=463 data-nosnippet>463</a>        <span class="kw">use </span>EncoderStateError <span class="kw">as </span>SErr;
 <a href=#464 id=464 data-nosnippet>464</a>
@@ -1546,131 +1546,133 @@
 <a href=#1546 id=1546 data-nosnippet>1546</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
 <a href=#1547 id=1547 data-nosnippet>1547</a>
 <a href=#1548 id=1548 data-nosnippet>1548</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-<a href=#1549 id=1549 data-nosnippet>1549</a>        <span class="kw">let </span>query_set = <span class="macro">pass_try!</span>(base, scope, hub.query_sets.get(query_set_id).get());
-<a href=#1550 id=1550 data-nosnippet>1550</a>
-<a href=#1551 id=1551 data-nosnippet>1551</a>        base.commands.push(ArcComputeCommand::WriteTimestamp {
-<a href=#1552 id=1552 data-nosnippet>1552</a>            query_set,
-<a href=#1553 id=1553 data-nosnippet>1553</a>            query_index,
-<a href=#1554 id=1554 data-nosnippet>1554</a>        });
-<a href=#1555 id=1555 data-nosnippet>1555</a>
-<a href=#1556 id=1556 data-nosnippet>1556</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1557 id=1557 data-nosnippet>1557</a>    }
-<a href=#1558 id=1558 data-nosnippet>1558</a>
-<a href=#1559 id=1559 data-nosnippet>1559</a>    <span class="kw">pub fn </span>compute_pass_write_timestamp_with_id(
-<a href=#1560 id=1560 data-nosnippet>1560</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1561 id=1561 data-nosnippet>1561</a>        pass_id: id::ComputePassEncoderId,
-<a href=#1562 id=1562 data-nosnippet>1562</a>        query_set_id: id::QuerySetId,
-<a href=#1563 id=1563 data-nosnippet>1563</a>        query_index: u32,
-<a href=#1564 id=1564 data-nosnippet>1564</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1565 id=1565 data-nosnippet>1565</a>        <span class="kw">let </span>pass = <span class="self">self</span>.hub.compute_passes.get(pass_id);
-<a href=#1566 id=1566 data-nosnippet>1566</a>        <span class="kw">let </span><span class="kw-2">mut </span>pass = pass
-<a href=#1567 id=1567 data-nosnippet>1567</a>            .try_lock()
-<a href=#1568 id=1568 data-nosnippet>1568</a>            .expect(<span class="string">"ComputePasses should not be accessed concurrently"</span>);
-<a href=#1569 id=1569 data-nosnippet>1569</a>        <span class="self">self</span>.compute_pass_write_timestamp(<span class="kw-2">&amp;mut </span>pass, query_set_id, query_index)
-<a href=#1570 id=1570 data-nosnippet>1570</a>    }
-<a href=#1571 id=1571 data-nosnippet>1571</a>
-<a href=#1572 id=1572 data-nosnippet>1572</a>    <span class="kw">pub fn </span>compute_pass_begin_pipeline_statistics_query(
-<a href=#1573 id=1573 data-nosnippet>1573</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1574 id=1574 data-nosnippet>1574</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1575 id=1575 data-nosnippet>1575</a>        query_set_id: id::QuerySetId,
-<a href=#1576 id=1576 data-nosnippet>1576</a>        query_index: u32,
-<a href=#1577 id=1577 data-nosnippet>1577</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1578 id=1578 data-nosnippet>1578</a>        <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
-<a href=#1579 id=1579 data-nosnippet>1579</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
-<a href=#1580 id=1580 data-nosnippet>1580</a>
-<a href=#1581 id=1581 data-nosnippet>1581</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-<a href=#1582 id=1582 data-nosnippet>1582</a>        <span class="kw">let </span>query_set = <span class="macro">pass_try!</span>(base, scope, hub.query_sets.get(query_set_id).get());
-<a href=#1583 id=1583 data-nosnippet>1583</a>
-<a href=#1584 id=1584 data-nosnippet>1584</a>        base.commands
-<a href=#1585 id=1585 data-nosnippet>1585</a>            .push(ArcComputeCommand::BeginPipelineStatisticsQuery {
-<a href=#1586 id=1586 data-nosnippet>1586</a>                query_set,
-<a href=#1587 id=1587 data-nosnippet>1587</a>                query_index,
-<a href=#1588 id=1588 data-nosnippet>1588</a>            });
-<a href=#1589 id=1589 data-nosnippet>1589</a>
-<a href=#1590 id=1590 data-nosnippet>1590</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1591 id=1591 data-nosnippet>1591</a>    }
-<a href=#1592 id=1592 data-nosnippet>1592</a>
-<a href=#1593 id=1593 data-nosnippet>1593</a>    <span class="kw">pub fn </span>compute_pass_begin_pipeline_statistics_query_with_id(
-<a href=#1594 id=1594 data-nosnippet>1594</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1595 id=1595 data-nosnippet>1595</a>        pass_id: id::ComputePassEncoderId,
-<a href=#1596 id=1596 data-nosnippet>1596</a>        query_set_id: id::QuerySetId,
-<a href=#1597 id=1597 data-nosnippet>1597</a>        query_index: u32,
-<a href=#1598 id=1598 data-nosnippet>1598</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1599 id=1599 data-nosnippet>1599</a>        <span class="kw">let </span>pass = <span class="self">self</span>.hub.compute_passes.get(pass_id);
-<a href=#1600 id=1600 data-nosnippet>1600</a>        <span class="kw">let </span><span class="kw-2">mut </span>pass = pass
-<a href=#1601 id=1601 data-nosnippet>1601</a>            .try_lock()
-<a href=#1602 id=1602 data-nosnippet>1602</a>            .expect(<span class="string">"ComputePasses should not be accessed concurrently"</span>);
-<a href=#1603 id=1603 data-nosnippet>1603</a>        <span class="self">self</span>.compute_pass_begin_pipeline_statistics_query(<span class="kw-2">&amp;mut </span>pass, query_set_id, query_index)
-<a href=#1604 id=1604 data-nosnippet>1604</a>    }
-<a href=#1605 id=1605 data-nosnippet>1605</a>
-<a href=#1606 id=1606 data-nosnippet>1606</a>    <span class="kw">pub fn </span>compute_pass_end_pipeline_statistics_query(
-<a href=#1607 id=1607 data-nosnippet>1607</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1608 id=1608 data-nosnippet>1608</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1609 id=1609 data-nosnippet>1609</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1610 id=1610 data-nosnippet>1610</a>        <span class="macro">pass_base!</span>(pass, PassErrorScope::EndPipelineStatisticsQuery)
-<a href=#1611 id=1611 data-nosnippet>1611</a>            .commands
-<a href=#1612 id=1612 data-nosnippet>1612</a>            .push(ArcComputeCommand::EndPipelineStatisticsQuery);
-<a href=#1613 id=1613 data-nosnippet>1613</a>
-<a href=#1614 id=1614 data-nosnippet>1614</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1615 id=1615 data-nosnippet>1615</a>    }
-<a href=#1616 id=1616 data-nosnippet>1616</a>
-<a href=#1617 id=1617 data-nosnippet>1617</a>    <span class="kw">pub fn </span>compute_pass_end_pipeline_statistics_query_with_id(
-<a href=#1618 id=1618 data-nosnippet>1618</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1619 id=1619 data-nosnippet>1619</a>        pass_id: id::ComputePassEncoderId,
-<a href=#1620 id=1620 data-nosnippet>1620</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1621 id=1621 data-nosnippet>1621</a>        <span class="kw">let </span>pass = <span class="self">self</span>.hub.compute_passes.get(pass_id);
-<a href=#1622 id=1622 data-nosnippet>1622</a>        <span class="kw">let </span><span class="kw-2">mut </span>pass = pass
-<a href=#1623 id=1623 data-nosnippet>1623</a>            .try_lock()
-<a href=#1624 id=1624 data-nosnippet>1624</a>            .expect(<span class="string">"ComputePasses should not be accessed concurrently"</span>);
-<a href=#1625 id=1625 data-nosnippet>1625</a>        <span class="self">self</span>.compute_pass_end_pipeline_statistics_query(<span class="kw-2">&amp;mut </span>pass)
-<a href=#1626 id=1626 data-nosnippet>1626</a>    }
-<a href=#1627 id=1627 data-nosnippet>1627</a>
-<a href=#1628 id=1628 data-nosnippet>1628</a>    <span class="kw">pub fn </span>compute_pass_transition_resources(
-<a href=#1629 id=1629 data-nosnippet>1629</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1630 id=1630 data-nosnippet>1630</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
-<a href=#1631 id=1631 data-nosnippet>1631</a>        buffer_transitions: <span class="kw">impl </span>Iterator&lt;Item = wgt::BufferTransition&lt;id::BufferId&gt;&gt;,
-<a href=#1632 id=1632 data-nosnippet>1632</a>        texture_transitions: <span class="kw">impl </span>Iterator&lt;Item = wgt::TextureTransition&lt;id::TextureViewId&gt;&gt;,
-<a href=#1633 id=1633 data-nosnippet>1633</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
-<a href=#1634 id=1634 data-nosnippet>1634</a>        <span class="kw">let </span>scope = PassErrorScope::TransitionResources;
-<a href=#1635 id=1635 data-nosnippet>1635</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
-<a href=#1636 id=1636 data-nosnippet>1636</a>
-<a href=#1637 id=1637 data-nosnippet>1637</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1549 id=1549 data-nosnippet>1549</a>        <span class="kw">let </span>query_set = hub.query_sets.get(query_set_id);
+<a href=#1550 id=1550 data-nosnippet>1550</a>        <span class="macro">pass_try!</span>(base, scope, query_set.check_is_valid());
+<a href=#1551 id=1551 data-nosnippet>1551</a>
+<a href=#1552 id=1552 data-nosnippet>1552</a>        base.commands.push(ArcComputeCommand::WriteTimestamp {
+<a href=#1553 id=1553 data-nosnippet>1553</a>            query_set,
+<a href=#1554 id=1554 data-nosnippet>1554</a>            query_index,
+<a href=#1555 id=1555 data-nosnippet>1555</a>        });
+<a href=#1556 id=1556 data-nosnippet>1556</a>
+<a href=#1557 id=1557 data-nosnippet>1557</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1558 id=1558 data-nosnippet>1558</a>    }
+<a href=#1559 id=1559 data-nosnippet>1559</a>
+<a href=#1560 id=1560 data-nosnippet>1560</a>    <span class="kw">pub fn </span>compute_pass_write_timestamp_with_id(
+<a href=#1561 id=1561 data-nosnippet>1561</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1562 id=1562 data-nosnippet>1562</a>        pass_id: id::ComputePassEncoderId,
+<a href=#1563 id=1563 data-nosnippet>1563</a>        query_set_id: id::QuerySetId,
+<a href=#1564 id=1564 data-nosnippet>1564</a>        query_index: u32,
+<a href=#1565 id=1565 data-nosnippet>1565</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1566 id=1566 data-nosnippet>1566</a>        <span class="kw">let </span>pass = <span class="self">self</span>.hub.compute_passes.get(pass_id);
+<a href=#1567 id=1567 data-nosnippet>1567</a>        <span class="kw">let </span><span class="kw-2">mut </span>pass = pass
+<a href=#1568 id=1568 data-nosnippet>1568</a>            .try_lock()
+<a href=#1569 id=1569 data-nosnippet>1569</a>            .expect(<span class="string">"ComputePasses should not be accessed concurrently"</span>);
+<a href=#1570 id=1570 data-nosnippet>1570</a>        <span class="self">self</span>.compute_pass_write_timestamp(<span class="kw-2">&amp;mut </span>pass, query_set_id, query_index)
+<a href=#1571 id=1571 data-nosnippet>1571</a>    }
+<a href=#1572 id=1572 data-nosnippet>1572</a>
+<a href=#1573 id=1573 data-nosnippet>1573</a>    <span class="kw">pub fn </span>compute_pass_begin_pipeline_statistics_query(
+<a href=#1574 id=1574 data-nosnippet>1574</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1575 id=1575 data-nosnippet>1575</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1576 id=1576 data-nosnippet>1576</a>        query_set_id: id::QuerySetId,
+<a href=#1577 id=1577 data-nosnippet>1577</a>        query_index: u32,
+<a href=#1578 id=1578 data-nosnippet>1578</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1579 id=1579 data-nosnippet>1579</a>        <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
+<a href=#1580 id=1580 data-nosnippet>1580</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
+<a href=#1581 id=1581 data-nosnippet>1581</a>
+<a href=#1582 id=1582 data-nosnippet>1582</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1583 id=1583 data-nosnippet>1583</a>        <span class="kw">let </span>query_set = hub.query_sets.get(query_set_id);
+<a href=#1584 id=1584 data-nosnippet>1584</a>        <span class="macro">pass_try!</span>(base, scope, query_set.check_is_valid());
+<a href=#1585 id=1585 data-nosnippet>1585</a>
+<a href=#1586 id=1586 data-nosnippet>1586</a>        base.commands
+<a href=#1587 id=1587 data-nosnippet>1587</a>            .push(ArcComputeCommand::BeginPipelineStatisticsQuery {
+<a href=#1588 id=1588 data-nosnippet>1588</a>                query_set,
+<a href=#1589 id=1589 data-nosnippet>1589</a>                query_index,
+<a href=#1590 id=1590 data-nosnippet>1590</a>            });
+<a href=#1591 id=1591 data-nosnippet>1591</a>
+<a href=#1592 id=1592 data-nosnippet>1592</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1593 id=1593 data-nosnippet>1593</a>    }
+<a href=#1594 id=1594 data-nosnippet>1594</a>
+<a href=#1595 id=1595 data-nosnippet>1595</a>    <span class="kw">pub fn </span>compute_pass_begin_pipeline_statistics_query_with_id(
+<a href=#1596 id=1596 data-nosnippet>1596</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1597 id=1597 data-nosnippet>1597</a>        pass_id: id::ComputePassEncoderId,
+<a href=#1598 id=1598 data-nosnippet>1598</a>        query_set_id: id::QuerySetId,
+<a href=#1599 id=1599 data-nosnippet>1599</a>        query_index: u32,
+<a href=#1600 id=1600 data-nosnippet>1600</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1601 id=1601 data-nosnippet>1601</a>        <span class="kw">let </span>pass = <span class="self">self</span>.hub.compute_passes.get(pass_id);
+<a href=#1602 id=1602 data-nosnippet>1602</a>        <span class="kw">let </span><span class="kw-2">mut </span>pass = pass
+<a href=#1603 id=1603 data-nosnippet>1603</a>            .try_lock()
+<a href=#1604 id=1604 data-nosnippet>1604</a>            .expect(<span class="string">"ComputePasses should not be accessed concurrently"</span>);
+<a href=#1605 id=1605 data-nosnippet>1605</a>        <span class="self">self</span>.compute_pass_begin_pipeline_statistics_query(<span class="kw-2">&amp;mut </span>pass, query_set_id, query_index)
+<a href=#1606 id=1606 data-nosnippet>1606</a>    }
+<a href=#1607 id=1607 data-nosnippet>1607</a>
+<a href=#1608 id=1608 data-nosnippet>1608</a>    <span class="kw">pub fn </span>compute_pass_end_pipeline_statistics_query(
+<a href=#1609 id=1609 data-nosnippet>1609</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1610 id=1610 data-nosnippet>1610</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1611 id=1611 data-nosnippet>1611</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1612 id=1612 data-nosnippet>1612</a>        <span class="macro">pass_base!</span>(pass, PassErrorScope::EndPipelineStatisticsQuery)
+<a href=#1613 id=1613 data-nosnippet>1613</a>            .commands
+<a href=#1614 id=1614 data-nosnippet>1614</a>            .push(ArcComputeCommand::EndPipelineStatisticsQuery);
+<a href=#1615 id=1615 data-nosnippet>1615</a>
+<a href=#1616 id=1616 data-nosnippet>1616</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1617 id=1617 data-nosnippet>1617</a>    }
+<a href=#1618 id=1618 data-nosnippet>1618</a>
+<a href=#1619 id=1619 data-nosnippet>1619</a>    <span class="kw">pub fn </span>compute_pass_end_pipeline_statistics_query_with_id(
+<a href=#1620 id=1620 data-nosnippet>1620</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1621 id=1621 data-nosnippet>1621</a>        pass_id: id::ComputePassEncoderId,
+<a href=#1622 id=1622 data-nosnippet>1622</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1623 id=1623 data-nosnippet>1623</a>        <span class="kw">let </span>pass = <span class="self">self</span>.hub.compute_passes.get(pass_id);
+<a href=#1624 id=1624 data-nosnippet>1624</a>        <span class="kw">let </span><span class="kw-2">mut </span>pass = pass
+<a href=#1625 id=1625 data-nosnippet>1625</a>            .try_lock()
+<a href=#1626 id=1626 data-nosnippet>1626</a>            .expect(<span class="string">"ComputePasses should not be accessed concurrently"</span>);
+<a href=#1627 id=1627 data-nosnippet>1627</a>        <span class="self">self</span>.compute_pass_end_pipeline_statistics_query(<span class="kw-2">&amp;mut </span>pass)
+<a href=#1628 id=1628 data-nosnippet>1628</a>    }
+<a href=#1629 id=1629 data-nosnippet>1629</a>
+<a href=#1630 id=1630 data-nosnippet>1630</a>    <span class="kw">pub fn </span>compute_pass_transition_resources(
+<a href=#1631 id=1631 data-nosnippet>1631</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1632 id=1632 data-nosnippet>1632</a>        pass: <span class="kw-2">&amp;mut </span>ComputePass,
+<a href=#1633 id=1633 data-nosnippet>1633</a>        buffer_transitions: <span class="kw">impl </span>Iterator&lt;Item = wgt::BufferTransition&lt;id::BufferId&gt;&gt;,
+<a href=#1634 id=1634 data-nosnippet>1634</a>        texture_transitions: <span class="kw">impl </span>Iterator&lt;Item = wgt::TextureTransition&lt;id::TextureViewId&gt;&gt;,
+<a href=#1635 id=1635 data-nosnippet>1635</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PassStateError&gt; {
+<a href=#1636 id=1636 data-nosnippet>1636</a>        <span class="kw">let </span>scope = PassErrorScope::TransitionResources;
+<a href=#1637 id=1637 data-nosnippet>1637</a>        <span class="kw">let </span>base = <span class="macro">pass_base!</span>(pass, scope);
 <a href=#1638 id=1638 data-nosnippet>1638</a>
-<a href=#1639 id=1639 data-nosnippet>1639</a>        <span class="kw">let </span>buffer_transitions = <span class="macro">pass_try!</span>(
-<a href=#1640 id=1640 data-nosnippet>1640</a>            base,
-<a href=#1641 id=1641 data-nosnippet>1641</a>            scope,
-<a href=#1642 id=1642 data-nosnippet>1642</a>            buffer_transitions
-<a href=#1643 id=1643 data-nosnippet>1643</a>                .map(|buffer_transition| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, InvalidResourceError&gt; {
-<a href=#1644 id=1644 data-nosnippet>1644</a>                    <span class="prelude-val">Ok</span>(wgt::BufferTransition {
-<a href=#1645 id=1645 data-nosnippet>1645</a>                        buffer: hub.buffers.get(buffer_transition.buffer).get()<span class="question-mark">?</span>,
-<a href=#1646 id=1646 data-nosnippet>1646</a>                        state: buffer_transition.state,
-<a href=#1647 id=1647 data-nosnippet>1647</a>                    })
-<a href=#1648 id=1648 data-nosnippet>1648</a>                })
-<a href=#1649 id=1649 data-nosnippet>1649</a>                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()
-<a href=#1650 id=1650 data-nosnippet>1650</a>        );
-<a href=#1651 id=1651 data-nosnippet>1651</a>
-<a href=#1652 id=1652 data-nosnippet>1652</a>        <span class="kw">let </span>texture_transitions = <span class="macro">pass_try!</span>(
-<a href=#1653 id=1653 data-nosnippet>1653</a>            base,
-<a href=#1654 id=1654 data-nosnippet>1654</a>            scope,
-<a href=#1655 id=1655 data-nosnippet>1655</a>            texture_transitions
-<a href=#1656 id=1656 data-nosnippet>1656</a>                .map(|texture_transition| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, InvalidResourceError&gt; {
-<a href=#1657 id=1657 data-nosnippet>1657</a>                    <span class="kw">let </span>texture_view = hub.texture_views.get(texture_transition.texture);
-<a href=#1658 id=1658 data-nosnippet>1658</a>                    texture_view.check_valid()<span class="question-mark">?</span>;
-<a href=#1659 id=1659 data-nosnippet>1659</a>                    <span class="prelude-val">Ok</span>(wgt::TextureTransition {
-<a href=#1660 id=1660 data-nosnippet>1660</a>                        texture: texture_view,
-<a href=#1661 id=1661 data-nosnippet>1661</a>                        selector: texture_transition.selector,
-<a href=#1662 id=1662 data-nosnippet>1662</a>                        state: texture_transition.state,
-<a href=#1663 id=1663 data-nosnippet>1663</a>                    })
-<a href=#1664 id=1664 data-nosnippet>1664</a>                })
-<a href=#1665 id=1665 data-nosnippet>1665</a>                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()
-<a href=#1666 id=1666 data-nosnippet>1666</a>        );
-<a href=#1667 id=1667 data-nosnippet>1667</a>
-<a href=#1668 id=1668 data-nosnippet>1668</a>        base.commands.push(ArcComputeCommand::TransitionResources {
-<a href=#1669 id=1669 data-nosnippet>1669</a>            buffer_transitions,
-<a href=#1670 id=1670 data-nosnippet>1670</a>            texture_transitions,
-<a href=#1671 id=1671 data-nosnippet>1671</a>        });
-<a href=#1672 id=1672 data-nosnippet>1672</a>
-<a href=#1673 id=1673 data-nosnippet>1673</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1674 id=1674 data-nosnippet>1674</a>    }
-<a href=#1675 id=1675 data-nosnippet>1675</a>}
+<a href=#1639 id=1639 data-nosnippet>1639</a>        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+<a href=#1640 id=1640 data-nosnippet>1640</a>
+<a href=#1641 id=1641 data-nosnippet>1641</a>        <span class="kw">let </span>buffer_transitions = <span class="macro">pass_try!</span>(
+<a href=#1642 id=1642 data-nosnippet>1642</a>            base,
+<a href=#1643 id=1643 data-nosnippet>1643</a>            scope,
+<a href=#1644 id=1644 data-nosnippet>1644</a>            buffer_transitions
+<a href=#1645 id=1645 data-nosnippet>1645</a>                .map(|buffer_transition| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, InvalidResourceError&gt; {
+<a href=#1646 id=1646 data-nosnippet>1646</a>                    <span class="prelude-val">Ok</span>(wgt::BufferTransition {
+<a href=#1647 id=1647 data-nosnippet>1647</a>                        buffer: hub.buffers.get(buffer_transition.buffer).get()<span class="question-mark">?</span>,
+<a href=#1648 id=1648 data-nosnippet>1648</a>                        state: buffer_transition.state,
+<a href=#1649 id=1649 data-nosnippet>1649</a>                    })
+<a href=#1650 id=1650 data-nosnippet>1650</a>                })
+<a href=#1651 id=1651 data-nosnippet>1651</a>                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()
+<a href=#1652 id=1652 data-nosnippet>1652</a>        );
+<a href=#1653 id=1653 data-nosnippet>1653</a>
+<a href=#1654 id=1654 data-nosnippet>1654</a>        <span class="kw">let </span>texture_transitions = <span class="macro">pass_try!</span>(
+<a href=#1655 id=1655 data-nosnippet>1655</a>            base,
+<a href=#1656 id=1656 data-nosnippet>1656</a>            scope,
+<a href=#1657 id=1657 data-nosnippet>1657</a>            texture_transitions
+<a href=#1658 id=1658 data-nosnippet>1658</a>                .map(|texture_transition| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, InvalidResourceError&gt; {
+<a href=#1659 id=1659 data-nosnippet>1659</a>                    <span class="kw">let </span>texture_view = hub.texture_views.get(texture_transition.texture);
+<a href=#1660 id=1660 data-nosnippet>1660</a>                    texture_view.check_valid()<span class="question-mark">?</span>;
+<a href=#1661 id=1661 data-nosnippet>1661</a>                    <span class="prelude-val">Ok</span>(wgt::TextureTransition {
+<a href=#1662 id=1662 data-nosnippet>1662</a>                        texture: texture_view,
+<a href=#1663 id=1663 data-nosnippet>1663</a>                        selector: texture_transition.selector,
+<a href=#1664 id=1664 data-nosnippet>1664</a>                        state: texture_transition.state,
+<a href=#1665 id=1665 data-nosnippet>1665</a>                    })
+<a href=#1666 id=1666 data-nosnippet>1666</a>                })
+<a href=#1667 id=1667 data-nosnippet>1667</a>                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()
+<a href=#1668 id=1668 data-nosnippet>1668</a>        );
+<a href=#1669 id=1669 data-nosnippet>1669</a>
+<a href=#1670 id=1670 data-nosnippet>1670</a>        base.commands.push(ArcComputeCommand::TransitionResources {
+<a href=#1671 id=1671 data-nosnippet>1671</a>            buffer_transitions,
+<a href=#1672 id=1672 data-nosnippet>1672</a>            texture_transitions,
+<a href=#1673 id=1673 data-nosnippet>1673</a>        });
+<a href=#1674 id=1674 data-nosnippet>1674</a>
+<a href=#1675 id=1675 data-nosnippet>1675</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1676 id=1676 data-nosnippet>1676</a>    }
+<a href=#1677 id=1677 data-nosnippet>1677</a>}
 </code></pre></div></section></main></body></html>
