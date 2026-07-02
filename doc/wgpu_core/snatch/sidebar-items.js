@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["trace"],"struct":["ExclusiveSnatchGuard","SnatchGuard","SnatchLock","SnatchableInner"],"type":["Snatchable","Snatchable2"]};
+window.SIDEBAR_ITEMS = {"mod":["trace"],"struct":["ExclusiveSnatchGuard","SnatchGuard","SnatchLock","SnatchableInner"],"type":["Snatchable"]};
