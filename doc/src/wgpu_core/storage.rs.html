@@ -116,110 +116,111 @@
 <a href=#116 id=116 data-nosnippet>116</a>        }
 <a href=#117 id=117 data-nosnippet>117</a>    }
 <a href=#118 id=118 data-nosnippet>118</a>
-<a href=#119 id=119 data-nosnippet>119</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (Id&lt;T::Marker&gt;, <span class="kw-2">&amp;</span>T)&gt; {
-<a href=#120 id=120 data-nosnippet>120</a>        <span class="self">self</span>.map
-<a href=#121 id=121 data-nosnippet>121</a>            .iter()
-<a href=#122 id=122 data-nosnippet>122</a>            .enumerate()
-<a href=#123 id=123 data-nosnippet>123</a>            .filter_map(<span class="kw">move </span>|(index, x)| <span class="kw">match </span><span class="kw-2">*</span>x {
-<a href=#124 id=124 data-nosnippet>124</a>                Element::Occupied(<span class="kw-2">ref </span>value, storage_epoch) =&gt; {
-<a href=#125 id=125 data-nosnippet>125</a>                    <span class="prelude-val">Some</span>((Id::zip(index <span class="kw">as </span>Index, storage_epoch), value))
-<a href=#126 id=126 data-nosnippet>126</a>                }
-<a href=#127 id=127 data-nosnippet>127</a>                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#128 id=128 data-nosnippet>128</a>            })
-<a href=#129 id=129 data-nosnippet>129</a>    }
-<a href=#130 id=130 data-nosnippet>130</a>}
-<a href=#131 id=131 data-nosnippet>131</a>
-<a href=#132 id=132 data-nosnippet>132</a><span class="kw">impl</span>&lt;T&gt; Storage&lt;T&gt;
-<a href=#133 id=133 data-nosnippet>133</a><span class="kw">where
-<a href=#134 id=134 data-nosnippet>134</a>    </span>T: StorageItem + Clone,
-<a href=#135 id=135 data-nosnippet>135</a>{
-<a href=#136 id=136 data-nosnippet>136</a>    <span class="doccomment">/// Get an owned reference to an item.
-<a href=#137 id=137 data-nosnippet>137</a>    /// Panics if there is an epoch mismatch, the entry is empty or in error.
-<a href=#138 id=138 data-nosnippet>138</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; T {
-<a href=#139 id=139 data-nosnippet>139</a>        <span class="kw">let </span>(index, epoch) = id.unzip();
-<a href=#140 id=140 data-nosnippet>140</a>        <span class="kw">let </span>(result, storage_epoch) = <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
-<a href=#141 id=141 data-nosnippet>141</a>            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Occupied(<span class="kw-2">ref </span>v, epoch)) =&gt; (v.clone(), epoch),
-<a href=#142 id=142 data-nosnippet>142</a>            <span class="prelude-val">None </span>| <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; {
-<a href=#143 id=143 data-nosnippet>143</a>                <span class="macro">panic!</span>(<span class="string">"Cannot get non-existent resource {id:?}"</span>);
-<a href=#144 id=144 data-nosnippet>144</a>            }
-<a href=#145 id=145 data-nosnippet>145</a>        };
-<a href=#146 id=146 data-nosnippet>146</a>        <span class="macro">assert_eq!</span>(
-<a href=#147 id=147 data-nosnippet>147</a>            epoch,
-<a href=#148 id=148 data-nosnippet>148</a>            storage_epoch,
-<a href=#149 id=149 data-nosnippet>149</a>            <span class="string">"Cannot get {id:?}, found other resource {other:?}"</span>,
-<a href=#150 id=150 data-nosnippet>150</a>            other = Id::&lt;T::Marker&gt;::zip(index, storage_epoch),
-<a href=#151 id=151 data-nosnippet>151</a>        );
-<a href=#152 id=152 data-nosnippet>152</a>        result
-<a href=#153 id=153 data-nosnippet>153</a>    }
-<a href=#154 id=154 data-nosnippet>154</a>}
-<a href=#155 id=155 data-nosnippet>155</a>
-<a href=#156 id=156 data-nosnippet>156</a><span class="attr">#[cfg(test)]
-<a href=#157 id=157 data-nosnippet>157</a></span><span class="kw">mod </span>tests {
-<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-<a href=#159 id=159 data-nosnippet>159</a>
-<a href=#160 id=160 data-nosnippet>160</a>    <span class="attr">#[derive(Clone, Debug)]
-<a href=#161 id=161 data-nosnippet>161</a>    </span><span class="kw">struct </span>TestItem;
-<a href=#162 id=162 data-nosnippet>162</a>
-<a href=#163 id=163 data-nosnippet>163</a>    <span class="kw">impl </span>ResourceType <span class="kw">for </span>TestItem {
-<a href=#164 id=164 data-nosnippet>164</a>        <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">"TestItem"</span>;
-<a href=#165 id=165 data-nosnippet>165</a>    }
-<a href=#166 id=166 data-nosnippet>166</a>
-<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">impl </span>StorageItem <span class="kw">for </span>TestItem {
-<a href=#168 id=168 data-nosnippet>168</a>        <span class="kw">type </span>Marker = ();
-<a href=#169 id=169 data-nosnippet>169</a>    }
-<a href=#170 id=170 data-nosnippet>170</a>
-<a href=#171 id=171 data-nosnippet>171</a>    <span class="kw">fn </span>id(index: Index, epoch: Epoch) -&gt; Id&lt;()&gt; {
-<a href=#172 id=172 data-nosnippet>172</a>        Id::zip(index, epoch)
-<a href=#173 id=173 data-nosnippet>173</a>    }
-<a href=#174 id=174 data-nosnippet>174</a>
-<a href=#175 id=175 data-nosnippet>175</a>    <span class="attr">#[test]
-<a href=#176 id=176 data-nosnippet>176</a>    #[should_panic(
-<a href=#177 id=177 data-nosnippet>177</a>        expected = <span class="string">"Cannot insert UntypedId(0,1), found existing resource UntypedId(0,1)"
-<a href=#178 id=178 data-nosnippet>178</a>    </span>)]
-<a href=#179 id=179 data-nosnippet>179</a>    </span><span class="kw">fn </span>insert_occupied_same_epoch() {
-<a href=#180 id=180 data-nosnippet>180</a>        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::new();
-<a href=#181 id=181 data-nosnippet>181</a>        storage.insert(id(<span class="number">0</span>, <span class="number">1</span>), TestItem);
+<a href=#119 id=119 data-nosnippet>119</a>    <span class="attr">#[allow(dead_code)]
+<a href=#120 id=120 data-nosnippet>120</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (Id&lt;T::Marker&gt;, <span class="kw-2">&amp;</span>T)&gt; {
+<a href=#121 id=121 data-nosnippet>121</a>        <span class="self">self</span>.map
+<a href=#122 id=122 data-nosnippet>122</a>            .iter()
+<a href=#123 id=123 data-nosnippet>123</a>            .enumerate()
+<a href=#124 id=124 data-nosnippet>124</a>            .filter_map(<span class="kw">move </span>|(index, x)| <span class="kw">match </span><span class="kw-2">*</span>x {
+<a href=#125 id=125 data-nosnippet>125</a>                Element::Occupied(<span class="kw-2">ref </span>value, storage_epoch) =&gt; {
+<a href=#126 id=126 data-nosnippet>126</a>                    <span class="prelude-val">Some</span>((Id::zip(index <span class="kw">as </span>Index, storage_epoch), value))
+<a href=#127 id=127 data-nosnippet>127</a>                }
+<a href=#128 id=128 data-nosnippet>128</a>                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#129 id=129 data-nosnippet>129</a>            })
+<a href=#130 id=130 data-nosnippet>130</a>    }
+<a href=#131 id=131 data-nosnippet>131</a>}
+<a href=#132 id=132 data-nosnippet>132</a>
+<a href=#133 id=133 data-nosnippet>133</a><span class="kw">impl</span>&lt;T&gt; Storage&lt;T&gt;
+<a href=#134 id=134 data-nosnippet>134</a><span class="kw">where
+<a href=#135 id=135 data-nosnippet>135</a>    </span>T: StorageItem + Clone,
+<a href=#136 id=136 data-nosnippet>136</a>{
+<a href=#137 id=137 data-nosnippet>137</a>    <span class="doccomment">/// Get an owned reference to an item.
+<a href=#138 id=138 data-nosnippet>138</a>    /// Panics if there is an epoch mismatch, the entry is empty or in error.
+<a href=#139 id=139 data-nosnippet>139</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; T {
+<a href=#140 id=140 data-nosnippet>140</a>        <span class="kw">let </span>(index, epoch) = id.unzip();
+<a href=#141 id=141 data-nosnippet>141</a>        <span class="kw">let </span>(result, storage_epoch) = <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
+<a href=#142 id=142 data-nosnippet>142</a>            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Occupied(<span class="kw-2">ref </span>v, epoch)) =&gt; (v.clone(), epoch),
+<a href=#143 id=143 data-nosnippet>143</a>            <span class="prelude-val">None </span>| <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; {
+<a href=#144 id=144 data-nosnippet>144</a>                <span class="macro">panic!</span>(<span class="string">"Cannot get non-existent resource {id:?}"</span>);
+<a href=#145 id=145 data-nosnippet>145</a>            }
+<a href=#146 id=146 data-nosnippet>146</a>        };
+<a href=#147 id=147 data-nosnippet>147</a>        <span class="macro">assert_eq!</span>(
+<a href=#148 id=148 data-nosnippet>148</a>            epoch,
+<a href=#149 id=149 data-nosnippet>149</a>            storage_epoch,
+<a href=#150 id=150 data-nosnippet>150</a>            <span class="string">"Cannot get {id:?}, found other resource {other:?}"</span>,
+<a href=#151 id=151 data-nosnippet>151</a>            other = Id::&lt;T::Marker&gt;::zip(index, storage_epoch),
+<a href=#152 id=152 data-nosnippet>152</a>        );
+<a href=#153 id=153 data-nosnippet>153</a>        result
+<a href=#154 id=154 data-nosnippet>154</a>    }
+<a href=#155 id=155 data-nosnippet>155</a>}
+<a href=#156 id=156 data-nosnippet>156</a>
+<a href=#157 id=157 data-nosnippet>157</a><span class="attr">#[cfg(test)]
+<a href=#158 id=158 data-nosnippet>158</a></span><span class="kw">mod </span>tests {
+<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#160 id=160 data-nosnippet>160</a>
+<a href=#161 id=161 data-nosnippet>161</a>    <span class="attr">#[derive(Clone, Debug)]
+<a href=#162 id=162 data-nosnippet>162</a>    </span><span class="kw">struct </span>TestItem;
+<a href=#163 id=163 data-nosnippet>163</a>
+<a href=#164 id=164 data-nosnippet>164</a>    <span class="kw">impl </span>ResourceType <span class="kw">for </span>TestItem {
+<a href=#165 id=165 data-nosnippet>165</a>        <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">"TestItem"</span>;
+<a href=#166 id=166 data-nosnippet>166</a>    }
+<a href=#167 id=167 data-nosnippet>167</a>
+<a href=#168 id=168 data-nosnippet>168</a>    <span class="kw">impl </span>StorageItem <span class="kw">for </span>TestItem {
+<a href=#169 id=169 data-nosnippet>169</a>        <span class="kw">type </span>Marker = ();
+<a href=#170 id=170 data-nosnippet>170</a>    }
+<a href=#171 id=171 data-nosnippet>171</a>
+<a href=#172 id=172 data-nosnippet>172</a>    <span class="kw">fn </span>id(index: Index, epoch: Epoch) -&gt; Id&lt;()&gt; {
+<a href=#173 id=173 data-nosnippet>173</a>        Id::zip(index, epoch)
+<a href=#174 id=174 data-nosnippet>174</a>    }
+<a href=#175 id=175 data-nosnippet>175</a>
+<a href=#176 id=176 data-nosnippet>176</a>    <span class="attr">#[test]
+<a href=#177 id=177 data-nosnippet>177</a>    #[should_panic(
+<a href=#178 id=178 data-nosnippet>178</a>        expected = <span class="string">"Cannot insert UntypedId(0,1), found existing resource UntypedId(0,1)"
+<a href=#179 id=179 data-nosnippet>179</a>    </span>)]
+<a href=#180 id=180 data-nosnippet>180</a>    </span><span class="kw">fn </span>insert_occupied_same_epoch() {
+<a href=#181 id=181 data-nosnippet>181</a>        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::new();
 <a href=#182 id=182 data-nosnippet>182</a>        storage.insert(id(<span class="number">0</span>, <span class="number">1</span>), TestItem);
-<a href=#183 id=183 data-nosnippet>183</a>    }
-<a href=#184 id=184 data-nosnippet>184</a>
-<a href=#185 id=185 data-nosnippet>185</a>    <span class="attr">#[test]
-<a href=#186 id=186 data-nosnippet>186</a>    #[should_panic(
-<a href=#187 id=187 data-nosnippet>187</a>        expected = <span class="string">"Cannot insert UntypedId(0,2), found existing resource UntypedId(0,1)"
-<a href=#188 id=188 data-nosnippet>188</a>    </span>)]
-<a href=#189 id=189 data-nosnippet>189</a>    </span><span class="kw">fn </span>insert_occupied_different_epoch() {
-<a href=#190 id=190 data-nosnippet>190</a>        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::new();
-<a href=#191 id=191 data-nosnippet>191</a>        storage.insert(id(<span class="number">0</span>, <span class="number">1</span>), TestItem);
-<a href=#192 id=192 data-nosnippet>192</a>        storage.insert(id(<span class="number">0</span>, <span class="number">2</span>), TestItem);
-<a href=#193 id=193 data-nosnippet>193</a>    }
-<a href=#194 id=194 data-nosnippet>194</a>
-<a href=#195 id=195 data-nosnippet>195</a>    <span class="attr">#[test]
-<a href=#196 id=196 data-nosnippet>196</a>    #[should_panic(expected = <span class="string">"Cannot remove UntypedId(0,2), found other resource UntypedId(0,1)"</span>)]
-<a href=#197 id=197 data-nosnippet>197</a>    </span><span class="kw">fn </span>remove_epoch_mismatch() {
-<a href=#198 id=198 data-nosnippet>198</a>        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::new();
-<a href=#199 id=199 data-nosnippet>199</a>        storage.insert(id(<span class="number">0</span>, <span class="number">1</span>), TestItem);
-<a href=#200 id=200 data-nosnippet>200</a>        storage.remove(id(<span class="number">0</span>, <span class="number">2</span>));
-<a href=#201 id=201 data-nosnippet>201</a>    }
-<a href=#202 id=202 data-nosnippet>202</a>
-<a href=#203 id=203 data-nosnippet>203</a>    <span class="attr">#[test]
-<a href=#204 id=204 data-nosnippet>204</a>    #[should_panic(expected = <span class="string">"Cannot remove non-existent resource UntypedId(0,1)"</span>)]
-<a href=#205 id=205 data-nosnippet>205</a>    </span><span class="kw">fn </span>remove_vacant() {
-<a href=#206 id=206 data-nosnippet>206</a>        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::&lt;TestItem&gt;::new();
-<a href=#207 id=207 data-nosnippet>207</a>        storage.remove(id(<span class="number">0</span>, <span class="number">1</span>));
-<a href=#208 id=208 data-nosnippet>208</a>    }
-<a href=#209 id=209 data-nosnippet>209</a>
-<a href=#210 id=210 data-nosnippet>210</a>    <span class="attr">#[test]
-<a href=#211 id=211 data-nosnippet>211</a>    #[should_panic(expected = <span class="string">"Cannot get non-existent resource UntypedId(0,1)"</span>)]
-<a href=#212 id=212 data-nosnippet>212</a>    </span><span class="kw">fn </span>get_vacant() {
-<a href=#213 id=213 data-nosnippet>213</a>        <span class="kw">let </span>storage = Storage::&lt;TestItem&gt;::new();
-<a href=#214 id=214 data-nosnippet>214</a>        storage.get(id(<span class="number">0</span>, <span class="number">1</span>));
-<a href=#215 id=215 data-nosnippet>215</a>    }
-<a href=#216 id=216 data-nosnippet>216</a>
-<a href=#217 id=217 data-nosnippet>217</a>    <span class="attr">#[test]
-<a href=#218 id=218 data-nosnippet>218</a>    #[should_panic(expected = <span class="string">"Cannot get UntypedId(0,2), found other resource UntypedId(0,1)"</span>)]
-<a href=#219 id=219 data-nosnippet>219</a>    </span><span class="kw">fn </span>get_epoch_mismatch() {
-<a href=#220 id=220 data-nosnippet>220</a>        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::new();
-<a href=#221 id=221 data-nosnippet>221</a>        storage.insert(id(<span class="number">0</span>, <span class="number">1</span>), TestItem);
-<a href=#222 id=222 data-nosnippet>222</a>        storage.get(id(<span class="number">0</span>, <span class="number">2</span>));
-<a href=#223 id=223 data-nosnippet>223</a>    }
-<a href=#224 id=224 data-nosnippet>224</a>}
+<a href=#183 id=183 data-nosnippet>183</a>        storage.insert(id(<span class="number">0</span>, <span class="number">1</span>), TestItem);
+<a href=#184 id=184 data-nosnippet>184</a>    }
+<a href=#185 id=185 data-nosnippet>185</a>
+<a href=#186 id=186 data-nosnippet>186</a>    <span class="attr">#[test]
+<a href=#187 id=187 data-nosnippet>187</a>    #[should_panic(
+<a href=#188 id=188 data-nosnippet>188</a>        expected = <span class="string">"Cannot insert UntypedId(0,2), found existing resource UntypedId(0,1)"
+<a href=#189 id=189 data-nosnippet>189</a>    </span>)]
+<a href=#190 id=190 data-nosnippet>190</a>    </span><span class="kw">fn </span>insert_occupied_different_epoch() {
+<a href=#191 id=191 data-nosnippet>191</a>        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::new();
+<a href=#192 id=192 data-nosnippet>192</a>        storage.insert(id(<span class="number">0</span>, <span class="number">1</span>), TestItem);
+<a href=#193 id=193 data-nosnippet>193</a>        storage.insert(id(<span class="number">0</span>, <span class="number">2</span>), TestItem);
+<a href=#194 id=194 data-nosnippet>194</a>    }
+<a href=#195 id=195 data-nosnippet>195</a>
+<a href=#196 id=196 data-nosnippet>196</a>    <span class="attr">#[test]
+<a href=#197 id=197 data-nosnippet>197</a>    #[should_panic(expected = <span class="string">"Cannot remove UntypedId(0,2), found other resource UntypedId(0,1)"</span>)]
+<a href=#198 id=198 data-nosnippet>198</a>    </span><span class="kw">fn </span>remove_epoch_mismatch() {
+<a href=#199 id=199 data-nosnippet>199</a>        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::new();
+<a href=#200 id=200 data-nosnippet>200</a>        storage.insert(id(<span class="number">0</span>, <span class="number">1</span>), TestItem);
+<a href=#201 id=201 data-nosnippet>201</a>        storage.remove(id(<span class="number">0</span>, <span class="number">2</span>));
+<a href=#202 id=202 data-nosnippet>202</a>    }
+<a href=#203 id=203 data-nosnippet>203</a>
+<a href=#204 id=204 data-nosnippet>204</a>    <span class="attr">#[test]
+<a href=#205 id=205 data-nosnippet>205</a>    #[should_panic(expected = <span class="string">"Cannot remove non-existent resource UntypedId(0,1)"</span>)]
+<a href=#206 id=206 data-nosnippet>206</a>    </span><span class="kw">fn </span>remove_vacant() {
+<a href=#207 id=207 data-nosnippet>207</a>        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::&lt;TestItem&gt;::new();
+<a href=#208 id=208 data-nosnippet>208</a>        storage.remove(id(<span class="number">0</span>, <span class="number">1</span>));
+<a href=#209 id=209 data-nosnippet>209</a>    }
+<a href=#210 id=210 data-nosnippet>210</a>
+<a href=#211 id=211 data-nosnippet>211</a>    <span class="attr">#[test]
+<a href=#212 id=212 data-nosnippet>212</a>    #[should_panic(expected = <span class="string">"Cannot get non-existent resource UntypedId(0,1)"</span>)]
+<a href=#213 id=213 data-nosnippet>213</a>    </span><span class="kw">fn </span>get_vacant() {
+<a href=#214 id=214 data-nosnippet>214</a>        <span class="kw">let </span>storage = Storage::&lt;TestItem&gt;::new();
+<a href=#215 id=215 data-nosnippet>215</a>        storage.get(id(<span class="number">0</span>, <span class="number">1</span>));
+<a href=#216 id=216 data-nosnippet>216</a>    }
+<a href=#217 id=217 data-nosnippet>217</a>
+<a href=#218 id=218 data-nosnippet>218</a>    <span class="attr">#[test]
+<a href=#219 id=219 data-nosnippet>219</a>    #[should_panic(expected = <span class="string">"Cannot get UntypedId(0,2), found other resource UntypedId(0,1)"</span>)]
+<a href=#220 id=220 data-nosnippet>220</a>    </span><span class="kw">fn </span>get_epoch_mismatch() {
+<a href=#221 id=221 data-nosnippet>221</a>        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::new();
+<a href=#222 id=222 data-nosnippet>222</a>        storage.insert(id(<span class="number">0</span>, <span class="number">1</span>), TestItem);
+<a href=#223 id=223 data-nosnippet>223</a>        storage.get(id(<span class="number">0</span>, <span class="number">2</span>));
+<a href=#224 id=224 data-nosnippet>224</a>    }
+<a href=#225 id=225 data-nosnippet>225</a>}
 </code></pre></div></section></main></body></html>
