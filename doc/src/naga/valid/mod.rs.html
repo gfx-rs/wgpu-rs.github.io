@@ -733,7 +733,7 @@
 <a href=#733 id=733 data-nosnippet>733</a>    </span><span class="kw">pub fn </span>validate(
 <a href=#734 id=734 data-nosnippet>734</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#735 id=735 data-nosnippet>735</a>        module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
-<a href=#736 id=736 data-nosnippet>736</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;ModuleInfo, WithSpan&lt;ValidationError&gt;&gt; {
+<a href=#736 id=736 data-nosnippet>736</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;ModuleInfo, Box&lt;WithSpan&lt;ValidationError&gt;&gt;&gt; {
 <a href=#737 id=737 data-nosnippet>737</a>        <span class="self">self</span>.overrides_resolved = <span class="bool-val">false</span>;
 <a href=#738 id=738 data-nosnippet>738</a>        <span class="self">self</span>.validate_impl(module)
 <a href=#739 id=739 data-nosnippet>739</a>    }
@@ -748,7 +748,7 @@
 <a href=#748 id=748 data-nosnippet>748</a>    </span><span class="kw">pub fn </span>validate_resolved_overrides(
 <a href=#749 id=749 data-nosnippet>749</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#750 id=750 data-nosnippet>750</a>        module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
-<a href=#751 id=751 data-nosnippet>751</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;ModuleInfo, WithSpan&lt;ValidationError&gt;&gt; {
+<a href=#751 id=751 data-nosnippet>751</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;ModuleInfo, Box&lt;WithSpan&lt;ValidationError&gt;&gt;&gt; {
 <a href=#752 id=752 data-nosnippet>752</a>        <span class="self">self</span>.overrides_resolved = <span class="bool-val">true</span>;
 <a href=#753 id=753 data-nosnippet>753</a>        <span class="self">self</span>.validate_impl(module)
 <a href=#754 id=754 data-nosnippet>754</a>    }
@@ -756,11 +756,11 @@
 <a href=#756 id=756 data-nosnippet>756</a>    <span class="kw">fn </span>validate_impl(
 <a href=#757 id=757 data-nosnippet>757</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#758 id=758 data-nosnippet>758</a>        module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
-<a href=#759 id=759 data-nosnippet>759</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;ModuleInfo, WithSpan&lt;ValidationError&gt;&gt; {
+<a href=#759 id=759 data-nosnippet>759</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;ModuleInfo, Box&lt;WithSpan&lt;ValidationError&gt;&gt;&gt; {
 <a href=#760 id=760 data-nosnippet>760</a>        <span class="self">self</span>.reset();
 <a href=#761 id=761 data-nosnippet>761</a>        <span class="self">self</span>.reset_types(module.types.len());
 <a href=#762 id=762 data-nosnippet>762</a>
-<a href=#763 id=763 data-nosnippet>763</a>        <span class="self">Self</span>::validate_module_handles(module).map_err(|e| e.with_span())<span class="question-mark">?</span>;
+<a href=#763 id=763 data-nosnippet>763</a>        <span class="self">Self</span>::validate_module_handles(module).map_err(|e| Box::new((<span class="kw-2">*</span>e).with_span()))<span class="question-mark">?</span>;
 <a href=#764 id=764 data-nosnippet>764</a>
 <a href=#765 id=765 data-nosnippet>765</a>        <span class="self">self</span>.layouter.update(module.to_ctx()).map_err(|e| {
 <a href=#766 id=766 data-nosnippet>766</a>            <span class="kw">let </span>handle = e.ty;
@@ -870,14 +870,14 @@
 <a href=#870 id=870 data-nosnippet>870</a>            <span class="kw">match </span><span class="self">self</span>.validate_function(fun, module, <span class="kw-2">&amp;</span>mod_info, <span class="bool-val">false</span>) {
 <a href=#871 id=871 data-nosnippet>871</a>                <span class="prelude-val">Ok</span>(info) =&gt; mod_info.functions.push(info),
 <a href=#872 id=872 data-nosnippet>872</a>                <span class="prelude-val">Err</span>(error) =&gt; {
-<a href=#873 id=873 data-nosnippet>873</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(error.and_then(|source| {
+<a href=#873 id=873 data-nosnippet>873</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(error.and_then(|source| {
 <a href=#874 id=874 data-nosnippet>874</a>                        ValidationError::Function {
 <a href=#875 id=875 data-nosnippet>875</a>                            handle,
 <a href=#876 id=876 data-nosnippet>876</a>                            name: fun.name.clone().unwrap_or_default(),
 <a href=#877 id=877 data-nosnippet>877</a>                            source,
 <a href=#878 id=878 data-nosnippet>878</a>                        }
 <a href=#879 id=879 data-nosnippet>879</a>                        .with_span_handle(handle, <span class="kw-2">&amp;</span>module.functions)
-<a href=#880 id=880 data-nosnippet>880</a>                    }))
+<a href=#880 id=880 data-nosnippet>880</a>                    })))
 <a href=#881 id=881 data-nosnippet>881</a>                }
 <a href=#882 id=882 data-nosnippet>882</a>            }
 <a href=#883 id=883 data-nosnippet>883</a>        }
@@ -885,42 +885,44 @@
 <a href=#885 id=885 data-nosnippet>885</a>        <span class="kw">let </span><span class="kw-2">mut </span>ep_map = FastHashSet::default();
 <a href=#886 id=886 data-nosnippet>886</a>        <span class="kw">for </span>ep <span class="kw">in </span>module.entry_points.iter() {
 <a href=#887 id=887 data-nosnippet>887</a>            <span class="kw">if </span>!ep_map.insert((ep.stage, <span class="kw-2">&amp;</span>ep.name)) {
-<a href=#888 id=888 data-nosnippet>888</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(ValidationError::EntryPoint {
-<a href=#889 id=889 data-nosnippet>889</a>                    stage: ep.stage,
-<a href=#890 id=890 data-nosnippet>890</a>                    name: ep.name.clone(),
-<a href=#891 id=891 data-nosnippet>891</a>                    source: EntryPointError::Conflict,
-<a href=#892 id=892 data-nosnippet>892</a>                }
-<a href=#893 id=893 data-nosnippet>893</a>                .with_span()); <span class="comment">// TODO: keep some EP span information?
-<a href=#894 id=894 data-nosnippet>894</a>            </span>}
-<a href=#895 id=895 data-nosnippet>895</a>
-<a href=#896 id=896 data-nosnippet>896</a>            <span class="kw">match </span><span class="self">self</span>.validate_entry_point(ep, module, <span class="kw-2">&amp;</span>mod_info) {
-<a href=#897 id=897 data-nosnippet>897</a>                <span class="prelude-val">Ok</span>(info) =&gt; mod_info.entry_points.push(info),
-<a href=#898 id=898 data-nosnippet>898</a>                <span class="prelude-val">Err</span>(error) =&gt; {
-<a href=#899 id=899 data-nosnippet>899</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(error.and_then(|source| {
-<a href=#900 id=900 data-nosnippet>900</a>                        ValidationError::EntryPoint {
-<a href=#901 id=901 data-nosnippet>901</a>                            stage: ep.stage,
-<a href=#902 id=902 data-nosnippet>902</a>                            name: ep.name.clone(),
-<a href=#903 id=903 data-nosnippet>903</a>                            source,
-<a href=#904 id=904 data-nosnippet>904</a>                        }
-<a href=#905 id=905 data-nosnippet>905</a>                        .with_span()
-<a href=#906 id=906 data-nosnippet>906</a>                    }));
-<a href=#907 id=907 data-nosnippet>907</a>                }
-<a href=#908 id=908 data-nosnippet>908</a>            }
-<a href=#909 id=909 data-nosnippet>909</a>        }
-<a href=#910 id=910 data-nosnippet>910</a>
-<a href=#911 id=911 data-nosnippet>911</a>        <span class="prelude-val">Ok</span>(mod_info)
-<a href=#912 id=912 data-nosnippet>912</a>    }
-<a href=#913 id=913 data-nosnippet>913</a>}
-<a href=#914 id=914 data-nosnippet>914</a>
-<a href=#915 id=915 data-nosnippet>915</a><span class="kw">fn </span>validate_atomic_compare_exchange_struct(
-<a href=#916 id=916 data-nosnippet>916</a>    types: <span class="kw-2">&amp;</span><span class="kw">crate</span>::UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
-<a href=#917 id=917 data-nosnippet>917</a>    members: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::StructMember],
-<a href=#918 id=918 data-nosnippet>918</a>    scalar_predicate: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner) -&gt; bool,
-<a href=#919 id=919 data-nosnippet>919</a>) -&gt; bool {
-<a href=#920 id=920 data-nosnippet>920</a>    members.len() == <span class="number">2
-<a href=#921 id=921 data-nosnippet>921</a>        </span>&amp;&amp; members[<span class="number">0</span>].name.as_deref() == <span class="prelude-val">Some</span>(<span class="string">"old_value"</span>)
-<a href=#922 id=922 data-nosnippet>922</a>        &amp;&amp; scalar_predicate(<span class="kw-2">&amp;</span>types[members[<span class="number">0</span>].ty].inner)
-<a href=#923 id=923 data-nosnippet>923</a>        &amp;&amp; members[<span class="number">1</span>].name.as_deref() == <span class="prelude-val">Some</span>(<span class="string">"exchanged"</span>)
-<a href=#924 id=924 data-nosnippet>924</a>        &amp;&amp; types[members[<span class="number">1</span>].ty].inner == <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar::BOOL)
-<a href=#925 id=925 data-nosnippet>925</a>}
+<a href=#888 id=888 data-nosnippet>888</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(
+<a href=#889 id=889 data-nosnippet>889</a>                    ValidationError::EntryPoint {
+<a href=#890 id=890 data-nosnippet>890</a>                        stage: ep.stage,
+<a href=#891 id=891 data-nosnippet>891</a>                        name: ep.name.clone(),
+<a href=#892 id=892 data-nosnippet>892</a>                        source: EntryPointError::Conflict,
+<a href=#893 id=893 data-nosnippet>893</a>                    }
+<a href=#894 id=894 data-nosnippet>894</a>                    .with_span(),
+<a href=#895 id=895 data-nosnippet>895</a>                )); <span class="comment">// TODO: keep some EP span information?
+<a href=#896 id=896 data-nosnippet>896</a>            </span>}
+<a href=#897 id=897 data-nosnippet>897</a>
+<a href=#898 id=898 data-nosnippet>898</a>            <span class="kw">match </span><span class="self">self</span>.validate_entry_point(ep, module, <span class="kw-2">&amp;</span>mod_info) {
+<a href=#899 id=899 data-nosnippet>899</a>                <span class="prelude-val">Ok</span>(info) =&gt; mod_info.entry_points.push(info),
+<a href=#900 id=900 data-nosnippet>900</a>                <span class="prelude-val">Err</span>(error) =&gt; {
+<a href=#901 id=901 data-nosnippet>901</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(error.and_then(|source| {
+<a href=#902 id=902 data-nosnippet>902</a>                        ValidationError::EntryPoint {
+<a href=#903 id=903 data-nosnippet>903</a>                            stage: ep.stage,
+<a href=#904 id=904 data-nosnippet>904</a>                            name: ep.name.clone(),
+<a href=#905 id=905 data-nosnippet>905</a>                            source,
+<a href=#906 id=906 data-nosnippet>906</a>                        }
+<a href=#907 id=907 data-nosnippet>907</a>                        .with_span()
+<a href=#908 id=908 data-nosnippet>908</a>                    })));
+<a href=#909 id=909 data-nosnippet>909</a>                }
+<a href=#910 id=910 data-nosnippet>910</a>            }
+<a href=#911 id=911 data-nosnippet>911</a>        }
+<a href=#912 id=912 data-nosnippet>912</a>
+<a href=#913 id=913 data-nosnippet>913</a>        <span class="prelude-val">Ok</span>(mod_info)
+<a href=#914 id=914 data-nosnippet>914</a>    }
+<a href=#915 id=915 data-nosnippet>915</a>}
+<a href=#916 id=916 data-nosnippet>916</a>
+<a href=#917 id=917 data-nosnippet>917</a><span class="kw">fn </span>validate_atomic_compare_exchange_struct(
+<a href=#918 id=918 data-nosnippet>918</a>    types: <span class="kw-2">&amp;</span><span class="kw">crate</span>::UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
+<a href=#919 id=919 data-nosnippet>919</a>    members: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::StructMember],
+<a href=#920 id=920 data-nosnippet>920</a>    scalar_predicate: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner) -&gt; bool,
+<a href=#921 id=921 data-nosnippet>921</a>) -&gt; bool {
+<a href=#922 id=922 data-nosnippet>922</a>    members.len() == <span class="number">2
+<a href=#923 id=923 data-nosnippet>923</a>        </span>&amp;&amp; members[<span class="number">0</span>].name.as_deref() == <span class="prelude-val">Some</span>(<span class="string">"old_value"</span>)
+<a href=#924 id=924 data-nosnippet>924</a>        &amp;&amp; scalar_predicate(<span class="kw-2">&amp;</span>types[members[<span class="number">0</span>].ty].inner)
+<a href=#925 id=925 data-nosnippet>925</a>        &amp;&amp; members[<span class="number">1</span>].name.as_deref() == <span class="prelude-val">Some</span>(<span class="string">"exchanged"</span>)
+<a href=#926 id=926 data-nosnippet>926</a>        &amp;&amp; types[members[<span class="number">1</span>].ty].inner == <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar::BOOL)
+<a href=#927 id=927 data-nosnippet>927</a>}
 </code></pre></div></section></main></body></html>
