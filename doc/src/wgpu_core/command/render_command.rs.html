@@ -1,9 +1,9 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/render_command.rs`."><title>render_command.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>render_command.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>wgt::{BufferAddress, BufferSize, Color};
-<a href=#2 id=2 data-nosnippet>2</a>
-<a href=#3 id=3 data-nosnippet>3</a><span class="kw">use super</span>::{DrawCommandFamily, Rect};
-<a href=#4 id=4 data-nosnippet>4</a><span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
-<a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">use </span><span class="kw">crate</span>::command::serde_object_reference_struct;
-<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span><span class="kw">crate</span>::command::{ArcReferences, ReferenceType};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/render_command.rs`."><title>render_command.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>render_command.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use super</span>::{DrawCommandFamily, Rect};
+<a href=#2 id=2 data-nosnippet>2</a><span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
+<a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span><span class="kw">crate</span>::command::serde_object_reference_struct;
+<a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::command::{ArcReferences, ReferenceType};
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>alloc::vec::Vec;
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>wgt::{BufferAddress, BufferSize, Color};
 <a href=#7 id=7 data-nosnippet>7</a>
 <a href=#8 id=8 data-nosnippet>8</a><span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 <a href=#9 id=9 data-nosnippet>9</a></span><span class="kw">use </span>macro_rules_attribute::apply;
@@ -50,95 +50,83 @@
 <a href=#50 id=50 data-nosnippet>50</a>        /// must be a multiple of four.
 <a href=#51 id=51 data-nosnippet>51</a>        </span>offset: u32,
 <a href=#52 id=52 data-nosnippet>52</a>
-<a href=#53 id=53 data-nosnippet>53</a>        <span class="doccomment">/// The number of bytes to write. This must be a multiple of four.
-<a href=#54 id=54 data-nosnippet>54</a>        </span>size_bytes: u32,
-<a href=#55 id=55 data-nosnippet>55</a>
-<a href=#56 id=56 data-nosnippet>56</a>        <span class="doccomment">/// Index in [`BasePass::immediates_data`] of the start of the data
-<a href=#57 id=57 data-nosnippet>57</a>        /// to be written.
-<a href=#58 id=58 data-nosnippet>58</a>        ///
-<a href=#59 id=59 data-nosnippet>59</a>        /// Note: this is not a byte offset like `offset`. Rather, it is the
-<a href=#60 id=60 data-nosnippet>60</a>        /// index of the first `u32` element in `immediates_data` to read.
-<a href=#61 id=61 data-nosnippet>61</a>        ///
-<a href=#62 id=62 data-nosnippet>62</a>        /// `None` means zeros should be written to the destination range, and
-<a href=#63 id=63 data-nosnippet>63</a>        /// there is no corresponding data in `immediates_data`. This is used
-<a href=#64 id=64 data-nosnippet>64</a>        /// by render bundles, which explicitly clear out any state that
-<a href=#65 id=65 data-nosnippet>65</a>        /// post-bundle code might see.
-<a href=#66 id=66 data-nosnippet>66</a>        </span>values_offset: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-<a href=#67 id=67 data-nosnippet>67</a>    },
-<a href=#68 id=68 data-nosnippet>68</a>    Draw {
-<a href=#69 id=69 data-nosnippet>69</a>        vertex_count: u32,
-<a href=#70 id=70 data-nosnippet>70</a>        instance_count: u32,
-<a href=#71 id=71 data-nosnippet>71</a>        first_vertex: u32,
-<a href=#72 id=72 data-nosnippet>72</a>        first_instance: u32,
+<a href=#53 id=53 data-nosnippet>53</a>        <span class="doccomment">/// The immediate data to be written.
+<a href=#54 id=54 data-nosnippet>54</a>        </span>data: Vec&lt;u32&gt;,
+<a href=#55 id=55 data-nosnippet>55</a>    },
+<a href=#56 id=56 data-nosnippet>56</a>    Draw {
+<a href=#57 id=57 data-nosnippet>57</a>        vertex_count: u32,
+<a href=#58 id=58 data-nosnippet>58</a>        instance_count: u32,
+<a href=#59 id=59 data-nosnippet>59</a>        first_vertex: u32,
+<a href=#60 id=60 data-nosnippet>60</a>        first_instance: u32,
+<a href=#61 id=61 data-nosnippet>61</a>    },
+<a href=#62 id=62 data-nosnippet>62</a>    DrawIndexed {
+<a href=#63 id=63 data-nosnippet>63</a>        index_count: u32,
+<a href=#64 id=64 data-nosnippet>64</a>        instance_count: u32,
+<a href=#65 id=65 data-nosnippet>65</a>        first_index: u32,
+<a href=#66 id=66 data-nosnippet>66</a>        base_vertex: i32,
+<a href=#67 id=67 data-nosnippet>67</a>        first_instance: u32,
+<a href=#68 id=68 data-nosnippet>68</a>    },
+<a href=#69 id=69 data-nosnippet>69</a>    DrawMeshTasks {
+<a href=#70 id=70 data-nosnippet>70</a>        group_count_x: u32,
+<a href=#71 id=71 data-nosnippet>71</a>        group_count_y: u32,
+<a href=#72 id=72 data-nosnippet>72</a>        group_count_z: u32,
 <a href=#73 id=73 data-nosnippet>73</a>    },
-<a href=#74 id=74 data-nosnippet>74</a>    DrawIndexed {
-<a href=#75 id=75 data-nosnippet>75</a>        index_count: u32,
-<a href=#76 id=76 data-nosnippet>76</a>        instance_count: u32,
-<a href=#77 id=77 data-nosnippet>77</a>        first_index: u32,
-<a href=#78 id=78 data-nosnippet>78</a>        base_vertex: i32,
-<a href=#79 id=79 data-nosnippet>79</a>        first_instance: u32,
-<a href=#80 id=80 data-nosnippet>80</a>    },
-<a href=#81 id=81 data-nosnippet>81</a>    DrawMeshTasks {
-<a href=#82 id=82 data-nosnippet>82</a>        group_count_x: u32,
-<a href=#83 id=83 data-nosnippet>83</a>        group_count_y: u32,
-<a href=#84 id=84 data-nosnippet>84</a>        group_count_z: u32,
-<a href=#85 id=85 data-nosnippet>85</a>    },
-<a href=#86 id=86 data-nosnippet>86</a>    DrawIndirect {
-<a href=#87 id=87 data-nosnippet>87</a>        buffer: R::Buffer,
-<a href=#88 id=88 data-nosnippet>88</a>        offset: BufferAddress,
-<a href=#89 id=89 data-nosnippet>89</a>        count: u32,
+<a href=#74 id=74 data-nosnippet>74</a>    DrawIndirect {
+<a href=#75 id=75 data-nosnippet>75</a>        buffer: R::Buffer,
+<a href=#76 id=76 data-nosnippet>76</a>        offset: BufferAddress,
+<a href=#77 id=77 data-nosnippet>77</a>        count: u32,
+<a href=#78 id=78 data-nosnippet>78</a>        family: DrawCommandFamily,
+<a href=#79 id=79 data-nosnippet>79</a>        <span class="doccomment">/// This limit is only populated for commands in a finished [`RenderBundle`].
+<a href=#80 id=80 data-nosnippet>80</a>        </span>vertex_or_index_limit: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+<a href=#81 id=81 data-nosnippet>81</a>        <span class="doccomment">/// This limit is only populated for commands in a finished [`RenderBundle`].
+<a href=#82 id=82 data-nosnippet>82</a>        </span>instance_limit: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+<a href=#83 id=83 data-nosnippet>83</a>    },
+<a href=#84 id=84 data-nosnippet>84</a>    MultiDrawIndirectCount {
+<a href=#85 id=85 data-nosnippet>85</a>        buffer: R::Buffer,
+<a href=#86 id=86 data-nosnippet>86</a>        offset: BufferAddress,
+<a href=#87 id=87 data-nosnippet>87</a>        count_buffer: R::Buffer,
+<a href=#88 id=88 data-nosnippet>88</a>        count_buffer_offset: BufferAddress,
+<a href=#89 id=89 data-nosnippet>89</a>        max_count: u32,
 <a href=#90 id=90 data-nosnippet>90</a>        family: DrawCommandFamily,
-<a href=#91 id=91 data-nosnippet>91</a>        <span class="doccomment">/// This limit is only populated for commands in a finished [`RenderBundle`].
-<a href=#92 id=92 data-nosnippet>92</a>        </span>vertex_or_index_limit: <span class="prelude-ty">Option</span>&lt;u64&gt;,
-<a href=#93 id=93 data-nosnippet>93</a>        <span class="doccomment">/// This limit is only populated for commands in a finished [`RenderBundle`].
-<a href=#94 id=94 data-nosnippet>94</a>        </span>instance_limit: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+<a href=#91 id=91 data-nosnippet>91</a>    },
+<a href=#92 id=92 data-nosnippet>92</a>    PushDebugGroup {
+<a href=#93 id=93 data-nosnippet>93</a>        color: u32,
+<a href=#94 id=94 data-nosnippet>94</a>        len: usize,
 <a href=#95 id=95 data-nosnippet>95</a>    },
-<a href=#96 id=96 data-nosnippet>96</a>    MultiDrawIndirectCount {
-<a href=#97 id=97 data-nosnippet>97</a>        buffer: R::Buffer,
-<a href=#98 id=98 data-nosnippet>98</a>        offset: BufferAddress,
-<a href=#99 id=99 data-nosnippet>99</a>        count_buffer: R::Buffer,
-<a href=#100 id=100 data-nosnippet>100</a>        count_buffer_offset: BufferAddress,
-<a href=#101 id=101 data-nosnippet>101</a>        max_count: u32,
-<a href=#102 id=102 data-nosnippet>102</a>        family: DrawCommandFamily,
-<a href=#103 id=103 data-nosnippet>103</a>    },
-<a href=#104 id=104 data-nosnippet>104</a>    PushDebugGroup {
-<a href=#105 id=105 data-nosnippet>105</a>        color: u32,
-<a href=#106 id=106 data-nosnippet>106</a>        len: usize,
+<a href=#96 id=96 data-nosnippet>96</a>    PopDebugGroup,
+<a href=#97 id=97 data-nosnippet>97</a>    InsertDebugMarker {
+<a href=#98 id=98 data-nosnippet>98</a>        color: u32,
+<a href=#99 id=99 data-nosnippet>99</a>        len: usize,
+<a href=#100 id=100 data-nosnippet>100</a>    },
+<a href=#101 id=101 data-nosnippet>101</a>    WriteTimestamp {
+<a href=#102 id=102 data-nosnippet>102</a>        query_set: R::QuerySet,
+<a href=#103 id=103 data-nosnippet>103</a>        query_index: u32,
+<a href=#104 id=104 data-nosnippet>104</a>    },
+<a href=#105 id=105 data-nosnippet>105</a>    BeginOcclusionQuery {
+<a href=#106 id=106 data-nosnippet>106</a>        query_index: u32,
 <a href=#107 id=107 data-nosnippet>107</a>    },
-<a href=#108 id=108 data-nosnippet>108</a>    PopDebugGroup,
-<a href=#109 id=109 data-nosnippet>109</a>    InsertDebugMarker {
-<a href=#110 id=110 data-nosnippet>110</a>        color: u32,
-<a href=#111 id=111 data-nosnippet>111</a>        len: usize,
+<a href=#108 id=108 data-nosnippet>108</a>    EndOcclusionQuery,
+<a href=#109 id=109 data-nosnippet>109</a>    BeginPipelineStatisticsQuery {
+<a href=#110 id=110 data-nosnippet>110</a>        query_set: R::QuerySet,
+<a href=#111 id=111 data-nosnippet>111</a>        query_index: u32,
 <a href=#112 id=112 data-nosnippet>112</a>    },
-<a href=#113 id=113 data-nosnippet>113</a>    WriteTimestamp {
-<a href=#114 id=114 data-nosnippet>114</a>        query_set: R::QuerySet,
-<a href=#115 id=115 data-nosnippet>115</a>        query_index: u32,
-<a href=#116 id=116 data-nosnippet>116</a>    },
-<a href=#117 id=117 data-nosnippet>117</a>    BeginOcclusionQuery {
-<a href=#118 id=118 data-nosnippet>118</a>        query_index: u32,
-<a href=#119 id=119 data-nosnippet>119</a>    },
-<a href=#120 id=120 data-nosnippet>120</a>    EndOcclusionQuery,
-<a href=#121 id=121 data-nosnippet>121</a>    BeginPipelineStatisticsQuery {
-<a href=#122 id=122 data-nosnippet>122</a>        query_set: R::QuerySet,
-<a href=#123 id=123 data-nosnippet>123</a>        query_index: u32,
-<a href=#124 id=124 data-nosnippet>124</a>    },
-<a href=#125 id=125 data-nosnippet>125</a>    EndPipelineStatisticsQuery,
-<a href=#126 id=126 data-nosnippet>126</a>    ExecuteBundle(R::RenderBundle),
-<a href=#127 id=127 data-nosnippet>127</a>}
-<a href=#128 id=128 data-nosnippet>128</a>
-<a href=#129 id=129 data-nosnippet>129</a><span class="doccomment">/// Equivalent to `RenderCommand` with the Ids resolved into resource Arcs.
-<a href=#130 id=130 data-nosnippet>130</a>///
-<a href=#131 id=131 data-nosnippet>131</a>/// In a render pass, commands are stored in this format between when they are
-<a href=#132 id=132 data-nosnippet>132</a>/// added to the pass, and when the pass is `end()`ed and the commands are
-<a href=#133 id=133 data-nosnippet>133</a>/// replayed to the HAL encoder. Validation occurs when the pass is ended, which
-<a href=#134 id=134 data-nosnippet>134</a>/// means that parameters stored in an `ArcRenderCommand` for a pass operation
-<a href=#135 id=135 data-nosnippet>135</a>/// have generally not been validated.
-<a href=#136 id=136 data-nosnippet>136</a>///
-<a href=#137 id=137 data-nosnippet>137</a>/// In a render bundle, commands are stored in this format between when the bundle
-<a href=#138 id=138 data-nosnippet>138</a>/// is `finish()`ed and when the bundle is executed. Validation occurs when the
-<a href=#139 id=139 data-nosnippet>139</a>/// bundle is finished, which means that parameters stored in an `ArcRenderCommand`
-<a href=#140 id=140 data-nosnippet>140</a>/// for a render bundle operation must have been validated.
-<a href=#141 id=141 data-nosnippet>141</a>///
-<a href=#142 id=142 data-nosnippet>142</a>/// cbindgen:ignore
-<a href=#143 id=143 data-nosnippet>143</a></span><span class="kw">pub type </span>ArcRenderCommand = RenderCommand&lt;ArcReferences&gt;;
+<a href=#113 id=113 data-nosnippet>113</a>    EndPipelineStatisticsQuery,
+<a href=#114 id=114 data-nosnippet>114</a>    ExecuteBundle(R::RenderBundle),
+<a href=#115 id=115 data-nosnippet>115</a>}
+<a href=#116 id=116 data-nosnippet>116</a>
+<a href=#117 id=117 data-nosnippet>117</a><span class="doccomment">/// Equivalent to `RenderCommand` with the Ids resolved into resource Arcs.
+<a href=#118 id=118 data-nosnippet>118</a>///
+<a href=#119 id=119 data-nosnippet>119</a>/// In a render pass, commands are stored in this format between when they are
+<a href=#120 id=120 data-nosnippet>120</a>/// added to the pass, and when the pass is `end()`ed and the commands are
+<a href=#121 id=121 data-nosnippet>121</a>/// replayed to the HAL encoder. Validation occurs when the pass is ended, which
+<a href=#122 id=122 data-nosnippet>122</a>/// means that parameters stored in an `ArcRenderCommand` for a pass operation
+<a href=#123 id=123 data-nosnippet>123</a>/// have generally not been validated.
+<a href=#124 id=124 data-nosnippet>124</a>///
+<a href=#125 id=125 data-nosnippet>125</a>/// In a render bundle, commands are stored in this format between when the bundle
+<a href=#126 id=126 data-nosnippet>126</a>/// is `finish()`ed and when the bundle is executed. Validation occurs when the
+<a href=#127 id=127 data-nosnippet>127</a>/// bundle is finished, which means that parameters stored in an `ArcRenderCommand`
+<a href=#128 id=128 data-nosnippet>128</a>/// for a render bundle operation must have been validated.
+<a href=#129 id=129 data-nosnippet>129</a>///
+<a href=#130 id=130 data-nosnippet>130</a>/// cbindgen:ignore
+<a href=#131 id=131 data-nosnippet>131</a></span><span class="kw">pub type </span>ArcRenderCommand = RenderCommand&lt;ArcReferences&gt;;
 </code></pre></div></section></main></body></html>
