@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ImmediateSlots"]};
+window.SIDEBAR_ITEMS = {"enum":["ImmediateUsage"],"struct":["ImmediateSlots","ImmediateSlotsOverflowError"]};
