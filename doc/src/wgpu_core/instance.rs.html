@@ -262,7 +262,7 @@
 <a href=#262 id=262 data-nosnippet>262</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#263 id=263 data-nosnippet>263</a>        display_handle: <span class="prelude-ty">Option</span>&lt;raw_window_handle::RawDisplayHandle&gt;,
 <a href=#264 id=264 data-nosnippet>264</a>        window_handle: raw_window_handle::RawWindowHandle,
-<a href=#265 id=265 data-nosnippet>265</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+<a href=#265 id=265 data-nosnippet>265</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;Surface&gt;, CreateSurfaceError&gt; {
 <a href=#266 id=266 data-nosnippet>266</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_surface"</span>);
 <a href=#267 id=267 data-nosnippet>267</a>
 <a href=#268 id=268 data-nosnippet>268</a>        <span class="kw">let </span>instance_display_handle = <span class="self">self</span>.display.as_ref().map(|d| {
@@ -308,10 +308,10 @@
 <a href=#308 id=308 data-nosnippet>308</a>                errors,
 <a href=#309 id=309 data-nosnippet>309</a>            ))
 <a href=#310 id=310 data-nosnippet>310</a>        } <span class="kw">else </span>{
-<a href=#311 id=311 data-nosnippet>311</a>            <span class="kw">let </span>surface = Surface {
+<a href=#311 id=311 data-nosnippet>311</a>            <span class="kw">let </span>surface = Arc::new(Surface {
 <a href=#312 id=312 data-nosnippet>312</a>                presentation: Mutex::new(rank::SURFACE_PRESENTATION, <span class="prelude-val">None</span>),
 <a href=#313 id=313 data-nosnippet>313</a>                surface_per_backend,
-<a href=#314 id=314 data-nosnippet>314</a>            };
+<a href=#314 id=314 data-nosnippet>314</a>            });
 <a href=#315 id=315 data-nosnippet>315</a>
 <a href=#316 id=316 data-nosnippet>316</a>            <span class="prelude-val">Ok</span>(surface)
 <a href=#317 id=317 data-nosnippet>317</a>        }
@@ -338,7 +338,7 @@
 <a href=#338 id=338 data-nosnippet>338</a>        width: u32,
 <a href=#339 id=339 data-nosnippet>339</a>        height: u32,
 <a href=#340 id=340 data-nosnippet>340</a>        refresh_rate: u32,
-<a href=#341 id=341 data-nosnippet>341</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+<a href=#341 id=341 data-nosnippet>341</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;Surface&gt;, CreateSurfaceError&gt; {
 <a href=#342 id=342 data-nosnippet>342</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_surface_from_drm"</span>);
 <a href=#343 id=343 data-nosnippet>343</a>
 <a href=#344 id=344 data-nosnippet>344</a>        <span class="kw">let </span><span class="kw-2">mut </span>errors = HashMap::default();
@@ -375,10 +375,10 @@
 <a href=#375 id=375 data-nosnippet>375</a>                errors,
 <a href=#376 id=376 data-nosnippet>376</a>            ))
 <a href=#377 id=377 data-nosnippet>377</a>        } <span class="kw">else </span>{
-<a href=#378 id=378 data-nosnippet>378</a>            <span class="kw">let </span>surface = Surface {
+<a href=#378 id=378 data-nosnippet>378</a>            <span class="kw">let </span>surface = Arc::new(Surface {
 <a href=#379 id=379 data-nosnippet>379</a>                presentation: Mutex::new(rank::SURFACE_PRESENTATION, <span class="prelude-val">None</span>),
 <a href=#380 id=380 data-nosnippet>380</a>                surface_per_backend,
-<a href=#381 id=381 data-nosnippet>381</a>            };
+<a href=#381 id=381 data-nosnippet>381</a>            });
 <a href=#382 id=382 data-nosnippet>382</a>
 <a href=#383 id=383 data-nosnippet>383</a>            <span class="prelude-val">Ok</span>(surface)
 <a href=#384 id=384 data-nosnippet>384</a>        }
@@ -391,7 +391,7 @@
 <a href=#391 id=391 data-nosnippet>391</a>    </span><span class="kw">pub unsafe fn </span>create_surface_metal(
 <a href=#392 id=392 data-nosnippet>392</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#393 id=393 data-nosnippet>393</a>        layer: <span class="kw-2">*mut </span>core::ffi::c_void,
-<a href=#394 id=394 data-nosnippet>394</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+<a href=#394 id=394 data-nosnippet>394</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;Surface&gt;, CreateSurfaceError&gt; {
 <a href=#395 id=395 data-nosnippet>395</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_surface_metal"</span>);
 <a href=#396 id=396 data-nosnippet>396</a>
 <a href=#397 id=397 data-nosnippet>397</a>        <span class="kw">let </span>instance = <span class="kw">unsafe </span>{ <span class="self">self</span>.as_hal::&lt;hal::api::Metal&gt;() }
@@ -413,10 +413,10 @@
 <a href=#413 id=413 data-nosnippet>413</a>        <span class="kw">let </span>raw_surface: Box&lt;<span class="kw">dyn </span>hal::DynSurface&gt; =
 <a href=#414 id=414 data-nosnippet>414</a>            Box::new(instance.create_surface_from_layer(layer));
 <a href=#415 id=415 data-nosnippet>415</a>
-<a href=#416 id=416 data-nosnippet>416</a>        <span class="kw">let </span>surface = Surface {
+<a href=#416 id=416 data-nosnippet>416</a>        <span class="kw">let </span>surface = Arc::new(Surface {
 <a href=#417 id=417 data-nosnippet>417</a>            presentation: Mutex::new(rank::SURFACE_PRESENTATION, <span class="prelude-val">None</span>),
 <a href=#418 id=418 data-nosnippet>418</a>            surface_per_backend: core::iter::once((Backend::Metal, raw_surface)).collect(),
-<a href=#419 id=419 data-nosnippet>419</a>        };
+<a href=#419 id=419 data-nosnippet>419</a>        });
 <a href=#420 id=420 data-nosnippet>420</a>
 <a href=#421 id=421 data-nosnippet>421</a>        <span class="prelude-val">Ok</span>(surface)
 <a href=#422 id=422 data-nosnippet>422</a>    }
@@ -425,15 +425,15 @@
 <a href=#425 id=425 data-nosnippet>425</a>    </span><span class="kw">fn </span>create_surface_dx12(
 <a href=#426 id=426 data-nosnippet>426</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#427 id=427 data-nosnippet>427</a>        create_surface_func: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>hal::dx12::Instance) -&gt; hal::dx12::Surface,
-<a href=#428 id=428 data-nosnippet>428</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+<a href=#428 id=428 data-nosnippet>428</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;Surface&gt;, CreateSurfaceError&gt; {
 <a href=#429 id=429 data-nosnippet>429</a>        <span class="kw">let </span>instance = <span class="kw">unsafe </span>{ <span class="self">self</span>.as_hal::&lt;hal::api::Dx12&gt;() }
 <a href=#430 id=430 data-nosnippet>430</a>            .ok_or(CreateSurfaceError::BackendNotEnabled(Backend::Dx12))<span class="question-mark">?</span>;
 <a href=#431 id=431 data-nosnippet>431</a>        <span class="kw">let </span>surface: Box&lt;<span class="kw">dyn </span>hal::DynSurface&gt; = Box::new(create_surface_func(instance));
 <a href=#432 id=432 data-nosnippet>432</a>
-<a href=#433 id=433 data-nosnippet>433</a>        <span class="kw">let </span>surface = Surface {
+<a href=#433 id=433 data-nosnippet>433</a>        <span class="kw">let </span>surface = Arc::new(Surface {
 <a href=#434 id=434 data-nosnippet>434</a>            presentation: Mutex::new(rank::SURFACE_PRESENTATION, <span class="prelude-val">None</span>),
 <a href=#435 id=435 data-nosnippet>435</a>            surface_per_backend: core::iter::once((Backend::Dx12, surface)).collect(),
-<a href=#436 id=436 data-nosnippet>436</a>        };
+<a href=#436 id=436 data-nosnippet>436</a>        });
 <a href=#437 id=437 data-nosnippet>437</a>
 <a href=#438 id=438 data-nosnippet>438</a>        <span class="prelude-val">Ok</span>(surface)
 <a href=#439 id=439 data-nosnippet>439</a>    }
@@ -445,7 +445,7 @@
 <a href=#445 id=445 data-nosnippet>445</a>    </span><span class="kw">pub unsafe fn </span>create_surface_from_visual(
 <a href=#446 id=446 data-nosnippet>446</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#447 id=447 data-nosnippet>447</a>        visual: <span class="kw-2">*mut </span>core::ffi::c_void,
-<a href=#448 id=448 data-nosnippet>448</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+<a href=#448 id=448 data-nosnippet>448</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;Surface&gt;, CreateSurfaceError&gt; {
 <a href=#449 id=449 data-nosnippet>449</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_visual"</span>);
 <a href=#450 id=450 data-nosnippet>450</a>        <span class="self">self</span>.create_surface_dx12(|inst| <span class="kw">unsafe </span>{ inst.create_surface_from_visual(visual) })
 <a href=#451 id=451 data-nosnippet>451</a>    }
@@ -457,7 +457,7 @@
 <a href=#457 id=457 data-nosnippet>457</a>    </span><span class="kw">pub unsafe fn </span>create_surface_from_surface_handle(
 <a href=#458 id=458 data-nosnippet>458</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#459 id=459 data-nosnippet>459</a>        surface_handle: <span class="kw-2">*mut </span>core::ffi::c_void,
-<a href=#460 id=460 data-nosnippet>460</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+<a href=#460 id=460 data-nosnippet>460</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;Surface&gt;, CreateSurfaceError&gt; {
 <a href=#461 id=461 data-nosnippet>461</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_surface_handle"</span>);
 <a href=#462 id=462 data-nosnippet>462</a>        <span class="self">self</span>.create_surface_dx12(|inst| <span class="kw">unsafe </span>{
 <a href=#463 id=463 data-nosnippet>463</a>            inst.create_surface_from_surface_handle(surface_handle)
@@ -471,7 +471,7 @@
 <a href=#471 id=471 data-nosnippet>471</a>    </span><span class="kw">pub unsafe fn </span>create_surface_from_swap_chain_panel(
 <a href=#472 id=472 data-nosnippet>472</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#473 id=473 data-nosnippet>473</a>        swap_chain_panel: <span class="kw-2">*mut </span>core::ffi::c_void,
-<a href=#474 id=474 data-nosnippet>474</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+<a href=#474 id=474 data-nosnippet>474</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;Surface&gt;, CreateSurfaceError&gt; {
 <a href=#475 id=475 data-nosnippet>475</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_swap_chain_panel"</span>);
 <a href=#476 id=476 data-nosnippet>476</a>        <span class="self">self</span>.create_surface_dx12(|inst| <span class="kw">unsafe </span>{
 <a href=#477 id=477 data-nosnippet>477</a>            inst.create_surface_from_swap_chain_panel(swap_chain_panel)
@@ -1368,7 +1368,7 @@
 <a href=#1368 id=1368 data-nosnippet>1368</a>        id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
 <a href=#1369 id=1369 data-nosnippet>1369</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
 <a href=#1370 id=1370 data-nosnippet>1370</a>        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{ <span class="self">self</span>.instance.create_surface(display_handle, window_handle) }<span class="question-mark">?</span>;
-<a href=#1371 id=1371 data-nosnippet>1371</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
+<a href=#1371 id=1371 data-nosnippet>1371</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
 <a href=#1372 id=1372 data-nosnippet>1372</a>        <span class="prelude-val">Ok</span>(id)
 <a href=#1373 id=1373 data-nosnippet>1373</a>    }
 <a href=#1374 id=1374 data-nosnippet>1374</a>
@@ -1404,7 +1404,7 @@
 <a href=#1404 id=1404 data-nosnippet>1404</a>                refresh_rate,
 <a href=#1405 id=1405 data-nosnippet>1405</a>            )
 <a href=#1406 id=1406 data-nosnippet>1406</a>        }<span class="question-mark">?</span>;
-<a href=#1407 id=1407 data-nosnippet>1407</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
+<a href=#1407 id=1407 data-nosnippet>1407</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
 <a href=#1408 id=1408 data-nosnippet>1408</a>
 <a href=#1409 id=1409 data-nosnippet>1409</a>        <span class="prelude-val">Ok</span>(id)
 <a href=#1410 id=1410 data-nosnippet>1410</a>    }
@@ -1419,7 +1419,7 @@
 <a href=#1419 id=1419 data-nosnippet>1419</a>        id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
 <a href=#1420 id=1420 data-nosnippet>1420</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
 <a href=#1421 id=1421 data-nosnippet>1421</a>        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{ <span class="self">self</span>.instance.create_surface_metal(layer) }<span class="question-mark">?</span>;
-<a href=#1422 id=1422 data-nosnippet>1422</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
+<a href=#1422 id=1422 data-nosnippet>1422</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
 <a href=#1423 id=1423 data-nosnippet>1423</a>        <span class="prelude-val">Ok</span>(id)
 <a href=#1424 id=1424 data-nosnippet>1424</a>    }
 <a href=#1425 id=1425 data-nosnippet>1425</a>
@@ -1433,7 +1433,7 @@
 <a href=#1433 id=1433 data-nosnippet>1433</a>        id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
 <a href=#1434 id=1434 data-nosnippet>1434</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
 <a href=#1435 id=1435 data-nosnippet>1435</a>        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{ <span class="self">self</span>.instance.create_surface_from_visual(visual) }<span class="question-mark">?</span>;
-<a href=#1436 id=1436 data-nosnippet>1436</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
+<a href=#1436 id=1436 data-nosnippet>1436</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
 <a href=#1437 id=1437 data-nosnippet>1437</a>        <span class="prelude-val">Ok</span>(id)
 <a href=#1438 id=1438 data-nosnippet>1438</a>    }
 <a href=#1439 id=1439 data-nosnippet>1439</a>
@@ -1450,7 +1450,7 @@
 <a href=#1450 id=1450 data-nosnippet>1450</a>            <span class="self">self</span>.instance
 <a href=#1451 id=1451 data-nosnippet>1451</a>                .create_surface_from_surface_handle(surface_handle)
 <a href=#1452 id=1452 data-nosnippet>1452</a>        }<span class="question-mark">?</span>;
-<a href=#1453 id=1453 data-nosnippet>1453</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
+<a href=#1453 id=1453 data-nosnippet>1453</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
 <a href=#1454 id=1454 data-nosnippet>1454</a>        <span class="prelude-val">Ok</span>(id)
 <a href=#1455 id=1455 data-nosnippet>1455</a>    }
 <a href=#1456 id=1456 data-nosnippet>1456</a>
@@ -1467,7 +1467,7 @@
 <a href=#1467 id=1467 data-nosnippet>1467</a>            <span class="self">self</span>.instance
 <a href=#1468 id=1468 data-nosnippet>1468</a>                .create_surface_from_swap_chain_panel(swap_chain_panel)
 <a href=#1469 id=1469 data-nosnippet>1469</a>        }<span class="question-mark">?</span>;
-<a href=#1470 id=1470 data-nosnippet>1470</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
+<a href=#1470 id=1470 data-nosnippet>1470</a>        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
 <a href=#1471 id=1471 data-nosnippet>1471</a>        <span class="prelude-val">Ok</span>(id)
 <a href=#1472 id=1472 data-nosnippet>1472</a>    }
 <a href=#1473 id=1473 data-nosnippet>1473</a>
