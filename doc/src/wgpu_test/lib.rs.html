@@ -22,9 +22,9 @@
 <a href=#22 id=22 data-nosnippet>22</a><span class="kw">pub use </span>config::{GpuTestConfiguration, GpuTestInitializer};
 <a href=#23 id=23 data-nosnippet>23</a><span class="kw">pub use </span>expectations::{FailureApplicationReasons, FailureBehavior, FailureCase, FailureReason};
 <a href=#24 id=24 data-nosnippet>24</a><span class="kw">pub use </span>init::{initialize_adapter, initialize_device, initialize_instance};
-<a href=#25 id=25 data-nosnippet>25</a><span class="kw">pub use </span>params::TestParameters;
-<a href=#26 id=26 data-nosnippet>26</a><span class="kw">pub use </span>run::{execute_test, TestingContext};
-<a href=#27 id=27 data-nosnippet>27</a><span class="kw">pub use </span>wgpu_macros::gpu_test;
+<a href=#25 id=25 data-nosnippet>25</a><span class="kw">pub use </span>macro_rules_attribute::apply;
+<a href=#26 id=26 data-nosnippet>26</a><span class="kw">pub use </span>params::TestParameters;
+<a href=#27 id=27 data-nosnippet>27</a><span class="kw">pub use </span>run::{execute_test, TestingContext};
 <a href=#28 id=28 data-nosnippet>28</a>
 <a href=#29 id=29 data-nosnippet>29</a><span class="doccomment">/// Run some code in an error scope and assert that validation fails.
 <a href=#30 id=30 data-nosnippet>30</a>///
@@ -144,4 +144,33 @@
 <a href=#144 id=144 data-nosnippet>144</a>        }
 <a href=#145 id=145 data-nosnippet>145</a>    };
 <a href=#146 id=146 data-nosnippet>146</a>}
+<a href=#147 id=147 data-nosnippet>147</a>
+<a href=#148 id=148 data-nosnippet>148</a><span class="doccomment">/// Creates a test that will run on all gpus on a given system.
+<a href=#149 id=149 data-nosnippet>149</a>///
+<a href=#150 id=150 data-nosnippet>150</a>/// Use this macro as [`#[apply(gpu_test)]`][apply] on a static variable with a type that
+<a href=#151 id=151 data-nosnippet>151</a>/// can be converted to a [`GpuTestConfiguration`].
+<a href=#152 id=152 data-nosnippet>152</a></span><span class="attr">#[macro_export]
+<a href=#153 id=153 data-nosnippet>153</a></span><span class="macro">macro_rules!</span> gpu_test {
+<a href=#154 id=154 data-nosnippet>154</a>    (
+<a href=#155 id=155 data-nosnippet>155</a>        $( <span class="attr">#[ <span class="macro-nonterminal">$meta</span>:meta ] </span>)*
+<a href=#156 id=156 data-nosnippet>156</a>        <span class="macro-nonterminal">$vis</span>:vis <span class="kw">static </span><span class="macro-nonterminal">$static_name</span>:ident: <span class="macro-nonterminal">$static_type</span>:ty = <span class="macro-nonterminal">$init_expr</span>:expr;
+<a href=#157 id=157 data-nosnippet>157</a>    ) =&gt; {
+<a href=#158 id=158 data-nosnippet>158</a>        <span class="macro-nonterminal">$crate::macro_support::paste</span>! {
+<a href=#159 id=159 data-nosnippet>159</a>            $( <span class="attr">#[ <span class="macro-nonterminal">$meta </span>] </span>)*
+<a href=#160 id=160 data-nosnippet>160</a>            <span class="attr">#[allow(non_snake_case)]
+<a href=#161 id=161 data-nosnippet>161</a>            </span><span class="macro-nonterminal">$vis </span><span class="kw">fn </span><span class="macro-nonterminal">$static_name</span>() -&gt; <span class="macro-nonterminal">$crate::GpuTestConfiguration </span>{
+<a href=#162 id=162 data-nosnippet>162</a>                <span class="kw">struct </span>S;
+<a href=#163 id=163 data-nosnippet>163</a>
+<a href=#164 id=164 data-nosnippet>164</a>                <span class="comment">// Allow any type that can be converted to a GpuTestConfiguration
+<a href=#165 id=165 data-nosnippet>165</a>                </span><span class="macro-nonterminal">$crate::GpuTestConfiguration::from</span>(<span class="macro-nonterminal">$init_expr</span>)
+<a href=#166 id=166 data-nosnippet>166</a>                    .name_from_init_function_typename::&lt;S&gt;(<span class="macro">stringify!</span>([&lt; <span class="macro-nonterminal">$static_name</span>:lower &gt;]))
+<a href=#167 id=167 data-nosnippet>167</a>            }
+<a href=#168 id=168 data-nosnippet>168</a>        }
+<a href=#169 id=169 data-nosnippet>169</a>    };
+<a href=#170 id=170 data-nosnippet>170</a>}
+<a href=#171 id=171 data-nosnippet>171</a>
+<a href=#172 id=172 data-nosnippet>172</a><span class="attr">#[doc(hidden)]
+<a href=#173 id=173 data-nosnippet>173</a></span><span class="kw">pub mod </span>macro_support {
+<a href=#174 id=174 data-nosnippet>174</a>    <span class="kw">pub use </span>paste::paste;
+<a href=#175 id=175 data-nosnippet>175</a>}
 </code></pre></div></section></main></body></html>
