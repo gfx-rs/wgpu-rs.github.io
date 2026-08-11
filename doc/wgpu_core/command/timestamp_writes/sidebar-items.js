@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["PassTimestampWrites"],"type":["ArcPassTimestampWrites"]};
+window.SIDEBAR_ITEMS = {"struct":["PassTimestampWrites"]};
