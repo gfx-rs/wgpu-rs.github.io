@@ -105,6 +105,51 @@
 <a href=#105 id=105 data-nosnippet>105</a>    };
 <a href=#106 id=106 data-nosnippet>106</a>}
 <a href=#107 id=107 data-nosnippet>107</a>
-<a href=#108 id=108 data-nosnippet>108</a><span class="attr">#[cfg_attr(not(any(wgpu_core, custom)), expect(unused_imports))]
-<a href=#109 id=109 data-nosnippet>109</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>{impl_eq_ord_hash_arc_address, impl_eq_ord_hash_proxy};
+<a href=#108 id=108 data-nosnippet>108</a><span class="doccomment">/// Implements `PartialEq`, `Eq`, `PartialOrd`, `Ord`, and `Hash` for a type by comparing the addresses of the `Arc`s.
+<a href=#109 id=109 data-nosnippet>109</a>///
+<a href=#110 id=110 data-nosnippet>110</a>/// ```ignore
+<a href=#111 id=111 data-nosnippet>111</a>/// impl_eq_ord_hash_arc_address!(MyType =&gt; .field);
+<a href=#112 id=112 data-nosnippet>112</a>/// ```
+<a href=#113 id=113 data-nosnippet>113</a></span><span class="attr">#[cfg_attr(not(any(wgpu_core, custom)), expect(unused_macros))]
+<a href=#114 id=114 data-nosnippet>114</a></span><span class="macro">macro_rules!</span> impl_eq_ord_hash_box_address {
+<a href=#115 id=115 data-nosnippet>115</a>    (<span class="macro-nonterminal">$type</span>:ty =&gt; $(<span class="macro-nonterminal">$access</span>:tt)<span class="kw-2">*</span>) =&gt; {
+<a href=#116 id=116 data-nosnippet>116</a>        <span class="kw">impl </span>PartialEq <span class="kw">for </span><span class="macro-nonterminal">$type </span>{
+<a href=#117 id=117 data-nosnippet>117</a>            <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+<a href=#118 id=118 data-nosnippet>118</a>                <span class="kw">let </span>address_left: <span class="kw-2">*const </span><span class="kw">_ </span>= <span class="kw-2">&amp;</span><span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>;
+<a href=#119 id=119 data-nosnippet>119</a>                <span class="kw">let </span>address_right: <span class="kw-2">*const </span><span class="kw">_ </span>= <span class="kw-2">&amp;</span>other $(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>;
+<a href=#120 id=120 data-nosnippet>120</a>
+<a href=#121 id=121 data-nosnippet>121</a>                address_left == address_right
+<a href=#122 id=122 data-nosnippet>122</a>            }
+<a href=#123 id=123 data-nosnippet>123</a>        }
+<a href=#124 id=124 data-nosnippet>124</a>
+<a href=#125 id=125 data-nosnippet>125</a>        <span class="kw">impl </span>Eq <span class="kw">for </span><span class="macro-nonterminal">$type </span>{}
+<a href=#126 id=126 data-nosnippet>126</a>
+<a href=#127 id=127 data-nosnippet>127</a>        <span class="kw">impl </span>PartialOrd <span class="kw">for </span><span class="macro-nonterminal">$type </span>{
+<a href=#128 id=128 data-nosnippet>128</a>            <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;core::cmp::Ordering&gt; {
+<a href=#129 id=129 data-nosnippet>129</a>                <span class="prelude-val">Some</span>(<span class="self">self</span>.cmp(other))
+<a href=#130 id=130 data-nosnippet>130</a>            }
+<a href=#131 id=131 data-nosnippet>131</a>        }
+<a href=#132 id=132 data-nosnippet>132</a>
+<a href=#133 id=133 data-nosnippet>133</a>        <span class="kw">impl </span>Ord <span class="kw">for </span><span class="macro-nonterminal">$type </span>{
+<a href=#134 id=134 data-nosnippet>134</a>            <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; core::cmp::Ordering {
+<a href=#135 id=135 data-nosnippet>135</a>                <span class="kw">let </span>address_left: <span class="kw-2">*const </span><span class="kw">_ </span>= <span class="kw-2">&amp;</span><span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>;
+<a href=#136 id=136 data-nosnippet>136</a>                <span class="kw">let </span>address_right: <span class="kw-2">*const </span><span class="kw">_ </span>= <span class="kw-2">&amp;</span>other $(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>;
+<a href=#137 id=137 data-nosnippet>137</a>
+<a href=#138 id=138 data-nosnippet>138</a>                address_left.cmp(<span class="kw-2">&amp;</span>address_right)
+<a href=#139 id=139 data-nosnippet>139</a>            }
+<a href=#140 id=140 data-nosnippet>140</a>        }
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a>        <span class="kw">impl </span>core::hash::Hash <span class="kw">for </span><span class="macro-nonterminal">$type </span>{
+<a href=#143 id=143 data-nosnippet>143</a>            <span class="kw">fn </span>hash&lt;H: core::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
+<a href=#144 id=144 data-nosnippet>144</a>                <span class="kw">let </span>address: <span class="kw-2">*const </span><span class="kw">_ </span>= <span class="kw-2">&amp;</span><span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>;
+<a href=#145 id=145 data-nosnippet>145</a>                address.hash(state)
+<a href=#146 id=146 data-nosnippet>146</a>            }
+<a href=#147 id=147 data-nosnippet>147</a>        }
+<a href=#148 id=148 data-nosnippet>148</a>    };
+<a href=#149 id=149 data-nosnippet>149</a>}
+<a href=#150 id=150 data-nosnippet>150</a>
+<a href=#151 id=151 data-nosnippet>151</a><span class="attr">#[cfg_attr(not(any(wgpu_core, custom)), expect(unused_imports))]
+<a href=#152 id=152 data-nosnippet>152</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>{
+<a href=#153 id=153 data-nosnippet>153</a>    impl_eq_ord_hash_arc_address, impl_eq_ord_hash_box_address, impl_eq_ord_hash_proxy,
+<a href=#154 id=154 data-nosnippet>154</a>};
 </code></pre></div></section></main></body></html>
