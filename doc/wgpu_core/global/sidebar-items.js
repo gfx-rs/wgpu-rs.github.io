@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["_test_send_sync"],"struct":["Global","GlobalReport"]};

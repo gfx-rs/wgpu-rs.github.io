@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"type":["BindGroupDescriptor","BindGroupEntry","BindingResource","BufferBinding","ComputePipelineDescriptor","GeneralRenderPipelineDescriptor","MeshPipelineDescriptor","RenderPipelineDescriptor","VertexState"]};
