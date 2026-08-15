@@ -63,23 +63,23 @@
 <a href=#63 id=63 data-nosnippet>63</a>
 <a href=#64 id=64 data-nosnippet>64</a><span class="doccomment">/// A `Mutex` instrumented for deadlock prevention.
 <a href=#65 id=65 data-nosnippet>65</a>///
-<a href=#66 id=66 data-nosnippet>66</a>/// This is just a wrapper around a [`parking_lot::Mutex`], along with
+<a href=#66 id=66 data-nosnippet>66</a>/// This is just a wrapper around a [`wgpu_sync::Mutex`], along with
 <a href=#67 id=67 data-nosnippet>67</a>/// its rank in the `wgpu_core` lock ordering.
 <a href=#68 id=68 data-nosnippet>68</a>///
 <a href=#69 id=69 data-nosnippet>69</a>/// For details, see [the module documentation][self].
 <a href=#70 id=70 data-nosnippet>70</a></span><span class="kw">pub struct </span>Mutex&lt;T&gt; {
-<a href=#71 id=71 data-nosnippet>71</a>    inner: parking_lot::Mutex&lt;T&gt;,
+<a href=#71 id=71 data-nosnippet>71</a>    inner: wgpu_sync::Mutex&lt;T&gt;,
 <a href=#72 id=72 data-nosnippet>72</a>    rank: LockRank,
 <a href=#73 id=73 data-nosnippet>73</a>}
 <a href=#74 id=74 data-nosnippet>74</a>
 <a href=#75 id=75 data-nosnippet>75</a><span class="doccomment">/// A guard produced by locking [`Mutex`].
 <a href=#76 id=76 data-nosnippet>76</a>///
-<a href=#77 id=77 data-nosnippet>77</a>/// This is just a wrapper around a [`parking_lot::MutexGuard`], along
+<a href=#77 id=77 data-nosnippet>77</a>/// This is just a wrapper around a [`wgpu_sync::MutexGuard`], along
 <a href=#78 id=78 data-nosnippet>78</a>/// with the state needed to track lock acquisition.
 <a href=#79 id=79 data-nosnippet>79</a>///
 <a href=#80 id=80 data-nosnippet>80</a>/// For details, see [the module documentation][self].
 <a href=#81 id=81 data-nosnippet>81</a></span><span class="kw">pub struct </span>MutexGuard&lt;<span class="lifetime">'a</span>, T&gt; {
-<a href=#82 id=82 data-nosnippet>82</a>    inner: parking_lot::MutexGuard&lt;<span class="lifetime">'a</span>, T&gt;,
+<a href=#82 id=82 data-nosnippet>82</a>    inner: wgpu_sync::MutexGuard&lt;<span class="lifetime">'a</span>, T&gt;,
 <a href=#83 id=83 data-nosnippet>83</a>    <span class="attr">#[cfg_attr(not(miri), expect(unused))] </span><span class="comment">// but `Drop` has important side effects
 <a href=#84 id=84 data-nosnippet>84</a>    </span>saved: LockStateGuard,
 <a href=#85 id=85 data-nosnippet>85</a>}
@@ -216,7 +216,7 @@
 <a href=#216 id=216 data-nosnippet>216</a><span class="kw">impl</span>&lt;T&gt; Mutex&lt;T&gt; {
 <a href=#217 id=217 data-nosnippet>217</a>    <span class="kw">pub fn </span>new(rank: LockRank, value: T) -&gt; Mutex&lt;T&gt; {
 <a href=#218 id=218 data-nosnippet>218</a>        Mutex {
-<a href=#219 id=219 data-nosnippet>219</a>            inner: parking_lot::Mutex::new(value),
+<a href=#219 id=219 data-nosnippet>219</a>            inner: wgpu_sync::Mutex::new(value),
 <a href=#220 id=220 data-nosnippet>220</a>            rank,
 <a href=#221 id=221 data-nosnippet>221</a>        }
 <a href=#222 id=222 data-nosnippet>222</a>    }
@@ -261,41 +261,41 @@
 <a href=#261 id=261 data-nosnippet>261</a>
 <a href=#262 id=262 data-nosnippet>262</a><span class="doccomment">/// An `RwLock` instrumented for deadlock prevention.
 <a href=#263 id=263 data-nosnippet>263</a>///
-<a href=#264 id=264 data-nosnippet>264</a>/// This is just a wrapper around a [`parking_lot::RwLock`], along with
+<a href=#264 id=264 data-nosnippet>264</a>/// This is just a wrapper around a [`wgpu_sync::RwLock`], along with
 <a href=#265 id=265 data-nosnippet>265</a>/// its rank in the `wgpu_core` lock ordering.
 <a href=#266 id=266 data-nosnippet>266</a>///
 <a href=#267 id=267 data-nosnippet>267</a>/// For details, see [the module documentation][self].
 <a href=#268 id=268 data-nosnippet>268</a></span><span class="kw">pub struct </span>RwLock&lt;T&gt; {
-<a href=#269 id=269 data-nosnippet>269</a>    inner: parking_lot::RwLock&lt;T&gt;,
+<a href=#269 id=269 data-nosnippet>269</a>    inner: wgpu_sync::RwLock&lt;T&gt;,
 <a href=#270 id=270 data-nosnippet>270</a>    rank: LockRank,
 <a href=#271 id=271 data-nosnippet>271</a>}
 <a href=#272 id=272 data-nosnippet>272</a>
 <a href=#273 id=273 data-nosnippet>273</a><span class="doccomment">/// A read guard produced by locking [`RwLock`] for reading.
 <a href=#274 id=274 data-nosnippet>274</a>///
-<a href=#275 id=275 data-nosnippet>275</a>/// This is just a wrapper around a [`parking_lot::RwLockReadGuard`], along with
+<a href=#275 id=275 data-nosnippet>275</a>/// This is just a wrapper around a [`wgpu_sync::RwLockReadGuard`], along with
 <a href=#276 id=276 data-nosnippet>276</a>/// the state needed to track lock acquisition.
 <a href=#277 id=277 data-nosnippet>277</a>///
 <a href=#278 id=278 data-nosnippet>278</a>/// For details, see [the module documentation][self].
 <a href=#279 id=279 data-nosnippet>279</a></span><span class="kw">pub struct </span>RwLockReadGuard&lt;<span class="lifetime">'a</span>, T&gt; {
-<a href=#280 id=280 data-nosnippet>280</a>    inner: parking_lot::RwLockReadGuard&lt;<span class="lifetime">'a</span>, T&gt;,
+<a href=#280 id=280 data-nosnippet>280</a>    inner: wgpu_sync::RwLockReadGuard&lt;<span class="lifetime">'a</span>, T&gt;,
 <a href=#281 id=281 data-nosnippet>281</a>    saved: LockStateGuard,
 <a href=#282 id=282 data-nosnippet>282</a>}
 <a href=#283 id=283 data-nosnippet>283</a>
 <a href=#284 id=284 data-nosnippet>284</a><span class="doccomment">/// A write guard produced by locking [`RwLock`] for writing.
 <a href=#285 id=285 data-nosnippet>285</a>///
-<a href=#286 id=286 data-nosnippet>286</a>/// This is just a wrapper around a [`parking_lot::RwLockWriteGuard`], along
+<a href=#286 id=286 data-nosnippet>286</a>/// This is just a wrapper around a [`wgpu_sync::RwLockWriteGuard`], along
 <a href=#287 id=287 data-nosnippet>287</a>/// with the state needed to track lock acquisition.
 <a href=#288 id=288 data-nosnippet>288</a>///
 <a href=#289 id=289 data-nosnippet>289</a>/// For details, see [the module documentation][self].
 <a href=#290 id=290 data-nosnippet>290</a></span><span class="kw">pub struct </span>RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt; {
-<a href=#291 id=291 data-nosnippet>291</a>    inner: parking_lot::RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt;,
+<a href=#291 id=291 data-nosnippet>291</a>    inner: wgpu_sync::RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt;,
 <a href=#292 id=292 data-nosnippet>292</a>    saved: LockStateGuard,
 <a href=#293 id=293 data-nosnippet>293</a>}
 <a href=#294 id=294 data-nosnippet>294</a>
 <a href=#295 id=295 data-nosnippet>295</a><span class="kw">impl</span>&lt;T&gt; RwLock&lt;T&gt; {
 <a href=#296 id=296 data-nosnippet>296</a>    <span class="kw">pub fn </span>new(rank: LockRank, value: T) -&gt; RwLock&lt;T&gt; {
 <a href=#297 id=297 data-nosnippet>297</a>        RwLock {
-<a href=#298 id=298 data-nosnippet>298</a>            inner: parking_lot::RwLock::new(value),
+<a href=#298 id=298 data-nosnippet>298</a>            inner: wgpu_sync::RwLock::new(value),
 <a href=#299 id=299 data-nosnippet>299</a>            rank,
 <a href=#300 id=300 data-nosnippet>300</a>        }
 <a href=#301 id=301 data-nosnippet>301</a>    }

@@ -1,2 +1,2 @@
-window.ALL_CRATES = ["hlsl_snapshots","naga","naga_test","naga_types","player","wgpu","wgpu_benchmark","wgpu_core","wgpu_core_deps_apple","wgpu_core_deps_emscripten","wgpu_core_deps_linux_android_bsd","wgpu_core_deps_wasm","wgpu_core_deps_windows","wgpu_examples","wgpu_hal","wgpu_naga_bridge","wgpu_test","wgpu_types"];
-//{"start":21,"fragment_lengths":[16,7,12,13,9,7,17,12,23,28,35,22,25,16,11,19,12,13]}
+window.ALL_CRATES = ["hlsl_snapshots","naga","naga_test","naga_types","player","wgpu","wgpu_benchmark","wgpu_core","wgpu_core_deps_apple","wgpu_core_deps_emscripten","wgpu_core_deps_linux_android_bsd","wgpu_core_deps_wasm","wgpu_core_deps_windows","wgpu_examples","wgpu_hal","wgpu_naga_bridge","wgpu_sync","wgpu_test","wgpu_types"];
+//{"start":21,"fragment_lengths":[16,7,12,13,9,7,17,12,23,28,35,22,25,16,11,19,12,12,13]}
