@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["PointerId"],"macro":["ids"],"mod":["markers"],"trait":["Marker"]};
+window.SIDEBAR_ITEMS = {"enum":["PointerId"],"mod":["markers"],"trait":["Marker"]};
