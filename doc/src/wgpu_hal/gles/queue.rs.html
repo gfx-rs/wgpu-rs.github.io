@@ -5,7 +5,7 @@
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>arrayvec::ArrayVec;
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>glow::HasContext;
 <a href=#7 id=7 data-nosnippet>7</a>
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use super</span>::{conv::is_layered_target, lock, Command <span class="kw">as </span>C, PrivateCapabilities};
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use super</span>::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
 <a href=#9 id=9 data-nosnippet>9</a>
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">const </span>DEBUG_ID: u32 = <span class="number">0</span>;
 <a href=#11 id=11 data-nosnippet>11</a>
@@ -377,7 +377,7 @@
 <a href=#377 id=377 data-nosnippet>377</a>                    }
 <a href=#378 id=378 data-nosnippet>378</a>                }
 <a href=#379 id=379 data-nosnippet>379</a>                <span class="prelude-val">None </span>=&gt; {
-<a href=#380 id=380 data-nosnippet>380</a>                    <span class="kw">let </span><span class="kw-2">mut </span>map_state = lock(<span class="kw-2">&amp;</span>dst.map_state);
+<a href=#380 id=380 data-nosnippet>380</a>                    <span class="kw">let </span><span class="kw-2">mut </span>map_state = dst.map_state.lock();
 <a href=#381 id=381 data-nosnippet>381</a>                    map_state.data.as_mut().unwrap().as_mut_slice()
 <a href=#382 id=382 data-nosnippet>382</a>                        [range.start <span class="kw">as </span>usize..range.end <span class="kw">as </span>usize]
 <a href=#383 id=383 data-nosnippet>383</a>                        .fill(<span class="number">0</span>);
@@ -420,7 +420,7 @@
 <a href=#420 id=420 data-nosnippet>420</a>                        };
 <a href=#421 id=421 data-nosnippet>421</a>                    }
 <a href=#422 id=422 data-nosnippet>422</a>                    (<span class="prelude-val">Some</span>(src), <span class="prelude-val">None</span>) =&gt; {
-<a href=#423 id=423 data-nosnippet>423</a>                        <span class="kw">let </span><span class="kw-2">mut </span>map_state = lock(<span class="kw-2">&amp;</span>dst.map_state);
+<a href=#423 id=423 data-nosnippet>423</a>                        <span class="kw">let </span><span class="kw-2">mut </span>map_state = dst.map_state.lock();
 <a href=#424 id=424 data-nosnippet>424</a>                        <span class="kw">let </span>dst_data = <span class="kw-2">&amp;mut </span>map_state.data.as_mut().unwrap().as_mut_slice()
 <a href=#425 id=425 data-nosnippet>425</a>                            [copy.dst_offset <span class="kw">as </span>usize..copy.dst_offset <span class="kw">as </span>usize + size];
 <a href=#426 id=426 data-nosnippet>426</a>
@@ -435,7 +435,7 @@
 <a href=#435 id=435 data-nosnippet>435</a>                        };
 <a href=#436 id=436 data-nosnippet>436</a>                    }
 <a href=#437 id=437 data-nosnippet>437</a>                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(dst)) =&gt; {
-<a href=#438 id=438 data-nosnippet>438</a>                        <span class="kw">let </span>map_state = lock(<span class="kw-2">&amp;</span>src.map_state);
+<a href=#438 id=438 data-nosnippet>438</a>                        <span class="kw">let </span>map_state = src.map_state.lock();
 <a href=#439 id=439 data-nosnippet>439</a>                        <span class="kw">let </span>src_data = <span class="kw-2">&amp;</span>map_state.data.as_ref().unwrap().as_slice()
 <a href=#440 id=440 data-nosnippet>440</a>                            [copy.src_offset <span class="kw">as </span>usize..copy.src_offset <span class="kw">as </span>usize + size];
 <a href=#441 id=441 data-nosnippet>441</a>                        <span class="kw">unsafe </span>{ gl.bind_buffer(copy_dst_target, <span class="prelude-val">Some</span>(dst)) };
@@ -784,7 +784,7 @@
 <a href=#784 id=784 data-nosnippet>784</a>                            glow::PixelUnpackData::BufferOffset(copy.buffer_layout.offset <span class="kw">as </span>u32)
 <a href=#785 id=785 data-nosnippet>785</a>                        }
 <a href=#786 id=786 data-nosnippet>786</a>                        <span class="prelude-val">None </span>=&gt; {
-<a href=#787 id=787 data-nosnippet>787</a>                            map_state = lock(<span class="kw-2">&amp;</span>src.map_state);
+<a href=#787 id=787 data-nosnippet>787</a>                            map_state = src.map_state.lock();
 <a href=#788 id=788 data-nosnippet>788</a>                            <span class="kw">let </span>src_data = <span class="kw-2">&amp;</span>map_state.data.as_ref().unwrap().as_slice()
 <a href=#789 id=789 data-nosnippet>789</a>                                [copy.buffer_layout.offset <span class="kw">as </span>usize..];
 <a href=#790 id=790 data-nosnippet>790</a>                            glow::PixelUnpackData::Slice(<span class="prelude-val">Some</span>(src_data))
@@ -848,7 +848,7 @@
 <a href=#848 id=848 data-nosnippet>848</a>                            )
 <a href=#849 id=849 data-nosnippet>849</a>                        }
 <a href=#850 id=850 data-nosnippet>850</a>                        <span class="prelude-val">None </span>=&gt; {
-<a href=#851 id=851 data-nosnippet>851</a>                            map_state = lock(<span class="kw-2">&amp;</span>src.map_state);
+<a href=#851 id=851 data-nosnippet>851</a>                            map_state = src.map_state.lock();
 <a href=#852 id=852 data-nosnippet>852</a>                            <span class="kw">let </span>src_data = <span class="kw-2">&amp;</span>map_state.data.as_ref().unwrap().as_slice()
 <a href=#853 id=853 data-nosnippet>853</a>                                [(offset <span class="kw">as </span>usize)..(offset + bytes_in_upload) <span class="kw">as </span>usize];
 <a href=#854 id=854 data-nosnippet>854</a>                            glow::CompressedPixelUnpackData::Slice(src_data)
@@ -929,7 +929,7 @@
 <a href=#929 id=929 data-nosnippet>929</a>                            glow::PixelPackData::BufferOffset(offset <span class="kw">as </span>u32)
 <a href=#930 id=930 data-nosnippet>930</a>                        }
 <a href=#931 id=931 data-nosnippet>931</a>                        <span class="prelude-val">None </span>=&gt; {
-<a href=#932 id=932 data-nosnippet>932</a>                            map_state = lock(<span class="kw-2">&amp;</span>dst.map_state);
+<a href=#932 id=932 data-nosnippet>932</a>                            map_state = dst.map_state.lock();
 <a href=#933 id=933 data-nosnippet>933</a>                            <span class="kw">let </span>dst_data = <span class="kw-2">&amp;mut </span>map_state.data.as_mut().unwrap().as_mut_slice()
 <a href=#934 id=934 data-nosnippet>934</a>                                [offset <span class="kw">as </span>usize..];
 <a href=#935 id=935 data-nosnippet>935</a>                            glow::PixelPackData::Slice(<span class="prelude-val">Some</span>(dst_data))
@@ -1096,7 +1096,7 @@
 <a href=#1096 id=1096 data-nosnippet>1096</a>                            };
 <a href=#1097 id=1097 data-nosnippet>1097</a>                        }
 <a href=#1098 id=1098 data-nosnippet>1098</a>                        <span class="prelude-val">None </span>=&gt; {
-<a href=#1099 id=1099 data-nosnippet>1099</a>                            <span class="kw">let </span><span class="kw-2">mut </span>map_state = lock(<span class="kw-2">&amp;</span>dst.map_state);
+<a href=#1099 id=1099 data-nosnippet>1099</a>                            <span class="kw">let </span><span class="kw-2">mut </span>map_state = dst.map_state.lock();
 <a href=#1100 id=1100 data-nosnippet>1100</a>                            <span class="kw">let </span>data = map_state.data.as_mut().unwrap();
 <a href=#1101 id=1101 data-nosnippet>1101</a>                            <span class="kw">let </span>len = query_data.len().min(data.len());
 <a href=#1102 id=1102 data-nosnippet>1102</a>                            data[..len].copy_from_slice(<span class="kw-2">&amp;</span>query_data[..len]);
