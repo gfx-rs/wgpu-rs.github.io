@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["mutex","rwlock"],"struct":["Condvar","RawMutex","RawRwLock"],"type":["CondvarMutex","MappedMutexGuard","Mutex","MutexGuard","RwLock","RwLockReadGuard","RwLockUpgradableReadGuard","RwLockWriteGuard"]};
+window.SIDEBAR_ITEMS = {"mod":["mutex","rwlock"],"struct":["Condvar","Lazy","OnceBool","OnceBox","OnceCell","OnceNonZeroUsize","OnceRef","RawMutex","RawRwLock"],"type":["CondvarMutex","MappedMutexGuard","Mutex","MutexGuard","RwLock","RwLockReadGuard","RwLockUpgradableReadGuard","RwLockWriteGuard"]};
