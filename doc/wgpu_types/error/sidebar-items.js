@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ErrorType"],"trait":["WebGpuError"]};
+window.SIDEBAR_ITEMS = {"enum":["Error","ErrorFilter","ErrorType"],"trait":["UncapturedErrorHandler","WebGpuError"],"type":["ErrorSource"]};

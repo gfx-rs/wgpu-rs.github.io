@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Error","ErrorFilter","RequestDeviceErrorKind"],"struct":["Device","ErrorScopeGuard","RequestDeviceError"],"trait":["UncapturedErrorHandler"],"type":["DeviceDescriptor","ErrorSource","QueueDescriptor"]};
+window.SIDEBAR_ITEMS = {"enum":["Error","ErrorFilter","ErrorType","RequestDeviceErrorKind"],"struct":["Device","ErrorScopeGuard","RequestDeviceError"],"trait":["UncapturedErrorHandler","WebGpuError"],"type":["DeviceDescriptor","ErrorSource","QueueDescriptor"]};
