@@ -5638,124 +5638,123 @@
 <a href=#5638 id=5638 data-nosnippet>5638</a>                raw: Snatchable::new(raw),
 <a href=#5639 id=5639 data-nosnippet>5639</a>            }),
 <a href=#5640 id=5640 data-nosnippet>5640</a>            device: <span class="self">self</span>.clone(),
-<a href=#5641 id=5641 data-nosnippet>5641</a>            label: desc.label.to_string(),
-<a href=#5642 id=5642 data-nosnippet>5642</a>            tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.query_sets.clone()),
-<a href=#5643 id=5643 data-nosnippet>5643</a>            desc: desc.map_label(|<span class="kw">_</span>| ()),
-<a href=#5644 id=5644 data-nosnippet>5644</a>            initialized_slots: Mutex::new(
-<a href=#5645 id=5645 data-nosnippet>5645</a>                rank::QUERY_SET_INITIALIZED_SLOTS,
-<a href=#5646 id=5646 data-nosnippet>5646</a>                bit_vec::BitVec::from_elem(desc.count <span class="kw">as </span>usize, <span class="bool-val">false</span>),
-<a href=#5647 id=5647 data-nosnippet>5647</a>            ),
-<a href=#5648 id=5648 data-nosnippet>5648</a>        };
-<a href=#5649 id=5649 data-nosnippet>5649</a>
-<a href=#5650 id=5650 data-nosnippet>5650</a>        <span class="kw">let </span>query_set = Arc::new(query_set);
-<a href=#5651 id=5651 data-nosnippet>5651</a>
-<a href=#5652 id=5652 data-nosnippet>5652</a>        <span class="prelude-val">Ok</span>(query_set)
-<a href=#5653 id=5653 data-nosnippet>5653</a>    }
-<a href=#5654 id=5654 data-nosnippet>5654</a>
-<a href=#5655 id=5655 data-nosnippet>5655</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lose(<span class="kw-2">&amp;</span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>str) {
-<a href=#5656 id=5656 data-nosnippet>5656</a>        <span class="comment">// Follow the steps at https://gpuweb.github.io/gpuweb/#lose-the-device.
-<a href=#5657 id=5657 data-nosnippet>5657</a>
-<a href=#5658 id=5658 data-nosnippet>5658</a>        // Mark the device explicitly as invalid. This is checked in various
-<a href=#5659 id=5659 data-nosnippet>5659</a>        // places to prevent new work from being submitted.
-<a href=#5660 id=5660 data-nosnippet>5660</a>        </span><span class="self">self</span>.valid.store(<span class="bool-val">false</span>, Ordering::Release);
-<a href=#5661 id=5661 data-nosnippet>5661</a>
-<a href=#5662 id=5662 data-nosnippet>5662</a>        <span class="comment">// 1) Resolve the GPUDevice device.lost promise.
-<a href=#5663 id=5663 data-nosnippet>5663</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(device_lost_closure) = <span class="self">self</span>.device_lost_closure.lock().take() {
-<a href=#5664 id=5664 data-nosnippet>5664</a>            device_lost_closure(DeviceLostReason::Unknown, message.to_string());
-<a href=#5665 id=5665 data-nosnippet>5665</a>        }
-<a href=#5666 id=5666 data-nosnippet>5666</a>
-<a href=#5667 id=5667 data-nosnippet>5667</a>        <span class="comment">// 2) Complete any outstanding mapAsync() steps.
-<a href=#5668 id=5668 data-nosnippet>5668</a>        // 3) Complete any outstanding onSubmittedWorkDone() steps.
-<a href=#5669 id=5669 data-nosnippet>5669</a>
-<a href=#5670 id=5670 data-nosnippet>5670</a>        // These parts are passively accomplished by setting valid to false,
-<a href=#5671 id=5671 data-nosnippet>5671</a>        // since that will prevent any new work from being added to the queues.
-<a href=#5672 id=5672 data-nosnippet>5672</a>        // Future calls to poll_devices will continue to check the work queues
-<a href=#5673 id=5673 data-nosnippet>5673</a>        // until they are cleared, and then drop the device.
-<a href=#5674 id=5674 data-nosnippet>5674</a>    </span>}
-<a href=#5675 id=5675 data-nosnippet>5675</a>
-<a href=#5676 id=5676 data-nosnippet>5676</a>    <span class="kw">fn </span>release_gpu_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-<a href=#5677 id=5677 data-nosnippet>5677</a>        <span class="comment">// This is called when the device is lost, which makes every associated
-<a href=#5678 id=5678 data-nosnippet>5678</a>        // resource invalid and unusable. This is an opportunity to release all of
-<a href=#5679 id=5679 data-nosnippet>5679</a>        // the underlying gpu resources, even though the objects remain visible to
-<a href=#5680 id=5680 data-nosnippet>5680</a>        // the user agent. We purge this memory naturally when resources have been
-<a href=#5681 id=5681 data-nosnippet>5681</a>        // moved into the appropriate buckets, so this function just needs to
-<a href=#5682 id=5682 data-nosnippet>5682</a>        // initiate movement into those buckets, and it can do that by calling
-<a href=#5683 id=5683 data-nosnippet>5683</a>        // "destroy" on all the resources we know about.
-<a href=#5684 id=5684 data-nosnippet>5684</a>
-<a href=#5685 id=5685 data-nosnippet>5685</a>        </span><span class="kw">let </span>trackers = <span class="self">self</span>.trackers.lock();
-<a href=#5686 id=5686 data-nosnippet>5686</a>        <span class="kw">let </span>buffers = trackers
-<a href=#5687 id=5687 data-nosnippet>5687</a>            .buffers
-<a href=#5688 id=5688 data-nosnippet>5688</a>            .used_resources()
-<a href=#5689 id=5689 data-nosnippet>5689</a>            .flat_map(Weak::upgrade)
-<a href=#5690 id=5690 data-nosnippet>5690</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-<a href=#5691 id=5691 data-nosnippet>5691</a>        <span class="kw">let </span>textures = trackers
-<a href=#5692 id=5692 data-nosnippet>5692</a>            .textures
-<a href=#5693 id=5693 data-nosnippet>5693</a>            .used_resources()
-<a href=#5694 id=5694 data-nosnippet>5694</a>            .flat_map(Weak::upgrade)
-<a href=#5695 id=5695 data-nosnippet>5695</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-<a href=#5696 id=5696 data-nosnippet>5696</a>        drop(trackers);
-<a href=#5697 id=5697 data-nosnippet>5697</a>
-<a href=#5698 id=5698 data-nosnippet>5698</a>        <span class="kw">for </span>buffer <span class="kw">in </span>buffers {
-<a href=#5699 id=5699 data-nosnippet>5699</a>            buffer.destroy();
-<a href=#5700 id=5700 data-nosnippet>5700</a>        }
-<a href=#5701 id=5701 data-nosnippet>5701</a>        <span class="kw">for </span>texture <span class="kw">in </span>textures {
-<a href=#5702 id=5702 data-nosnippet>5702</a>            texture.destroy();
-<a href=#5703 id=5703 data-nosnippet>5703</a>        }
-<a href=#5704 id=5704 data-nosnippet>5704</a>    }
-<a href=#5705 id=5705 data-nosnippet>5705</a>
-<a href=#5706 id=5706 data-nosnippet>5706</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_usage_scope(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UsageScope&lt;<span class="lifetime">'_</span>&gt; {
-<a href=#5707 id=5707 data-nosnippet>5707</a>        UsageScope::new_pooled(
-<a href=#5708 id=5708 data-nosnippet>5708</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.usage_scopes,
-<a href=#5709 id=5709 data-nosnippet>5709</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.tracker_indices,
-<a href=#5710 id=5710 data-nosnippet>5710</a>            <span class="self">self</span>.ordered_buffer_usages,
-<a href=#5711 id=5711 data-nosnippet>5711</a>            <span class="self">self</span>.ordered_texture_usages,
-<a href=#5712 id=5712 data-nosnippet>5712</a>        )
-<a href=#5713 id=5713 data-nosnippet>5713</a>    }
-<a href=#5714 id=5714 data-nosnippet>5714</a>
-<a href=#5715 id=5715 data-nosnippet>5715</a>    <span class="doccomment">/// `device_lost_closure` might never be called.
-<a href=#5716 id=5716 data-nosnippet>5716</a>    </span><span class="kw">pub fn </span>set_device_lost_closure(<span class="kw-2">&amp;</span><span class="self">self</span>, device_lost_closure: DeviceLostClosure) {
-<a href=#5717 id=5717 data-nosnippet>5717</a>        <span class="self">self</span>.device_lost_closure.lock().replace(device_lost_closure);
-<a href=#5718 id=5718 data-nosnippet>5718</a>    }
-<a href=#5719 id=5719 data-nosnippet>5719</a>
-<a href=#5720 id=5720 data-nosnippet>5720</a>    <span class="kw">pub fn </span>destroy(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) {
-<a href=#5721 id=5721 data-nosnippet>5721</a>        <span class="macro">api_log!</span>(<span class="string">"Device::destroy {:?}"</span>, Arc::as_ptr(<span class="self">self</span>));
-<a href=#5722 id=5722 data-nosnippet>5722</a>
-<a href=#5723 id=5723 data-nosnippet>5723</a>        <span class="comment">// Follow the steps at
-<a href=#5724 id=5724 data-nosnippet>5724</a>        // https://gpuweb.github.io/gpuweb/#dom-gpudevice-destroy.
-<a href=#5725 id=5725 data-nosnippet>5725</a>        // It's legal to call destroy multiple times, but if the device
-<a href=#5726 id=5726 data-nosnippet>5726</a>        // is already invalid, there's nothing more to do. There's also
-<a href=#5727 id=5727 data-nosnippet>5727</a>        // no need to return an error.
-<a href=#5728 id=5728 data-nosnippet>5728</a>        </span><span class="kw">if </span>!<span class="self">self</span>.is_valid() {
-<a href=#5729 id=5729 data-nosnippet>5729</a>            <span class="kw">return</span>;
-<a href=#5730 id=5730 data-nosnippet>5730</a>        }
-<a href=#5731 id=5731 data-nosnippet>5731</a>
-<a href=#5732 id=5732 data-nosnippet>5732</a>        <span class="comment">// The last part of destroy is to lose the device. The spec says
-<a href=#5733 id=5733 data-nosnippet>5733</a>        // delay that until all "currently-enqueued operations on any
-<a href=#5734 id=5734 data-nosnippet>5734</a>        // queue on this device are completed." This is accomplished by
-<a href=#5735 id=5735 data-nosnippet>5735</a>        // setting valid to false, and then relying upon maintain to
-<a href=#5736 id=5736 data-nosnippet>5736</a>        // check for empty queues and a DeviceLostClosure. At that time,
-<a href=#5737 id=5737 data-nosnippet>5737</a>        // the DeviceLostClosure will be called with "destroyed" as the
-<a href=#5738 id=5738 data-nosnippet>5738</a>        // reason.
-<a href=#5739 id=5739 data-nosnippet>5739</a>        </span><span class="self">self</span>.valid.store(<span class="bool-val">false</span>, Ordering::Release);
-<a href=#5740 id=5740 data-nosnippet>5740</a>    }
-<a href=#5741 id=5741 data-nosnippet>5741</a>
-<a href=#5742 id=5742 data-nosnippet>5742</a>    <span class="kw">pub fn </span>get_internal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::InternalCounters {
-<a href=#5743 id=5743 data-nosnippet>5743</a>        wgt::InternalCounters {
-<a href=#5744 id=5744 data-nosnippet>5744</a>            hal: <span class="self">self</span>.get_hal_counters(),
-<a href=#5745 id=5745 data-nosnippet>5745</a>            core: wgt::CoreCounters {},
-<a href=#5746 id=5746 data-nosnippet>5746</a>        }
-<a href=#5747 id=5747 data-nosnippet>5747</a>    }
-<a href=#5748 id=5748 data-nosnippet>5748</a>
-<a href=#5749 id=5749 data-nosnippet>5749</a>    <span class="kw">pub fn </span>get_hal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
-<a href=#5750 id=5750 data-nosnippet>5750</a>        <span class="self">self</span>.raw().get_internal_counters()
-<a href=#5751 id=5751 data-nosnippet>5751</a>    }
-<a href=#5752 id=5752 data-nosnippet>5752</a>
-<a href=#5753 id=5753 data-nosnippet>5753</a>    <span class="kw">pub fn </span>generate_allocator_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::AllocatorReport&gt; {
-<a href=#5754 id=5754 data-nosnippet>5754</a>        <span class="self">self</span>.raw().generate_allocator_report()
-<a href=#5755 id=5755 data-nosnippet>5755</a>    }
-<a href=#5756 id=5756 data-nosnippet>5756</a>}
-<a href=#5757 id=5757 data-nosnippet>5757</a>
-<a href=#5758 id=5758 data-nosnippet>5758</a><span class="macro">crate::impl_resource_type!</span>(Device);
-<a href=#5759 id=5759 data-nosnippet>5759</a><span class="macro">crate::impl_labeled!</span>(Device);
-<a href=#5760 id=5760 data-nosnippet>5760</a><span class="macro">crate::impl_storage_item!</span>(Device);
+<a href=#5641 id=5641 data-nosnippet>5641</a>            tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.query_sets.clone()),
+<a href=#5642 id=5642 data-nosnippet>5642</a>            desc: desc.map_label(|l| l.to_string()),
+<a href=#5643 id=5643 data-nosnippet>5643</a>            initialized_slots: Mutex::new(
+<a href=#5644 id=5644 data-nosnippet>5644</a>                rank::QUERY_SET_INITIALIZED_SLOTS,
+<a href=#5645 id=5645 data-nosnippet>5645</a>                bit_vec::BitVec::from_elem(desc.count <span class="kw">as </span>usize, <span class="bool-val">false</span>),
+<a href=#5646 id=5646 data-nosnippet>5646</a>            ),
+<a href=#5647 id=5647 data-nosnippet>5647</a>        };
+<a href=#5648 id=5648 data-nosnippet>5648</a>
+<a href=#5649 id=5649 data-nosnippet>5649</a>        <span class="kw">let </span>query_set = Arc::new(query_set);
+<a href=#5650 id=5650 data-nosnippet>5650</a>
+<a href=#5651 id=5651 data-nosnippet>5651</a>        <span class="prelude-val">Ok</span>(query_set)
+<a href=#5652 id=5652 data-nosnippet>5652</a>    }
+<a href=#5653 id=5653 data-nosnippet>5653</a>
+<a href=#5654 id=5654 data-nosnippet>5654</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lose(<span class="kw-2">&amp;</span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>str) {
+<a href=#5655 id=5655 data-nosnippet>5655</a>        <span class="comment">// Follow the steps at https://gpuweb.github.io/gpuweb/#lose-the-device.
+<a href=#5656 id=5656 data-nosnippet>5656</a>
+<a href=#5657 id=5657 data-nosnippet>5657</a>        // Mark the device explicitly as invalid. This is checked in various
+<a href=#5658 id=5658 data-nosnippet>5658</a>        // places to prevent new work from being submitted.
+<a href=#5659 id=5659 data-nosnippet>5659</a>        </span><span class="self">self</span>.valid.store(<span class="bool-val">false</span>, Ordering::Release);
+<a href=#5660 id=5660 data-nosnippet>5660</a>
+<a href=#5661 id=5661 data-nosnippet>5661</a>        <span class="comment">// 1) Resolve the GPUDevice device.lost promise.
+<a href=#5662 id=5662 data-nosnippet>5662</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(device_lost_closure) = <span class="self">self</span>.device_lost_closure.lock().take() {
+<a href=#5663 id=5663 data-nosnippet>5663</a>            device_lost_closure(DeviceLostReason::Unknown, message.to_string());
+<a href=#5664 id=5664 data-nosnippet>5664</a>        }
+<a href=#5665 id=5665 data-nosnippet>5665</a>
+<a href=#5666 id=5666 data-nosnippet>5666</a>        <span class="comment">// 2) Complete any outstanding mapAsync() steps.
+<a href=#5667 id=5667 data-nosnippet>5667</a>        // 3) Complete any outstanding onSubmittedWorkDone() steps.
+<a href=#5668 id=5668 data-nosnippet>5668</a>
+<a href=#5669 id=5669 data-nosnippet>5669</a>        // These parts are passively accomplished by setting valid to false,
+<a href=#5670 id=5670 data-nosnippet>5670</a>        // since that will prevent any new work from being added to the queues.
+<a href=#5671 id=5671 data-nosnippet>5671</a>        // Future calls to poll_devices will continue to check the work queues
+<a href=#5672 id=5672 data-nosnippet>5672</a>        // until they are cleared, and then drop the device.
+<a href=#5673 id=5673 data-nosnippet>5673</a>    </span>}
+<a href=#5674 id=5674 data-nosnippet>5674</a>
+<a href=#5675 id=5675 data-nosnippet>5675</a>    <span class="kw">fn </span>release_gpu_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+<a href=#5676 id=5676 data-nosnippet>5676</a>        <span class="comment">// This is called when the device is lost, which makes every associated
+<a href=#5677 id=5677 data-nosnippet>5677</a>        // resource invalid and unusable. This is an opportunity to release all of
+<a href=#5678 id=5678 data-nosnippet>5678</a>        // the underlying gpu resources, even though the objects remain visible to
+<a href=#5679 id=5679 data-nosnippet>5679</a>        // the user agent. We purge this memory naturally when resources have been
+<a href=#5680 id=5680 data-nosnippet>5680</a>        // moved into the appropriate buckets, so this function just needs to
+<a href=#5681 id=5681 data-nosnippet>5681</a>        // initiate movement into those buckets, and it can do that by calling
+<a href=#5682 id=5682 data-nosnippet>5682</a>        // "destroy" on all the resources we know about.
+<a href=#5683 id=5683 data-nosnippet>5683</a>
+<a href=#5684 id=5684 data-nosnippet>5684</a>        </span><span class="kw">let </span>trackers = <span class="self">self</span>.trackers.lock();
+<a href=#5685 id=5685 data-nosnippet>5685</a>        <span class="kw">let </span>buffers = trackers
+<a href=#5686 id=5686 data-nosnippet>5686</a>            .buffers
+<a href=#5687 id=5687 data-nosnippet>5687</a>            .used_resources()
+<a href=#5688 id=5688 data-nosnippet>5688</a>            .flat_map(Weak::upgrade)
+<a href=#5689 id=5689 data-nosnippet>5689</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+<a href=#5690 id=5690 data-nosnippet>5690</a>        <span class="kw">let </span>textures = trackers
+<a href=#5691 id=5691 data-nosnippet>5691</a>            .textures
+<a href=#5692 id=5692 data-nosnippet>5692</a>            .used_resources()
+<a href=#5693 id=5693 data-nosnippet>5693</a>            .flat_map(Weak::upgrade)
+<a href=#5694 id=5694 data-nosnippet>5694</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+<a href=#5695 id=5695 data-nosnippet>5695</a>        drop(trackers);
+<a href=#5696 id=5696 data-nosnippet>5696</a>
+<a href=#5697 id=5697 data-nosnippet>5697</a>        <span class="kw">for </span>buffer <span class="kw">in </span>buffers {
+<a href=#5698 id=5698 data-nosnippet>5698</a>            buffer.destroy();
+<a href=#5699 id=5699 data-nosnippet>5699</a>        }
+<a href=#5700 id=5700 data-nosnippet>5700</a>        <span class="kw">for </span>texture <span class="kw">in </span>textures {
+<a href=#5701 id=5701 data-nosnippet>5701</a>            texture.destroy();
+<a href=#5702 id=5702 data-nosnippet>5702</a>        }
+<a href=#5703 id=5703 data-nosnippet>5703</a>    }
+<a href=#5704 id=5704 data-nosnippet>5704</a>
+<a href=#5705 id=5705 data-nosnippet>5705</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_usage_scope(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UsageScope&lt;<span class="lifetime">'_</span>&gt; {
+<a href=#5706 id=5706 data-nosnippet>5706</a>        UsageScope::new_pooled(
+<a href=#5707 id=5707 data-nosnippet>5707</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.usage_scopes,
+<a href=#5708 id=5708 data-nosnippet>5708</a>            <span class="kw-2">&amp;</span><span class="self">self</span>.tracker_indices,
+<a href=#5709 id=5709 data-nosnippet>5709</a>            <span class="self">self</span>.ordered_buffer_usages,
+<a href=#5710 id=5710 data-nosnippet>5710</a>            <span class="self">self</span>.ordered_texture_usages,
+<a href=#5711 id=5711 data-nosnippet>5711</a>        )
+<a href=#5712 id=5712 data-nosnippet>5712</a>    }
+<a href=#5713 id=5713 data-nosnippet>5713</a>
+<a href=#5714 id=5714 data-nosnippet>5714</a>    <span class="doccomment">/// `device_lost_closure` might never be called.
+<a href=#5715 id=5715 data-nosnippet>5715</a>    </span><span class="kw">pub fn </span>set_device_lost_closure(<span class="kw-2">&amp;</span><span class="self">self</span>, device_lost_closure: DeviceLostClosure) {
+<a href=#5716 id=5716 data-nosnippet>5716</a>        <span class="self">self</span>.device_lost_closure.lock().replace(device_lost_closure);
+<a href=#5717 id=5717 data-nosnippet>5717</a>    }
+<a href=#5718 id=5718 data-nosnippet>5718</a>
+<a href=#5719 id=5719 data-nosnippet>5719</a>    <span class="kw">pub fn </span>destroy(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) {
+<a href=#5720 id=5720 data-nosnippet>5720</a>        <span class="macro">api_log!</span>(<span class="string">"Device::destroy {:?}"</span>, Arc::as_ptr(<span class="self">self</span>));
+<a href=#5721 id=5721 data-nosnippet>5721</a>
+<a href=#5722 id=5722 data-nosnippet>5722</a>        <span class="comment">// Follow the steps at
+<a href=#5723 id=5723 data-nosnippet>5723</a>        // https://gpuweb.github.io/gpuweb/#dom-gpudevice-destroy.
+<a href=#5724 id=5724 data-nosnippet>5724</a>        // It's legal to call destroy multiple times, but if the device
+<a href=#5725 id=5725 data-nosnippet>5725</a>        // is already invalid, there's nothing more to do. There's also
+<a href=#5726 id=5726 data-nosnippet>5726</a>        // no need to return an error.
+<a href=#5727 id=5727 data-nosnippet>5727</a>        </span><span class="kw">if </span>!<span class="self">self</span>.is_valid() {
+<a href=#5728 id=5728 data-nosnippet>5728</a>            <span class="kw">return</span>;
+<a href=#5729 id=5729 data-nosnippet>5729</a>        }
+<a href=#5730 id=5730 data-nosnippet>5730</a>
+<a href=#5731 id=5731 data-nosnippet>5731</a>        <span class="comment">// The last part of destroy is to lose the device. The spec says
+<a href=#5732 id=5732 data-nosnippet>5732</a>        // delay that until all "currently-enqueued operations on any
+<a href=#5733 id=5733 data-nosnippet>5733</a>        // queue on this device are completed." This is accomplished by
+<a href=#5734 id=5734 data-nosnippet>5734</a>        // setting valid to false, and then relying upon maintain to
+<a href=#5735 id=5735 data-nosnippet>5735</a>        // check for empty queues and a DeviceLostClosure. At that time,
+<a href=#5736 id=5736 data-nosnippet>5736</a>        // the DeviceLostClosure will be called with "destroyed" as the
+<a href=#5737 id=5737 data-nosnippet>5737</a>        // reason.
+<a href=#5738 id=5738 data-nosnippet>5738</a>        </span><span class="self">self</span>.valid.store(<span class="bool-val">false</span>, Ordering::Release);
+<a href=#5739 id=5739 data-nosnippet>5739</a>    }
+<a href=#5740 id=5740 data-nosnippet>5740</a>
+<a href=#5741 id=5741 data-nosnippet>5741</a>    <span class="kw">pub fn </span>get_internal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::InternalCounters {
+<a href=#5742 id=5742 data-nosnippet>5742</a>        wgt::InternalCounters {
+<a href=#5743 id=5743 data-nosnippet>5743</a>            hal: <span class="self">self</span>.get_hal_counters(),
+<a href=#5744 id=5744 data-nosnippet>5744</a>            core: wgt::CoreCounters {},
+<a href=#5745 id=5745 data-nosnippet>5745</a>        }
+<a href=#5746 id=5746 data-nosnippet>5746</a>    }
+<a href=#5747 id=5747 data-nosnippet>5747</a>
+<a href=#5748 id=5748 data-nosnippet>5748</a>    <span class="kw">pub fn </span>get_hal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
+<a href=#5749 id=5749 data-nosnippet>5749</a>        <span class="self">self</span>.raw().get_internal_counters()
+<a href=#5750 id=5750 data-nosnippet>5750</a>    }
+<a href=#5751 id=5751 data-nosnippet>5751</a>
+<a href=#5752 id=5752 data-nosnippet>5752</a>    <span class="kw">pub fn </span>generate_allocator_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::AllocatorReport&gt; {
+<a href=#5753 id=5753 data-nosnippet>5753</a>        <span class="self">self</span>.raw().generate_allocator_report()
+<a href=#5754 id=5754 data-nosnippet>5754</a>    }
+<a href=#5755 id=5755 data-nosnippet>5755</a>}
+<a href=#5756 id=5756 data-nosnippet>5756</a>
+<a href=#5757 id=5757 data-nosnippet>5757</a><span class="macro">crate::impl_resource_type!</span>(Device);
+<a href=#5758 id=5758 data-nosnippet>5758</a><span class="macro">crate::impl_labeled!</span>(Device);
+<a href=#5759 id=5759 data-nosnippet>5759</a><span class="macro">crate::impl_storage_item!</span>(Device);
 </code></pre></div></section></main></body></html>
