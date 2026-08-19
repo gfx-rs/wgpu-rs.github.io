@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["MemoryHints","Trace"],"struct":["DeviceDescriptor"]};
+window.SIDEBAR_ITEMS = {"enum":["MemoryHints","Trace"],"struct":["DeviceDescriptor","QueueDescriptor"]};
