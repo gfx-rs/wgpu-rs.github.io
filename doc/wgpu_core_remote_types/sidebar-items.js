@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["binding_model","encoders","id","identity"],"type":["Epoch","Index","Label","SubmissionIndex","SubmittedWorkDoneClosure"]};
+window.SIDEBAR_ITEMS = {"macro":["assert_ffi_safe"],"mod":["binding_model","encoders","ffi","id","identity"],"type":["Epoch","Index","Label","SubmissionIndex","SubmittedWorkDoneClosure"]};

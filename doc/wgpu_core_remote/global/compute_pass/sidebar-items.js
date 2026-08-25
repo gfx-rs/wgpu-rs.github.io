@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"type":["ComputePassDescriptor"]};
+window.SIDEBAR_ITEMS = {};

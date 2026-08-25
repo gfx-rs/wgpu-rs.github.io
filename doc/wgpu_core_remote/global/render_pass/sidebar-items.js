@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["RenderPassDescriptor"]};
+window.SIDEBAR_ITEMS = {};
