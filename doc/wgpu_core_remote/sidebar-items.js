@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["global","hub","id","registry","storage"],"type":["Command","CopyExternalImageDestInfo","TexelCopyBufferInfo","TexelCopyTextureInfo"]};

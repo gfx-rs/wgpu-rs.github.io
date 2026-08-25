@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BindingCommand","CommandEncoderCommand","ComputePassEncoderCommand","DebugCommand","RenderBundleEncoderCommand","RenderCommand","RenderPassEncoderCommand"],"type":["CommandBufferDescriptor","RenderBundleDescriptor"]};
