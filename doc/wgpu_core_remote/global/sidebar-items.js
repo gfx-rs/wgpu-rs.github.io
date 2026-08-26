@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["as_hal","bundle","command_encoder","compute_pass","device","instance","queue","render_pass"],"struct":["Global"]};
+window.SIDEBAR_ITEMS = {"mod":["bundle","command_encoder","compute_pass","device","instance","queue","render_pass"],"struct":["Global"]};
