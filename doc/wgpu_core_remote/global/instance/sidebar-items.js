@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"type":["RequestAdapterOptions"]};
+window.SIDEBAR_ITEMS = {};

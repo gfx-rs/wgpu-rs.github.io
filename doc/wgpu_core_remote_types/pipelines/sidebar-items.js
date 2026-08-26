@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["ComputePipelineDescriptor","FragmentState","ProgrammableStageDescriptor","RenderPipelineDescriptor","VertexBufferLayout","VertexState"]};
