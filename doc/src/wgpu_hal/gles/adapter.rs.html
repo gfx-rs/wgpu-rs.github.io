@@ -1402,77 +1402,78 @@
 <a href=#1402 id=1402 data-nosnippet>1402</a>    </span><span class="kw">fn </span>get_ordered_texture_usages(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::TextureUses {
 <a href=#1403 id=1403 data-nosnippet>1403</a>        wgt::TextureUses::INCLUSIVE
 <a href=#1404 id=1404 data-nosnippet>1404</a>            | wgt::TextureUses::COLOR_TARGET
-<a href=#1405 id=1405 data-nosnippet>1405</a>            | wgt::TextureUses::DEPTH_STENCIL_WRITE
-<a href=#1406 id=1406 data-nosnippet>1406</a>    }
-<a href=#1407 id=1407 data-nosnippet>1407</a>}
-<a href=#1408 id=1408 data-nosnippet>1408</a>
-<a href=#1409 id=1409 data-nosnippet>1409</a><span class="kw">impl </span><span class="kw">super</span>::AdapterShared {
-<a href=#1410 id=1410 data-nosnippet>1410</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>get_buffer_sub_data(
-<a href=#1411 id=1411 data-nosnippet>1411</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1412 id=1412 data-nosnippet>1412</a>        gl: <span class="kw-2">&amp;</span>glow::Context,
-<a href=#1413 id=1413 data-nosnippet>1413</a>        target: u32,
-<a href=#1414 id=1414 data-nosnippet>1414</a>        offset: i32,
-<a href=#1415 id=1415 data-nosnippet>1415</a>        dst_data: <span class="kw-2">&amp;mut </span>[u8],
-<a href=#1416 id=1416 data-nosnippet>1416</a>    ) {
-<a href=#1417 id=1417 data-nosnippet>1417</a>        <span class="kw">if </span><span class="self">self
-<a href=#1418 id=1418 data-nosnippet>1418</a>            </span>.private_caps
-<a href=#1419 id=1419 data-nosnippet>1419</a>            .contains(<span class="kw">super</span>::PrivateCapabilities::GET_BUFFER_SUB_DATA)
-<a href=#1420 id=1420 data-nosnippet>1420</a>        {
-<a href=#1421 id=1421 data-nosnippet>1421</a>            <span class="kw">unsafe </span>{ gl.get_buffer_sub_data(target, offset, dst_data) };
-<a href=#1422 id=1422 data-nosnippet>1422</a>        } <span class="kw">else </span>{
-<a href=#1423 id=1423 data-nosnippet>1423</a>            <span class="macro">log::error!</span>(<span class="string">"Fake map"</span>);
-<a href=#1424 id=1424 data-nosnippet>1424</a>            <span class="kw">let </span>length = dst_data.len();
-<a href=#1425 id=1425 data-nosnippet>1425</a>            <span class="comment">// glMapBufferRange throws an error if length is 0.
-<a href=#1426 id=1426 data-nosnippet>1426</a>            </span><span class="kw">if </span><span class="macro">length !</span>= <span class="number">0 </span>{
-<a href=#1427 id=1427 data-nosnippet>1427</a>                <span class="kw">let </span>buffer_mapping =
-<a href=#1428 id=1428 data-nosnippet>1428</a>                    <span class="kw">unsafe </span>{ gl.map_buffer_range(target, offset, length <span class="kw">as _</span>, glow::MAP_READ_BIT) };
-<a href=#1429 id=1429 data-nosnippet>1429</a>
-<a href=#1430 id=1430 data-nosnippet>1430</a>                <span class="kw">unsafe </span>{
-<a href=#1431 id=1431 data-nosnippet>1431</a>                    core::ptr::copy_nonoverlapping(buffer_mapping, dst_data.as_mut_ptr(), length)
-<a href=#1432 id=1432 data-nosnippet>1432</a>                };
-<a href=#1433 id=1433 data-nosnippet>1433</a>
-<a href=#1434 id=1434 data-nosnippet>1434</a>                <span class="kw">unsafe </span>{ gl.unmap_buffer(target) };
-<a href=#1435 id=1435 data-nosnippet>1435</a>            }
-<a href=#1436 id=1436 data-nosnippet>1436</a>        }
-<a href=#1437 id=1437 data-nosnippet>1437</a>    }
-<a href=#1438 id=1438 data-nosnippet>1438</a>}
-<a href=#1439 id=1439 data-nosnippet>1439</a>
-<a href=#1440 id=1440 data-nosnippet>1440</a><span class="attr">#[cfg(send_sync)]
-<a href=#1441 id=1441 data-nosnippet>1441</a></span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span><span class="kw">super</span>::Adapter {}
-<a href=#1442 id=1442 data-nosnippet>1442</a><span class="attr">#[cfg(send_sync)]
-<a href=#1443 id=1443 data-nosnippet>1443</a></span><span class="kw">unsafe impl </span>Send <span class="kw">for </span><span class="kw">super</span>::Adapter {}
-<a href=#1444 id=1444 data-nosnippet>1444</a>
-<a href=#1445 id=1445 data-nosnippet>1445</a><span class="attr">#[cfg(test)]
-<a href=#1446 id=1446 data-nosnippet>1446</a></span><span class="kw">mod </span>tests {
-<a href=#1447 id=1447 data-nosnippet>1447</a>    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::Adapter;
-<a href=#1448 id=1448 data-nosnippet>1448</a>
-<a href=#1449 id=1449 data-nosnippet>1449</a>    <span class="attr">#[test]
-<a href=#1450 id=1450 data-nosnippet>1450</a>    </span><span class="kw">fn </span>test_version_parse() {
-<a href=#1451 id=1451 data-nosnippet>1451</a>        Adapter::parse_version(<span class="string">"1"</span>).unwrap_err();
-<a href=#1452 id=1452 data-nosnippet>1452</a>        Adapter::parse_version(<span class="string">"1."</span>).unwrap_err();
-<a href=#1453 id=1453 data-nosnippet>1453</a>        Adapter::parse_version(<span class="string">"1 h3l1o. W0rld"</span>).unwrap_err();
-<a href=#1454 id=1454 data-nosnippet>1454</a>        Adapter::parse_version(<span class="string">"1. h3l1o. W0rld"</span>).unwrap_err();
-<a href=#1455 id=1455 data-nosnippet>1455</a>        Adapter::parse_version(<span class="string">"1.2.3"</span>).unwrap_err();
-<a href=#1456 id=1456 data-nosnippet>1456</a>
-<a href=#1457 id=1457 data-nosnippet>1457</a>        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">"OpenGL ES 3.1"</span>).unwrap(), (<span class="number">3</span>, <span class="number">1</span>));
-<a href=#1458 id=1458 data-nosnippet>1458</a>        <span class="macro">assert_eq!</span>(
-<a href=#1459 id=1459 data-nosnippet>1459</a>            Adapter::parse_version(<span class="string">"OpenGL ES 2.0 Google Nexus"</span>).unwrap(),
-<a href=#1460 id=1460 data-nosnippet>1460</a>            (<span class="number">2</span>, <span class="number">0</span>)
-<a href=#1461 id=1461 data-nosnippet>1461</a>        );
-<a href=#1462 id=1462 data-nosnippet>1462</a>        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">"GLSL ES 1.1"</span>).unwrap(), (<span class="number">1</span>, <span class="number">1</span>));
-<a href=#1463 id=1463 data-nosnippet>1463</a>        <span class="macro">assert_eq!</span>(
-<a href=#1464 id=1464 data-nosnippet>1464</a>            Adapter::parse_version(<span class="string">"OpenGL ES GLSL ES 3.20"</span>).unwrap(),
-<a href=#1465 id=1465 data-nosnippet>1465</a>            (<span class="number">3</span>, <span class="number">2</span>)
-<a href=#1466 id=1466 data-nosnippet>1466</a>        );
-<a href=#1467 id=1467 data-nosnippet>1467</a>        <span class="macro">assert_eq!</span>(
-<a href=#1468 id=1468 data-nosnippet>1468</a>            <span class="comment">// WebGL 2.0 should parse as OpenGL ES 3.0
-<a href=#1469 id=1469 data-nosnippet>1469</a>            </span>Adapter::parse_version(<span class="string">"WebGL 2.0 (OpenGL ES 3.0 Chromium)"</span>).unwrap(),
-<a href=#1470 id=1470 data-nosnippet>1470</a>            (<span class="number">3</span>, <span class="number">0</span>)
-<a href=#1471 id=1471 data-nosnippet>1471</a>        );
-<a href=#1472 id=1472 data-nosnippet>1472</a>        <span class="macro">assert_eq!</span>(
-<a href=#1473 id=1473 data-nosnippet>1473</a>            Adapter::parse_version(<span class="string">"WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)"</span>).unwrap(),
-<a href=#1474 id=1474 data-nosnippet>1474</a>            (<span class="number">3</span>, <span class="number">0</span>)
-<a href=#1475 id=1475 data-nosnippet>1475</a>        );
-<a href=#1476 id=1476 data-nosnippet>1476</a>    }
-<a href=#1477 id=1477 data-nosnippet>1477</a>}
+<a href=#1405 id=1405 data-nosnippet>1405</a>            | wgt::TextureUses::DEPTH_WRITE
+<a href=#1406 id=1406 data-nosnippet>1406</a>            | wgt::TextureUses::STENCIL_WRITE
+<a href=#1407 id=1407 data-nosnippet>1407</a>    }
+<a href=#1408 id=1408 data-nosnippet>1408</a>}
+<a href=#1409 id=1409 data-nosnippet>1409</a>
+<a href=#1410 id=1410 data-nosnippet>1410</a><span class="kw">impl </span><span class="kw">super</span>::AdapterShared {
+<a href=#1411 id=1411 data-nosnippet>1411</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>get_buffer_sub_data(
+<a href=#1412 id=1412 data-nosnippet>1412</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1413 id=1413 data-nosnippet>1413</a>        gl: <span class="kw-2">&amp;</span>glow::Context,
+<a href=#1414 id=1414 data-nosnippet>1414</a>        target: u32,
+<a href=#1415 id=1415 data-nosnippet>1415</a>        offset: i32,
+<a href=#1416 id=1416 data-nosnippet>1416</a>        dst_data: <span class="kw-2">&amp;mut </span>[u8],
+<a href=#1417 id=1417 data-nosnippet>1417</a>    ) {
+<a href=#1418 id=1418 data-nosnippet>1418</a>        <span class="kw">if </span><span class="self">self
+<a href=#1419 id=1419 data-nosnippet>1419</a>            </span>.private_caps
+<a href=#1420 id=1420 data-nosnippet>1420</a>            .contains(<span class="kw">super</span>::PrivateCapabilities::GET_BUFFER_SUB_DATA)
+<a href=#1421 id=1421 data-nosnippet>1421</a>        {
+<a href=#1422 id=1422 data-nosnippet>1422</a>            <span class="kw">unsafe </span>{ gl.get_buffer_sub_data(target, offset, dst_data) };
+<a href=#1423 id=1423 data-nosnippet>1423</a>        } <span class="kw">else </span>{
+<a href=#1424 id=1424 data-nosnippet>1424</a>            <span class="macro">log::error!</span>(<span class="string">"Fake map"</span>);
+<a href=#1425 id=1425 data-nosnippet>1425</a>            <span class="kw">let </span>length = dst_data.len();
+<a href=#1426 id=1426 data-nosnippet>1426</a>            <span class="comment">// glMapBufferRange throws an error if length is 0.
+<a href=#1427 id=1427 data-nosnippet>1427</a>            </span><span class="kw">if </span><span class="macro">length !</span>= <span class="number">0 </span>{
+<a href=#1428 id=1428 data-nosnippet>1428</a>                <span class="kw">let </span>buffer_mapping =
+<a href=#1429 id=1429 data-nosnippet>1429</a>                    <span class="kw">unsafe </span>{ gl.map_buffer_range(target, offset, length <span class="kw">as _</span>, glow::MAP_READ_BIT) };
+<a href=#1430 id=1430 data-nosnippet>1430</a>
+<a href=#1431 id=1431 data-nosnippet>1431</a>                <span class="kw">unsafe </span>{
+<a href=#1432 id=1432 data-nosnippet>1432</a>                    core::ptr::copy_nonoverlapping(buffer_mapping, dst_data.as_mut_ptr(), length)
+<a href=#1433 id=1433 data-nosnippet>1433</a>                };
+<a href=#1434 id=1434 data-nosnippet>1434</a>
+<a href=#1435 id=1435 data-nosnippet>1435</a>                <span class="kw">unsafe </span>{ gl.unmap_buffer(target) };
+<a href=#1436 id=1436 data-nosnippet>1436</a>            }
+<a href=#1437 id=1437 data-nosnippet>1437</a>        }
+<a href=#1438 id=1438 data-nosnippet>1438</a>    }
+<a href=#1439 id=1439 data-nosnippet>1439</a>}
+<a href=#1440 id=1440 data-nosnippet>1440</a>
+<a href=#1441 id=1441 data-nosnippet>1441</a><span class="attr">#[cfg(send_sync)]
+<a href=#1442 id=1442 data-nosnippet>1442</a></span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span><span class="kw">super</span>::Adapter {}
+<a href=#1443 id=1443 data-nosnippet>1443</a><span class="attr">#[cfg(send_sync)]
+<a href=#1444 id=1444 data-nosnippet>1444</a></span><span class="kw">unsafe impl </span>Send <span class="kw">for </span><span class="kw">super</span>::Adapter {}
+<a href=#1445 id=1445 data-nosnippet>1445</a>
+<a href=#1446 id=1446 data-nosnippet>1446</a><span class="attr">#[cfg(test)]
+<a href=#1447 id=1447 data-nosnippet>1447</a></span><span class="kw">mod </span>tests {
+<a href=#1448 id=1448 data-nosnippet>1448</a>    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::Adapter;
+<a href=#1449 id=1449 data-nosnippet>1449</a>
+<a href=#1450 id=1450 data-nosnippet>1450</a>    <span class="attr">#[test]
+<a href=#1451 id=1451 data-nosnippet>1451</a>    </span><span class="kw">fn </span>test_version_parse() {
+<a href=#1452 id=1452 data-nosnippet>1452</a>        Adapter::parse_version(<span class="string">"1"</span>).unwrap_err();
+<a href=#1453 id=1453 data-nosnippet>1453</a>        Adapter::parse_version(<span class="string">"1."</span>).unwrap_err();
+<a href=#1454 id=1454 data-nosnippet>1454</a>        Adapter::parse_version(<span class="string">"1 h3l1o. W0rld"</span>).unwrap_err();
+<a href=#1455 id=1455 data-nosnippet>1455</a>        Adapter::parse_version(<span class="string">"1. h3l1o. W0rld"</span>).unwrap_err();
+<a href=#1456 id=1456 data-nosnippet>1456</a>        Adapter::parse_version(<span class="string">"1.2.3"</span>).unwrap_err();
+<a href=#1457 id=1457 data-nosnippet>1457</a>
+<a href=#1458 id=1458 data-nosnippet>1458</a>        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">"OpenGL ES 3.1"</span>).unwrap(), (<span class="number">3</span>, <span class="number">1</span>));
+<a href=#1459 id=1459 data-nosnippet>1459</a>        <span class="macro">assert_eq!</span>(
+<a href=#1460 id=1460 data-nosnippet>1460</a>            Adapter::parse_version(<span class="string">"OpenGL ES 2.0 Google Nexus"</span>).unwrap(),
+<a href=#1461 id=1461 data-nosnippet>1461</a>            (<span class="number">2</span>, <span class="number">0</span>)
+<a href=#1462 id=1462 data-nosnippet>1462</a>        );
+<a href=#1463 id=1463 data-nosnippet>1463</a>        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">"GLSL ES 1.1"</span>).unwrap(), (<span class="number">1</span>, <span class="number">1</span>));
+<a href=#1464 id=1464 data-nosnippet>1464</a>        <span class="macro">assert_eq!</span>(
+<a href=#1465 id=1465 data-nosnippet>1465</a>            Adapter::parse_version(<span class="string">"OpenGL ES GLSL ES 3.20"</span>).unwrap(),
+<a href=#1466 id=1466 data-nosnippet>1466</a>            (<span class="number">3</span>, <span class="number">2</span>)
+<a href=#1467 id=1467 data-nosnippet>1467</a>        );
+<a href=#1468 id=1468 data-nosnippet>1468</a>        <span class="macro">assert_eq!</span>(
+<a href=#1469 id=1469 data-nosnippet>1469</a>            <span class="comment">// WebGL 2.0 should parse as OpenGL ES 3.0
+<a href=#1470 id=1470 data-nosnippet>1470</a>            </span>Adapter::parse_version(<span class="string">"WebGL 2.0 (OpenGL ES 3.0 Chromium)"</span>).unwrap(),
+<a href=#1471 id=1471 data-nosnippet>1471</a>            (<span class="number">3</span>, <span class="number">0</span>)
+<a href=#1472 id=1472 data-nosnippet>1472</a>        );
+<a href=#1473 id=1473 data-nosnippet>1473</a>        <span class="macro">assert_eq!</span>(
+<a href=#1474 id=1474 data-nosnippet>1474</a>            Adapter::parse_version(<span class="string">"WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)"</span>).unwrap(),
+<a href=#1475 id=1475 data-nosnippet>1475</a>            (<span class="number">3</span>, <span class="number">0</span>)
+<a href=#1476 id=1476 data-nosnippet>1476</a>        );
+<a href=#1477 id=1477 data-nosnippet>1477</a>    }
+<a href=#1478 id=1478 data-nosnippet>1478</a>}
 </code></pre></div></section></main></body></html>

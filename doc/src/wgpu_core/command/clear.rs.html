@@ -331,7 +331,7 @@
 <a href=#331 id=331 data-nosnippet>331</a>        TextureClearMode::BufferCopy =&gt; wgt::TextureUses::COPY_DST,
 <a href=#332 id=332 data-nosnippet>332</a>        TextureClearMode::RenderPass {
 <a href=#333 id=333 data-nosnippet>333</a>            is_color: <span class="bool-val">false</span>, ..
-<a href=#334 id=334 data-nosnippet>334</a>        } =&gt; wgt::TextureUses::DEPTH_STENCIL_WRITE,
+<a href=#334 id=334 data-nosnippet>334</a>        } =&gt; wgt::TextureUses::DEPTH_WRITE | wgt::TextureUses::STENCIL_WRITE,
 <a href=#335 id=335 data-nosnippet>335</a>        TextureClearMode::Surface { .. } | TextureClearMode::RenderPass { is_color: <span class="bool-val">true</span>, .. } =&gt; {
 <a href=#336 id=336 data-nosnippet>336</a>            wgt::TextureUses::COLOR_TARGET
 <a href=#337 id=337 data-nosnippet>337</a>        }
@@ -555,35 +555,37 @@
 <a href=#555 id=555 data-nosnippet>555</a>                                mip_level,
 <a href=#556 id=556 data-nosnippet>556</a>                                depth_or_layer,
 <a href=#557 id=557 data-nosnippet>557</a>                            ),
-<a href=#558 id=558 data-nosnippet>558</a>                            usage: wgt::TextureUses::DEPTH_STENCIL_WRITE,
+<a href=#558 id=558 data-nosnippet>558</a>                            usage: wgt::TextureUses::DEPTH_WRITE | wgt::TextureUses::STENCIL_WRITE,
 <a href=#559 id=559 data-nosnippet>559</a>                        },
 <a href=#560 id=560 data-nosnippet>560</a>                        depth_ops: hal::AttachmentOps::STORE | hal::AttachmentOps::LOAD_CLEAR,
 <a href=#561 id=561 data-nosnippet>561</a>                        stencil_ops: hal::AttachmentOps::STORE | hal::AttachmentOps::LOAD_CLEAR,
 <a href=#562 id=562 data-nosnippet>562</a>                        clear_value: (<span class="number">0.0</span>, <span class="number">0</span>),
-<a href=#563 id=563 data-nosnippet>563</a>                    }),
-<a href=#564 id=564 data-nosnippet>564</a>                )
-<a href=#565 id=565 data-nosnippet>565</a>            };
-<a href=#566 id=566 data-nosnippet>566</a>            <span class="kw">unsafe </span>{
-<a href=#567 id=567 data-nosnippet>567</a>                encoder
-<a href=#568 id=568 data-nosnippet>568</a>                    .begin_render_pass(<span class="kw-2">&amp;</span>hal::RenderPassDescriptor {
-<a href=#569 id=569 data-nosnippet>569</a>                        label: hal_label(
-<a href=#570 id=570 data-nosnippet>570</a>                            <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) clear_texture clear pass"</span>),
-<a href=#571 id=571 data-nosnippet>571</a>                            instance_flags,
-<a href=#572 id=572 data-nosnippet>572</a>                        ),
-<a href=#573 id=573 data-nosnippet>573</a>                        extent,
-<a href=#574 id=574 data-nosnippet>574</a>                        sample_count: dst_texture.desc.sample_count,
-<a href=#575 id=575 data-nosnippet>575</a>                        color_attachments,
-<a href=#576 id=576 data-nosnippet>576</a>                        depth_stencil_attachment,
-<a href=#577 id=577 data-nosnippet>577</a>                        multiview_mask: <span class="prelude-val">None</span>,
-<a href=#578 id=578 data-nosnippet>578</a>                        timestamp_writes: <span class="prelude-val">None</span>,
-<a href=#579 id=579 data-nosnippet>579</a>                        occlusion_query_set: <span class="prelude-val">None</span>,
-<a href=#580 id=580 data-nosnippet>580</a>                    })
-<a href=#581 id=581 data-nosnippet>581</a>                    .map_err(|e| dst_texture.device.handle_hal_error(e))<span class="question-mark">?</span>;
-<a href=#582 id=582 data-nosnippet>582</a>                encoder.end_render_pass();
-<a href=#583 id=583 data-nosnippet>583</a>            }
-<a href=#584 id=584 data-nosnippet>584</a>        }
-<a href=#585 id=585 data-nosnippet>585</a>    }
-<a href=#586 id=586 data-nosnippet>586</a>
-<a href=#587 id=587 data-nosnippet>587</a>    <span class="prelude-val">Ok</span>(())
-<a href=#588 id=588 data-nosnippet>588</a>}
+<a href=#563 id=563 data-nosnippet>563</a>                        depth_read_only: <span class="bool-val">false</span>,
+<a href=#564 id=564 data-nosnippet>564</a>                        stencil_read_only: <span class="bool-val">false</span>,
+<a href=#565 id=565 data-nosnippet>565</a>                    }),
+<a href=#566 id=566 data-nosnippet>566</a>                )
+<a href=#567 id=567 data-nosnippet>567</a>            };
+<a href=#568 id=568 data-nosnippet>568</a>            <span class="kw">unsafe </span>{
+<a href=#569 id=569 data-nosnippet>569</a>                encoder
+<a href=#570 id=570 data-nosnippet>570</a>                    .begin_render_pass(<span class="kw-2">&amp;</span>hal::RenderPassDescriptor {
+<a href=#571 id=571 data-nosnippet>571</a>                        label: hal_label(
+<a href=#572 id=572 data-nosnippet>572</a>                            <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) clear_texture clear pass"</span>),
+<a href=#573 id=573 data-nosnippet>573</a>                            instance_flags,
+<a href=#574 id=574 data-nosnippet>574</a>                        ),
+<a href=#575 id=575 data-nosnippet>575</a>                        extent,
+<a href=#576 id=576 data-nosnippet>576</a>                        sample_count: dst_texture.desc.sample_count,
+<a href=#577 id=577 data-nosnippet>577</a>                        color_attachments,
+<a href=#578 id=578 data-nosnippet>578</a>                        depth_stencil_attachment,
+<a href=#579 id=579 data-nosnippet>579</a>                        multiview_mask: <span class="prelude-val">None</span>,
+<a href=#580 id=580 data-nosnippet>580</a>                        timestamp_writes: <span class="prelude-val">None</span>,
+<a href=#581 id=581 data-nosnippet>581</a>                        occlusion_query_set: <span class="prelude-val">None</span>,
+<a href=#582 id=582 data-nosnippet>582</a>                    })
+<a href=#583 id=583 data-nosnippet>583</a>                    .map_err(|e| dst_texture.device.handle_hal_error(e))<span class="question-mark">?</span>;
+<a href=#584 id=584 data-nosnippet>584</a>                encoder.end_render_pass();
+<a href=#585 id=585 data-nosnippet>585</a>            }
+<a href=#586 id=586 data-nosnippet>586</a>        }
+<a href=#587 id=587 data-nosnippet>587</a>    }
+<a href=#588 id=588 data-nosnippet>588</a>
+<a href=#589 id=589 data-nosnippet>589</a>    <span class="prelude-val">Ok</span>(())
+<a href=#590 id=590 data-nosnippet>590</a>}
 </code></pre></div></section></main></body></html>

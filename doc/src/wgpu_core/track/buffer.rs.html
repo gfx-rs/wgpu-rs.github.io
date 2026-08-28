@@ -17,8 +17,8 @@
 <a href=#17 id=17 data-nosnippet>17</a>    resource::{Buffer, Trackable},
 <a href=#18 id=18 data-nosnippet>18</a>    snatch::SnatchGuard,
 <a href=#19 id=19 data-nosnippet>19</a>    track::{
-<a href=#20 id=20 data-nosnippet>20</a>        invalid_resource_state, skip_barrier, ResourceMetadata, ResourceMetadataProvider,
-<a href=#21 id=21 data-nosnippet>21</a>        ResourceUsageCompatibilityError, ResourceUses,
+<a href=#20 id=20 data-nosnippet>20</a>        skip_barrier, ResourceMetadata, ResourceMetadataProvider, ResourceUsageCompatibilityError,
+<a href=#21 id=21 data-nosnippet>21</a>        ResourceUses,
 <a href=#22 id=22 data-nosnippet>22</a>    },
 <a href=#23 id=23 data-nosnippet>23</a>};
 <a href=#24 id=24 data-nosnippet>24</a>
@@ -27,8 +27,8 @@
 <a href=#27 id=27 data-nosnippet>27</a>
 <a href=#28 id=28 data-nosnippet>28</a>    <span class="kw">type </span>Selector = ();
 <a href=#29 id=29 data-nosnippet>29</a>
-<a href=#30 id=30 data-nosnippet>30</a>    <span class="kw">fn </span>bits(<span class="self">self</span>) -&gt; u16 {
-<a href=#31 id=31 data-nosnippet>31</a>        <span class="self">Self</span>::bits(<span class="kw-2">&amp;</span><span class="self">self</span>)
+<a href=#30 id=30 data-nosnippet>30</a>    <span class="kw">fn </span>bits(<span class="self">self</span>) -&gt; u32 {
+<a href=#31 id=31 data-nosnippet>31</a>        <span class="self">Self</span>::bits(<span class="kw-2">&amp;</span><span class="self">self</span>).into()
 <a href=#32 id=32 data-nosnippet>32</a>    }
 <a href=#33 id=33 data-nosnippet>33</a>
 <a href=#34 id=34 data-nosnippet>34</a>    <span class="kw">fn </span>any_exclusive(<span class="self">self</span>) -&gt; bool {
@@ -733,8 +733,8 @@
 <a href=#733 id=733 data-nosnippet>733</a>
 <a href=#734 id=734 data-nosnippet>734</a>    <span class="comment">// This should only ever happen with a wgpu bug, but let's just double
 <a href=#735 id=735 data-nosnippet>735</a>    // check that resource states don't have any conflicts.
-<a href=#736 id=736 data-nosnippet>736</a>    </span><span class="macro">strict_assert_eq!</span>(invalid_resource_state(new_start_state), <span class="bool-val">false</span>);
-<a href=#737 id=737 data-nosnippet>737</a>    <span class="macro">strict_assert_eq!</span>(invalid_resource_state(new_end_state), <span class="bool-val">false</span>);
+<a href=#736 id=736 data-nosnippet>736</a>    </span><span class="macro">strict_assert_eq!</span>(new_start_state.is_invalid(), <span class="bool-val">false</span>);
+<a href=#737 id=737 data-nosnippet>737</a>    <span class="macro">strict_assert_eq!</span>(new_end_state.is_invalid(), <span class="bool-val">false</span>);
 <a href=#738 id=738 data-nosnippet>738</a>
 <a href=#739 id=739 data-nosnippet>739</a>    <span class="kw">unsafe </span>{
 <a href=#740 id=740 data-nosnippet>740</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut ref mut </span>start_state) = start_states {
@@ -760,7 +760,7 @@
 <a href=#760 id=760 data-nosnippet>760</a>
 <a href=#761 id=761 data-nosnippet>761</a>    <span class="kw">let </span>merged_state = <span class="kw-2">*</span>current_state | new_state;
 <a href=#762 id=762 data-nosnippet>762</a>
-<a href=#763 id=763 data-nosnippet>763</a>    <span class="kw">if </span>invalid_resource_state(merged_state) {
+<a href=#763 id=763 data-nosnippet>763</a>    <span class="kw">if </span>merged_state.is_invalid() {
 <a href=#764 id=764 data-nosnippet>764</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ResourceUsageCompatibilityError::from_buffer(
 <a href=#765 id=765 data-nosnippet>765</a>            <span class="kw">unsafe </span>{ metadata_provider.get(index) },
 <a href=#766 id=766 data-nosnippet>766</a>            <span class="kw-2">*</span>current_state,
