@@ -2998,606 +2998,607 @@
 <a href=#2998 id=2998 data-nosnippet>2998</a>            relay_semaphores: Mutex::new(relay_semaphores),
 <a href=#2999 id=2999 data-nosnippet>2999</a>            signal_semaphores: Mutex::new(SemaphoreList::new(SemaphoreListMode::Signal)),
 <a href=#3000 id=3000 data-nosnippet>3000</a>            wait_semaphores: Mutex::new(SemaphoreList::new(SemaphoreListMode::Wait)),
-<a href=#3001 id=3001 data-nosnippet>3001</a>        };
-<a href=#3002 id=3002 data-nosnippet>3002</a>
-<a href=#3003 id=3003 data-nosnippet>3003</a>        <span class="kw">let </span>allocation_sizes = AllocationSizes::from_memory_hints(memory_hints).into();
-<a href=#3004 id=3004 data-nosnippet>3004</a>
-<a href=#3005 id=3005 data-nosnippet>3005</a>        <span class="kw">let </span>buffer_device_address = enabled_extensions.contains(<span class="kw-2">&amp;</span>khr::buffer_device_address::NAME);
-<a href=#3006 id=3006 data-nosnippet>3006</a>
-<a href=#3007 id=3007 data-nosnippet>3007</a>        <span class="kw">let </span>mem_allocator =
-<a href=#3008 id=3008 data-nosnippet>3008</a>            gpu_allocator::vulkan::Allocator::new(<span class="kw-2">&amp;</span>gpu_allocator::vulkan::AllocatorCreateDesc {
-<a href=#3009 id=3009 data-nosnippet>3009</a>                instance: <span class="self">self</span>.instance.raw.clone(),
-<a href=#3010 id=3010 data-nosnippet>3010</a>                device: shared.raw.clone(),
-<a href=#3011 id=3011 data-nosnippet>3011</a>                physical_device: <span class="self">self</span>.raw,
-<a href=#3012 id=3012 data-nosnippet>3012</a>                debug_settings: Default::default(),
-<a href=#3013 id=3013 data-nosnippet>3013</a>                buffer_device_address,
-<a href=#3014 id=3014 data-nosnippet>3014</a>                allocation_sizes,
-<a href=#3015 id=3015 data-nosnippet>3015</a>            })<span class="question-mark">?</span>;
-<a href=#3016 id=3016 data-nosnippet>3016</a>
-<a href=#3017 id=3017 data-nosnippet>3017</a>        <span class="kw">let </span>desc_allocator = <span class="kw">super</span>::descriptor::DescriptorAllocator::new(
-<a href=#3018 id=3018 data-nosnippet>3018</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(di) = <span class="self">self</span>.phd_capabilities.descriptor_indexing {
-<a href=#3019 id=3019 data-nosnippet>3019</a>                di.max_update_after_bind_descriptors_in_all_pools
-<a href=#3020 id=3020 data-nosnippet>3020</a>            } <span class="kw">else </span>{
-<a href=#3021 id=3021 data-nosnippet>3021</a>                <span class="number">0
-<a href=#3022 id=3022 data-nosnippet>3022</a>            </span>},
-<a href=#3023 id=3023 data-nosnippet>3023</a>        );
-<a href=#3024 id=3024 data-nosnippet>3024</a>
-<a href=#3025 id=3025 data-nosnippet>3025</a>        <span class="kw">let </span>device = <span class="kw">super</span>::Device {
-<a href=#3026 id=3026 data-nosnippet>3026</a>            shared,
-<a href=#3027 id=3027 data-nosnippet>3027</a>            mem_allocator: Mutex::new(mem_allocator),
-<a href=#3028 id=3028 data-nosnippet>3028</a>            desc_allocator: Mutex::new(desc_allocator),
-<a href=#3029 id=3029 data-nosnippet>3029</a>            valid_ash_memory_types,
-<a href=#3030 id=3030 data-nosnippet>3030</a>            naga_options,
-<a href=#3031 id=3031 data-nosnippet>3031</a>            <span class="attr">#[cfg(feature = <span class="string">"renderdoc"</span>)]
-<a href=#3032 id=3032 data-nosnippet>3032</a>            </span>render_doc: Default::default(),
-<a href=#3033 id=3033 data-nosnippet>3033</a>            counters: Default::default(),
-<a href=#3034 id=3034 data-nosnippet>3034</a>        };
-<a href=#3035 id=3035 data-nosnippet>3035</a>
-<a href=#3036 id=3036 data-nosnippet>3036</a>        <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::OpenDevice { device, queue })
-<a href=#3037 id=3037 data-nosnippet>3037</a>    }
-<a href=#3038 id=3038 data-nosnippet>3038</a>
-<a href=#3039 id=3039 data-nosnippet>3039</a>    <span class="kw">pub fn </span>texture_format_as_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_format: wgt::TextureFormat) -&gt; vk::Format {
-<a href=#3040 id=3040 data-nosnippet>3040</a>        <span class="self">self</span>.private_caps.map_texture_format(texture_format)
-<a href=#3041 id=3041 data-nosnippet>3041</a>    }
-<a href=#3042 id=3042 data-nosnippet>3042</a>
-<a href=#3043 id=3043 data-nosnippet>3043</a>    <span class="doccomment">/// # Safety:
-<a href=#3044 id=3044 data-nosnippet>3044</a>    /// - Same as `open` plus
-<a href=#3045 id=3045 data-nosnippet>3045</a>    /// - The callback may not change anything that the device does not support.
-<a href=#3046 id=3046 data-nosnippet>3046</a>    /// - The callback may not remove features.
-<a href=#3047 id=3047 data-nosnippet>3047</a>    </span><span class="kw">pub unsafe fn </span>open_with_callback&lt;<span class="lifetime">'a</span>&gt;(
-<a href=#3048 id=3048 data-nosnippet>3048</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#3049 id=3049 data-nosnippet>3049</a>        features: wgt::Features,
-<a href=#3050 id=3050 data-nosnippet>3050</a>        limits: <span class="kw-2">&amp;</span>wgt::Limits,
-<a href=#3051 id=3051 data-nosnippet>3051</a>        memory_hints: <span class="kw-2">&amp;</span>wgt::MemoryHints,
-<a href=#3052 id=3052 data-nosnippet>3052</a>        callback: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">super</span>::CreateDeviceCallback&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
-<a href=#3053 id=3053 data-nosnippet>3053</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::OpenDevice&lt;<span class="kw">super</span>::Api&gt;, <span class="kw">crate</span>::DeviceError&gt; {
-<a href=#3054 id=3054 data-nosnippet>3054</a>        <span class="kw">let </span><span class="kw-2">mut </span>enabled_extensions = <span class="self">self</span>.required_device_extensions(features);
-<a href=#3055 id=3055 data-nosnippet>3055</a>        <span class="kw">let </span><span class="kw-2">mut </span>enabled_phd_features = <span class="self">self</span>.physical_device_features(<span class="kw-2">&amp;</span>enabled_extensions, features);
-<a href=#3056 id=3056 data-nosnippet>3056</a>
-<a href=#3057 id=3057 data-nosnippet>3057</a>        <span class="kw">let </span>default_family_index = <span class="number">0</span>;
-<a href=#3058 id=3058 data-nosnippet>3058</a>        <span class="kw">let </span><span class="kw-2">mut </span>family_infos = <span class="macro">vec!</span>[vk::DeviceQueueCreateInfo::default()
-<a href=#3059 id=3059 data-nosnippet>3059</a>            .queue_family_index(default_family_index)
-<a href=#3060 id=3060 data-nosnippet>3060</a>            .queue_priorities(<span class="kw-2">&amp;</span>[<span class="number">1.0</span>])];
-<a href=#3061 id=3061 data-nosnippet>3061</a>
-<a href=#3062 id=3062 data-nosnippet>3062</a>        <span class="kw">let </span><span class="kw-2">mut </span>pre_info = vk::DeviceCreateInfo::default();
-<a href=#3063 id=3063 data-nosnippet>3063</a>
-<a href=#3064 id=3064 data-nosnippet>3064</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = callback {
-<a href=#3065 id=3065 data-nosnippet>3065</a>            callback(<span class="kw">super</span>::CreateDeviceCallbackArgs {
-<a href=#3066 id=3066 data-nosnippet>3066</a>                extensions: <span class="kw-2">&amp;mut </span>enabled_extensions,
-<a href=#3067 id=3067 data-nosnippet>3067</a>                device_features: <span class="kw-2">&amp;mut </span>enabled_phd_features,
-<a href=#3068 id=3068 data-nosnippet>3068</a>                queue_create_infos: <span class="kw-2">&amp;mut </span>family_infos,
-<a href=#3069 id=3069 data-nosnippet>3069</a>                create_info: <span class="kw-2">&amp;mut </span>pre_info,
-<a href=#3070 id=3070 data-nosnippet>3070</a>                _phantom: PhantomData,
-<a href=#3071 id=3071 data-nosnippet>3071</a>            })
-<a href=#3072 id=3072 data-nosnippet>3072</a>        }
-<a href=#3073 id=3073 data-nosnippet>3073</a>
-<a href=#3074 id=3074 data-nosnippet>3074</a>        <span class="kw">let </span>str_pointers = enabled_extensions
-<a href=#3075 id=3075 data-nosnippet>3075</a>            .iter()
-<a href=#3076 id=3076 data-nosnippet>3076</a>            .map(|<span class="kw-2">&amp;</span>s| {
-<a href=#3077 id=3077 data-nosnippet>3077</a>                <span class="comment">// Safe because `enabled_extensions` entries have static lifetime.
-<a href=#3078 id=3078 data-nosnippet>3078</a>                </span>s.as_ptr()
-<a href=#3079 id=3079 data-nosnippet>3079</a>            })
-<a href=#3080 id=3080 data-nosnippet>3080</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-<a href=#3081 id=3081 data-nosnippet>3081</a>
-<a href=#3082 id=3082 data-nosnippet>3082</a>        <span class="kw">let </span>pre_info = pre_info
-<a href=#3083 id=3083 data-nosnippet>3083</a>            .queue_create_infos(<span class="kw-2">&amp;</span>family_infos)
-<a href=#3084 id=3084 data-nosnippet>3084</a>            .enabled_extension_names(<span class="kw-2">&amp;</span>str_pointers);
-<a href=#3085 id=3085 data-nosnippet>3085</a>        <span class="kw">let </span>info = enabled_phd_features.add_to_device_create(pre_info);
-<a href=#3086 id=3086 data-nosnippet>3086</a>        <span class="kw">let </span>raw_device = {
-<a href=#3087 id=3087 data-nosnippet>3087</a>            <span class="macro">profiling::scope!</span>(<span class="string">"vkCreateDevice"</span>);
-<a href=#3088 id=3088 data-nosnippet>3088</a>            <span class="kw">unsafe </span>{
-<a href=#3089 id=3089 data-nosnippet>3089</a>                <span class="self">self</span>.instance
-<a href=#3090 id=3090 data-nosnippet>3090</a>                    .raw
-<a href=#3091 id=3091 data-nosnippet>3091</a>                    .create_device(<span class="self">self</span>.raw, <span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>)
-<a href=#3092 id=3092 data-nosnippet>3092</a>                    .map_err(map_err)<span class="question-mark">?
-<a href=#3093 id=3093 data-nosnippet>3093</a>            </span>}
-<a href=#3094 id=3094 data-nosnippet>3094</a>        };
-<a href=#3095 id=3095 data-nosnippet>3095</a>        <span class="kw">fn </span>map_err(err: vk::Result) -&gt; <span class="kw">crate</span>::DeviceError {
-<a href=#3096 id=3096 data-nosnippet>3096</a>            <span class="kw">match </span>err {
-<a href=#3097 id=3097 data-nosnippet>3097</a>                vk::Result::ERROR_TOO_MANY_OBJECTS =&gt; <span class="kw">crate</span>::DeviceError::OutOfMemory,
-<a href=#3098 id=3098 data-nosnippet>3098</a>                vk::Result::ERROR_INITIALIZATION_FAILED =&gt; <span class="kw">crate</span>::DeviceError::Lost,
-<a href=#3099 id=3099 data-nosnippet>3099</a>                vk::Result::ERROR_EXTENSION_NOT_PRESENT | vk::Result::ERROR_FEATURE_NOT_PRESENT =&gt; {
-<a href=#3100 id=3100 data-nosnippet>3100</a>                    <span class="kw">crate</span>::hal_usage_error(err)
-<a href=#3101 id=3101 data-nosnippet>3101</a>                }
-<a href=#3102 id=3102 data-nosnippet>3102</a>                other =&gt; <span class="kw">super</span>::map_host_device_oom_and_lost_err(other),
-<a href=#3103 id=3103 data-nosnippet>3103</a>            }
-<a href=#3104 id=3104 data-nosnippet>3104</a>        }
-<a href=#3105 id=3105 data-nosnippet>3105</a>
-<a href=#3106 id=3106 data-nosnippet>3106</a>        <span class="kw">unsafe </span>{
-<a href=#3107 id=3107 data-nosnippet>3107</a>            <span class="self">self</span>.device_from_raw(
-<a href=#3108 id=3108 data-nosnippet>3108</a>                raw_device,
-<a href=#3109 id=3109 data-nosnippet>3109</a>                <span class="prelude-val">None</span>,
-<a href=#3110 id=3110 data-nosnippet>3110</a>                <span class="kw-2">&amp;</span>enabled_extensions,
-<a href=#3111 id=3111 data-nosnippet>3111</a>                features,
-<a href=#3112 id=3112 data-nosnippet>3112</a>                limits,
-<a href=#3113 id=3113 data-nosnippet>3113</a>                memory_hints,
-<a href=#3114 id=3114 data-nosnippet>3114</a>                family_infos[<span class="number">0</span>].queue_family_index,
-<a href=#3115 id=3115 data-nosnippet>3115</a>                <span class="number">0</span>,
-<a href=#3116 id=3116 data-nosnippet>3116</a>            )
-<a href=#3117 id=3117 data-nosnippet>3117</a>        }
-<a href=#3118 id=3118 data-nosnippet>3118</a>    }
-<a href=#3119 id=3119 data-nosnippet>3119</a>}
-<a href=#3120 id=3120 data-nosnippet>3120</a>
-<a href=#3121 id=3121 data-nosnippet>3121</a><span class="kw">impl </span><span class="kw">crate</span>::Adapter <span class="kw">for </span><span class="kw">super</span>::Adapter {
-<a href=#3122 id=3122 data-nosnippet>3122</a>    <span class="kw">type </span>A = <span class="kw">super</span>::Api;
-<a href=#3123 id=3123 data-nosnippet>3123</a>
-<a href=#3124 id=3124 data-nosnippet>3124</a>    <span class="kw">unsafe fn </span>open(
-<a href=#3125 id=3125 data-nosnippet>3125</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#3126 id=3126 data-nosnippet>3126</a>        features: wgt::Features,
-<a href=#3127 id=3127 data-nosnippet>3127</a>        limits: <span class="kw-2">&amp;</span>wgt::Limits,
-<a href=#3128 id=3128 data-nosnippet>3128</a>        memory_hints: <span class="kw-2">&amp;</span>wgt::MemoryHints,
-<a href=#3129 id=3129 data-nosnippet>3129</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::OpenDevice&lt;<span class="kw">super</span>::Api&gt;, <span class="kw">crate</span>::DeviceError&gt; {
-<a href=#3130 id=3130 data-nosnippet>3130</a>        <span class="kw">unsafe </span>{ <span class="self">self</span>.open_with_callback(features, limits, memory_hints, <span class="prelude-val">None</span>) }
-<a href=#3131 id=3131 data-nosnippet>3131</a>    }
-<a href=#3132 id=3132 data-nosnippet>3132</a>
-<a href=#3133 id=3133 data-nosnippet>3133</a>    <span class="kw">unsafe fn </span>texture_format_capabilities(
-<a href=#3134 id=3134 data-nosnippet>3134</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#3135 id=3135 data-nosnippet>3135</a>        format: wgt::TextureFormat,
-<a href=#3136 id=3136 data-nosnippet>3136</a>    ) -&gt; <span class="kw">crate</span>::TextureFormatCapabilities {
-<a href=#3137 id=3137 data-nosnippet>3137</a>        <span class="kw">use </span><span class="kw">crate</span>::TextureFormatCapabilities <span class="kw">as </span>Tfc;
-<a href=#3138 id=3138 data-nosnippet>3138</a>
-<a href=#3139 id=3139 data-nosnippet>3139</a>        <span class="kw">let </span>vk_format = <span class="self">self</span>.private_caps.map_texture_format(format);
-<a href=#3140 id=3140 data-nosnippet>3140</a>        <span class="kw">let </span>properties = <span class="kw">unsafe </span>{
-<a href=#3141 id=3141 data-nosnippet>3141</a>            <span class="self">self</span>.instance
-<a href=#3142 id=3142 data-nosnippet>3142</a>                .raw
-<a href=#3143 id=3143 data-nosnippet>3143</a>                .get_physical_device_format_properties(<span class="self">self</span>.raw, vk_format)
-<a href=#3144 id=3144 data-nosnippet>3144</a>        };
-<a href=#3145 id=3145 data-nosnippet>3145</a>        <span class="kw">let </span>features = properties.optimal_tiling_features;
-<a href=#3146 id=3146 data-nosnippet>3146</a>
-<a href=#3147 id=3147 data-nosnippet>3147</a>        <span class="kw">let </span><span class="kw-2">mut </span>flags = Tfc::empty();
-<a href=#3148 id=3148 data-nosnippet>3148</a>        flags.set(
-<a href=#3149 id=3149 data-nosnippet>3149</a>            Tfc::SAMPLED,
-<a href=#3150 id=3150 data-nosnippet>3150</a>            features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE),
-<a href=#3151 id=3151 data-nosnippet>3151</a>        );
-<a href=#3152 id=3152 data-nosnippet>3152</a>        flags.set(
-<a href=#3153 id=3153 data-nosnippet>3153</a>            Tfc::SAMPLED_LINEAR,
-<a href=#3154 id=3154 data-nosnippet>3154</a>            features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_LINEAR),
-<a href=#3155 id=3155 data-nosnippet>3155</a>        );
-<a href=#3156 id=3156 data-nosnippet>3156</a>        <span class="comment">// flags.set(
-<a href=#3157 id=3157 data-nosnippet>3157</a>        //     Tfc::SAMPLED_MINMAX,
-<a href=#3158 id=3158 data-nosnippet>3158</a>        //     features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_MINMAX),
-<a href=#3159 id=3159 data-nosnippet>3159</a>        // );
-<a href=#3160 id=3160 data-nosnippet>3160</a>        </span>flags.set(
-<a href=#3161 id=3161 data-nosnippet>3161</a>            Tfc::STORAGE_READ_WRITE
-<a href=#3162 id=3162 data-nosnippet>3162</a>                | Tfc::STORAGE_WRITE_ONLY
-<a href=#3163 id=3163 data-nosnippet>3163</a>                | Tfc::STORAGE_READ_ONLY
-<a href=#3164 id=3164 data-nosnippet>3164</a>                | Tfc::STORAGE_ATOMIC,
-<a href=#3165 id=3165 data-nosnippet>3165</a>            features.contains(vk::FormatFeatureFlags::STORAGE_IMAGE),
-<a href=#3166 id=3166 data-nosnippet>3166</a>        );
-<a href=#3167 id=3167 data-nosnippet>3167</a>        flags.set(
-<a href=#3168 id=3168 data-nosnippet>3168</a>            Tfc::STORAGE_ATOMIC,
-<a href=#3169 id=3169 data-nosnippet>3169</a>            features.contains(vk::FormatFeatureFlags::STORAGE_IMAGE_ATOMIC),
-<a href=#3170 id=3170 data-nosnippet>3170</a>        );
-<a href=#3171 id=3171 data-nosnippet>3171</a>        flags.set(
-<a href=#3172 id=3172 data-nosnippet>3172</a>            Tfc::COLOR_ATTACHMENT,
-<a href=#3173 id=3173 data-nosnippet>3173</a>            features.contains(vk::FormatFeatureFlags::COLOR_ATTACHMENT),
-<a href=#3174 id=3174 data-nosnippet>3174</a>        );
-<a href=#3175 id=3175 data-nosnippet>3175</a>        flags.set(
-<a href=#3176 id=3176 data-nosnippet>3176</a>            Tfc::COLOR_ATTACHMENT_BLEND,
-<a href=#3177 id=3177 data-nosnippet>3177</a>            features.contains(vk::FormatFeatureFlags::COLOR_ATTACHMENT_BLEND),
-<a href=#3178 id=3178 data-nosnippet>3178</a>        );
-<a href=#3179 id=3179 data-nosnippet>3179</a>        flags.set(
-<a href=#3180 id=3180 data-nosnippet>3180</a>            Tfc::DEPTH_STENCIL_ATTACHMENT,
-<a href=#3181 id=3181 data-nosnippet>3181</a>            features.contains(vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT),
-<a href=#3182 id=3182 data-nosnippet>3182</a>        );
-<a href=#3183 id=3183 data-nosnippet>3183</a>        flags.set(
-<a href=#3184 id=3184 data-nosnippet>3184</a>            Tfc::COPY_SRC,
-<a href=#3185 id=3185 data-nosnippet>3185</a>            features.intersects(vk::FormatFeatureFlags::TRANSFER_SRC),
-<a href=#3186 id=3186 data-nosnippet>3186</a>        );
-<a href=#3187 id=3187 data-nosnippet>3187</a>        flags.set(
-<a href=#3188 id=3188 data-nosnippet>3188</a>            Tfc::COPY_DST,
-<a href=#3189 id=3189 data-nosnippet>3189</a>            features.intersects(vk::FormatFeatureFlags::TRANSFER_DST),
-<a href=#3190 id=3190 data-nosnippet>3190</a>        );
-<a href=#3191 id=3191 data-nosnippet>3191</a>        flags.set(
-<a href=#3192 id=3192 data-nosnippet>3192</a>            Tfc::STORAGE_ATOMIC,
-<a href=#3193 id=3193 data-nosnippet>3193</a>            features.intersects(vk::FormatFeatureFlags::STORAGE_IMAGE_ATOMIC),
-<a href=#3194 id=3194 data-nosnippet>3194</a>        );
-<a href=#3195 id=3195 data-nosnippet>3195</a>        <span class="comment">// Vulkan is very permissive about MSAA
-<a href=#3196 id=3196 data-nosnippet>3196</a>        </span>flags.set(Tfc::MULTISAMPLE_RESOLVE, !format.is_compressed());
-<a href=#3197 id=3197 data-nosnippet>3197</a>
-<a href=#3198 id=3198 data-nosnippet>3198</a>        <span class="comment">// get the supported sample counts
-<a href=#3199 id=3199 data-nosnippet>3199</a>        </span><span class="kw">let </span>format_aspect = <span class="kw">crate</span>::FormatAspects::from(format);
-<a href=#3200 id=3200 data-nosnippet>3200</a>        <span class="kw">let </span>limits = <span class="self">self</span>.phd_capabilities.properties.limits;
-<a href=#3201 id=3201 data-nosnippet>3201</a>
-<a href=#3202 id=3202 data-nosnippet>3202</a>        <span class="kw">let </span>sample_flags = <span class="kw">if </span>format_aspect.contains(<span class="kw">crate</span>::FormatAspects::DEPTH) {
-<a href=#3203 id=3203 data-nosnippet>3203</a>            limits
-<a href=#3204 id=3204 data-nosnippet>3204</a>                .framebuffer_depth_sample_counts
-<a href=#3205 id=3205 data-nosnippet>3205</a>                .min(limits.sampled_image_depth_sample_counts)
-<a href=#3206 id=3206 data-nosnippet>3206</a>        } <span class="kw">else if </span>format_aspect.contains(<span class="kw">crate</span>::FormatAspects::STENCIL) {
-<a href=#3207 id=3207 data-nosnippet>3207</a>            limits
-<a href=#3208 id=3208 data-nosnippet>3208</a>                .framebuffer_stencil_sample_counts
-<a href=#3209 id=3209 data-nosnippet>3209</a>                .min(limits.sampled_image_stencil_sample_counts)
-<a href=#3210 id=3210 data-nosnippet>3210</a>        } <span class="kw">else </span>{
-<a href=#3211 id=3211 data-nosnippet>3211</a>            <span class="kw">let </span>first_aspect = format_aspect
-<a href=#3212 id=3212 data-nosnippet>3212</a>                .iter()
-<a href=#3213 id=3213 data-nosnippet>3213</a>                .next()
-<a href=#3214 id=3214 data-nosnippet>3214</a>                .expect(<span class="string">"All texture should at least one aspect"</span>)
-<a href=#3215 id=3215 data-nosnippet>3215</a>                .map();
-<a href=#3216 id=3216 data-nosnippet>3216</a>
-<a href=#3217 id=3217 data-nosnippet>3217</a>            <span class="comment">// We should never get depth or stencil out of this, due to the above.
-<a href=#3218 id=3218 data-nosnippet>3218</a>            </span><span class="macro">assert_ne!</span>(first_aspect, wgt::TextureAspect::DepthOnly);
-<a href=#3219 id=3219 data-nosnippet>3219</a>            <span class="macro">assert_ne!</span>(first_aspect, wgt::TextureAspect::StencilOnly);
-<a href=#3220 id=3220 data-nosnippet>3220</a>
-<a href=#3221 id=3221 data-nosnippet>3221</a>            <span class="kw">match </span>format.sample_type(<span class="prelude-val">Some</span>(first_aspect), <span class="prelude-val">None</span>).unwrap() {
-<a href=#3222 id=3222 data-nosnippet>3222</a>                wgt::TextureSampleType::Float { .. } =&gt; limits
-<a href=#3223 id=3223 data-nosnippet>3223</a>                    .framebuffer_color_sample_counts
-<a href=#3224 id=3224 data-nosnippet>3224</a>                    .min(limits.sampled_image_color_sample_counts),
-<a href=#3225 id=3225 data-nosnippet>3225</a>                wgt::TextureSampleType::Sint | wgt::TextureSampleType::Uint =&gt; {
-<a href=#3226 id=3226 data-nosnippet>3226</a>                    limits.sampled_image_integer_sample_counts
-<a href=#3227 id=3227 data-nosnippet>3227</a>                }
-<a href=#3228 id=3228 data-nosnippet>3228</a>                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-<a href=#3229 id=3229 data-nosnippet>3229</a>            }
-<a href=#3230 id=3230 data-nosnippet>3230</a>        };
-<a href=#3231 id=3231 data-nosnippet>3231</a>
-<a href=#3232 id=3232 data-nosnippet>3232</a>        flags.set(
-<a href=#3233 id=3233 data-nosnippet>3233</a>            Tfc::MULTISAMPLE_X2,
-<a href=#3234 id=3234 data-nosnippet>3234</a>            sample_flags.contains(vk::SampleCountFlags::TYPE_2),
-<a href=#3235 id=3235 data-nosnippet>3235</a>        );
-<a href=#3236 id=3236 data-nosnippet>3236</a>        flags.set(
-<a href=#3237 id=3237 data-nosnippet>3237</a>            Tfc::MULTISAMPLE_X4,
-<a href=#3238 id=3238 data-nosnippet>3238</a>            sample_flags.contains(vk::SampleCountFlags::TYPE_4),
-<a href=#3239 id=3239 data-nosnippet>3239</a>        );
-<a href=#3240 id=3240 data-nosnippet>3240</a>        flags.set(
-<a href=#3241 id=3241 data-nosnippet>3241</a>            Tfc::MULTISAMPLE_X8,
-<a href=#3242 id=3242 data-nosnippet>3242</a>            sample_flags.contains(vk::SampleCountFlags::TYPE_8),
-<a href=#3243 id=3243 data-nosnippet>3243</a>        );
-<a href=#3244 id=3244 data-nosnippet>3244</a>        flags.set(
-<a href=#3245 id=3245 data-nosnippet>3245</a>            Tfc::MULTISAMPLE_X16,
-<a href=#3246 id=3246 data-nosnippet>3246</a>            sample_flags.contains(vk::SampleCountFlags::TYPE_16),
-<a href=#3247 id=3247 data-nosnippet>3247</a>        );
-<a href=#3248 id=3248 data-nosnippet>3248</a>
-<a href=#3249 id=3249 data-nosnippet>3249</a>        flags
-<a href=#3250 id=3250 data-nosnippet>3250</a>    }
-<a href=#3251 id=3251 data-nosnippet>3251</a>
-<a href=#3252 id=3252 data-nosnippet>3252</a>    <span class="kw">unsafe fn </span>surface_capabilities(
-<a href=#3253 id=3253 data-nosnippet>3253</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#3254 id=3254 data-nosnippet>3254</a>        surface: <span class="kw-2">&amp;</span><span class="kw">super</span>::Surface,
-<a href=#3255 id=3255 data-nosnippet>3255</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::SurfaceCapabilities&gt; {
-<a href=#3256 id=3256 data-nosnippet>3256</a>        surface.inner.surface_capabilities(<span class="self">self</span>)
-<a href=#3257 id=3257 data-nosnippet>3257</a>    }
-<a href=#3258 id=3258 data-nosnippet>3258</a>
-<a href=#3259 id=3259 data-nosnippet>3259</a>    <span class="kw">unsafe fn </span>surface_display_hdr_info(
-<a href=#3260 id=3260 data-nosnippet>3260</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#3261 id=3261 data-nosnippet>3261</a>        surface: <span class="kw-2">&amp;</span><span class="kw">super</span>::Surface,
-<a href=#3262 id=3262 data-nosnippet>3262</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::DisplayHdrInfo&gt; {
-<a href=#3263 id=3263 data-nosnippet>3263</a>        <span class="comment">// Vulkan has no portable luminance query; the Win32 surface reads it
-<a href=#3264 id=3264 data-nosnippet>3264</a>        // through DXGI (see `dxgi::hdr`). Every other surface reports `None`.
-<a href=#3265 id=3265 data-nosnippet>3265</a>        </span>surface.inner.display_hdr_info()
-<a href=#3266 id=3266 data-nosnippet>3266</a>    }
-<a href=#3267 id=3267 data-nosnippet>3267</a>
-<a href=#3268 id=3268 data-nosnippet>3268</a>    <span class="kw">unsafe fn </span>get_presentation_timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::PresentationTimestamp {
-<a href=#3269 id=3269 data-nosnippet>3269</a>        <span class="comment">// VK_GOOGLE_display_timing is the only way to get presentation
-<a href=#3270 id=3270 data-nosnippet>3270</a>        // timestamps on vulkan right now and it is only ever available
-<a href=#3271 id=3271 data-nosnippet>3271</a>        // on android and linux. This includes mac, but there's no alternative
-<a href=#3272 id=3272 data-nosnippet>3272</a>        // on mac, so this is fine.
-<a href=#3273 id=3273 data-nosnippet>3273</a>        </span><span class="attr">#[cfg(unix)]
-<a href=#3274 id=3274 data-nosnippet>3274</a>        </span>{
-<a href=#3275 id=3275 data-nosnippet>3275</a>            <span class="kw">let </span><span class="kw-2">mut </span>timespec = libc::timespec::default();
-<a href=#3276 id=3276 data-nosnippet>3276</a>            <span class="kw">unsafe </span>{
-<a href=#3277 id=3277 data-nosnippet>3277</a>                libc::clock_gettime(libc::CLOCK_MONOTONIC, <span class="kw-2">&amp;mut </span>timespec);
-<a href=#3278 id=3278 data-nosnippet>3278</a>            }
-<a href=#3279 id=3279 data-nosnippet>3279</a>
-<a href=#3280 id=3280 data-nosnippet>3280</a>            wgt::PresentationTimestamp(
-<a href=#3281 id=3281 data-nosnippet>3281</a>                timespec.tv_sec <span class="kw">as </span>u128 * <span class="number">1_000_000_000 </span>+ timespec.tv_nsec <span class="kw">as </span>u128,
-<a href=#3282 id=3282 data-nosnippet>3282</a>            )
-<a href=#3283 id=3283 data-nosnippet>3283</a>        }
-<a href=#3284 id=3284 data-nosnippet>3284</a>        <span class="attr">#[cfg(not(unix))]
-<a href=#3285 id=3285 data-nosnippet>3285</a>        </span>{
-<a href=#3286 id=3286 data-nosnippet>3286</a>            wgt::PresentationTimestamp::INVALID_TIMESTAMP
-<a href=#3287 id=3287 data-nosnippet>3287</a>        }
-<a href=#3288 id=3288 data-nosnippet>3288</a>    }
-<a href=#3289 id=3289 data-nosnippet>3289</a>
-<a href=#3290 id=3290 data-nosnippet>3290</a>    <span class="kw">fn </span>get_ordered_buffer_usages(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::BufferUses {
-<a href=#3291 id=3291 data-nosnippet>3291</a>        wgt::BufferUses::INCLUSIVE | wgt::BufferUses::MAP_WRITE
-<a href=#3292 id=3292 data-nosnippet>3292</a>    }
-<a href=#3293 id=3293 data-nosnippet>3293</a>
-<a href=#3294 id=3294 data-nosnippet>3294</a>    <span class="comment">// Vulkan makes very few execution ordering guarantees
-<a href=#3295 id=3295 data-nosnippet>3295</a>    // see https://registry.khronos.org/vulkan/specs/latest/html/vkspec.html#synchronization-implicit
-<a href=#3296 id=3296 data-nosnippet>3296</a>    // We just don't want to insert barriers between inclusive uses
-<a href=#3297 id=3297 data-nosnippet>3297</a>    // See https://github.com/gfx-rs/wgpu/issues/8853
-<a href=#3298 id=3298 data-nosnippet>3298</a>    </span><span class="kw">fn </span>get_ordered_texture_usages(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::TextureUses {
-<a href=#3299 id=3299 data-nosnippet>3299</a>        wgt::TextureUses::INCLUSIVE
-<a href=#3300 id=3300 data-nosnippet>3300</a>    }
-<a href=#3301 id=3301 data-nosnippet>3301</a>}
-<a href=#3302 id=3302 data-nosnippet>3302</a>
-<a href=#3303 id=3303 data-nosnippet>3303</a><span class="kw">fn </span>is_format_16bit_norm_supported(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
-<a href=#3304 id=3304 data-nosnippet>3304</a>    [
-<a href=#3305 id=3305 data-nosnippet>3305</a>        vk::Format::R16_UNORM,
-<a href=#3306 id=3306 data-nosnippet>3306</a>        vk::Format::R16_SNORM,
-<a href=#3307 id=3307 data-nosnippet>3307</a>        vk::Format::R16G16_UNORM,
-<a href=#3308 id=3308 data-nosnippet>3308</a>        vk::Format::R16G16_SNORM,
-<a href=#3309 id=3309 data-nosnippet>3309</a>        vk::Format::R16G16B16A16_UNORM,
-<a href=#3310 id=3310 data-nosnippet>3310</a>        vk::Format::R16G16B16A16_SNORM,
-<a href=#3311 id=3311 data-nosnippet>3311</a>    ]
-<a href=#3312 id=3312 data-nosnippet>3312</a>    .into_iter()
-<a href=#3313 id=3313 data-nosnippet>3313</a>    .all(|format| {
-<a href=#3314 id=3314 data-nosnippet>3314</a>        supports_format(
-<a href=#3315 id=3315 data-nosnippet>3315</a>            instance,
-<a href=#3316 id=3316 data-nosnippet>3316</a>            phd,
-<a href=#3317 id=3317 data-nosnippet>3317</a>            format,
-<a href=#3318 id=3318 data-nosnippet>3318</a>            vk::ImageTiling::OPTIMAL,
-<a href=#3319 id=3319 data-nosnippet>3319</a>            vk::FormatFeatureFlags::SAMPLED_IMAGE
-<a href=#3320 id=3320 data-nosnippet>3320</a>                | vk::FormatFeatureFlags::STORAGE_IMAGE
-<a href=#3321 id=3321 data-nosnippet>3321</a>                | vk::FormatFeatureFlags::TRANSFER_SRC
-<a href=#3322 id=3322 data-nosnippet>3322</a>                | vk::FormatFeatureFlags::TRANSFER_DST,
-<a href=#3323 id=3323 data-nosnippet>3323</a>        )
-<a href=#3324 id=3324 data-nosnippet>3324</a>    })
-<a href=#3325 id=3325 data-nosnippet>3325</a>}
-<a href=#3326 id=3326 data-nosnippet>3326</a>
-<a href=#3327 id=3327 data-nosnippet>3327</a><span class="kw">fn </span>is_float32_filterable_supported(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
-<a href=#3328 id=3328 data-nosnippet>3328</a>    [
-<a href=#3329 id=3329 data-nosnippet>3329</a>        vk::Format::R32_SFLOAT,
-<a href=#3330 id=3330 data-nosnippet>3330</a>        vk::Format::R32G32_SFLOAT,
-<a href=#3331 id=3331 data-nosnippet>3331</a>        vk::Format::R32G32B32A32_SFLOAT,
-<a href=#3332 id=3332 data-nosnippet>3332</a>    ]
-<a href=#3333 id=3333 data-nosnippet>3333</a>    .into_iter()
-<a href=#3334 id=3334 data-nosnippet>3334</a>    .all(|format| {
-<a href=#3335 id=3335 data-nosnippet>3335</a>        supports_format(
-<a href=#3336 id=3336 data-nosnippet>3336</a>            instance,
-<a href=#3337 id=3337 data-nosnippet>3337</a>            phd,
-<a href=#3338 id=3338 data-nosnippet>3338</a>            format,
-<a href=#3339 id=3339 data-nosnippet>3339</a>            vk::ImageTiling::OPTIMAL,
-<a href=#3340 id=3340 data-nosnippet>3340</a>            vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_LINEAR,
-<a href=#3341 id=3341 data-nosnippet>3341</a>        )
-<a href=#3342 id=3342 data-nosnippet>3342</a>    })
-<a href=#3343 id=3343 data-nosnippet>3343</a>}
-<a href=#3344 id=3344 data-nosnippet>3344</a>
-<a href=#3345 id=3345 data-nosnippet>3345</a><span class="kw">fn </span>is_float32_blendable_supported(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
-<a href=#3346 id=3346 data-nosnippet>3346</a>    [
-<a href=#3347 id=3347 data-nosnippet>3347</a>        vk::Format::R32_SFLOAT,
-<a href=#3348 id=3348 data-nosnippet>3348</a>        vk::Format::R32G32_SFLOAT,
-<a href=#3349 id=3349 data-nosnippet>3349</a>        vk::Format::R32G32B32A32_SFLOAT,
-<a href=#3350 id=3350 data-nosnippet>3350</a>    ]
-<a href=#3351 id=3351 data-nosnippet>3351</a>    .into_iter()
-<a href=#3352 id=3352 data-nosnippet>3352</a>    .all(|format| {
-<a href=#3353 id=3353 data-nosnippet>3353</a>        supports_format(
-<a href=#3354 id=3354 data-nosnippet>3354</a>            instance,
-<a href=#3355 id=3355 data-nosnippet>3355</a>            phd,
-<a href=#3356 id=3356 data-nosnippet>3356</a>            format,
-<a href=#3357 id=3357 data-nosnippet>3357</a>            vk::ImageTiling::OPTIMAL,
-<a href=#3358 id=3358 data-nosnippet>3358</a>            vk::FormatFeatureFlags::COLOR_ATTACHMENT_BLEND,
-<a href=#3359 id=3359 data-nosnippet>3359</a>        )
-<a href=#3360 id=3360 data-nosnippet>3360</a>    })
-<a href=#3361 id=3361 data-nosnippet>3361</a>}
-<a href=#3362 id=3362 data-nosnippet>3362</a>
-<a href=#3363 id=3363 data-nosnippet>3363</a><span class="kw">fn </span>supports_format(
-<a href=#3364 id=3364 data-nosnippet>3364</a>    instance: <span class="kw-2">&amp;</span>ash::Instance,
-<a href=#3365 id=3365 data-nosnippet>3365</a>    phd: vk::PhysicalDevice,
-<a href=#3366 id=3366 data-nosnippet>3366</a>    format: vk::Format,
-<a href=#3367 id=3367 data-nosnippet>3367</a>    tiling: vk::ImageTiling,
-<a href=#3368 id=3368 data-nosnippet>3368</a>    features: vk::FormatFeatureFlags,
-<a href=#3369 id=3369 data-nosnippet>3369</a>) -&gt; bool {
-<a href=#3370 id=3370 data-nosnippet>3370</a>    <span class="kw">let </span>properties = <span class="kw">unsafe </span>{ instance.get_physical_device_format_properties(phd, format) };
-<a href=#3371 id=3371 data-nosnippet>3371</a>    <span class="kw">match </span>tiling {
-<a href=#3372 id=3372 data-nosnippet>3372</a>        vk::ImageTiling::LINEAR =&gt; properties.linear_tiling_features.contains(features),
-<a href=#3373 id=3373 data-nosnippet>3373</a>        vk::ImageTiling::OPTIMAL =&gt; properties.optimal_tiling_features.contains(features),
-<a href=#3374 id=3374 data-nosnippet>3374</a>        <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-<a href=#3375 id=3375 data-nosnippet>3375</a>    }
-<a href=#3376 id=3376 data-nosnippet>3376</a>}
-<a href=#3377 id=3377 data-nosnippet>3377</a>
-<a href=#3378 id=3378 data-nosnippet>3378</a><span class="kw">fn </span>supports_astc_3d(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
-<a href=#3379 id=3379 data-nosnippet>3379</a>    [
-<a href=#3380 id=3380 data-nosnippet>3380</a>        vk::Format::ASTC_4X4_UNORM_BLOCK,
-<a href=#3381 id=3381 data-nosnippet>3381</a>        vk::Format::ASTC_4X4_SRGB_BLOCK,
-<a href=#3382 id=3382 data-nosnippet>3382</a>        vk::Format::ASTC_5X4_UNORM_BLOCK,
-<a href=#3383 id=3383 data-nosnippet>3383</a>        vk::Format::ASTC_5X4_SRGB_BLOCK,
-<a href=#3384 id=3384 data-nosnippet>3384</a>        vk::Format::ASTC_5X5_UNORM_BLOCK,
-<a href=#3385 id=3385 data-nosnippet>3385</a>        vk::Format::ASTC_5X5_SRGB_BLOCK,
-<a href=#3386 id=3386 data-nosnippet>3386</a>        vk::Format::ASTC_6X5_UNORM_BLOCK,
-<a href=#3387 id=3387 data-nosnippet>3387</a>        vk::Format::ASTC_6X5_SRGB_BLOCK,
-<a href=#3388 id=3388 data-nosnippet>3388</a>        vk::Format::ASTC_6X6_UNORM_BLOCK,
-<a href=#3389 id=3389 data-nosnippet>3389</a>        vk::Format::ASTC_6X6_SRGB_BLOCK,
-<a href=#3390 id=3390 data-nosnippet>3390</a>        vk::Format::ASTC_8X5_UNORM_BLOCK,
-<a href=#3391 id=3391 data-nosnippet>3391</a>        vk::Format::ASTC_8X5_SRGB_BLOCK,
-<a href=#3392 id=3392 data-nosnippet>3392</a>        vk::Format::ASTC_8X6_UNORM_BLOCK,
-<a href=#3393 id=3393 data-nosnippet>3393</a>        vk::Format::ASTC_8X6_SRGB_BLOCK,
-<a href=#3394 id=3394 data-nosnippet>3394</a>        vk::Format::ASTC_8X8_UNORM_BLOCK,
-<a href=#3395 id=3395 data-nosnippet>3395</a>        vk::Format::ASTC_8X8_SRGB_BLOCK,
-<a href=#3396 id=3396 data-nosnippet>3396</a>        vk::Format::ASTC_10X5_UNORM_BLOCK,
-<a href=#3397 id=3397 data-nosnippet>3397</a>        vk::Format::ASTC_10X5_SRGB_BLOCK,
-<a href=#3398 id=3398 data-nosnippet>3398</a>        vk::Format::ASTC_10X6_UNORM_BLOCK,
-<a href=#3399 id=3399 data-nosnippet>3399</a>        vk::Format::ASTC_10X6_SRGB_BLOCK,
-<a href=#3400 id=3400 data-nosnippet>3400</a>        vk::Format::ASTC_10X8_UNORM_BLOCK,
-<a href=#3401 id=3401 data-nosnippet>3401</a>        vk::Format::ASTC_10X8_SRGB_BLOCK,
-<a href=#3402 id=3402 data-nosnippet>3402</a>        vk::Format::ASTC_10X10_UNORM_BLOCK,
-<a href=#3403 id=3403 data-nosnippet>3403</a>        vk::Format::ASTC_10X10_SRGB_BLOCK,
-<a href=#3404 id=3404 data-nosnippet>3404</a>        vk::Format::ASTC_12X10_UNORM_BLOCK,
-<a href=#3405 id=3405 data-nosnippet>3405</a>        vk::Format::ASTC_12X10_SRGB_BLOCK,
-<a href=#3406 id=3406 data-nosnippet>3406</a>        vk::Format::ASTC_12X12_UNORM_BLOCK,
-<a href=#3407 id=3407 data-nosnippet>3407</a>        vk::Format::ASTC_12X12_SRGB_BLOCK,
-<a href=#3408 id=3408 data-nosnippet>3408</a>    ]
-<a href=#3409 id=3409 data-nosnippet>3409</a>    .into_iter()
-<a href=#3410 id=3410 data-nosnippet>3410</a>    .all(|format| {
-<a href=#3411 id=3411 data-nosnippet>3411</a>        <span class="kw">unsafe </span>{
-<a href=#3412 id=3412 data-nosnippet>3412</a>            instance.get_physical_device_image_format_properties(
-<a href=#3413 id=3413 data-nosnippet>3413</a>                phd,
-<a href=#3414 id=3414 data-nosnippet>3414</a>                format,
-<a href=#3415 id=3415 data-nosnippet>3415</a>                vk::ImageType::TYPE_3D,
-<a href=#3416 id=3416 data-nosnippet>3416</a>                vk::ImageTiling::OPTIMAL,
-<a href=#3417 id=3417 data-nosnippet>3417</a>                vk::ImageUsageFlags::SAMPLED,
-<a href=#3418 id=3418 data-nosnippet>3418</a>                vk::ImageCreateFlags::empty(),
-<a href=#3419 id=3419 data-nosnippet>3419</a>            )
-<a href=#3420 id=3420 data-nosnippet>3420</a>        }
-<a href=#3421 id=3421 data-nosnippet>3421</a>        .is_ok()
-<a href=#3422 id=3422 data-nosnippet>3422</a>    })
-<a href=#3423 id=3423 data-nosnippet>3423</a>}
-<a href=#3424 id=3424 data-nosnippet>3424</a>
-<a href=#3425 id=3425 data-nosnippet>3425</a><span class="kw">fn </span>supports_bgra8unorm_storage(
-<a href=#3426 id=3426 data-nosnippet>3426</a>    instance: <span class="kw-2">&amp;</span>ash::Instance,
-<a href=#3427 id=3427 data-nosnippet>3427</a>    phd: vk::PhysicalDevice,
-<a href=#3428 id=3428 data-nosnippet>3428</a>    device_api_version: u32,
-<a href=#3429 id=3429 data-nosnippet>3429</a>) -&gt; bool {
-<a href=#3430 id=3430 data-nosnippet>3430</a>    <span class="comment">// See https://github.com/KhronosGroup/Vulkan-Docs/issues/2027#issuecomment-1380608011
-<a href=#3431 id=3431 data-nosnippet>3431</a>
-<a href=#3432 id=3432 data-nosnippet>3432</a>    // This check gates the function call and structures used below.
-<a href=#3433 id=3433 data-nosnippet>3433</a>    // TODO: check for (`VK_KHR_get_physical_device_properties2` or VK1.1) and (`VK_KHR_format_feature_flags2` or VK1.3).
-<a href=#3434 id=3434 data-nosnippet>3434</a>    // Right now we only check for VK1.3.
-<a href=#3435 id=3435 data-nosnippet>3435</a>    </span><span class="kw">if </span>device_api_version &lt; vk::API_VERSION_1_3 {
-<a href=#3436 id=3436 data-nosnippet>3436</a>        <span class="kw">return </span><span class="bool-val">false</span>;
-<a href=#3437 id=3437 data-nosnippet>3437</a>    }
-<a href=#3438 id=3438 data-nosnippet>3438</a>
-<a href=#3439 id=3439 data-nosnippet>3439</a>    <span class="kw">unsafe </span>{
-<a href=#3440 id=3440 data-nosnippet>3440</a>        <span class="kw">let </span><span class="kw-2">mut </span>properties3 = vk::FormatProperties3::default();
-<a href=#3441 id=3441 data-nosnippet>3441</a>        <span class="kw">let </span><span class="kw-2">mut </span>properties2 = vk::FormatProperties2::default().push_next(<span class="kw-2">&amp;mut </span>properties3);
-<a href=#3442 id=3442 data-nosnippet>3442</a>
-<a href=#3443 id=3443 data-nosnippet>3443</a>        instance.get_physical_device_format_properties2(
-<a href=#3444 id=3444 data-nosnippet>3444</a>            phd,
-<a href=#3445 id=3445 data-nosnippet>3445</a>            vk::Format::B8G8R8A8_UNORM,
-<a href=#3446 id=3446 data-nosnippet>3446</a>            <span class="kw-2">&amp;mut </span>properties2,
-<a href=#3447 id=3447 data-nosnippet>3447</a>        );
-<a href=#3448 id=3448 data-nosnippet>3448</a>
-<a href=#3449 id=3449 data-nosnippet>3449</a>        <span class="kw">let </span>features2 = properties2.format_properties.optimal_tiling_features;
-<a href=#3450 id=3450 data-nosnippet>3450</a>        <span class="kw">let </span>features3 = properties3.optimal_tiling_features;
-<a href=#3451 id=3451 data-nosnippet>3451</a>
-<a href=#3452 id=3452 data-nosnippet>3452</a>        features2.contains(vk::FormatFeatureFlags::STORAGE_IMAGE)
-<a href=#3453 id=3453 data-nosnippet>3453</a>            &amp;&amp; features3.contains(vk::FormatFeatureFlags2::STORAGE_WRITE_WITHOUT_FORMAT)
-<a href=#3454 id=3454 data-nosnippet>3454</a>    }
-<a href=#3455 id=3455 data-nosnippet>3455</a>}
-<a href=#3456 id=3456 data-nosnippet>3456</a>
-<a href=#3457 id=3457 data-nosnippet>3457</a><span class="comment">// For https://github.com/gfx-rs/wgpu/issues/4599
-<a href=#3458 id=3458 data-nosnippet>3458</a>// Intel iGPUs with outdated drivers can break rendering if `VK_EXT_robustness2` is used.
-<a href=#3459 id=3459 data-nosnippet>3459</a>// Driver version 31.0.101.2115 works, but there's probably an earlier functional version.
-<a href=#3460 id=3460 data-nosnippet>3460</a></span><span class="kw">fn </span>is_intel_igpu_outdated_for_robustness2(capabilities: <span class="kw-2">&amp;</span>PhysicalDeviceProperties) -&gt; bool {
-<a href=#3461 id=3461 data-nosnippet>3461</a>    <span class="kw">const </span>DRIVER_VERSION_WORKING: u32 = (<span class="number">101 </span>&lt;&lt; <span class="number">14</span>) | <span class="number">2115</span>; <span class="comment">// X.X.101.2115
-<a href=#3462 id=3462 data-nosnippet>3462</a>
-<a href=#3463 id=3463 data-nosnippet>3463</a>    </span><span class="kw">let </span>props = <span class="kw-2">&amp;</span>capabilities.properties;
-<a href=#3464 id=3464 data-nosnippet>3464</a>
-<a href=#3465 id=3465 data-nosnippet>3465</a>    <span class="kw">let </span>is_outdated = props.vendor_id == <span class="kw">crate</span>::auxil::db::intel::VENDOR
-<a href=#3466 id=3466 data-nosnippet>3466</a>        &amp;&amp; props.device_type == vk::PhysicalDeviceType::INTEGRATED_GPU
-<a href=#3467 id=3467 data-nosnippet>3467</a>        &amp;&amp; props.driver_version &lt; DRIVER_VERSION_WORKING
-<a href=#3468 id=3468 data-nosnippet>3468</a>        &amp;&amp; capabilities.is_driver(vk::DriverId::INTEL_PROPRIETARY_WINDOWS);
-<a href=#3469 id=3469 data-nosnippet>3469</a>
-<a href=#3470 id=3470 data-nosnippet>3470</a>    <span class="kw">if </span>is_outdated {
-<a href=#3471 id=3471 data-nosnippet>3471</a>        <span class="macro">log::debug!</span>(
-<a href=#3472 id=3472 data-nosnippet>3472</a>            <span class="string">"Disabling robustBufferAccess2 and robustImageAccess2: IntegratedGpu Intel Driver is outdated. Found with version 0x{:X}, less than the known good version 0x{:X} (31.0.101.2115)"</span>,
-<a href=#3473 id=3473 data-nosnippet>3473</a>            props.driver_version,
-<a href=#3474 id=3474 data-nosnippet>3474</a>            DRIVER_VERSION_WORKING
-<a href=#3475 id=3475 data-nosnippet>3475</a>        );
-<a href=#3476 id=3476 data-nosnippet>3476</a>    }
-<a href=#3477 id=3477 data-nosnippet>3477</a>    is_outdated
-<a href=#3478 id=3478 data-nosnippet>3478</a>}
-<a href=#3479 id=3479 data-nosnippet>3479</a>
-<a href=#3480 id=3480 data-nosnippet>3480</a><span class="doccomment">/// Convert Vulkan component type to wgt::CooperativeScalarType.
-<a href=#3481 id=3481 data-nosnippet>3481</a></span><span class="kw">fn </span>map_vk_component_type(ty: vk::ComponentTypeKHR) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::CooperativeScalarType&gt; {
-<a href=#3482 id=3482 data-nosnippet>3482</a>    <span class="kw">match </span>ty {
-<a href=#3483 id=3483 data-nosnippet>3483</a>        vk::ComponentTypeKHR::FLOAT16 =&gt; <span class="prelude-val">Some</span>(wgt::CooperativeScalarType::F16),
-<a href=#3484 id=3484 data-nosnippet>3484</a>        vk::ComponentTypeKHR::FLOAT32 =&gt; <span class="prelude-val">Some</span>(wgt::CooperativeScalarType::F32),
-<a href=#3485 id=3485 data-nosnippet>3485</a>        vk::ComponentTypeKHR::SINT32 =&gt; <span class="prelude-val">Some</span>(wgt::CooperativeScalarType::I32),
-<a href=#3486 id=3486 data-nosnippet>3486</a>        vk::ComponentTypeKHR::UINT32 =&gt; <span class="prelude-val">Some</span>(wgt::CooperativeScalarType::U32),
-<a href=#3487 id=3487 data-nosnippet>3487</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#3488 id=3488 data-nosnippet>3488</a>    }
-<a href=#3489 id=3489 data-nosnippet>3489</a>}
-<a href=#3490 id=3490 data-nosnippet>3490</a>
-<a href=#3491 id=3491 data-nosnippet>3491</a><span class="doccomment">/// Convert Vulkan matrix size.
-<a href=#3492 id=3492 data-nosnippet>3492</a></span><span class="kw">fn </span>map_vk_cooperative_size(size: u32) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
-<a href=#3493 id=3493 data-nosnippet>3493</a>    <span class="kw">match </span>size {
-<a href=#3494 id=3494 data-nosnippet>3494</a>        <span class="number">8 </span>| <span class="number">16 </span>=&gt; <span class="prelude-val">Some</span>(size),
-<a href=#3495 id=3495 data-nosnippet>3495</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#3496 id=3496 data-nosnippet>3496</a>    }
-<a href=#3497 id=3497 data-nosnippet>3497</a>}
-<a href=#3498 id=3498 data-nosnippet>3498</a>
-<a href=#3499 id=3499 data-nosnippet>3499</a><span class="doccomment">/// Query all supported cooperative matrix configurations from Vulkan.
-<a href=#3500 id=3500 data-nosnippet>3500</a></span><span class="kw">fn </span>query_cooperative_matrix_properties(
-<a href=#3501 id=3501 data-nosnippet>3501</a>    coop_matrix: <span class="kw-2">&amp;</span>khr::cooperative_matrix::Instance,
-<a href=#3502 id=3502 data-nosnippet>3502</a>    phd: vk::PhysicalDevice,
-<a href=#3503 id=3503 data-nosnippet>3503</a>) -&gt; Vec&lt;wgt::CooperativeMatrixProperties&gt; {
-<a href=#3504 id=3504 data-nosnippet>3504</a>    <span class="kw">let </span>vk_properties =
-<a href=#3505 id=3505 data-nosnippet>3505</a>        <span class="kw">match unsafe </span>{ coop_matrix.get_physical_device_cooperative_matrix_properties(phd) } {
-<a href=#3506 id=3506 data-nosnippet>3506</a>            <span class="prelude-val">Ok</span>(props) =&gt; props,
-<a href=#3507 id=3507 data-nosnippet>3507</a>            <span class="prelude-val">Err</span>(e) =&gt; {
-<a href=#3508 id=3508 data-nosnippet>3508</a>                <span class="macro">log::warn!</span>(<span class="string">"Failed to query cooperative matrix properties: {e:?}"</span>);
-<a href=#3509 id=3509 data-nosnippet>3509</a>                <span class="kw">return </span>Vec::new();
-<a href=#3510 id=3510 data-nosnippet>3510</a>            }
-<a href=#3511 id=3511 data-nosnippet>3511</a>        };
-<a href=#3512 id=3512 data-nosnippet>3512</a>
-<a href=#3513 id=3513 data-nosnippet>3513</a>    <span class="macro">log::debug!</span>(
-<a href=#3514 id=3514 data-nosnippet>3514</a>        <span class="string">"Vulkan reports {} cooperative matrix configurations"</span>,
-<a href=#3515 id=3515 data-nosnippet>3515</a>        vk_properties.len()
-<a href=#3516 id=3516 data-nosnippet>3516</a>    );
-<a href=#3517 id=3517 data-nosnippet>3517</a>
-<a href=#3518 id=3518 data-nosnippet>3518</a>    <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::new();
-<a href=#3519 id=3519 data-nosnippet>3519</a>    <span class="kw">for </span>prop <span class="kw">in </span><span class="kw-2">&amp;</span>vk_properties {
-<a href=#3520 id=3520 data-nosnippet>3520</a>        <span class="macro">log::debug!</span>(
-<a href=#3521 id=3521 data-nosnippet>3521</a>            <span class="string">"  Vulkan coop matrix: M={} N={} K={} A={:?} B={:?} C={:?} Result={:?} scope={:?} saturating={}"</span>,
-<a href=#3522 id=3522 data-nosnippet>3522</a>            prop.m_size,
-<a href=#3523 id=3523 data-nosnippet>3523</a>            prop.n_size,
-<a href=#3524 id=3524 data-nosnippet>3524</a>            prop.k_size,
-<a href=#3525 id=3525 data-nosnippet>3525</a>            prop.a_type,
-<a href=#3526 id=3526 data-nosnippet>3526</a>            prop.b_type,
-<a href=#3527 id=3527 data-nosnippet>3527</a>            prop.c_type,
-<a href=#3528 id=3528 data-nosnippet>3528</a>            prop.result_type,
-<a href=#3529 id=3529 data-nosnippet>3529</a>            prop.scope,
-<a href=#3530 id=3530 data-nosnippet>3530</a>            prop.saturating_accumulation
-<a href=#3531 id=3531 data-nosnippet>3531</a>        );
-<a href=#3532 id=3532 data-nosnippet>3532</a>
-<a href=#3533 id=3533 data-nosnippet>3533</a>        <span class="comment">// Only include subgroup-scoped operations (the only scope we support)
-<a href=#3534 id=3534 data-nosnippet>3534</a>        </span><span class="kw">if </span>prop.<span class="macro">scope !</span>= vk::ScopeKHR::SUBGROUP {
-<a href=#3535 id=3535 data-nosnippet>3535</a>            <span class="macro">log::debug!</span>(<span class="string">"    Skipped: scope is not SUBGROUP"</span>);
-<a href=#3536 id=3536 data-nosnippet>3536</a>            <span class="kw">continue</span>;
-<a href=#3537 id=3537 data-nosnippet>3537</a>        }
-<a href=#3538 id=3538 data-nosnippet>3538</a>
-<a href=#3539 id=3539 data-nosnippet>3539</a>        <span class="comment">// Map sizes - skip configurations with sizes we don't support
-<a href=#3540 id=3540 data-nosnippet>3540</a>        </span><span class="kw">let </span>m_size = <span class="kw">match </span>map_vk_cooperative_size(prop.m_size) {
-<a href=#3541 id=3541 data-nosnippet>3541</a>            <span class="prelude-val">Some</span>(s) =&gt; s,
-<a href=#3542 id=3542 data-nosnippet>3542</a>            <span class="prelude-val">None </span>=&gt; {
-<a href=#3543 id=3543 data-nosnippet>3543</a>                <span class="macro">log::debug!</span>(<span class="string">"    Skipped: M size {} not supported"</span>, prop.m_size);
-<a href=#3544 id=3544 data-nosnippet>3544</a>                <span class="kw">continue</span>;
-<a href=#3545 id=3545 data-nosnippet>3545</a>            }
-<a href=#3546 id=3546 data-nosnippet>3546</a>        };
-<a href=#3547 id=3547 data-nosnippet>3547</a>        <span class="kw">let </span>n_size = <span class="kw">match </span>map_vk_cooperative_size(prop.n_size) {
-<a href=#3548 id=3548 data-nosnippet>3548</a>            <span class="prelude-val">Some</span>(s) =&gt; s,
-<a href=#3549 id=3549 data-nosnippet>3549</a>            <span class="prelude-val">None </span>=&gt; {
-<a href=#3550 id=3550 data-nosnippet>3550</a>                <span class="macro">log::debug!</span>(<span class="string">"    Skipped: N size {} not supported"</span>, prop.n_size);
-<a href=#3551 id=3551 data-nosnippet>3551</a>                <span class="kw">continue</span>;
-<a href=#3552 id=3552 data-nosnippet>3552</a>            }
-<a href=#3553 id=3553 data-nosnippet>3553</a>        };
-<a href=#3554 id=3554 data-nosnippet>3554</a>        <span class="kw">let </span>k_size = <span class="kw">match </span>map_vk_cooperative_size(prop.k_size) {
-<a href=#3555 id=3555 data-nosnippet>3555</a>            <span class="prelude-val">Some</span>(s) =&gt; s,
-<a href=#3556 id=3556 data-nosnippet>3556</a>            <span class="prelude-val">None </span>=&gt; {
-<a href=#3557 id=3557 data-nosnippet>3557</a>                <span class="macro">log::debug!</span>(<span class="string">"    Skipped: K size {} not supported"</span>, prop.k_size);
-<a href=#3558 id=3558 data-nosnippet>3558</a>                <span class="kw">continue</span>;
-<a href=#3559 id=3559 data-nosnippet>3559</a>            }
-<a href=#3560 id=3560 data-nosnippet>3560</a>        };
-<a href=#3561 id=3561 data-nosnippet>3561</a>
-<a href=#3562 id=3562 data-nosnippet>3562</a>        <span class="comment">// Map the component types - A and B must match, C and Result must match
-<a href=#3563 id=3563 data-nosnippet>3563</a>        </span><span class="kw">let </span>ab_type = <span class="kw">match </span>map_vk_component_type(prop.a_type) {
-<a href=#3564 id=3564 data-nosnippet>3564</a>            <span class="prelude-val">Some</span>(t) <span class="kw">if </span><span class="prelude-val">Some</span>(t) == map_vk_component_type(prop.b_type) =&gt; t,
-<a href=#3565 id=3565 data-nosnippet>3565</a>            <span class="kw">_ </span>=&gt; {
-<a href=#3566 id=3566 data-nosnippet>3566</a>                <span class="macro">log::debug!</span>(
-<a href=#3567 id=3567 data-nosnippet>3567</a>                    <span class="string">"    Skipped: A/B types {:?}/{:?} not supported or don't match"</span>,
-<a href=#3568 id=3568 data-nosnippet>3568</a>                    prop.a_type,
-<a href=#3569 id=3569 data-nosnippet>3569</a>                    prop.b_type
-<a href=#3570 id=3570 data-nosnippet>3570</a>                );
-<a href=#3571 id=3571 data-nosnippet>3571</a>                <span class="kw">continue</span>;
-<a href=#3572 id=3572 data-nosnippet>3572</a>            }
-<a href=#3573 id=3573 data-nosnippet>3573</a>        };
-<a href=#3574 id=3574 data-nosnippet>3574</a>        <span class="kw">let </span>cr_type = <span class="kw">match </span>map_vk_component_type(prop.c_type) {
-<a href=#3575 id=3575 data-nosnippet>3575</a>            <span class="prelude-val">Some</span>(t) <span class="kw">if </span><span class="prelude-val">Some</span>(t) == map_vk_component_type(prop.result_type) =&gt; t,
-<a href=#3576 id=3576 data-nosnippet>3576</a>            <span class="kw">_ </span>=&gt; {
-<a href=#3577 id=3577 data-nosnippet>3577</a>                <span class="macro">log::debug!</span>(
-<a href=#3578 id=3578 data-nosnippet>3578</a>                    <span class="string">"    Skipped: C/Result types {:?}/{:?} not supported or don't match"</span>,
-<a href=#3579 id=3579 data-nosnippet>3579</a>                    prop.c_type,
-<a href=#3580 id=3580 data-nosnippet>3580</a>                    prop.result_type
-<a href=#3581 id=3581 data-nosnippet>3581</a>                );
-<a href=#3582 id=3582 data-nosnippet>3582</a>                <span class="kw">continue</span>;
-<a href=#3583 id=3583 data-nosnippet>3583</a>            }
-<a href=#3584 id=3584 data-nosnippet>3584</a>        };
-<a href=#3585 id=3585 data-nosnippet>3585</a>
-<a href=#3586 id=3586 data-nosnippet>3586</a>        <span class="macro">log::debug!</span>(<span class="string">"    Accepted!"</span>);
-<a href=#3587 id=3587 data-nosnippet>3587</a>        result.push(wgt::CooperativeMatrixProperties {
-<a href=#3588 id=3588 data-nosnippet>3588</a>            m_size,
-<a href=#3589 id=3589 data-nosnippet>3589</a>            n_size,
-<a href=#3590 id=3590 data-nosnippet>3590</a>            k_size,
-<a href=#3591 id=3591 data-nosnippet>3591</a>            ab_type,
-<a href=#3592 id=3592 data-nosnippet>3592</a>            cr_type,
-<a href=#3593 id=3593 data-nosnippet>3593</a>            saturating_accumulation: prop.<span class="macro">saturating_accumulation !</span>= <span class="number">0</span>,
-<a href=#3594 id=3594 data-nosnippet>3594</a>        });
-<a href=#3595 id=3595 data-nosnippet>3595</a>    }
-<a href=#3596 id=3596 data-nosnippet>3596</a>
-<a href=#3597 id=3597 data-nosnippet>3597</a>    <span class="macro">log::debug!</span>(
-<a href=#3598 id=3598 data-nosnippet>3598</a>        <span class="string">"Found {} cooperative matrix configurations supported by wgpu"</span>,
-<a href=#3599 id=3599 data-nosnippet>3599</a>        result.len()
-<a href=#3600 id=3600 data-nosnippet>3600</a>    );
-<a href=#3601 id=3601 data-nosnippet>3601</a>    result
-<a href=#3602 id=3602 data-nosnippet>3602</a>}
+<a href=#3001 id=3001 data-nosnippet>3001</a>            next_submit_chain: Mutex::new(<span class="prelude-val">None</span>),
+<a href=#3002 id=3002 data-nosnippet>3002</a>        };
+<a href=#3003 id=3003 data-nosnippet>3003</a>
+<a href=#3004 id=3004 data-nosnippet>3004</a>        <span class="kw">let </span>allocation_sizes = AllocationSizes::from_memory_hints(memory_hints).into();
+<a href=#3005 id=3005 data-nosnippet>3005</a>
+<a href=#3006 id=3006 data-nosnippet>3006</a>        <span class="kw">let </span>buffer_device_address = enabled_extensions.contains(<span class="kw-2">&amp;</span>khr::buffer_device_address::NAME);
+<a href=#3007 id=3007 data-nosnippet>3007</a>
+<a href=#3008 id=3008 data-nosnippet>3008</a>        <span class="kw">let </span>mem_allocator =
+<a href=#3009 id=3009 data-nosnippet>3009</a>            gpu_allocator::vulkan::Allocator::new(<span class="kw-2">&amp;</span>gpu_allocator::vulkan::AllocatorCreateDesc {
+<a href=#3010 id=3010 data-nosnippet>3010</a>                instance: <span class="self">self</span>.instance.raw.clone(),
+<a href=#3011 id=3011 data-nosnippet>3011</a>                device: shared.raw.clone(),
+<a href=#3012 id=3012 data-nosnippet>3012</a>                physical_device: <span class="self">self</span>.raw,
+<a href=#3013 id=3013 data-nosnippet>3013</a>                debug_settings: Default::default(),
+<a href=#3014 id=3014 data-nosnippet>3014</a>                buffer_device_address,
+<a href=#3015 id=3015 data-nosnippet>3015</a>                allocation_sizes,
+<a href=#3016 id=3016 data-nosnippet>3016</a>            })<span class="question-mark">?</span>;
+<a href=#3017 id=3017 data-nosnippet>3017</a>
+<a href=#3018 id=3018 data-nosnippet>3018</a>        <span class="kw">let </span>desc_allocator = <span class="kw">super</span>::descriptor::DescriptorAllocator::new(
+<a href=#3019 id=3019 data-nosnippet>3019</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(di) = <span class="self">self</span>.phd_capabilities.descriptor_indexing {
+<a href=#3020 id=3020 data-nosnippet>3020</a>                di.max_update_after_bind_descriptors_in_all_pools
+<a href=#3021 id=3021 data-nosnippet>3021</a>            } <span class="kw">else </span>{
+<a href=#3022 id=3022 data-nosnippet>3022</a>                <span class="number">0
+<a href=#3023 id=3023 data-nosnippet>3023</a>            </span>},
+<a href=#3024 id=3024 data-nosnippet>3024</a>        );
+<a href=#3025 id=3025 data-nosnippet>3025</a>
+<a href=#3026 id=3026 data-nosnippet>3026</a>        <span class="kw">let </span>device = <span class="kw">super</span>::Device {
+<a href=#3027 id=3027 data-nosnippet>3027</a>            shared,
+<a href=#3028 id=3028 data-nosnippet>3028</a>            mem_allocator: Mutex::new(mem_allocator),
+<a href=#3029 id=3029 data-nosnippet>3029</a>            desc_allocator: Mutex::new(desc_allocator),
+<a href=#3030 id=3030 data-nosnippet>3030</a>            valid_ash_memory_types,
+<a href=#3031 id=3031 data-nosnippet>3031</a>            naga_options,
+<a href=#3032 id=3032 data-nosnippet>3032</a>            <span class="attr">#[cfg(feature = <span class="string">"renderdoc"</span>)]
+<a href=#3033 id=3033 data-nosnippet>3033</a>            </span>render_doc: Default::default(),
+<a href=#3034 id=3034 data-nosnippet>3034</a>            counters: Default::default(),
+<a href=#3035 id=3035 data-nosnippet>3035</a>        };
+<a href=#3036 id=3036 data-nosnippet>3036</a>
+<a href=#3037 id=3037 data-nosnippet>3037</a>        <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::OpenDevice { device, queue })
+<a href=#3038 id=3038 data-nosnippet>3038</a>    }
+<a href=#3039 id=3039 data-nosnippet>3039</a>
+<a href=#3040 id=3040 data-nosnippet>3040</a>    <span class="kw">pub fn </span>texture_format_as_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_format: wgt::TextureFormat) -&gt; vk::Format {
+<a href=#3041 id=3041 data-nosnippet>3041</a>        <span class="self">self</span>.private_caps.map_texture_format(texture_format)
+<a href=#3042 id=3042 data-nosnippet>3042</a>    }
+<a href=#3043 id=3043 data-nosnippet>3043</a>
+<a href=#3044 id=3044 data-nosnippet>3044</a>    <span class="doccomment">/// # Safety:
+<a href=#3045 id=3045 data-nosnippet>3045</a>    /// - Same as `open` plus
+<a href=#3046 id=3046 data-nosnippet>3046</a>    /// - The callback may not change anything that the device does not support.
+<a href=#3047 id=3047 data-nosnippet>3047</a>    /// - The callback may not remove features.
+<a href=#3048 id=3048 data-nosnippet>3048</a>    </span><span class="kw">pub unsafe fn </span>open_with_callback&lt;<span class="lifetime">'a</span>&gt;(
+<a href=#3049 id=3049 data-nosnippet>3049</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#3050 id=3050 data-nosnippet>3050</a>        features: wgt::Features,
+<a href=#3051 id=3051 data-nosnippet>3051</a>        limits: <span class="kw-2">&amp;</span>wgt::Limits,
+<a href=#3052 id=3052 data-nosnippet>3052</a>        memory_hints: <span class="kw-2">&amp;</span>wgt::MemoryHints,
+<a href=#3053 id=3053 data-nosnippet>3053</a>        callback: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">super</span>::CreateDeviceCallback&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
+<a href=#3054 id=3054 data-nosnippet>3054</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::OpenDevice&lt;<span class="kw">super</span>::Api&gt;, <span class="kw">crate</span>::DeviceError&gt; {
+<a href=#3055 id=3055 data-nosnippet>3055</a>        <span class="kw">let </span><span class="kw-2">mut </span>enabled_extensions = <span class="self">self</span>.required_device_extensions(features);
+<a href=#3056 id=3056 data-nosnippet>3056</a>        <span class="kw">let </span><span class="kw-2">mut </span>enabled_phd_features = <span class="self">self</span>.physical_device_features(<span class="kw-2">&amp;</span>enabled_extensions, features);
+<a href=#3057 id=3057 data-nosnippet>3057</a>
+<a href=#3058 id=3058 data-nosnippet>3058</a>        <span class="kw">let </span>default_family_index = <span class="number">0</span>;
+<a href=#3059 id=3059 data-nosnippet>3059</a>        <span class="kw">let </span><span class="kw-2">mut </span>family_infos = <span class="macro">vec!</span>[vk::DeviceQueueCreateInfo::default()
+<a href=#3060 id=3060 data-nosnippet>3060</a>            .queue_family_index(default_family_index)
+<a href=#3061 id=3061 data-nosnippet>3061</a>            .queue_priorities(<span class="kw-2">&amp;</span>[<span class="number">1.0</span>])];
+<a href=#3062 id=3062 data-nosnippet>3062</a>
+<a href=#3063 id=3063 data-nosnippet>3063</a>        <span class="kw">let </span><span class="kw-2">mut </span>pre_info = vk::DeviceCreateInfo::default();
+<a href=#3064 id=3064 data-nosnippet>3064</a>
+<a href=#3065 id=3065 data-nosnippet>3065</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = callback {
+<a href=#3066 id=3066 data-nosnippet>3066</a>            callback(<span class="kw">super</span>::CreateDeviceCallbackArgs {
+<a href=#3067 id=3067 data-nosnippet>3067</a>                extensions: <span class="kw-2">&amp;mut </span>enabled_extensions,
+<a href=#3068 id=3068 data-nosnippet>3068</a>                device_features: <span class="kw-2">&amp;mut </span>enabled_phd_features,
+<a href=#3069 id=3069 data-nosnippet>3069</a>                queue_create_infos: <span class="kw-2">&amp;mut </span>family_infos,
+<a href=#3070 id=3070 data-nosnippet>3070</a>                create_info: <span class="kw-2">&amp;mut </span>pre_info,
+<a href=#3071 id=3071 data-nosnippet>3071</a>                _phantom: PhantomData,
+<a href=#3072 id=3072 data-nosnippet>3072</a>            })
+<a href=#3073 id=3073 data-nosnippet>3073</a>        }
+<a href=#3074 id=3074 data-nosnippet>3074</a>
+<a href=#3075 id=3075 data-nosnippet>3075</a>        <span class="kw">let </span>str_pointers = enabled_extensions
+<a href=#3076 id=3076 data-nosnippet>3076</a>            .iter()
+<a href=#3077 id=3077 data-nosnippet>3077</a>            .map(|<span class="kw-2">&amp;</span>s| {
+<a href=#3078 id=3078 data-nosnippet>3078</a>                <span class="comment">// Safe because `enabled_extensions` entries have static lifetime.
+<a href=#3079 id=3079 data-nosnippet>3079</a>                </span>s.as_ptr()
+<a href=#3080 id=3080 data-nosnippet>3080</a>            })
+<a href=#3081 id=3081 data-nosnippet>3081</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+<a href=#3082 id=3082 data-nosnippet>3082</a>
+<a href=#3083 id=3083 data-nosnippet>3083</a>        <span class="kw">let </span>pre_info = pre_info
+<a href=#3084 id=3084 data-nosnippet>3084</a>            .queue_create_infos(<span class="kw-2">&amp;</span>family_infos)
+<a href=#3085 id=3085 data-nosnippet>3085</a>            .enabled_extension_names(<span class="kw-2">&amp;</span>str_pointers);
+<a href=#3086 id=3086 data-nosnippet>3086</a>        <span class="kw">let </span>info = enabled_phd_features.add_to_device_create(pre_info);
+<a href=#3087 id=3087 data-nosnippet>3087</a>        <span class="kw">let </span>raw_device = {
+<a href=#3088 id=3088 data-nosnippet>3088</a>            <span class="macro">profiling::scope!</span>(<span class="string">"vkCreateDevice"</span>);
+<a href=#3089 id=3089 data-nosnippet>3089</a>            <span class="kw">unsafe </span>{
+<a href=#3090 id=3090 data-nosnippet>3090</a>                <span class="self">self</span>.instance
+<a href=#3091 id=3091 data-nosnippet>3091</a>                    .raw
+<a href=#3092 id=3092 data-nosnippet>3092</a>                    .create_device(<span class="self">self</span>.raw, <span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>)
+<a href=#3093 id=3093 data-nosnippet>3093</a>                    .map_err(map_err)<span class="question-mark">?
+<a href=#3094 id=3094 data-nosnippet>3094</a>            </span>}
+<a href=#3095 id=3095 data-nosnippet>3095</a>        };
+<a href=#3096 id=3096 data-nosnippet>3096</a>        <span class="kw">fn </span>map_err(err: vk::Result) -&gt; <span class="kw">crate</span>::DeviceError {
+<a href=#3097 id=3097 data-nosnippet>3097</a>            <span class="kw">match </span>err {
+<a href=#3098 id=3098 data-nosnippet>3098</a>                vk::Result::ERROR_TOO_MANY_OBJECTS =&gt; <span class="kw">crate</span>::DeviceError::OutOfMemory,
+<a href=#3099 id=3099 data-nosnippet>3099</a>                vk::Result::ERROR_INITIALIZATION_FAILED =&gt; <span class="kw">crate</span>::DeviceError::Lost,
+<a href=#3100 id=3100 data-nosnippet>3100</a>                vk::Result::ERROR_EXTENSION_NOT_PRESENT | vk::Result::ERROR_FEATURE_NOT_PRESENT =&gt; {
+<a href=#3101 id=3101 data-nosnippet>3101</a>                    <span class="kw">crate</span>::hal_usage_error(err)
+<a href=#3102 id=3102 data-nosnippet>3102</a>                }
+<a href=#3103 id=3103 data-nosnippet>3103</a>                other =&gt; <span class="kw">super</span>::map_host_device_oom_and_lost_err(other),
+<a href=#3104 id=3104 data-nosnippet>3104</a>            }
+<a href=#3105 id=3105 data-nosnippet>3105</a>        }
+<a href=#3106 id=3106 data-nosnippet>3106</a>
+<a href=#3107 id=3107 data-nosnippet>3107</a>        <span class="kw">unsafe </span>{
+<a href=#3108 id=3108 data-nosnippet>3108</a>            <span class="self">self</span>.device_from_raw(
+<a href=#3109 id=3109 data-nosnippet>3109</a>                raw_device,
+<a href=#3110 id=3110 data-nosnippet>3110</a>                <span class="prelude-val">None</span>,
+<a href=#3111 id=3111 data-nosnippet>3111</a>                <span class="kw-2">&amp;</span>enabled_extensions,
+<a href=#3112 id=3112 data-nosnippet>3112</a>                features,
+<a href=#3113 id=3113 data-nosnippet>3113</a>                limits,
+<a href=#3114 id=3114 data-nosnippet>3114</a>                memory_hints,
+<a href=#3115 id=3115 data-nosnippet>3115</a>                family_infos[<span class="number">0</span>].queue_family_index,
+<a href=#3116 id=3116 data-nosnippet>3116</a>                <span class="number">0</span>,
+<a href=#3117 id=3117 data-nosnippet>3117</a>            )
+<a href=#3118 id=3118 data-nosnippet>3118</a>        }
+<a href=#3119 id=3119 data-nosnippet>3119</a>    }
+<a href=#3120 id=3120 data-nosnippet>3120</a>}
+<a href=#3121 id=3121 data-nosnippet>3121</a>
+<a href=#3122 id=3122 data-nosnippet>3122</a><span class="kw">impl </span><span class="kw">crate</span>::Adapter <span class="kw">for </span><span class="kw">super</span>::Adapter {
+<a href=#3123 id=3123 data-nosnippet>3123</a>    <span class="kw">type </span>A = <span class="kw">super</span>::Api;
+<a href=#3124 id=3124 data-nosnippet>3124</a>
+<a href=#3125 id=3125 data-nosnippet>3125</a>    <span class="kw">unsafe fn </span>open(
+<a href=#3126 id=3126 data-nosnippet>3126</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#3127 id=3127 data-nosnippet>3127</a>        features: wgt::Features,
+<a href=#3128 id=3128 data-nosnippet>3128</a>        limits: <span class="kw-2">&amp;</span>wgt::Limits,
+<a href=#3129 id=3129 data-nosnippet>3129</a>        memory_hints: <span class="kw-2">&amp;</span>wgt::MemoryHints,
+<a href=#3130 id=3130 data-nosnippet>3130</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::OpenDevice&lt;<span class="kw">super</span>::Api&gt;, <span class="kw">crate</span>::DeviceError&gt; {
+<a href=#3131 id=3131 data-nosnippet>3131</a>        <span class="kw">unsafe </span>{ <span class="self">self</span>.open_with_callback(features, limits, memory_hints, <span class="prelude-val">None</span>) }
+<a href=#3132 id=3132 data-nosnippet>3132</a>    }
+<a href=#3133 id=3133 data-nosnippet>3133</a>
+<a href=#3134 id=3134 data-nosnippet>3134</a>    <span class="kw">unsafe fn </span>texture_format_capabilities(
+<a href=#3135 id=3135 data-nosnippet>3135</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#3136 id=3136 data-nosnippet>3136</a>        format: wgt::TextureFormat,
+<a href=#3137 id=3137 data-nosnippet>3137</a>    ) -&gt; <span class="kw">crate</span>::TextureFormatCapabilities {
+<a href=#3138 id=3138 data-nosnippet>3138</a>        <span class="kw">use </span><span class="kw">crate</span>::TextureFormatCapabilities <span class="kw">as </span>Tfc;
+<a href=#3139 id=3139 data-nosnippet>3139</a>
+<a href=#3140 id=3140 data-nosnippet>3140</a>        <span class="kw">let </span>vk_format = <span class="self">self</span>.private_caps.map_texture_format(format);
+<a href=#3141 id=3141 data-nosnippet>3141</a>        <span class="kw">let </span>properties = <span class="kw">unsafe </span>{
+<a href=#3142 id=3142 data-nosnippet>3142</a>            <span class="self">self</span>.instance
+<a href=#3143 id=3143 data-nosnippet>3143</a>                .raw
+<a href=#3144 id=3144 data-nosnippet>3144</a>                .get_physical_device_format_properties(<span class="self">self</span>.raw, vk_format)
+<a href=#3145 id=3145 data-nosnippet>3145</a>        };
+<a href=#3146 id=3146 data-nosnippet>3146</a>        <span class="kw">let </span>features = properties.optimal_tiling_features;
+<a href=#3147 id=3147 data-nosnippet>3147</a>
+<a href=#3148 id=3148 data-nosnippet>3148</a>        <span class="kw">let </span><span class="kw-2">mut </span>flags = Tfc::empty();
+<a href=#3149 id=3149 data-nosnippet>3149</a>        flags.set(
+<a href=#3150 id=3150 data-nosnippet>3150</a>            Tfc::SAMPLED,
+<a href=#3151 id=3151 data-nosnippet>3151</a>            features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE),
+<a href=#3152 id=3152 data-nosnippet>3152</a>        );
+<a href=#3153 id=3153 data-nosnippet>3153</a>        flags.set(
+<a href=#3154 id=3154 data-nosnippet>3154</a>            Tfc::SAMPLED_LINEAR,
+<a href=#3155 id=3155 data-nosnippet>3155</a>            features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_LINEAR),
+<a href=#3156 id=3156 data-nosnippet>3156</a>        );
+<a href=#3157 id=3157 data-nosnippet>3157</a>        <span class="comment">// flags.set(
+<a href=#3158 id=3158 data-nosnippet>3158</a>        //     Tfc::SAMPLED_MINMAX,
+<a href=#3159 id=3159 data-nosnippet>3159</a>        //     features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_MINMAX),
+<a href=#3160 id=3160 data-nosnippet>3160</a>        // );
+<a href=#3161 id=3161 data-nosnippet>3161</a>        </span>flags.set(
+<a href=#3162 id=3162 data-nosnippet>3162</a>            Tfc::STORAGE_READ_WRITE
+<a href=#3163 id=3163 data-nosnippet>3163</a>                | Tfc::STORAGE_WRITE_ONLY
+<a href=#3164 id=3164 data-nosnippet>3164</a>                | Tfc::STORAGE_READ_ONLY
+<a href=#3165 id=3165 data-nosnippet>3165</a>                | Tfc::STORAGE_ATOMIC,
+<a href=#3166 id=3166 data-nosnippet>3166</a>            features.contains(vk::FormatFeatureFlags::STORAGE_IMAGE),
+<a href=#3167 id=3167 data-nosnippet>3167</a>        );
+<a href=#3168 id=3168 data-nosnippet>3168</a>        flags.set(
+<a href=#3169 id=3169 data-nosnippet>3169</a>            Tfc::STORAGE_ATOMIC,
+<a href=#3170 id=3170 data-nosnippet>3170</a>            features.contains(vk::FormatFeatureFlags::STORAGE_IMAGE_ATOMIC),
+<a href=#3171 id=3171 data-nosnippet>3171</a>        );
+<a href=#3172 id=3172 data-nosnippet>3172</a>        flags.set(
+<a href=#3173 id=3173 data-nosnippet>3173</a>            Tfc::COLOR_ATTACHMENT,
+<a href=#3174 id=3174 data-nosnippet>3174</a>            features.contains(vk::FormatFeatureFlags::COLOR_ATTACHMENT),
+<a href=#3175 id=3175 data-nosnippet>3175</a>        );
+<a href=#3176 id=3176 data-nosnippet>3176</a>        flags.set(
+<a href=#3177 id=3177 data-nosnippet>3177</a>            Tfc::COLOR_ATTACHMENT_BLEND,
+<a href=#3178 id=3178 data-nosnippet>3178</a>            features.contains(vk::FormatFeatureFlags::COLOR_ATTACHMENT_BLEND),
+<a href=#3179 id=3179 data-nosnippet>3179</a>        );
+<a href=#3180 id=3180 data-nosnippet>3180</a>        flags.set(
+<a href=#3181 id=3181 data-nosnippet>3181</a>            Tfc::DEPTH_STENCIL_ATTACHMENT,
+<a href=#3182 id=3182 data-nosnippet>3182</a>            features.contains(vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT),
+<a href=#3183 id=3183 data-nosnippet>3183</a>        );
+<a href=#3184 id=3184 data-nosnippet>3184</a>        flags.set(
+<a href=#3185 id=3185 data-nosnippet>3185</a>            Tfc::COPY_SRC,
+<a href=#3186 id=3186 data-nosnippet>3186</a>            features.intersects(vk::FormatFeatureFlags::TRANSFER_SRC),
+<a href=#3187 id=3187 data-nosnippet>3187</a>        );
+<a href=#3188 id=3188 data-nosnippet>3188</a>        flags.set(
+<a href=#3189 id=3189 data-nosnippet>3189</a>            Tfc::COPY_DST,
+<a href=#3190 id=3190 data-nosnippet>3190</a>            features.intersects(vk::FormatFeatureFlags::TRANSFER_DST),
+<a href=#3191 id=3191 data-nosnippet>3191</a>        );
+<a href=#3192 id=3192 data-nosnippet>3192</a>        flags.set(
+<a href=#3193 id=3193 data-nosnippet>3193</a>            Tfc::STORAGE_ATOMIC,
+<a href=#3194 id=3194 data-nosnippet>3194</a>            features.intersects(vk::FormatFeatureFlags::STORAGE_IMAGE_ATOMIC),
+<a href=#3195 id=3195 data-nosnippet>3195</a>        );
+<a href=#3196 id=3196 data-nosnippet>3196</a>        <span class="comment">// Vulkan is very permissive about MSAA
+<a href=#3197 id=3197 data-nosnippet>3197</a>        </span>flags.set(Tfc::MULTISAMPLE_RESOLVE, !format.is_compressed());
+<a href=#3198 id=3198 data-nosnippet>3198</a>
+<a href=#3199 id=3199 data-nosnippet>3199</a>        <span class="comment">// get the supported sample counts
+<a href=#3200 id=3200 data-nosnippet>3200</a>        </span><span class="kw">let </span>format_aspect = <span class="kw">crate</span>::FormatAspects::from(format);
+<a href=#3201 id=3201 data-nosnippet>3201</a>        <span class="kw">let </span>limits = <span class="self">self</span>.phd_capabilities.properties.limits;
+<a href=#3202 id=3202 data-nosnippet>3202</a>
+<a href=#3203 id=3203 data-nosnippet>3203</a>        <span class="kw">let </span>sample_flags = <span class="kw">if </span>format_aspect.contains(<span class="kw">crate</span>::FormatAspects::DEPTH) {
+<a href=#3204 id=3204 data-nosnippet>3204</a>            limits
+<a href=#3205 id=3205 data-nosnippet>3205</a>                .framebuffer_depth_sample_counts
+<a href=#3206 id=3206 data-nosnippet>3206</a>                .min(limits.sampled_image_depth_sample_counts)
+<a href=#3207 id=3207 data-nosnippet>3207</a>        } <span class="kw">else if </span>format_aspect.contains(<span class="kw">crate</span>::FormatAspects::STENCIL) {
+<a href=#3208 id=3208 data-nosnippet>3208</a>            limits
+<a href=#3209 id=3209 data-nosnippet>3209</a>                .framebuffer_stencil_sample_counts
+<a href=#3210 id=3210 data-nosnippet>3210</a>                .min(limits.sampled_image_stencil_sample_counts)
+<a href=#3211 id=3211 data-nosnippet>3211</a>        } <span class="kw">else </span>{
+<a href=#3212 id=3212 data-nosnippet>3212</a>            <span class="kw">let </span>first_aspect = format_aspect
+<a href=#3213 id=3213 data-nosnippet>3213</a>                .iter()
+<a href=#3214 id=3214 data-nosnippet>3214</a>                .next()
+<a href=#3215 id=3215 data-nosnippet>3215</a>                .expect(<span class="string">"All texture should at least one aspect"</span>)
+<a href=#3216 id=3216 data-nosnippet>3216</a>                .map();
+<a href=#3217 id=3217 data-nosnippet>3217</a>
+<a href=#3218 id=3218 data-nosnippet>3218</a>            <span class="comment">// We should never get depth or stencil out of this, due to the above.
+<a href=#3219 id=3219 data-nosnippet>3219</a>            </span><span class="macro">assert_ne!</span>(first_aspect, wgt::TextureAspect::DepthOnly);
+<a href=#3220 id=3220 data-nosnippet>3220</a>            <span class="macro">assert_ne!</span>(first_aspect, wgt::TextureAspect::StencilOnly);
+<a href=#3221 id=3221 data-nosnippet>3221</a>
+<a href=#3222 id=3222 data-nosnippet>3222</a>            <span class="kw">match </span>format.sample_type(<span class="prelude-val">Some</span>(first_aspect), <span class="prelude-val">None</span>).unwrap() {
+<a href=#3223 id=3223 data-nosnippet>3223</a>                wgt::TextureSampleType::Float { .. } =&gt; limits
+<a href=#3224 id=3224 data-nosnippet>3224</a>                    .framebuffer_color_sample_counts
+<a href=#3225 id=3225 data-nosnippet>3225</a>                    .min(limits.sampled_image_color_sample_counts),
+<a href=#3226 id=3226 data-nosnippet>3226</a>                wgt::TextureSampleType::Sint | wgt::TextureSampleType::Uint =&gt; {
+<a href=#3227 id=3227 data-nosnippet>3227</a>                    limits.sampled_image_integer_sample_counts
+<a href=#3228 id=3228 data-nosnippet>3228</a>                }
+<a href=#3229 id=3229 data-nosnippet>3229</a>                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+<a href=#3230 id=3230 data-nosnippet>3230</a>            }
+<a href=#3231 id=3231 data-nosnippet>3231</a>        };
+<a href=#3232 id=3232 data-nosnippet>3232</a>
+<a href=#3233 id=3233 data-nosnippet>3233</a>        flags.set(
+<a href=#3234 id=3234 data-nosnippet>3234</a>            Tfc::MULTISAMPLE_X2,
+<a href=#3235 id=3235 data-nosnippet>3235</a>            sample_flags.contains(vk::SampleCountFlags::TYPE_2),
+<a href=#3236 id=3236 data-nosnippet>3236</a>        );
+<a href=#3237 id=3237 data-nosnippet>3237</a>        flags.set(
+<a href=#3238 id=3238 data-nosnippet>3238</a>            Tfc::MULTISAMPLE_X4,
+<a href=#3239 id=3239 data-nosnippet>3239</a>            sample_flags.contains(vk::SampleCountFlags::TYPE_4),
+<a href=#3240 id=3240 data-nosnippet>3240</a>        );
+<a href=#3241 id=3241 data-nosnippet>3241</a>        flags.set(
+<a href=#3242 id=3242 data-nosnippet>3242</a>            Tfc::MULTISAMPLE_X8,
+<a href=#3243 id=3243 data-nosnippet>3243</a>            sample_flags.contains(vk::SampleCountFlags::TYPE_8),
+<a href=#3244 id=3244 data-nosnippet>3244</a>        );
+<a href=#3245 id=3245 data-nosnippet>3245</a>        flags.set(
+<a href=#3246 id=3246 data-nosnippet>3246</a>            Tfc::MULTISAMPLE_X16,
+<a href=#3247 id=3247 data-nosnippet>3247</a>            sample_flags.contains(vk::SampleCountFlags::TYPE_16),
+<a href=#3248 id=3248 data-nosnippet>3248</a>        );
+<a href=#3249 id=3249 data-nosnippet>3249</a>
+<a href=#3250 id=3250 data-nosnippet>3250</a>        flags
+<a href=#3251 id=3251 data-nosnippet>3251</a>    }
+<a href=#3252 id=3252 data-nosnippet>3252</a>
+<a href=#3253 id=3253 data-nosnippet>3253</a>    <span class="kw">unsafe fn </span>surface_capabilities(
+<a href=#3254 id=3254 data-nosnippet>3254</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#3255 id=3255 data-nosnippet>3255</a>        surface: <span class="kw-2">&amp;</span><span class="kw">super</span>::Surface,
+<a href=#3256 id=3256 data-nosnippet>3256</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::SurfaceCapabilities&gt; {
+<a href=#3257 id=3257 data-nosnippet>3257</a>        surface.inner.surface_capabilities(<span class="self">self</span>)
+<a href=#3258 id=3258 data-nosnippet>3258</a>    }
+<a href=#3259 id=3259 data-nosnippet>3259</a>
+<a href=#3260 id=3260 data-nosnippet>3260</a>    <span class="kw">unsafe fn </span>surface_display_hdr_info(
+<a href=#3261 id=3261 data-nosnippet>3261</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#3262 id=3262 data-nosnippet>3262</a>        surface: <span class="kw-2">&amp;</span><span class="kw">super</span>::Surface,
+<a href=#3263 id=3263 data-nosnippet>3263</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::DisplayHdrInfo&gt; {
+<a href=#3264 id=3264 data-nosnippet>3264</a>        <span class="comment">// Vulkan has no portable luminance query; the Win32 surface reads it
+<a href=#3265 id=3265 data-nosnippet>3265</a>        // through DXGI (see `dxgi::hdr`). Every other surface reports `None`.
+<a href=#3266 id=3266 data-nosnippet>3266</a>        </span>surface.inner.display_hdr_info()
+<a href=#3267 id=3267 data-nosnippet>3267</a>    }
+<a href=#3268 id=3268 data-nosnippet>3268</a>
+<a href=#3269 id=3269 data-nosnippet>3269</a>    <span class="kw">unsafe fn </span>get_presentation_timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::PresentationTimestamp {
+<a href=#3270 id=3270 data-nosnippet>3270</a>        <span class="comment">// VK_GOOGLE_display_timing is the only way to get presentation
+<a href=#3271 id=3271 data-nosnippet>3271</a>        // timestamps on vulkan right now and it is only ever available
+<a href=#3272 id=3272 data-nosnippet>3272</a>        // on android and linux. This includes mac, but there's no alternative
+<a href=#3273 id=3273 data-nosnippet>3273</a>        // on mac, so this is fine.
+<a href=#3274 id=3274 data-nosnippet>3274</a>        </span><span class="attr">#[cfg(unix)]
+<a href=#3275 id=3275 data-nosnippet>3275</a>        </span>{
+<a href=#3276 id=3276 data-nosnippet>3276</a>            <span class="kw">let </span><span class="kw-2">mut </span>timespec = libc::timespec::default();
+<a href=#3277 id=3277 data-nosnippet>3277</a>            <span class="kw">unsafe </span>{
+<a href=#3278 id=3278 data-nosnippet>3278</a>                libc::clock_gettime(libc::CLOCK_MONOTONIC, <span class="kw-2">&amp;mut </span>timespec);
+<a href=#3279 id=3279 data-nosnippet>3279</a>            }
+<a href=#3280 id=3280 data-nosnippet>3280</a>
+<a href=#3281 id=3281 data-nosnippet>3281</a>            wgt::PresentationTimestamp(
+<a href=#3282 id=3282 data-nosnippet>3282</a>                timespec.tv_sec <span class="kw">as </span>u128 * <span class="number">1_000_000_000 </span>+ timespec.tv_nsec <span class="kw">as </span>u128,
+<a href=#3283 id=3283 data-nosnippet>3283</a>            )
+<a href=#3284 id=3284 data-nosnippet>3284</a>        }
+<a href=#3285 id=3285 data-nosnippet>3285</a>        <span class="attr">#[cfg(not(unix))]
+<a href=#3286 id=3286 data-nosnippet>3286</a>        </span>{
+<a href=#3287 id=3287 data-nosnippet>3287</a>            wgt::PresentationTimestamp::INVALID_TIMESTAMP
+<a href=#3288 id=3288 data-nosnippet>3288</a>        }
+<a href=#3289 id=3289 data-nosnippet>3289</a>    }
+<a href=#3290 id=3290 data-nosnippet>3290</a>
+<a href=#3291 id=3291 data-nosnippet>3291</a>    <span class="kw">fn </span>get_ordered_buffer_usages(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::BufferUses {
+<a href=#3292 id=3292 data-nosnippet>3292</a>        wgt::BufferUses::INCLUSIVE | wgt::BufferUses::MAP_WRITE
+<a href=#3293 id=3293 data-nosnippet>3293</a>    }
+<a href=#3294 id=3294 data-nosnippet>3294</a>
+<a href=#3295 id=3295 data-nosnippet>3295</a>    <span class="comment">// Vulkan makes very few execution ordering guarantees
+<a href=#3296 id=3296 data-nosnippet>3296</a>    // see https://registry.khronos.org/vulkan/specs/latest/html/vkspec.html#synchronization-implicit
+<a href=#3297 id=3297 data-nosnippet>3297</a>    // We just don't want to insert barriers between inclusive uses
+<a href=#3298 id=3298 data-nosnippet>3298</a>    // See https://github.com/gfx-rs/wgpu/issues/8853
+<a href=#3299 id=3299 data-nosnippet>3299</a>    </span><span class="kw">fn </span>get_ordered_texture_usages(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::TextureUses {
+<a href=#3300 id=3300 data-nosnippet>3300</a>        wgt::TextureUses::INCLUSIVE
+<a href=#3301 id=3301 data-nosnippet>3301</a>    }
+<a href=#3302 id=3302 data-nosnippet>3302</a>}
+<a href=#3303 id=3303 data-nosnippet>3303</a>
+<a href=#3304 id=3304 data-nosnippet>3304</a><span class="kw">fn </span>is_format_16bit_norm_supported(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
+<a href=#3305 id=3305 data-nosnippet>3305</a>    [
+<a href=#3306 id=3306 data-nosnippet>3306</a>        vk::Format::R16_UNORM,
+<a href=#3307 id=3307 data-nosnippet>3307</a>        vk::Format::R16_SNORM,
+<a href=#3308 id=3308 data-nosnippet>3308</a>        vk::Format::R16G16_UNORM,
+<a href=#3309 id=3309 data-nosnippet>3309</a>        vk::Format::R16G16_SNORM,
+<a href=#3310 id=3310 data-nosnippet>3310</a>        vk::Format::R16G16B16A16_UNORM,
+<a href=#3311 id=3311 data-nosnippet>3311</a>        vk::Format::R16G16B16A16_SNORM,
+<a href=#3312 id=3312 data-nosnippet>3312</a>    ]
+<a href=#3313 id=3313 data-nosnippet>3313</a>    .into_iter()
+<a href=#3314 id=3314 data-nosnippet>3314</a>    .all(|format| {
+<a href=#3315 id=3315 data-nosnippet>3315</a>        supports_format(
+<a href=#3316 id=3316 data-nosnippet>3316</a>            instance,
+<a href=#3317 id=3317 data-nosnippet>3317</a>            phd,
+<a href=#3318 id=3318 data-nosnippet>3318</a>            format,
+<a href=#3319 id=3319 data-nosnippet>3319</a>            vk::ImageTiling::OPTIMAL,
+<a href=#3320 id=3320 data-nosnippet>3320</a>            vk::FormatFeatureFlags::SAMPLED_IMAGE
+<a href=#3321 id=3321 data-nosnippet>3321</a>                | vk::FormatFeatureFlags::STORAGE_IMAGE
+<a href=#3322 id=3322 data-nosnippet>3322</a>                | vk::FormatFeatureFlags::TRANSFER_SRC
+<a href=#3323 id=3323 data-nosnippet>3323</a>                | vk::FormatFeatureFlags::TRANSFER_DST,
+<a href=#3324 id=3324 data-nosnippet>3324</a>        )
+<a href=#3325 id=3325 data-nosnippet>3325</a>    })
+<a href=#3326 id=3326 data-nosnippet>3326</a>}
+<a href=#3327 id=3327 data-nosnippet>3327</a>
+<a href=#3328 id=3328 data-nosnippet>3328</a><span class="kw">fn </span>is_float32_filterable_supported(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
+<a href=#3329 id=3329 data-nosnippet>3329</a>    [
+<a href=#3330 id=3330 data-nosnippet>3330</a>        vk::Format::R32_SFLOAT,
+<a href=#3331 id=3331 data-nosnippet>3331</a>        vk::Format::R32G32_SFLOAT,
+<a href=#3332 id=3332 data-nosnippet>3332</a>        vk::Format::R32G32B32A32_SFLOAT,
+<a href=#3333 id=3333 data-nosnippet>3333</a>    ]
+<a href=#3334 id=3334 data-nosnippet>3334</a>    .into_iter()
+<a href=#3335 id=3335 data-nosnippet>3335</a>    .all(|format| {
+<a href=#3336 id=3336 data-nosnippet>3336</a>        supports_format(
+<a href=#3337 id=3337 data-nosnippet>3337</a>            instance,
+<a href=#3338 id=3338 data-nosnippet>3338</a>            phd,
+<a href=#3339 id=3339 data-nosnippet>3339</a>            format,
+<a href=#3340 id=3340 data-nosnippet>3340</a>            vk::ImageTiling::OPTIMAL,
+<a href=#3341 id=3341 data-nosnippet>3341</a>            vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_LINEAR,
+<a href=#3342 id=3342 data-nosnippet>3342</a>        )
+<a href=#3343 id=3343 data-nosnippet>3343</a>    })
+<a href=#3344 id=3344 data-nosnippet>3344</a>}
+<a href=#3345 id=3345 data-nosnippet>3345</a>
+<a href=#3346 id=3346 data-nosnippet>3346</a><span class="kw">fn </span>is_float32_blendable_supported(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
+<a href=#3347 id=3347 data-nosnippet>3347</a>    [
+<a href=#3348 id=3348 data-nosnippet>3348</a>        vk::Format::R32_SFLOAT,
+<a href=#3349 id=3349 data-nosnippet>3349</a>        vk::Format::R32G32_SFLOAT,
+<a href=#3350 id=3350 data-nosnippet>3350</a>        vk::Format::R32G32B32A32_SFLOAT,
+<a href=#3351 id=3351 data-nosnippet>3351</a>    ]
+<a href=#3352 id=3352 data-nosnippet>3352</a>    .into_iter()
+<a href=#3353 id=3353 data-nosnippet>3353</a>    .all(|format| {
+<a href=#3354 id=3354 data-nosnippet>3354</a>        supports_format(
+<a href=#3355 id=3355 data-nosnippet>3355</a>            instance,
+<a href=#3356 id=3356 data-nosnippet>3356</a>            phd,
+<a href=#3357 id=3357 data-nosnippet>3357</a>            format,
+<a href=#3358 id=3358 data-nosnippet>3358</a>            vk::ImageTiling::OPTIMAL,
+<a href=#3359 id=3359 data-nosnippet>3359</a>            vk::FormatFeatureFlags::COLOR_ATTACHMENT_BLEND,
+<a href=#3360 id=3360 data-nosnippet>3360</a>        )
+<a href=#3361 id=3361 data-nosnippet>3361</a>    })
+<a href=#3362 id=3362 data-nosnippet>3362</a>}
+<a href=#3363 id=3363 data-nosnippet>3363</a>
+<a href=#3364 id=3364 data-nosnippet>3364</a><span class="kw">fn </span>supports_format(
+<a href=#3365 id=3365 data-nosnippet>3365</a>    instance: <span class="kw-2">&amp;</span>ash::Instance,
+<a href=#3366 id=3366 data-nosnippet>3366</a>    phd: vk::PhysicalDevice,
+<a href=#3367 id=3367 data-nosnippet>3367</a>    format: vk::Format,
+<a href=#3368 id=3368 data-nosnippet>3368</a>    tiling: vk::ImageTiling,
+<a href=#3369 id=3369 data-nosnippet>3369</a>    features: vk::FormatFeatureFlags,
+<a href=#3370 id=3370 data-nosnippet>3370</a>) -&gt; bool {
+<a href=#3371 id=3371 data-nosnippet>3371</a>    <span class="kw">let </span>properties = <span class="kw">unsafe </span>{ instance.get_physical_device_format_properties(phd, format) };
+<a href=#3372 id=3372 data-nosnippet>3372</a>    <span class="kw">match </span>tiling {
+<a href=#3373 id=3373 data-nosnippet>3373</a>        vk::ImageTiling::LINEAR =&gt; properties.linear_tiling_features.contains(features),
+<a href=#3374 id=3374 data-nosnippet>3374</a>        vk::ImageTiling::OPTIMAL =&gt; properties.optimal_tiling_features.contains(features),
+<a href=#3375 id=3375 data-nosnippet>3375</a>        <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+<a href=#3376 id=3376 data-nosnippet>3376</a>    }
+<a href=#3377 id=3377 data-nosnippet>3377</a>}
+<a href=#3378 id=3378 data-nosnippet>3378</a>
+<a href=#3379 id=3379 data-nosnippet>3379</a><span class="kw">fn </span>supports_astc_3d(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
+<a href=#3380 id=3380 data-nosnippet>3380</a>    [
+<a href=#3381 id=3381 data-nosnippet>3381</a>        vk::Format::ASTC_4X4_UNORM_BLOCK,
+<a href=#3382 id=3382 data-nosnippet>3382</a>        vk::Format::ASTC_4X4_SRGB_BLOCK,
+<a href=#3383 id=3383 data-nosnippet>3383</a>        vk::Format::ASTC_5X4_UNORM_BLOCK,
+<a href=#3384 id=3384 data-nosnippet>3384</a>        vk::Format::ASTC_5X4_SRGB_BLOCK,
+<a href=#3385 id=3385 data-nosnippet>3385</a>        vk::Format::ASTC_5X5_UNORM_BLOCK,
+<a href=#3386 id=3386 data-nosnippet>3386</a>        vk::Format::ASTC_5X5_SRGB_BLOCK,
+<a href=#3387 id=3387 data-nosnippet>3387</a>        vk::Format::ASTC_6X5_UNORM_BLOCK,
+<a href=#3388 id=3388 data-nosnippet>3388</a>        vk::Format::ASTC_6X5_SRGB_BLOCK,
+<a href=#3389 id=3389 data-nosnippet>3389</a>        vk::Format::ASTC_6X6_UNORM_BLOCK,
+<a href=#3390 id=3390 data-nosnippet>3390</a>        vk::Format::ASTC_6X6_SRGB_BLOCK,
+<a href=#3391 id=3391 data-nosnippet>3391</a>        vk::Format::ASTC_8X5_UNORM_BLOCK,
+<a href=#3392 id=3392 data-nosnippet>3392</a>        vk::Format::ASTC_8X5_SRGB_BLOCK,
+<a href=#3393 id=3393 data-nosnippet>3393</a>        vk::Format::ASTC_8X6_UNORM_BLOCK,
+<a href=#3394 id=3394 data-nosnippet>3394</a>        vk::Format::ASTC_8X6_SRGB_BLOCK,
+<a href=#3395 id=3395 data-nosnippet>3395</a>        vk::Format::ASTC_8X8_UNORM_BLOCK,
+<a href=#3396 id=3396 data-nosnippet>3396</a>        vk::Format::ASTC_8X8_SRGB_BLOCK,
+<a href=#3397 id=3397 data-nosnippet>3397</a>        vk::Format::ASTC_10X5_UNORM_BLOCK,
+<a href=#3398 id=3398 data-nosnippet>3398</a>        vk::Format::ASTC_10X5_SRGB_BLOCK,
+<a href=#3399 id=3399 data-nosnippet>3399</a>        vk::Format::ASTC_10X6_UNORM_BLOCK,
+<a href=#3400 id=3400 data-nosnippet>3400</a>        vk::Format::ASTC_10X6_SRGB_BLOCK,
+<a href=#3401 id=3401 data-nosnippet>3401</a>        vk::Format::ASTC_10X8_UNORM_BLOCK,
+<a href=#3402 id=3402 data-nosnippet>3402</a>        vk::Format::ASTC_10X8_SRGB_BLOCK,
+<a href=#3403 id=3403 data-nosnippet>3403</a>        vk::Format::ASTC_10X10_UNORM_BLOCK,
+<a href=#3404 id=3404 data-nosnippet>3404</a>        vk::Format::ASTC_10X10_SRGB_BLOCK,
+<a href=#3405 id=3405 data-nosnippet>3405</a>        vk::Format::ASTC_12X10_UNORM_BLOCK,
+<a href=#3406 id=3406 data-nosnippet>3406</a>        vk::Format::ASTC_12X10_SRGB_BLOCK,
+<a href=#3407 id=3407 data-nosnippet>3407</a>        vk::Format::ASTC_12X12_UNORM_BLOCK,
+<a href=#3408 id=3408 data-nosnippet>3408</a>        vk::Format::ASTC_12X12_SRGB_BLOCK,
+<a href=#3409 id=3409 data-nosnippet>3409</a>    ]
+<a href=#3410 id=3410 data-nosnippet>3410</a>    .into_iter()
+<a href=#3411 id=3411 data-nosnippet>3411</a>    .all(|format| {
+<a href=#3412 id=3412 data-nosnippet>3412</a>        <span class="kw">unsafe </span>{
+<a href=#3413 id=3413 data-nosnippet>3413</a>            instance.get_physical_device_image_format_properties(
+<a href=#3414 id=3414 data-nosnippet>3414</a>                phd,
+<a href=#3415 id=3415 data-nosnippet>3415</a>                format,
+<a href=#3416 id=3416 data-nosnippet>3416</a>                vk::ImageType::TYPE_3D,
+<a href=#3417 id=3417 data-nosnippet>3417</a>                vk::ImageTiling::OPTIMAL,
+<a href=#3418 id=3418 data-nosnippet>3418</a>                vk::ImageUsageFlags::SAMPLED,
+<a href=#3419 id=3419 data-nosnippet>3419</a>                vk::ImageCreateFlags::empty(),
+<a href=#3420 id=3420 data-nosnippet>3420</a>            )
+<a href=#3421 id=3421 data-nosnippet>3421</a>        }
+<a href=#3422 id=3422 data-nosnippet>3422</a>        .is_ok()
+<a href=#3423 id=3423 data-nosnippet>3423</a>    })
+<a href=#3424 id=3424 data-nosnippet>3424</a>}
+<a href=#3425 id=3425 data-nosnippet>3425</a>
+<a href=#3426 id=3426 data-nosnippet>3426</a><span class="kw">fn </span>supports_bgra8unorm_storage(
+<a href=#3427 id=3427 data-nosnippet>3427</a>    instance: <span class="kw-2">&amp;</span>ash::Instance,
+<a href=#3428 id=3428 data-nosnippet>3428</a>    phd: vk::PhysicalDevice,
+<a href=#3429 id=3429 data-nosnippet>3429</a>    device_api_version: u32,
+<a href=#3430 id=3430 data-nosnippet>3430</a>) -&gt; bool {
+<a href=#3431 id=3431 data-nosnippet>3431</a>    <span class="comment">// See https://github.com/KhronosGroup/Vulkan-Docs/issues/2027#issuecomment-1380608011
+<a href=#3432 id=3432 data-nosnippet>3432</a>
+<a href=#3433 id=3433 data-nosnippet>3433</a>    // This check gates the function call and structures used below.
+<a href=#3434 id=3434 data-nosnippet>3434</a>    // TODO: check for (`VK_KHR_get_physical_device_properties2` or VK1.1) and (`VK_KHR_format_feature_flags2` or VK1.3).
+<a href=#3435 id=3435 data-nosnippet>3435</a>    // Right now we only check for VK1.3.
+<a href=#3436 id=3436 data-nosnippet>3436</a>    </span><span class="kw">if </span>device_api_version &lt; vk::API_VERSION_1_3 {
+<a href=#3437 id=3437 data-nosnippet>3437</a>        <span class="kw">return </span><span class="bool-val">false</span>;
+<a href=#3438 id=3438 data-nosnippet>3438</a>    }
+<a href=#3439 id=3439 data-nosnippet>3439</a>
+<a href=#3440 id=3440 data-nosnippet>3440</a>    <span class="kw">unsafe </span>{
+<a href=#3441 id=3441 data-nosnippet>3441</a>        <span class="kw">let </span><span class="kw-2">mut </span>properties3 = vk::FormatProperties3::default();
+<a href=#3442 id=3442 data-nosnippet>3442</a>        <span class="kw">let </span><span class="kw-2">mut </span>properties2 = vk::FormatProperties2::default().push_next(<span class="kw-2">&amp;mut </span>properties3);
+<a href=#3443 id=3443 data-nosnippet>3443</a>
+<a href=#3444 id=3444 data-nosnippet>3444</a>        instance.get_physical_device_format_properties2(
+<a href=#3445 id=3445 data-nosnippet>3445</a>            phd,
+<a href=#3446 id=3446 data-nosnippet>3446</a>            vk::Format::B8G8R8A8_UNORM,
+<a href=#3447 id=3447 data-nosnippet>3447</a>            <span class="kw-2">&amp;mut </span>properties2,
+<a href=#3448 id=3448 data-nosnippet>3448</a>        );
+<a href=#3449 id=3449 data-nosnippet>3449</a>
+<a href=#3450 id=3450 data-nosnippet>3450</a>        <span class="kw">let </span>features2 = properties2.format_properties.optimal_tiling_features;
+<a href=#3451 id=3451 data-nosnippet>3451</a>        <span class="kw">let </span>features3 = properties3.optimal_tiling_features;
+<a href=#3452 id=3452 data-nosnippet>3452</a>
+<a href=#3453 id=3453 data-nosnippet>3453</a>        features2.contains(vk::FormatFeatureFlags::STORAGE_IMAGE)
+<a href=#3454 id=3454 data-nosnippet>3454</a>            &amp;&amp; features3.contains(vk::FormatFeatureFlags2::STORAGE_WRITE_WITHOUT_FORMAT)
+<a href=#3455 id=3455 data-nosnippet>3455</a>    }
+<a href=#3456 id=3456 data-nosnippet>3456</a>}
+<a href=#3457 id=3457 data-nosnippet>3457</a>
+<a href=#3458 id=3458 data-nosnippet>3458</a><span class="comment">// For https://github.com/gfx-rs/wgpu/issues/4599
+<a href=#3459 id=3459 data-nosnippet>3459</a>// Intel iGPUs with outdated drivers can break rendering if `VK_EXT_robustness2` is used.
+<a href=#3460 id=3460 data-nosnippet>3460</a>// Driver version 31.0.101.2115 works, but there's probably an earlier functional version.
+<a href=#3461 id=3461 data-nosnippet>3461</a></span><span class="kw">fn </span>is_intel_igpu_outdated_for_robustness2(capabilities: <span class="kw-2">&amp;</span>PhysicalDeviceProperties) -&gt; bool {
+<a href=#3462 id=3462 data-nosnippet>3462</a>    <span class="kw">const </span>DRIVER_VERSION_WORKING: u32 = (<span class="number">101 </span>&lt;&lt; <span class="number">14</span>) | <span class="number">2115</span>; <span class="comment">// X.X.101.2115
+<a href=#3463 id=3463 data-nosnippet>3463</a>
+<a href=#3464 id=3464 data-nosnippet>3464</a>    </span><span class="kw">let </span>props = <span class="kw-2">&amp;</span>capabilities.properties;
+<a href=#3465 id=3465 data-nosnippet>3465</a>
+<a href=#3466 id=3466 data-nosnippet>3466</a>    <span class="kw">let </span>is_outdated = props.vendor_id == <span class="kw">crate</span>::auxil::db::intel::VENDOR
+<a href=#3467 id=3467 data-nosnippet>3467</a>        &amp;&amp; props.device_type == vk::PhysicalDeviceType::INTEGRATED_GPU
+<a href=#3468 id=3468 data-nosnippet>3468</a>        &amp;&amp; props.driver_version &lt; DRIVER_VERSION_WORKING
+<a href=#3469 id=3469 data-nosnippet>3469</a>        &amp;&amp; capabilities.is_driver(vk::DriverId::INTEL_PROPRIETARY_WINDOWS);
+<a href=#3470 id=3470 data-nosnippet>3470</a>
+<a href=#3471 id=3471 data-nosnippet>3471</a>    <span class="kw">if </span>is_outdated {
+<a href=#3472 id=3472 data-nosnippet>3472</a>        <span class="macro">log::debug!</span>(
+<a href=#3473 id=3473 data-nosnippet>3473</a>            <span class="string">"Disabling robustBufferAccess2 and robustImageAccess2: IntegratedGpu Intel Driver is outdated. Found with version 0x{:X}, less than the known good version 0x{:X} (31.0.101.2115)"</span>,
+<a href=#3474 id=3474 data-nosnippet>3474</a>            props.driver_version,
+<a href=#3475 id=3475 data-nosnippet>3475</a>            DRIVER_VERSION_WORKING
+<a href=#3476 id=3476 data-nosnippet>3476</a>        );
+<a href=#3477 id=3477 data-nosnippet>3477</a>    }
+<a href=#3478 id=3478 data-nosnippet>3478</a>    is_outdated
+<a href=#3479 id=3479 data-nosnippet>3479</a>}
+<a href=#3480 id=3480 data-nosnippet>3480</a>
+<a href=#3481 id=3481 data-nosnippet>3481</a><span class="doccomment">/// Convert Vulkan component type to wgt::CooperativeScalarType.
+<a href=#3482 id=3482 data-nosnippet>3482</a></span><span class="kw">fn </span>map_vk_component_type(ty: vk::ComponentTypeKHR) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::CooperativeScalarType&gt; {
+<a href=#3483 id=3483 data-nosnippet>3483</a>    <span class="kw">match </span>ty {
+<a href=#3484 id=3484 data-nosnippet>3484</a>        vk::ComponentTypeKHR::FLOAT16 =&gt; <span class="prelude-val">Some</span>(wgt::CooperativeScalarType::F16),
+<a href=#3485 id=3485 data-nosnippet>3485</a>        vk::ComponentTypeKHR::FLOAT32 =&gt; <span class="prelude-val">Some</span>(wgt::CooperativeScalarType::F32),
+<a href=#3486 id=3486 data-nosnippet>3486</a>        vk::ComponentTypeKHR::SINT32 =&gt; <span class="prelude-val">Some</span>(wgt::CooperativeScalarType::I32),
+<a href=#3487 id=3487 data-nosnippet>3487</a>        vk::ComponentTypeKHR::UINT32 =&gt; <span class="prelude-val">Some</span>(wgt::CooperativeScalarType::U32),
+<a href=#3488 id=3488 data-nosnippet>3488</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#3489 id=3489 data-nosnippet>3489</a>    }
+<a href=#3490 id=3490 data-nosnippet>3490</a>}
+<a href=#3491 id=3491 data-nosnippet>3491</a>
+<a href=#3492 id=3492 data-nosnippet>3492</a><span class="doccomment">/// Convert Vulkan matrix size.
+<a href=#3493 id=3493 data-nosnippet>3493</a></span><span class="kw">fn </span>map_vk_cooperative_size(size: u32) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+<a href=#3494 id=3494 data-nosnippet>3494</a>    <span class="kw">match </span>size {
+<a href=#3495 id=3495 data-nosnippet>3495</a>        <span class="number">8 </span>| <span class="number">16 </span>=&gt; <span class="prelude-val">Some</span>(size),
+<a href=#3496 id=3496 data-nosnippet>3496</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#3497 id=3497 data-nosnippet>3497</a>    }
+<a href=#3498 id=3498 data-nosnippet>3498</a>}
+<a href=#3499 id=3499 data-nosnippet>3499</a>
+<a href=#3500 id=3500 data-nosnippet>3500</a><span class="doccomment">/// Query all supported cooperative matrix configurations from Vulkan.
+<a href=#3501 id=3501 data-nosnippet>3501</a></span><span class="kw">fn </span>query_cooperative_matrix_properties(
+<a href=#3502 id=3502 data-nosnippet>3502</a>    coop_matrix: <span class="kw-2">&amp;</span>khr::cooperative_matrix::Instance,
+<a href=#3503 id=3503 data-nosnippet>3503</a>    phd: vk::PhysicalDevice,
+<a href=#3504 id=3504 data-nosnippet>3504</a>) -&gt; Vec&lt;wgt::CooperativeMatrixProperties&gt; {
+<a href=#3505 id=3505 data-nosnippet>3505</a>    <span class="kw">let </span>vk_properties =
+<a href=#3506 id=3506 data-nosnippet>3506</a>        <span class="kw">match unsafe </span>{ coop_matrix.get_physical_device_cooperative_matrix_properties(phd) } {
+<a href=#3507 id=3507 data-nosnippet>3507</a>            <span class="prelude-val">Ok</span>(props) =&gt; props,
+<a href=#3508 id=3508 data-nosnippet>3508</a>            <span class="prelude-val">Err</span>(e) =&gt; {
+<a href=#3509 id=3509 data-nosnippet>3509</a>                <span class="macro">log::warn!</span>(<span class="string">"Failed to query cooperative matrix properties: {e:?}"</span>);
+<a href=#3510 id=3510 data-nosnippet>3510</a>                <span class="kw">return </span>Vec::new();
+<a href=#3511 id=3511 data-nosnippet>3511</a>            }
+<a href=#3512 id=3512 data-nosnippet>3512</a>        };
+<a href=#3513 id=3513 data-nosnippet>3513</a>
+<a href=#3514 id=3514 data-nosnippet>3514</a>    <span class="macro">log::debug!</span>(
+<a href=#3515 id=3515 data-nosnippet>3515</a>        <span class="string">"Vulkan reports {} cooperative matrix configurations"</span>,
+<a href=#3516 id=3516 data-nosnippet>3516</a>        vk_properties.len()
+<a href=#3517 id=3517 data-nosnippet>3517</a>    );
+<a href=#3518 id=3518 data-nosnippet>3518</a>
+<a href=#3519 id=3519 data-nosnippet>3519</a>    <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::new();
+<a href=#3520 id=3520 data-nosnippet>3520</a>    <span class="kw">for </span>prop <span class="kw">in </span><span class="kw-2">&amp;</span>vk_properties {
+<a href=#3521 id=3521 data-nosnippet>3521</a>        <span class="macro">log::debug!</span>(
+<a href=#3522 id=3522 data-nosnippet>3522</a>            <span class="string">"  Vulkan coop matrix: M={} N={} K={} A={:?} B={:?} C={:?} Result={:?} scope={:?} saturating={}"</span>,
+<a href=#3523 id=3523 data-nosnippet>3523</a>            prop.m_size,
+<a href=#3524 id=3524 data-nosnippet>3524</a>            prop.n_size,
+<a href=#3525 id=3525 data-nosnippet>3525</a>            prop.k_size,
+<a href=#3526 id=3526 data-nosnippet>3526</a>            prop.a_type,
+<a href=#3527 id=3527 data-nosnippet>3527</a>            prop.b_type,
+<a href=#3528 id=3528 data-nosnippet>3528</a>            prop.c_type,
+<a href=#3529 id=3529 data-nosnippet>3529</a>            prop.result_type,
+<a href=#3530 id=3530 data-nosnippet>3530</a>            prop.scope,
+<a href=#3531 id=3531 data-nosnippet>3531</a>            prop.saturating_accumulation
+<a href=#3532 id=3532 data-nosnippet>3532</a>        );
+<a href=#3533 id=3533 data-nosnippet>3533</a>
+<a href=#3534 id=3534 data-nosnippet>3534</a>        <span class="comment">// Only include subgroup-scoped operations (the only scope we support)
+<a href=#3535 id=3535 data-nosnippet>3535</a>        </span><span class="kw">if </span>prop.<span class="macro">scope !</span>= vk::ScopeKHR::SUBGROUP {
+<a href=#3536 id=3536 data-nosnippet>3536</a>            <span class="macro">log::debug!</span>(<span class="string">"    Skipped: scope is not SUBGROUP"</span>);
+<a href=#3537 id=3537 data-nosnippet>3537</a>            <span class="kw">continue</span>;
+<a href=#3538 id=3538 data-nosnippet>3538</a>        }
+<a href=#3539 id=3539 data-nosnippet>3539</a>
+<a href=#3540 id=3540 data-nosnippet>3540</a>        <span class="comment">// Map sizes - skip configurations with sizes we don't support
+<a href=#3541 id=3541 data-nosnippet>3541</a>        </span><span class="kw">let </span>m_size = <span class="kw">match </span>map_vk_cooperative_size(prop.m_size) {
+<a href=#3542 id=3542 data-nosnippet>3542</a>            <span class="prelude-val">Some</span>(s) =&gt; s,
+<a href=#3543 id=3543 data-nosnippet>3543</a>            <span class="prelude-val">None </span>=&gt; {
+<a href=#3544 id=3544 data-nosnippet>3544</a>                <span class="macro">log::debug!</span>(<span class="string">"    Skipped: M size {} not supported"</span>, prop.m_size);
+<a href=#3545 id=3545 data-nosnippet>3545</a>                <span class="kw">continue</span>;
+<a href=#3546 id=3546 data-nosnippet>3546</a>            }
+<a href=#3547 id=3547 data-nosnippet>3547</a>        };
+<a href=#3548 id=3548 data-nosnippet>3548</a>        <span class="kw">let </span>n_size = <span class="kw">match </span>map_vk_cooperative_size(prop.n_size) {
+<a href=#3549 id=3549 data-nosnippet>3549</a>            <span class="prelude-val">Some</span>(s) =&gt; s,
+<a href=#3550 id=3550 data-nosnippet>3550</a>            <span class="prelude-val">None </span>=&gt; {
+<a href=#3551 id=3551 data-nosnippet>3551</a>                <span class="macro">log::debug!</span>(<span class="string">"    Skipped: N size {} not supported"</span>, prop.n_size);
+<a href=#3552 id=3552 data-nosnippet>3552</a>                <span class="kw">continue</span>;
+<a href=#3553 id=3553 data-nosnippet>3553</a>            }
+<a href=#3554 id=3554 data-nosnippet>3554</a>        };
+<a href=#3555 id=3555 data-nosnippet>3555</a>        <span class="kw">let </span>k_size = <span class="kw">match </span>map_vk_cooperative_size(prop.k_size) {
+<a href=#3556 id=3556 data-nosnippet>3556</a>            <span class="prelude-val">Some</span>(s) =&gt; s,
+<a href=#3557 id=3557 data-nosnippet>3557</a>            <span class="prelude-val">None </span>=&gt; {
+<a href=#3558 id=3558 data-nosnippet>3558</a>                <span class="macro">log::debug!</span>(<span class="string">"    Skipped: K size {} not supported"</span>, prop.k_size);
+<a href=#3559 id=3559 data-nosnippet>3559</a>                <span class="kw">continue</span>;
+<a href=#3560 id=3560 data-nosnippet>3560</a>            }
+<a href=#3561 id=3561 data-nosnippet>3561</a>        };
+<a href=#3562 id=3562 data-nosnippet>3562</a>
+<a href=#3563 id=3563 data-nosnippet>3563</a>        <span class="comment">// Map the component types - A and B must match, C and Result must match
+<a href=#3564 id=3564 data-nosnippet>3564</a>        </span><span class="kw">let </span>ab_type = <span class="kw">match </span>map_vk_component_type(prop.a_type) {
+<a href=#3565 id=3565 data-nosnippet>3565</a>            <span class="prelude-val">Some</span>(t) <span class="kw">if </span><span class="prelude-val">Some</span>(t) == map_vk_component_type(prop.b_type) =&gt; t,
+<a href=#3566 id=3566 data-nosnippet>3566</a>            <span class="kw">_ </span>=&gt; {
+<a href=#3567 id=3567 data-nosnippet>3567</a>                <span class="macro">log::debug!</span>(
+<a href=#3568 id=3568 data-nosnippet>3568</a>                    <span class="string">"    Skipped: A/B types {:?}/{:?} not supported or don't match"</span>,
+<a href=#3569 id=3569 data-nosnippet>3569</a>                    prop.a_type,
+<a href=#3570 id=3570 data-nosnippet>3570</a>                    prop.b_type
+<a href=#3571 id=3571 data-nosnippet>3571</a>                );
+<a href=#3572 id=3572 data-nosnippet>3572</a>                <span class="kw">continue</span>;
+<a href=#3573 id=3573 data-nosnippet>3573</a>            }
+<a href=#3574 id=3574 data-nosnippet>3574</a>        };
+<a href=#3575 id=3575 data-nosnippet>3575</a>        <span class="kw">let </span>cr_type = <span class="kw">match </span>map_vk_component_type(prop.c_type) {
+<a href=#3576 id=3576 data-nosnippet>3576</a>            <span class="prelude-val">Some</span>(t) <span class="kw">if </span><span class="prelude-val">Some</span>(t) == map_vk_component_type(prop.result_type) =&gt; t,
+<a href=#3577 id=3577 data-nosnippet>3577</a>            <span class="kw">_ </span>=&gt; {
+<a href=#3578 id=3578 data-nosnippet>3578</a>                <span class="macro">log::debug!</span>(
+<a href=#3579 id=3579 data-nosnippet>3579</a>                    <span class="string">"    Skipped: C/Result types {:?}/{:?} not supported or don't match"</span>,
+<a href=#3580 id=3580 data-nosnippet>3580</a>                    prop.c_type,
+<a href=#3581 id=3581 data-nosnippet>3581</a>                    prop.result_type
+<a href=#3582 id=3582 data-nosnippet>3582</a>                );
+<a href=#3583 id=3583 data-nosnippet>3583</a>                <span class="kw">continue</span>;
+<a href=#3584 id=3584 data-nosnippet>3584</a>            }
+<a href=#3585 id=3585 data-nosnippet>3585</a>        };
+<a href=#3586 id=3586 data-nosnippet>3586</a>
+<a href=#3587 id=3587 data-nosnippet>3587</a>        <span class="macro">log::debug!</span>(<span class="string">"    Accepted!"</span>);
+<a href=#3588 id=3588 data-nosnippet>3588</a>        result.push(wgt::CooperativeMatrixProperties {
+<a href=#3589 id=3589 data-nosnippet>3589</a>            m_size,
+<a href=#3590 id=3590 data-nosnippet>3590</a>            n_size,
+<a href=#3591 id=3591 data-nosnippet>3591</a>            k_size,
+<a href=#3592 id=3592 data-nosnippet>3592</a>            ab_type,
+<a href=#3593 id=3593 data-nosnippet>3593</a>            cr_type,
+<a href=#3594 id=3594 data-nosnippet>3594</a>            saturating_accumulation: prop.<span class="macro">saturating_accumulation !</span>= <span class="number">0</span>,
+<a href=#3595 id=3595 data-nosnippet>3595</a>        });
+<a href=#3596 id=3596 data-nosnippet>3596</a>    }
+<a href=#3597 id=3597 data-nosnippet>3597</a>
+<a href=#3598 id=3598 data-nosnippet>3598</a>    <span class="macro">log::debug!</span>(
+<a href=#3599 id=3599 data-nosnippet>3599</a>        <span class="string">"Found {} cooperative matrix configurations supported by wgpu"</span>,
+<a href=#3600 id=3600 data-nosnippet>3600</a>        result.len()
+<a href=#3601 id=3601 data-nosnippet>3601</a>    );
+<a href=#3602 id=3602 data-nosnippet>3602</a>    result
+<a href=#3603 id=3603 data-nosnippet>3603</a>}
 </code></pre></div></section></main></body></html>
