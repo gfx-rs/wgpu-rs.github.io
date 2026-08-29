@@ -1,0 +1,246 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="🧪Experimental🧪 Mesh Shading"><title>wgpu::documentation::extensions::mesh_shading - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module mesh_shading</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="logo"></a><h2><a href="../../../../wgpu/index.html">wgpu</a><span class="version">30.0.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module mesh_<wbr>shading</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#experimental-mesh-shading" title="🧪Experimental🧪 Mesh Shading">🧪Experimental🧪 Mesh Shading</a><ul><li><a href="#mesh-shaders-overview" title="Mesh shaders overview">Mesh shaders overview</a></li><li><a href="#wgpu-api" title="`wgpu` API"><code>wgpu</code> API</a></li><li><a href="#naga-implementation" title="Naga implementation">Naga implementation</a></li><li><a href="#wgsl-extension-specification" title="`WGSL` extension specification"><code>WGSL</code> extension specification</a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In wgpu::<wbr>documentation::<wbr>extensions</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../../index.html">wgpu</a>::<wbr><a href="../../index.html">documentation</a>::<wbr><a href="../index.html">extensions</a></div><h1>Module <span>mesh_<wbr>shading</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../../src/wgpu/documentation/extensions/mesh_shading.rs.html#1-286">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="experimental-mesh-shading"><a class="doc-anchor" href="#experimental-mesh-shading">§</a>🧪Experimental🧪 Mesh Shading</h2>
+<p><code>wgpu</code> supports an experimental version of mesh shading when <a href="../../../struct.Features.html#associatedconstant.EXPERIMENTAL_MESH_SHADER" title="associated constant wgpu::Features::EXPERIMENTAL_MESH_SHADER"><code>Features::EXPERIMENTAL_MESH_SHADER</code></a> is enabled.
+The status of the implementation is documented in <a href="https://github.com/gfx-rs/wgpu/issues/7197">the mesh-shading issue</a>.</p>
+<p><strong>Note</strong>: The features documented here may have major bugs in them and are expected to be subject
+to breaking changes. Suggestions for the API exposed by this should be posted on the issue above.</p>
+<h3 id="mesh-shaders-overview"><a class="doc-anchor" href="#mesh-shaders-overview">§</a>Mesh shaders overview</h3><h4 id="what-are-mesh-shaders"><a class="doc-anchor" href="#what-are-mesh-shaders">§</a>What are mesh shaders?</h4>
+<p>Mesh shaders are a new kind of rasterization pipeline intended to address some of the shortfalls with the vertex shader pipeline. The core idea of mesh shaders is that the GPU decides how to render the many small parts of a scene instead of the CPU issuing a draw call for every small part or issuing an inefficient monolithic draw call for a large part of the scene.</p>
+<p>Mesh shaders are specifically designed to be used with <strong>meshlet rendering</strong>, a technique where every object is split into many subobjects called meshlets that are each rendered with their own parameters. With the standard vertex pipeline, each draw call specifies an exact number of primitives to render and the same parameters for all vertex shaders on an entire object (or even multiple objects). This doesn’t leave room for different LODs for different parts of an object, for example a closer part having more detail, nor does it allow culling smaller sections (or primitives) of objects. With mesh shaders, each task workgroup might get assigned to a single object. It can then analyze the different meshlets(sections) of that object, determine which are visible and should actually be rendered, and for those meshlets determine what LOD to use based on the distance from the camera. It can then dispatch a mesh workgroup for each meshlet, with each mesh workgroup then reading the data for that specific LOD of its meshlet, determining which and how many vertices and primitives to output, determining which remaining primitives need to be culled, and passing the resulting primitives to the rasterizer.</p>
+<p>Mesh shaders are most effective in scenes with many polygons. They can allow skipping processing of entire groups of primitives that are facing away from the camera or otherwise occluded, which reduces the number of primitives that need to be processed by more than half in most cases, and they can reduce the number of primitives that need to be processed for more distant objects. Scenes that are not bottlenecked by geometry (perhaps instead by fragment processing or post processing) will not see much benefit from using them.</p>
+<p>Mesh shaders were first shown off in <a href="https://www.youtube.com/watch?v=CRfZYJ_sk5E">NVIDIA’s asteroids demo</a>. Now, they form the basis for <a href="https://www.unrealengine.com/en-US/blog/unreal-engine-5-is-now-available-in-preview#Nanite">Unreal Engine’s Nanite</a>.</p>
+<h4 id="mesh-shader-pipeline"><a class="doc-anchor" href="#mesh-shader-pipeline">§</a>Mesh shader pipeline</h4>
+<p>With the current pipeline set to a mesh pipeline, a draw command like
+<code>render_pass.draw_mesh_tasks(x, y, z)</code> takes the following steps:</p>
+<ul>
+<li>
+<p>If the pipeline has a task shader stage:</p>
+<ul>
+<li>
+<p>Dispatch a grid of task shader workgroups, where <code>x</code>, <code>y</code>, and <code>z</code> give
+the number of workgroups along each axis of the grid. Each task shader
+workgroup produces a mesh shader workgroup grid size <code>(mx, my, mz)</code> and a
+task payload value <code>mp</code>.</p>
+</li>
+<li>
+<p>For each task shader workgroup, dispatch a grid of mesh shader workgroups,
+where <code>mx</code>, <code>my</code>, and <code>mz</code> give the number of workgroups along each axis
+of the grid. Pass <code>mp</code> to each of these workgroup’s mesh shader
+invocations.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Alternatively, if the pipeline does not have a task shader stage:</p>
+<ul>
+<li>Dispatch a single grid of mesh shader workgroups, where <code>x</code>, <code>y</code>, and <code>z</code>
+give the number of workgroups along each axis of the grid. These mesh
+shaders receive no task payload value.</li>
+</ul>
+</li>
+<li>
+<p>Each mesh shader workgroup produces a list of output vertices, and a list of
+primitives built from those vertices. The workgroup can supply per-primitive
+values as well, if needed. Each primitive selects its vertices by index, like
+an indexed draw call, from among the vertices generated by this workgroup.</p>
+<p>Unlike a grid of ordinary compute shader workgroups collaborating to build
+vertex and index data in common storage buffers, the vertices and primitives
+produced by a mesh shader workgroup are entirely private to that workgroup,
+and are not accessible by other workgroups.</p>
+</li>
+<li>
+<p>Primitives produced by a mesh shader workgroup can have a culling flag. If a
+primitive’s culling flag is false, it is skipped during rasterization.</p>
+</li>
+<li>
+<p>The primitives produced by all mesh shader workgroups are then rasterized in
+the usual way, with each fragment shader invocation handling one pixel.</p>
+<p>Attributes from the vertices produced by the mesh shader workgroup are
+provided to the fragment shader with interpolation applied as appropriate.</p>
+<p>If the mesh shader workgroup supplied per-primitive values, these are
+available to each primitive’s fragment shader invocations. Per-primitive
+values are never interpolated; fragment shaders simply receive the values
+the mesh shader workgroup associated with their primitive.</p>
+</li>
+</ul>
+<h3 id="wgpu-api"><a class="doc-anchor" href="#wgpu-api">§</a><code>wgpu</code> API</h3><h4 id="new-wgpu-functions"><a class="doc-anchor" href="#new-wgpu-functions">§</a>New <code>wgpu</code> functions</h4>
+<p><a href="../../../struct.Device.html#method.create_mesh_pipeline" title="method wgpu::Device::create_mesh_pipeline"><code>Device::create_mesh_pipeline</code></a> - Creates a mesh shader pipeline. This is very similar to creating a standard render pipeline, except that it takes a mesh shader state and optional task shader state instead of a vertex state. If the task state is omitted, during rendering the number of workgroups is passed directly from the draw call to the mesh shader state, with an empty payload.</p>
+<p><a href="../../../struct.RenderPass.html#method.draw_mesh_tasks" title="method wgpu::RenderPass::draw_mesh_tasks"><code>RenderPass::draw_mesh_tasks</code></a> - Dispatches the mesh shader pipeline. This ignores render pipeline specific information, such as vertex buffer bindings and index buffer bindings. The dispatch size must adhere to the limits described below.</p>
+<p><a href="../../../struct.RenderPass.html#method.draw_mesh_tasks_indirect" title="method wgpu::RenderPass::draw_mesh_tasks_indirect"><code>RenderPass::draw_mesh_tasks_indirect</code></a>, <a href="../../../struct.RenderPass.html#method.multi_draw_mesh_tasks_indirect" title="method wgpu::RenderPass::multi_draw_mesh_tasks_indirect"><code>RenderPass::multi_draw_mesh_tasks_indirect</code></a> and <a href="../../../struct.RenderPass.html#method.multi_draw_mesh_tasks_indirect_count" title="method wgpu::RenderPass::multi_draw_mesh_tasks_indirect_count"><code>RenderPass::multi_draw_mesh_tasks_indirect_count</code></a> - Dispatches the mesh shader pipeline with dispatch size taken from a buffer. This ignores render pipeline specific information, such as vertex buffer bindings and index buffer bindings. The dispatch size must adhere to the limits described below. Analogous to <code>draw_indirect</code>, <code>multi_draw_indirect</code> and <code>multi_draw_indirect_count</code>. Requires the corresponding indirect feature to be enabled.</p>
+<p>An example of using mesh shaders to render a single triangle can be seen
+<a href="https://github.com/gfx-rs/wgpu/tree/trunk/examples/features/src/mesh_shader">here</a>.</p>
+<h4 id="features"><a class="doc-anchor" href="#features">§</a>Features</h4>
+<ul>
+<li>Using mesh shaders requires enabling <a href="../../../struct.Features.html#associatedconstant.EXPERIMENTAL_MESH_SHADER" title="associated constant wgpu::Features::EXPERIMENTAL_MESH_SHADER"><code>Features::EXPERIMENTAL_MESH_SHADER</code></a>.</li>
+<li>Using mesh shaders with multiview requires enabling <a href="../../../struct.Features.html#associatedconstant.EXPERIMENTAL_MESH_SHADER_MULTIVIEW" title="associated constant wgpu::Features::EXPERIMENTAL_MESH_SHADER_MULTIVIEW"><code>Features::EXPERIMENTAL_MESH_SHADER_MULTIVIEW</code></a>.</li>
+<li>Using mesh shaders with point primitives requires enabling <a href="../../../struct.Features.html#associatedconstant.EXPERIMENTAL_MESH_SHADER_POINTS" title="associated constant wgpu::Features::EXPERIMENTAL_MESH_SHADER_POINTS"><code>Features::EXPERIMENTAL_MESH_SHADER_POINTS</code></a>.</li>
+<li>Queries are unsupported</li>
+<li>Primitive index support will be added once support lands in for them in general.</li>
+</ul>
+<h4 id="limits"><a class="doc-anchor" href="#limits">§</a>Limits</h4>
+<blockquote>
+<p><strong>NOTE</strong>: More limits will be added when support is added to <code>naga</code>.</p>
+</blockquote>
+<ul>
+<li><code>Limits::max_task_mesh_workgroup_total_count</code> - the maximum total number of workgroups from a <code>draw_mesh_tasks</code> command or similar. The dimensions passed must be less than or equal to this limit when multiplied together.</li>
+<li><code>Limits::max_task_mesh_workgroups_per_dimension</code> - the maximum for each of the 3 workgroup dimensions in a <code>draw_mesh_tasks</code> command. Each dimension passed must be less than or equal to this limit.</li>
+<li><code>max_task_invocations_per_workgroup</code> - The maximum total number of threads in a task shader workgroup, given by <code>workgroupSize.x * workgroupSize.y * workgroupSize.z</code>.</li>
+<li><code>max_task_invocations_per_dimension</code> the maximum value for each of <code>workgroupSize.x</code>, <code>workgroupSize.y</code> and <code>workgroupSize.z</code> in task shader workgroups.</li>
+<li><code>max_mesh_invocations_per_workgroup</code> - The maximum total number of threads in a mesh shader workgroup, given by <code>workgroupSize.x * workgroupSize.y * workgroupSize.z</code>.</li>
+<li><code>max_mesh_invocations_per_dimension</code> the maximum value for each of <code>workgroupSize.x</code>, <code>workgroupSize.y</code> and <code>workgroupSize.z</code> in mesh shader workgroups.</li>
+<li><code>max_task_payload_size</code> - the size of an <code>var&lt;task_payload&gt;</code> variable, in bytes.</li>
+<li><code>max_mesh_output_vertices</code> - the maximum number of vertices that a single mesh shader workgroup may output.</li>
+<li><code>max_mesh_output_primitives</code> - the maximum number of primitives that a single mesh shader workgroup may output.</li>
+<li><code>max_mesh_multiview_count</code> - the maximum number of views used when multiview rendering with a mesh shader pipeline.</li>
+<li><code>max_mesh_output_layers</code> - the maximum number of output layers for a mesh shader pipeline.</li>
+</ul>
+<h3 id="naga-implementation"><a class="doc-anchor" href="#naga-implementation">§</a>Naga implementation</h3><h4 id="supported-frontends"><a class="doc-anchor" href="#supported-frontends">§</a>Supported frontends</h4>
+<ul>
+<li>🛠️ WGSL</li>
+<li>❌ SPIR-V</li>
+<li>🚫 GLSL</li>
+</ul>
+<h4 id="supported-backends"><a class="doc-anchor" href="#supported-backends">§</a>Supported backends</h4>
+<ul>
+<li>🛠️ SPIR-V</li>
+<li>🛠️ HLSL</li>
+<li>❌ MSL</li>
+<li>🚫 GLSL</li>
+<li>🚫 WGSL</li>
+</ul>
+<p>✔️ = Complete
+🛠️ = In progress
+❌ = Planned
+🚫 = Unplanned/impossible</p>
+<h3 id="wgsl-extension-specification"><a class="doc-anchor" href="#wgsl-extension-specification">§</a><code>WGSL</code> extension specification</h3>
+<p>The majority of changes relating to mesh shaders will be in WGSL and <code>naga</code>.</p>
+<p>Using any of these features in a <code>wgsl</code> program will require adding the <code>enable wgpu_mesh_shader;</code> directive to the top of a program.</p>
+<p>Two new shader stages will be added to <code>WGSL</code>. Fragment shaders are also modified slightly. Both task shaders and mesh shaders are allowed to use any compute-available functionality, including subgroup operations.</p>
+<h4 id="task-shader"><a class="doc-anchor" href="#task-shader">§</a>Task shader</h4>
+<p>A function with the <code>@task</code> attribute is a <strong>task shader entry point</strong>. A mesh shader pipeline may optionally specify a task shader entry point, and if it does, mesh draw commands using that pipeline dispatch a <strong>task shader grid</strong> of workgroups running the task shader entry point. Like compute shader dispatches, the three-component size passed to <code>draw_mesh_tasks</code>, or drawn from the indirect buffer for its indirect variants, specifies the size of the task shader grid as the number of workgroups along each of the grid’s three axes.</p>
+<p>A task shader entry point must have a <code>@workgroup_size</code> attribute, meeting the same requirements as one appearing on a compute shader entry point.</p>
+<p>A task shader entry point must also have a <code>@payload(G)</code> property, where <code>G</code> is the name of a global variable in the <code>task_payload</code> address space. Each task shader workgroup has its own instance of this variable, visible to all invocations in the workgroup. Whatever value the workgroup collectively stores in that global variable becomes the <strong>task payload</strong>, and is provided to all invocations in the mesh shader grid dispatched for the workgroup. A task payload variable must be at least 4 bytes in size.</p>
+<p>A task shader entry point must return a <code>vec3&lt;u32&gt;</code> value decorated with <code>@builtin(mesh_task_size)</code>. The return value of each workgroup’s first invocation (that is, the one whose <code>local_invocation_index</code> is <code>0</code>) is taken as the size of a <strong>mesh shader grid</strong> to dispatch, measured in workgroups. (If the task shader entry point returns <code>vec3(0, 0, 0)</code>, then no mesh shaders are dispatched.) Mesh shader grids are described in the next section.</p>
+<p>The output of a task shader is set to zero if it violates either of the limits <code>max_task_mesh_workgroup_total_count</code> or <code>max_task_mesh_workgroups_per_dimension</code>.</p>
+<p>Each task shader workgroup dispatches an independent mesh shader grid: in mesh shader invocations, <code>@builtin</code> values like <code>workgroup_id</code> and <code>global_invocation_id</code> describe the position of the workgroup and invocation within that grid;
+and <code>@builtin(num_workgroups)</code> matches the task shader workgroup’s return value. If this output violates any limits, it may be zeroed or cause undefined behavior, depending on the compilation options. Mesh shaders dispatched for other task shader workgroups are not included in the count. If it is necessary for a mesh shader to know which task shader workgroup dispatched it, the task shader can include its own workgroup id in the task payload.</p>
+<p>Task shaders can use compute and subgroup builtin inputs, in addition to <code>view_index</code> and <code>draw_id</code>.</p>
+<h4 id="mesh-shader"><a class="doc-anchor" href="#mesh-shader">§</a>Mesh shader</h4>
+<p>A function with the <code>@mesh</code> attribute is a <strong>mesh shader entry point</strong>. Mesh shaders must not return anything.</p>
+<p>Like compute shaders, mesh shaders are invoked in a grid of workgroups, called a <strong>mesh shader grid</strong>. If the mesh shader pipeline has a task shader, then each task shader workgroup determines the size of a mesh shader grid to be dispatched, as described above. Otherwise, the three-component size passed to <code>draw_mesh_tasks</code>, or drawn from the indirect buffer for its indirect variants, specifies the size of the mesh shader grid directly, as the number of workgroups along each of the grid’s three axes.</p>
+<p>If the mesh shader pipeline has a task shader entry point, then the pipeline’s mesh shader entry point must also have a <code>@payload(G)</code> attribute, and the sizes of the variables must match. Mesh shader invocations can read from, but not write to, this variable, which is initialized to whatever value was written to it by the task shader workgroup that dispatched this mesh shader grid.</p>
+<p>If the mesh shader pipeline does not have a task shader entry point, then the mesh shader entry point must not have any <code>@payload</code> attribute.</p>
+<p>A mesh shader entry point must have the following attributes:</p>
+<ul>
+<li>
+<p><code>@workgroup_size</code>: this has the same meaning as when it appears on a compute shader entry point.</p>
+</li>
+<li>
+<p><code>@mesh(VAR)</code>: Here, <code>VAR</code> represents a workgroup variable storing the output information.</p>
+</li>
+</ul>
+<p>All mesh shader outputs are per-workgroup, and taken from the workgroup variable specified above. The type must have exactly 4 fields:</p>
+<ul>
+<li>A field decorated with <code>@builtin(vertex_count)</code>, with type <code>u32</code>: this field represents the number of vertices that will be drawn</li>
+<li>A field decorated with <code>@builtin(primitive_count)</code>, with type <code>u32</code>: this field represents the number of primitives that will be drawn</li>
+<li>A field decorated with <code>@builtin(vertices)</code>, typed as an array of <code>V</code>, where <code>V</code> is the vertex output type as specified below</li>
+<li>A field decorated with <code>@builtin(primitives)</code>, typed as an array of <code>P</code>, where <code>P</code> is the primitive output type as specified below</li>
+</ul>
+<p>For a vertex count <code>NV</code>, the first <code>NV</code> elements of the vertex array above are outputted. Therefore, <code>NV</code> must be less than or equal to the size of the vertex array. The same is true for primitives with <code>NP</code>.</p>
+<p>The vertex output type <code>V</code> must meet the same requirements as a struct type returned by a <code>@vertex</code> entry point: all members must have either <code>@builtin</code> or <code>@location</code> attributes, there must be a <code>@builtin(position)</code>, and so on.</p>
+<p>The primitive output type <code>P</code> must be a struct type, every member of which either has a <code>@location</code> or <code>@builtin</code> attribute. All members decorated with <code>@location</code> must also be decorated with <code>@per_primitive</code>, as must the corresponding fragment input. The <code>@per_primitive</code> decoration may only be applied to members decorated with <code>@location</code>. The following <code>@builtin</code> attributes are allowed:</p>
+<ul>
+<li>
+<p><code>triangle_indices</code>, <code>line_indices</code>, or <code>point_index</code>: The annotated member must be of type <code>vec3&lt;u32&gt;</code>, <code>vec2&lt;u32&gt;</code>, or <code>u32</code>.</p>
+<p>The member’s components are indices (or, its value is an index) into the list of vertices generated by this workgroup, identifying the vertices of the primitive to be drawn. These indices must be less than the value of <code>numVertices</code> passed to <code>setMeshOutputs</code>.</p>
+<p>The type <code>P</code> must contain exactly one member with one of these attributes, determining what sort of primitives the mesh shader generates.</p>
+</li>
+<li>
+<p><code>cull_primitive</code>: The annotated member must be of type <code>bool</code>. If it is true, then the primitive is skipped during rendering.</p>
+</li>
+</ul>
+<p>The <code>@location</code> attributes of <code>P</code> and <code>V</code> must not overlap, since they are merged to produce the user-defined inputs to the fragment shader.</p>
+<p>Mesh shaders may write to the <code>primitive_index</code> builtin. This is treated just like a field decorated with <code>@location</code>, so if the mesh shader outputs <code>primitive_index</code> the fragment shader must input it, and if the fragment shader inputs it, the mesh shader must write it (unlike vertex shader pipelines).</p>
+<p>Mesh shaders can use compute and mesh shader builtin inputs, in addition to <code>view_index</code>, and if no task shader is present, <code>draw_id</code>.</p>
+<h4 id="fragment-shader"><a class="doc-anchor" href="#fragment-shader">§</a>Fragment shader</h4>
+<p>Fragment shaders can access vertex output data as if it is from a vertex shader. They can also access primitive output data, provided the input is decorated with <code>@per_primitive</code>. The <code>@per_primitive</code> decoration may only be applied to inputs or struct members decorated with <code>@location</code>.</p>
+<p>The primitive state is part of the fragment input and must match the output of the mesh shader in the pipeline. Using <code>@per_primitive</code> also requires enabling the mesh shader extension. Additionally, the locations of vertex and primitive input cannot overlap.</p>
+<h4 id="full-example"><a class="doc-anchor" href="#full-example">§</a>Full example</h4>
+<p>The following is a full example of WGSL shaders that could be used to create a mesh shader pipeline, showing off many of the features.</p>
+<div class="example-wrap"><pre class="language-wgsl"><code>enable wgpu_mesh_shader;
+
+const positions = array(
+    vec4(0., 1., 0., 1.),
+    vec4(-1., -1., 0., 1.),
+    vec4(1., -1., 0., 1.)
+);
+const colors = array(
+    vec4(0., 1., 0., 1.),
+    vec4(0., 0., 1., 1.),
+    vec4(1., 0., 0., 1.)
+);
+
+struct TaskPayload {
+    colorMask: vec4&lt;f32&gt;,
+    visible: bool,
+}
+struct VertexOutput {
+    @builtin(position) position: vec4&lt;f32&gt;,
+    @location(0) color: vec4&lt;f32&gt;,
+}
+struct PrimitiveOutput {
+    @builtin(triangle_indices) indices: vec3&lt;u32&gt;,
+    @builtin(cull_primitive) cull: bool,
+    @per_primitive @location(1) colorMask: vec4&lt;f32&gt;,
+}
+struct PrimitiveInput {
+    @per_primitive @location(1) colorMask: vec4&lt;f32&gt;,
+}
+
+var&lt;task_payload&gt; taskPayload: TaskPayload;
+var&lt;workgroup&gt; workgroupData: f32;
+
+@task
+@payload(taskPayload)
+@workgroup_size(1)
+fn ts_main() -&gt; @builtin(mesh_task_size) vec3&lt;u32&gt; {
+    workgroupData = 1.0;
+    taskPayload.colorMask = vec4(1.0, 1.0, 0.0, 1.0);
+    taskPayload.visible = true;
+    return vec3(1, 1, 1);
+}
+
+struct MeshOutput {
+    @builtin(vertices) vertices: array&lt;VertexOutput, 3&gt;,
+    @builtin(primitives) primitives: array&lt;PrimitiveOutput, 1&gt;,
+    @builtin(vertex_count) vertex_count: u32,
+    @builtin(primitive_count) primitive_count: u32,
+}
+
+var&lt;workgroup&gt; mesh_output: MeshOutput;
+
+@mesh(mesh_output)
+@payload(taskPayload)
+@workgroup_size(1)
+fn ms_main() {
+    mesh_output.vertex_count = 3;
+    mesh_output.primitive_count = 1;
+    workgroupData = 2.0;
+
+    mesh_output.vertices[0].position = positions[0];
+    mesh_output.vertices[0].color = colors[0] * taskPayload.colorMask;
+
+    mesh_output.vertices[1].position = positions[1];
+    mesh_output.vertices[1].color = colors[1] * taskPayload.colorMask;
+
+    mesh_output.vertices[2].position = positions[2];
+    mesh_output.vertices[2].color = colors[2] * taskPayload.colorMask;
+
+    mesh_output.primitives[0].indices = vec3&lt;u32&gt;(0, 1, 2);
+    mesh_output.primitives[0].cull = !taskPayload.visible;
+    mesh_output.primitives[0].colorMask = vec4&lt;f32&gt;(1.0, 0.0, 1.0, 1.0);
+}
+
+@fragment
+fn fs_main(vertex: VertexOutput, primitive: PrimitiveInput) -&gt; @location(0) vec4&lt;f32&gt; {
+    return vertex.color * primitive.colorMask;
+}</code></pre></div></div></details></section></div></main></body></html>

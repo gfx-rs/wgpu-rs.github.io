@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["hdr_surfaces","srgb"]};

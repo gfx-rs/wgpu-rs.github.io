@@ -1,0 +1,126 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="HDR Surfaces"><title>wgpu::documentation::color::hdr_surfaces - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module hdr_surfaces</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="logo"></a><h2><a href="../../../../wgpu/index.html">wgpu</a><span class="version">30.0.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module hdr_<wbr>surfaces</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#hdr-surfaces" title="HDR Surfaces">HDR Surfaces</a><ul><li><a href="#hdr-output-in-a-nutshell" title="HDR output in a nutshell">HDR output in a nutshell</a></li><li><a href="#the-practical-path" title="The practical path">The practical path</a></li><li><a href="#what-to-output-from-your-fragment-shader" title="What to output from your fragment shader">What to output from your fragment shader</a></li><li><a href="#glossary" title="Glossary">Glossary</a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In wgpu::<wbr>documentation::<wbr>color</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../../index.html">wgpu</a>::<wbr><a href="../../index.html">documentation</a>::<wbr><a href="../index.html">color</a></div><h1>Module <span>hdr_<wbr>surfaces</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../../src/wgpu/documentation/color/hdr_surfaces.rs.html#1-149">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="hdr-surfaces"><a class="doc-anchor" href="#hdr-surfaces">§</a>HDR Surfaces</h2>
+<p>A surface can present in different color spaces to get HDR or wide-gamut
+output onto the screen. This is configured through
+<a href="../../../../wgpu_types/surface/struct.SurfaceConfiguration.html#structfield.color_space" title="field wgpu_types::surface::SurfaceConfiguration::color_space"><code>SurfaceConfiguration::color_space</code></a>, and the rest of this section is a
+concept primer on how it works.</p>
+<h4 id="hdr-output-in-a-nutshell"><a class="doc-anchor" href="#hdr-output-in-a-nutshell">§</a>HDR output in a nutshell</h4>
+<p>By default a surface is standard dynamic range (SDR) with the sRGB gamut: the
+value <code>1.0</code> is the brightest white, anything above it clips, and only colors
+within sRGB are expressible. Other <a href="../../../enum.SurfaceColorSpace.html" title="enum wgpu::SurfaceColorSpace"><code>SurfaceColorSpace</code></a>s opt into a <strong>wider
+gamut</strong> (for example <a href="../../../enum.SurfaceColorSpace.html#variant.DisplayP3" title="variant wgpu::SurfaceColorSpace::DisplayP3"><code>DisplayP3</code></a>, still SDR
+but with more saturated colors than sRGB), <strong>high dynamic range</strong> (values
+above <code>1.0</code> drive brighter-than-white output), or both (for example
+<a href="../../../enum.SurfaceColorSpace.html#variant.Bt2100Pq" title="variant wgpu::SurfaceColorSpace::Bt2100Pq"><code>Bt2100Pq</code></a>, aka HDR10), on platforms that
+support it.</p>
+<p>Three ideas carry most of the weight:</p>
+<ul>
+<li><strong>Reference white and headroom.</strong> Brightness is measured in <em>nits</em>
+(cd/m²). On HDR-capable monitors, SDR reference white (plain white, <code>(1.0, 1.0, 1.0)</code> in the
+extended color spaces) sits <em>below</em> the display’s peak output on purpose, so
+highlights have room above it. That gap is the display’s <em>headroom</em>.</li>
+<li><strong>The transfer function is a round-trip.</strong> Your shader applies an
+encoding transfer function (the OETF) to turn the light it computed into a
+stored signal, and the display applies the inverse decoding transfer
+function (the EOTF) to turn it back into light. Choosing a color space
+chooses which transfer functions both ends use.</li>
+<li><strong>Who applies the encoding transfer function.</strong> wgpu applies it for you
+<strong>only</strong> when you render to an <code>*Srgb</code> texture view format, where the GPU
+runs the sRGB OETF when a value is stored to a texture. For every other
+color space (linear extended sRGB, encoded extended sRGB or P3, PQ, HLG)
+<strong>the values your shader writes to the surface texture must already be
+encoded by you</strong>, along with any gamut conversion; in a typical renderer
+this happens in a final tone-mapping or post-processing pass. wgpu hands
+the signal to the compositor unchanged; getting this wrong produces a
+wrong image with no error.</li>
+</ul>
+<p>wgpu does <strong>not</strong> tonemap or gamut-map for you. It gives you the surface
+and, through <a href="../../../struct.DisplayHdrInfo.html" title="struct wgpu::DisplayHdrInfo"><code>DisplayHdrInfo</code></a>, the display’s advisory capabilities;
+<em>choosing</em> and <em>applying</em> a tone curve is your application’s job.</p>
+<h4 id="the-practical-path"><a class="doc-anchor" href="#the-practical-path">§</a>The practical path</h4>
+<ol>
+<li><strong>Query capabilities.</strong> Call <a href="../../../struct.Surface.html#method.get_capabilities" title="method wgpu::Surface::get_capabilities"><code>Surface::get_capabilities</code></a>. To use HDR or
+wide-gamut output, read <a href="../../../struct.SurfaceCapabilities.html#structfield.format_capabilities" title="field wgpu::SurfaceCapabilities::format_capabilities"><code>SurfaceCapabilities::format_capabilities</code></a> (each
+format and the <a href="../../../struct.SurfaceColorSpaces.html" title="struct wgpu::SurfaceColorSpaces"><code>SurfaceColorSpaces</code></a> it supports), <strong>not</strong>
+<a href="../../../struct.SurfaceCapabilities.html#structfield.formats" title="field wgpu::SurfaceCapabilities::formats"><code>SurfaceCapabilities::formats</code></a>: the latter lists only formats usable
+with <a href="../../../enum.SurfaceColorSpace.html#variant.Auto" title="variant wgpu::SurfaceColorSpace::Auto"><code>Auto</code></a>, which never selects HDR.
+<a href="../../../struct.SurfaceCapabilities.html#method.color_spaces" title="method wgpu::SurfaceCapabilities::color_spaces"><code>SurfaceCapabilities::color_spaces</code></a> is a convenience lookup for one
+format.</li>
+<li><strong>Optionally query the display.</strong> Call <a href="../../../struct.Surface.html#method.display_hdr_info" title="method wgpu::Surface::display_hdr_info"><code>Surface::display_hdr_info</code></a> for the
+current <a href="../../../struct.DisplayHdrInfo.html" title="struct wgpu::DisplayHdrInfo"><code>DisplayHdrInfo</code></a> (peak and SDR-white nits, EDR headroom,
+primaries, and a coarse dynamic-range/gamut bucket). Use it to pick a
+tone-map target (<a href="../../../struct.DisplayHdrInfo.html#method.tone_map_headroom" title="method wgpu::DisplayHdrInfo::tone_map_headroom"><code>DisplayHdrInfo::tone_map_headroom</code></a>); <em>whether</em> HDR is
+worthwhile is the capability question from step 1, not this live value.
+Every field is advisory and optional; <code>None</code> means “cannot tell here”,
+never “SDR”.</li>
+<li><strong>Choose a format and color space.</strong> Intersect what you want with what
+step 1 advertises, in your own preference order (for example HDR10, then
+linear extended sRGB, then encoded extended sRGB, then SDR
+<a href="../../../enum.SurfaceColorSpace.html#variant.Srgb" title="variant wgpu::SurfaceColorSpace::Srgb"><code>Srgb</code></a>). Keep an SDR fallback for when nothing
+HDR is advertised, such as when OS HDR is off.</li>
+<li><strong>Configure the surface.</strong> Set <a href="../../../../wgpu_types/surface/struct.SurfaceConfiguration.html#structfield.color_space" title="field wgpu_types::surface::SurfaceConfiguration::color_space"><code>SurfaceConfiguration::color_space</code></a> and
+<code>format</code>. <a href="../../../enum.SurfaceColorSpace.html#variant.Auto" title="variant wgpu::SurfaceColorSpace::Auto"><code>Auto</code></a> (the default) reproduces
+wgpu’s historical behavior and never picks HDR; any other value must be in
+that format’s advertised set or configuration fails validation.</li>
+<li><strong>Encode what you write to the surface texture.</strong> For an <code>*Srgb</code> format,
+output linear and the hardware encodes for you. Otherwise the values your
+shader writes to the surface texture must already carry the encoding the
+chosen color space expects (sRGB, extended sRGB, PQ, or HLG) <strong>and</strong> any
+gamut conversion (for example outputting in the BT.2020 gamut for HDR10);
+in a typical renderer you do this in a final tone-mapping or
+post-processing pass. See the table below.</li>
+<li><strong>Present</strong> as usual. If OS HDR is toggled mid-run, you’ll see it on the
+next <a href="../../../struct.Surface.html#method.display_hdr_info" title="method wgpu::Surface::display_hdr_info"><code>Surface::display_hdr_info</code></a> poll; re-query <a href="../../../struct.Surface.html#method.get_capabilities" title="method wgpu::Surface::get_capabilities"><code>Surface::get_capabilities</code></a>
+and re-run the steps above.</li>
+</ol>
+<p>The standalone <a href="https://github.com/gfx-rs/wgpu/tree/v29/examples/standalone/03_hdr_surface">HDR surface example</a> implements every step, including the
+encoding transfer function for each color space.</p>
+<h4 id="what-to-output-from-your-fragment-shader"><a class="doc-anchor" href="#what-to-output-from-your-fragment-shader">§</a>What to output from your fragment shader</h4>
+<p>What the values your shader writes to the surface texture must contain for
+each color space, and whether wgpu applies the transfer function for you:</p>
+<div><table><thead><tr><th>Color space</th><th>Typical format</th><th>You write</th><th>wgpu encodes?</th></tr></thead><tbody>
+<tr><td><code>Srgb</code>, <code>*Srgb</code> format</td><td><code>{Rgba,Bgra}8UnormSrgb</code></td><td>linear</td><td><strong>yes</strong> (hardware sRGB OETF on store)</td></tr>
+<tr><td><code>Srgb</code>, non-srgb format</td><td><code>{Rgba,Bgra}8Unorm</code></td><td>sRGB-encoded</td><td>no; apply the sRGB OETF yourself or use <code>*Srgb</code> instead</td></tr>
+<tr><td><code>ExtendedSrgbLinear</code> (scRGB)</td><td><code>Rgba16Float</code></td><td>linear, <code>1.0</code> = SDR white</td><td>no, but no encoding is necessary</td></tr>
+<tr><td><code>ExtendedSrgb</code></td><td><code>Rgba16Float</code></td><td>extended sRGB-encoded</td><td>no; apply the extended sRGB OETF yourself</td></tr>
+<tr><td><code>DisplayP3</code></td><td><code>Bgra8Unorm</code></td><td>sRGB-encoded, P3 primaries</td><td>no; apply the sRGB OETF (after gamut-mapping to P3)</td></tr>
+<tr><td><code>ExtendedDisplayP3</code></td><td><code>Rgba16Float</code></td><td>extended sRGB-encoded, P3 primaries</td><td>no; apply the extended sRGB OETF (after gamut-mapping to P3)</td></tr>
+<tr><td><code>Bt2100Pq</code> (HDR10)</td><td><code>Rgb10a2Unorm</code></td><td>PQ-encoded, BT.2020 primaries</td><td>no; apply the PQ OETF (after gamut-mapping to BT.2020)</td></tr>
+<tr><td><code>Bt2100Hlg</code></td><td><code>Rgb10a2Unorm</code></td><td>HLG-encoded, BT.2020 primaries</td><td>no; apply the HLG OETF (after gamut-mapping to BT.2020)</td></tr>
+</tbody></table>
+</div>
+<p>In short, wgpu applies the transfer function for you only when you render to
+an <code>*Srgb</code> format. In every other case the values your shader writes to the
+surface texture must already carry both the transfer function and any gamut
+conversion. The <a href="https://github.com/gfx-rs/wgpu/tree/v29/examples/standalone/03_hdr_surface">HDR surface example</a> implements every encoder in WGSL.</p>
+<h4 id="glossary"><a class="doc-anchor" href="#glossary">§</a>Glossary</h4>
+<ul>
+<li><strong>Chromaticity</strong> — a color’s hue and saturation independent of its
+brightness, given as an <code>(x, y)</code> coordinate on the CIE 1931 diagram.</li>
+<li><strong>Primaries / gamut</strong> — the chromaticities of the red, green, and blue a
+color space addresses, and so the range of colors it can express. <a href="https://www.itu.int/rec/R-REC-BT.709">BT.709</a>
+is the sRGB gamut, <a href="https://en.wikipedia.org/wiki/DCI-P3#Display_P3">Display P3</a> is wider, and <a href="https://www.itu.int/rec/R-REC-BT.2020">BT.2020</a> is wider still.</li>
+<li><strong>White point</strong> — the chromaticity of <code>R = G = B</code> (what “white” looks
+like). Every color space here uses <a href="https://en.wikipedia.org/wiki/Standard_illuminant#D65_values">D65</a>, standard daylight.</li>
+<li><strong>Transfer function (OETF / EOTF)</strong> — how stored values map to light. The
+<em>OETF</em> is the encoding transfer function your application applies; the
+<em>EOTF</em> is the inverse decoding transfer function the display applies.</li>
+<li><strong>SDR / HDR</strong> — standard dynamic range clips at <code>1.0</code> (reference white);
+high dynamic range lets values above <code>1.0</code> drive brighter-than-white
+output.</li>
+<li><strong>Nits and reference white</strong> — a <em>nit</em> (cd/m²) is a unit of brightness;
+<em>reference white</em> (also called <em>paper white</em>, especially on Windows) is the
+brightness of SDR plain white, set below the panel’s peak so highlights have
+room above it.</li>
+<li><strong>Headroom (EDR)</strong> — how much brighter than current SDR white the display
+can go right now, as a multiplier (<code>1.0</code> means none). Dynamic; see
+<a href="../../../struct.DisplayHdrInfo.html#method.tone_map_headroom" title="method wgpu::DisplayHdrInfo::tone_map_headroom"><code>DisplayHdrInfo::tone_map_headroom</code></a>.</li>
+<li><strong>PQ / HLG</strong> — the two HDR transfer functions: <a href="https://en.wikipedia.org/wiki/Perceptual_quantizer">PQ</a> (SMPTE ST 2084,
+HDR10) encodes absolute luminance, <a href="https://www.itu.int/rec/R-REC-BT.2100">HLG</a> (BT.2100) encodes relative
+luminance.</li>
+<li><strong>scRGB / extended-range sRGB</strong> — sRGB extended past 0.0..=1.0 for
+HDR: <a href="https://en.wikipedia.org/wiki/ScRGB">scRGB</a> is <em>linear</em>
+(<a href="../../../enum.SurfaceColorSpace.html#variant.ExtendedSrgbLinear" title="variant wgpu::SurfaceColorSpace::ExtendedSrgbLinear"><code>ExtendedSrgbLinear</code></a>), while
+<a href="../../../enum.SurfaceColorSpace.html#variant.ExtendedSrgb" title="variant wgpu::SurfaceColorSpace::ExtendedSrgb"><code>ExtendedSrgb</code></a> is the same range but
+sRGB-<em>encoded</em> (gamma), the web’s HDR path.</li>
+</ul>
+</div></details></section></div></main></body></html>

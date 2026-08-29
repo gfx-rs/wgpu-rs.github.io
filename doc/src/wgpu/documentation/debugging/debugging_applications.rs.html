@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/documentation/debugging/debugging_applications.rs`."><title>debugging_applications.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu/documentation/debugging/</div>debugging_applications.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">/*!
+<a href=#2 id=2 data-nosnippet>2</a># Debugging wgpu Applications
+<a href=#3 id=3 data-nosnippet>3</a>
+<a href=#4 id=4 data-nosnippet>4</a>This page describes the tricks and tools aimed at investigating issues
+<a href=#5 id=5 data-nosnippet>5</a>related to `wgpu`.
+<a href=#6 id=6 data-nosnippet>6</a>
+<a href=#7 id=7 data-nosnippet>7</a>## Native API validation
+<a href=#8 id=8 data-nosnippet>8</a>
+<a href=#9 id=9 data-nosnippet>9</a>`wgpu`'s goal is to guarantee that only valid workloads reach the low-level
+<a href=#10 id=10 data-nosnippet>10</a>APIs under the hood. If anything is not correct, we are going to complain
+<a href=#11 id=11 data-nosnippet>11</a>about it. You should never need to listen to the low-level API's complaints.
+<a href=#12 id=12 data-nosnippet>12</a>
+<a href=#13 id=13 data-nosnippet>13</a>This is a big [work-in-progress](https://github.com/gfx-rs/wgpu/labels/area%3A%20validation),
+<a href=#14 id=14 data-nosnippet>14</a>however. So in the meantime, it's useful to hear what the low-level
+<a href=#15 id=15 data-nosnippet>15</a>validation has to say.
+<a href=#16 id=16 data-nosnippet>16</a>
+<a href=#17 id=17 data-nosnippet>17</a>### Vulkan and OpenGL
+<a href=#18 id=18 data-nosnippet>18</a>
+<a href=#19 id=19 data-nosnippet>19</a>On Khronos APIs we redirect all the validation output to the console. You
+<a href=#20 id=20 data-nosnippet>20</a>will see it as long as:
+<a href=#21 id=21 data-nosnippet>21</a>
+<a href=#22 id=22 data-nosnippet>22</a>1. you run a debug build,
+<a href=#23 id=23 data-nosnippet>23</a>2. you have the validation layers installed (i.e. the LunarG SDK), and
+<a href=#24 id=24 data-nosnippet>24</a>3. you capture logging (with something like
+<a href=#25 id=25 data-nosnippet>25</a>   [`env_logger`](https://crates.io/crates/env_logger)).
+<a href=#26 id=26 data-nosnippet>26</a>
+<a href=#27 id=27 data-nosnippet>27</a>To enable the validation layers in non-debug builds, manually turn on
+<a href=#28 id=28 data-nosnippet>28</a>validation in the [`InstanceDescriptor`] with [`InstanceFlags::VALIDATION`].
+<a href=#29 id=29 data-nosnippet>29</a>See also [Enabling Vulkan Validation Layers](crate::documentation::debugging::vulkan_validation_layers).
+<a href=#30 id=30 data-nosnippet>30</a>
+<a href=#31 id=31 data-nosnippet>31</a>### D3D
+<a href=#32 id=32 data-nosnippet>32</a>
+<a href=#33 id=33 data-nosnippet>33</a>#### COM
+<a href=#34 id=34 data-nosnippet>34</a>
+<a href=#35 id=35 data-nosnippet>35</a>The refcount of a COM object is 9 32-bit words behind the pointer's
+<a href=#36 id=36 data-nosnippet>36</a>destination and is 4 bytes. As such, subtract 36 from the pointer's address
+<a href=#37 id=37 data-nosnippet>37</a>to get a pointer to that object's refcount. This allows you to use data
+<a href=#38 id=38 data-nosnippet>38</a>breakpoints to see all changes to the object's refcount, useful for
+<a href=#39 id=39 data-nosnippet>39</a>detecting leaks and other such things.
+<a href=#40 id=40 data-nosnippet>40</a>
+<a href=#41 id=41 data-nosnippet>41</a>### Metal
+<a href=#42 id=42 data-nosnippet>42</a>
+<a href=#43 id=43 data-nosnippet>43</a>You can either set `METAL_DEVICE_WRAPPER_TYPE=1` in the environment, or
+<a href=#44 id=44 data-nosnippet>44</a>launch from Xcode, where validation options are configurable in the project
+<a href=#45 id=45 data-nosnippet>45</a>menus (and enabled by default). To launch from Xcode, you can create a
+<a href=#46 id=46 data-nosnippet>46</a>project of "External Build System" type, picking `cargo` or any other
+<a href=#47 id=47 data-nosnippet>47</a>command as the build system. Then you'd need to edit the target
+<a href=#48 id=48 data-nosnippet>48</a>configuration and select the executable.
+<a href=#49 id=49 data-nosnippet>49</a>
+<a href=#50 id=50 data-nosnippet>50</a>A full guide that explains how to launch from Xcode is available in
+<a href=#51 id=51 data-nosnippet>51</a>[Debugging with Xcode](crate::documentation::debugging::xcode).
+<a href=#52 id=52 data-nosnippet>52</a>
+<a href=#53 id=53 data-nosnippet>53</a>#### Mac leaks
+<a href=#54 id=54 data-nosnippet>54</a>
+<a href=#55 id=55 data-nosnippet>55</a>To look for leaks using "Instruments", you need to add a special entitlement
+<a href=#56 id=56 data-nosnippet>56</a>to your executable's signature. Write the following to `entitle.xml`:
+<a href=#57 id=57 data-nosnippet>57</a>
+<a href=#58 id=58 data-nosnippet>58</a>```xml
+<a href=#59 id=59 data-nosnippet>59</a>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<a href=#60 id=60 data-nosnippet>60</a>&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
+<a href=#61 id=61 data-nosnippet>61</a>&lt;plist version="1.0"&gt;
+<a href=#62 id=62 data-nosnippet>62</a>    &lt;dict&gt;
+<a href=#63 id=63 data-nosnippet>63</a>        &lt;key&gt;com.apple.security.get-task-allow&lt;/key&gt;
+<a href=#64 id=64 data-nosnippet>64</a>        &lt;true/&gt;
+<a href=#65 id=65 data-nosnippet>65</a>    &lt;/dict&gt;
+<a href=#66 id=66 data-nosnippet>66</a>&lt;/plist&gt;
+<a href=#67 id=67 data-nosnippet>67</a>```
+<a href=#68 id=68 data-nosnippet>68</a>
+<a href=#69 id=69 data-nosnippet>69</a>Then run `codesign -s - -v -f --entitlements=entitle.xml /path/to/my/app`.
+<a href=#70 id=70 data-nosnippet>70</a>
+<a href=#71 id=71 data-nosnippet>71</a>([Source](https://stackoverflow.com/questions/74262518/why-required-kernel-recording-resources-are-in-use-by-another-document-error-i).)
+<a href=#72 id=72 data-nosnippet>72</a>
+<a href=#73 id=73 data-nosnippet>73</a>## GPU debugging
+<a href=#74 id=74 data-nosnippet>74</a>
+<a href=#75 id=75 data-nosnippet>75</a>If the validation is clean, and you are getting incorrect rendering or
+<a href=#76 id=76 data-nosnippet>76</a>computing, it's time to dive into GPU debugging. Many tools exist today:
+<a href=#77 id=77 data-nosnippet>77</a>
+<a href=#78 id=78 data-nosnippet>78</a>- RenderDoc can be used on Windows and Linux to capture Vulkan, D3D, and
+<a href=#79 id=79 data-nosnippet>79</a>  OpenGL.
+<a href=#80 id=80 data-nosnippet>80</a>  - If RenderDoc is used with a compute shader without any normal rendering
+<a href=#81 id=81 data-nosnippet>81</a>    components, wrap the work in [`Device::start_graphics_debugger_capture`]
+<a href=#82 id=82 data-nosnippet>82</a>    and [`Device::stop_graphics_debugger_capture`] so RenderDoc picks up the
+<a href=#83 id=83 data-nosnippet>83</a>    pipeline.
+<a href=#84 id=84 data-nosnippet>84</a>  - Vulkan initialization may fail in RenderDoc under Wayland (see
+<a href=#85 id=85 data-nosnippet>85</a>    [issue 3889](https://github.com/gfx-rs/wgpu/issues/3889)). To work around
+<a href=#86 id=86 data-nosnippet>86</a>    it, force winit to use X11 by setting the `WAYLAND_DISPLAY` environment
+<a href=#87 id=87 data-nosnippet>87</a>    variable to an empty string for winit versions `0.28.2` and onward, or
+<a href=#88 id=88 data-nosnippet>88</a>    the `WINIT_UNIX_BACKEND` environment variable to `"x11"` for winit
+<a href=#89 id=89 data-nosnippet>89</a>    versions up to `0.29.1`. When in doubt, do both.
+<a href=#90 id=90 data-nosnippet>90</a>- PIX can be used on Windows to capture D3D12.
+<a href=#91 id=91 data-nosnippet>91</a>- Xcode has powerful Metal GPU capture support with full shader debugging.
+<a href=#92 id=92 data-nosnippet>92</a>
+<a href=#93 id=93 data-nosnippet>93</a>In order to run your application from Xcode, you can create an empty project,
+<a href=#94 id=94 data-nosnippet>94</a>select your executable binary, and provide the command-line parameters in
+<a href=#95 id=95 data-nosnippet>95</a>the project settings.
+<a href=#96 id=96 data-nosnippet>96</a>
+<a href=#97 id=97 data-nosnippet>97</a>### Capturing WebGPU in Chrome with PIX
+<a href=#98 id=98 data-nosnippet>98</a>
+<a href=#99 id=99 data-nosnippet>99</a>&lt;https://gist.github.com/Popov72/41f71cbf8d55f2cb8cae93f439eee347&gt;
+<a href=#100 id=100 data-nosnippet>100</a>
+<a href=#101 id=101 data-nosnippet>101</a>### Capturing WebGPU in Chrome with Xcode
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a>&lt;https://ced.quest/chromium-metal-debugger.html&gt;
+<a href=#104 id=104 data-nosnippet>104</a>
+<a href=#105 id=105 data-nosnippet>105</a>## CPU debugging
+<a href=#106 id=106 data-nosnippet>106</a>
+<a href=#107 id=107 data-nosnippet>107</a>As `wgpu` is a Rust project, all the regular methods of debugging work. It's
+<a href=#108 id=108 data-nosnippet>108</a>convenient to launch an application from Xcode (e.g. as an "External Build
+<a href=#109 id=109 data-nosnippet>109</a>System" type project), or Visual Studio (just go to "Open Project" and
+<a href=#110 id=110 data-nosnippet>110</a>select the executable, adjusting the path and parameters).
+<a href=#111 id=111 data-nosnippet>111</a>
+<a href=#112 id=112 data-nosnippet>112</a>When looking at a crash/panic, the first step is typically enabling
+<a href=#113 id=113 data-nosnippet>113</a>`RUST_BACKTRACE=1` in the environment. This will spew out the stack trace,
+<a href=#114 id=114 data-nosnippet>114</a>which helps you locate the problem.
+<a href=#115 id=115 data-nosnippet>115</a>
+<a href=#116 id=116 data-nosnippet>116</a>## Rubber-duck debugging
+<a href=#117 id=117 data-nosnippet>117</a>
+<a href=#118 id=118 data-nosnippet>118</a>Hop on to [`#wgpu:matrix.org`](https://matrix.to/#/#wgpu:matrix.org) and try
+<a href=#119 id=119 data-nosnippet>119</a>to explain what happens and why. Maybe we listen. Maybe you'll figure out
+<a href=#120 id=120 data-nosnippet>120</a>the answer by then ;)
+<a href=#121 id=121 data-nosnippet>121</a>
+<a href=#122 id=122 data-nosnippet>122</a>## Tracing infrastructure
+<a href=#123 id=123 data-nosnippet>123</a>
+<a href=#124 id=124 data-nosnippet>124</a>API tracing is built into `wgpu-core` under the `trace` feature. To record a
+<a href=#125 id=125 data-nosnippet>125</a>trace, first make sure this feature is enabled, then set the `trace` field
+<a href=#126 id=126 data-nosnippet>126</a>of the [`DeviceDescriptor`] to [`Trace::Directory`](crate::Trace) with an existing folder
+<a href=#127 id=127 data-nosnippet>127</a>path when calling [`Adapter::request_device`]. The device will then record a
+<a href=#128 id=128 data-nosnippet>128</a>trace of everything that's going on to that folder.
+<a href=#129 id=129 data-nosnippet>129</a>
+<a href=#130 id=130 data-nosnippet>130</a>Once the trace is recorded, you can zip the folder and attach it to an
+<a href=#131 id=131 data-nosnippet>131</a>issue. This should allow anyone, including the developers, to reproduce the
+<a href=#132 id=132 data-nosnippet>132</a>issue on their machines, using the `player`:
+<a href=#133 id=133 data-nosnippet>133</a>
+<a href=#134 id=134 data-nosnippet>134</a>```bash
+<a href=#135 id=135 data-nosnippet>135</a>cd player
+<a href=#136 id=136 data-nosnippet>136</a>cargo run --features winit -- &lt;trace_folder_path&gt;
+<a href=#137 id=137 data-nosnippet>137</a>```
+<a href=#138 id=138 data-nosnippet>138</a>
+<a href=#139 id=139 data-nosnippet>139</a>If the program crashed or was interrupted in the midst of recording, you may
+<a href=#140 id=140 data-nosnippet>140</a>need to edit the trace folder's `trace.ron` file and add a closing `]`
+<a href=#141 id=141 data-nosnippet>141</a>bracket to the end. When that bracket is missing, the player exits with a
+<a href=#142 id=142 data-nosnippet>142</a>message like:
+<a href=#143 id=143 data-nosnippet>143</a>
+<a href=#144 id=144 data-nosnippet>144</a>```text
+<a href=#145 id=145 data-nosnippet>145</a>thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value:
+<a href=#146 id=146 data-nosnippet>146</a>Error { code: Eof, position: Position { line: 96233, col: 1 } }', player/src/bin/play.rs:28:70
+<a href=#147 id=147 data-nosnippet>147</a>```
+<a href=#148 id=148 data-nosnippet>148</a>
+<a href=#149 id=149 data-nosnippet>149</a>### Running in Gecko
+<a href=#150 id=150 data-nosnippet>150</a>
+<a href=#151 id=151 data-nosnippet>151</a>If you encounter a problem with something that runs fine outside of Gecko
+<a href=#152 id=152 data-nosnippet>152</a>but fails to run in Gecko, there is a way to trace the API use by the
+<a href=#153 id=153 data-nosnippet>153</a>browser. Simply run Firefox Nightly (with prefs enabled for WebGPU,
+<a href=#154 id=154 data-nosnippet>154</a>obviously) under `WGPU_TRACE` pointing to a writable folder, and it will
+<a href=#155 id=155 data-nosnippet>155</a>record the API trace. Setting `MOZ_DISABLE_GPU_SANDBOX=1` might also be
+<a href=#156 id=156 data-nosnippet>156</a>required if the GPU process is sandboxed by default. This trace can be
+<a href=#157 id=157 data-nosnippet>157</a>replayed as usual, or even compared to a trace you get by running the same
+<a href=#158 id=158 data-nosnippet>158</a>application natively, to find out what the browser doesn't do right.
+<a href=#159 id=159 data-nosnippet>159</a>
+<a href=#160 id=160 data-nosnippet>160</a>To replay a capture from Firefox and inspect it in RenderDoc or similar
+<a href=#161 id=161 data-nosnippet>161</a>tools, it is best not to build the player with the `winit` cargo feature.
+<a href=#162 id=162 data-nosnippet>162</a>
+<a href=#163 id=163 data-nosnippet>163</a>When Firefox renders a WebGPU canvas, the result is done in a texture rather
+<a href=#164 id=164 data-nosnippet>164</a>than a window's swapchain, and that texture is then shared and put onto the
+<a href=#165 id=165 data-nosnippet>165</a>screen via other means that aren't part of the `wgpu` trace. Since there is
+<a href=#166 id=166 data-nosnippet>166</a>no window swapchain involved, RenderDoc can't guess when a frame starts and
+<a href=#167 id=167 data-nosnippet>167</a>ends, so it has to be helped by manually inserting begin/end capture
+<a href=#168 id=168 data-nosnippet>168</a>markers. When built without the `winit` feature, the player replays the
+<a href=#169 id=169 data-nosnippet>169</a>commands without rendering them into a window, and adds these markers at the
+<a href=#170 id=170 data-nosnippet>170</a>beginning and end of the trace; it doesn't when the `winit` feature is
+<a href=#171 id=171 data-nosnippet>171</a>enabled, since it then assumes the trace will eventually render into the
+<a href=#172 id=172 data-nosnippet>172</a>winit window's swapchain.
+<a href=#173 id=173 data-nosnippet>173</a>
+<a href=#174 id=174 data-nosnippet>174</a>This applies to Firefox as well as any other software using `wgpu` to render
+<a href=#175 id=175 data-nosnippet>175</a>content into a texture but not to present that texture into a window.
+<a href=#176 id=176 data-nosnippet>176</a>*/
+<a href=#177 id=177 data-nosnippet>177</a>
+<a href=#178 id=178 data-nosnippet>178</a></span><span class="kw">use crate</span>::{Adapter, Device, DeviceDescriptor, InstanceDescriptor, InstanceFlags, Trace};
+</code></pre></div></section></main></body></html>

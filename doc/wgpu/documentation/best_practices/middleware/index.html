@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Encapsulating Graphics Work: the Middleware Pattern"><title>wgpu::documentation::best_practices::middleware - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module middleware</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="logo"></a><h2><a href="../../../../wgpu/index.html">wgpu</a><span class="version">30.0.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module middleware</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#encapsulating-graphics-work-the-middleware-pattern" title="Encapsulating Graphics Work: the Middleware Pattern">Encapsulating Graphics Work: the Middleware Pattern</a><ul><li><a href="#middleware-libraries" title="Middleware libraries">Middleware libraries</a></li><li><a href="#api-design" title="API design">API design</a></li><li><a href="#functions" title="Functions">Functions</a></li><li><a href="#multiple-render-targets" title="Multiple render targets">Multiple render targets</a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In wgpu::<wbr>documentation::<wbr>best_<wbr>practices</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../../index.html">wgpu</a>::<wbr><a href="../../index.html">documentation</a>::<wbr><a href="../index.html">best_practices</a></div><h1>Module <span>middleware</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../../src/wgpu/documentation/best_practices/middleware.rs.html#1-104">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="encapsulating-graphics-work-the-middleware-pattern"><a class="doc-anchor" href="#encapsulating-graphics-work-the-middleware-pattern">§</a>Encapsulating Graphics Work: the Middleware Pattern</h2>
+<p>Whether you are designing a library to be used by others or modularizing
+your own code, it is important to be able to encapsulate graphics code in a
+way that offers the calling code as much flexibility as possible.</p>
+<p>The following pattern is called the “middleware pattern” and works well both
+in separate libraries and in regular modules.</p>
+<h3 id="middleware-libraries"><a class="doc-anchor" href="#middleware-libraries">§</a>Middleware libraries</h3>
+<p>Middleware is a piece of software that fits unobtrusively into an existing
+application, giving it some extra functionality. In the case of <code>wgpu</code>,
+middleware are libraries that use the <code>wgpu</code> context the user provides to do
+their work. If a library creates the <code>wgpu</code> adapter, device, etc. for you,
+it isn’t middleware — it would more likely be called a framework.</p>
+<h3 id="api-design"><a class="doc-anchor" href="#api-design">§</a>API design</h3>
+<p>This does not have to be the extent of the API; you may have more (or
+different) arguments or more functions, but this is the gist of the
+interactions with <code>wgpu</code>.</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">impl </span>MiddlewareRenderer {
+    <span class="doccomment">/// Create all unchanging resources here.
+    </span><span class="kw">pub fn </span>new(device: <span class="kw-2">&amp;</span>Device, format: <span class="kw-2">&amp;</span>TextureFormat, ..) -&gt; <span class="self">Self</span>;
+
+    <span class="doccomment">/// Prepare for rendering this frame; create all resources that will be
+    /// used during the next render that do not already exist.
+    </span><span class="kw">pub fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ..);
+
+    <span class="doccomment">/// Render using a caller-provided render pass.
+    </span><span class="kw">pub fn </span>render(<span class="kw-2">&amp;</span><span class="self">self</span>, render_pass: <span class="kw-2">&amp;mut </span>RenderPass&lt;<span class="lifetime">'_</span>&gt;);
+}</code></pre></div>
+<p>The goal of this API is to use as few render passes and submissions as
+possible.</p>
+<ul>
+<li>
+<p>On GPUs that use <em>tiled rendering</em>, there is significant cost to ending a
+render pass. Therefore, the middleware should accept an existing
+<a href="../../../struct.RenderPass.html" title="struct wgpu::RenderPass"><code>RenderPass</code></a> (presuming it is rendering to a surface/texture provided by
+the user).</p>
+</li>
+<li>
+<p><a href="../../../struct.Queue.html#method.submit" title="method wgpu::Queue::submit"><code>Queue::submit</code></a> is expensive for <code>wgpu</code> to execute. Therefore, if the
+middleware generates a <a href="../../../struct.CommandBuffer.html" title="struct wgpu::CommandBuffer"><code>CommandBuffer</code></a> when preparing, it should hand
+that buffer back to the caller to become part of a larger submission,
+instead of submitting it alone.</p>
+</li>
+</ul>
+<h3 id="functions"><a class="doc-anchor" href="#functions">§</a>Functions</h3><h4 id="new"><a class="doc-anchor" href="#new">§</a>New</h4>
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>new(device: <span class="kw-2">&amp;</span>Device, format: <span class="kw-2">&amp;</span>TextureFormat, ..) -&gt; <span class="self">Self</span>;</code></pre></div>
+<p>This is where you create your renderer and set up all the static resources.
+Things like pipelines, buffers, or textures should be created and uploaded
+here. When the middleware needs to know the parameters of what it is
+rendering to, favor accepting a <a href="../../../enum.TextureFormat.html" title="enum wgpu::TextureFormat"><code>TextureFormat</code></a>, <code>width</code>, and <code>height</code>
+over a <a href="../../../type.SurfaceConfiguration.html" title="type wgpu::SurfaceConfiguration"><code>SurfaceConfiguration</code></a>, as the user may not be rendering to the
+surface but to another texture.</p>
+<h4 id="prepare"><a class="doc-anchor" href="#prepare">§</a>Prepare</h4>
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ..);</code></pre></div>
+<p>Ideally there should be a minimal amount of resources created per frame, but
+that is often hard to avoid. <code>prepare()</code> should create those resources and
+do any other computation required to be ready to render.</p>
+<h4 id="render"><a class="doc-anchor" href="#render">§</a>Render</h4>
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>render(<span class="kw-2">&amp;</span><span class="self">self</span>, render_pass: <span class="kw-2">&amp;mut </span>RenderPass&lt;<span class="lifetime">'_</span>&gt;);</code></pre></div>
+<p>This is where the magic happens! Using the resources created during <code>new()</code>
+and <code>prepare()</code>, render everything using the provided render pass.</p>
+<p>The split between <code>prepare()</code> and <code>render()</code> is not critical but improves
+flexibility. By avoiding borrowing the middleware object exclusively
+(<code>&amp;mut</code>) during <code>render()</code>, the user has more options for organizing their
+code; for example, they might want to perform command encoding — including
+the middleware’s <code>render()</code> — in parallel into multiple command buffers, and
+this may be easier if the middleware (and therefore whatever owns it) does
+not have to be exclusively borrowed. It also means that the order of calls
+to <code>prepare()</code> of different middleware can be independent of the order of
+drawing.</p>
+<h3 id="multiple-render-targets"><a class="doc-anchor" href="#multiple-render-targets">§</a>Multiple render targets</h3>
+<p>If your piece of middleware has to render to multiple targets, it is pretty
+unavoidable to have multiple render passes. As much as possible, this
+pattern should be used as a guideline for the design of your API, but it
+doesn’t work for every possible piece of middleware out there.</p>
+</div></details></section></div></main></body></html>

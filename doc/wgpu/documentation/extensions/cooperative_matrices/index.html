@@ -1,0 +1,454 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="🧪Experimental🧪 Cooperative Matrix Extensions"><title>wgpu::documentation::extensions::cooperative_matrices - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module cooperative_matrices</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="logo"></a><h2><a href="../../../../wgpu/index.html">wgpu</a><span class="version">30.0.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module cooperative_<wbr>matrices</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#experimental-cooperative-matrix-extensions" title="🧪Experimental🧪 Cooperative Matrix Extensions">🧪Experimental🧪 Cooperative Matrix Extensions</a><ul><li><a href="#overview" title="Overview">Overview</a></li><li><a href="#querying-hardware-support-host-side" title="Querying hardware support (host side)">Querying hardware support (host side)</a></li><li><a href="#feature-and-backend-requirements" title="Feature and backend requirements">Feature and backend requirements</a></li><li><a href="#wgpu-api-surface" title="`wgpu` API surface"><code>wgpu</code> API surface</a></li><li><a href="#wgsl-extension-specification" title="WGSL extension specification">WGSL extension specification</a></li><li><a href="#validation-rules-and-undefined-behavior" title="Validation rules and undefined behavior">Validation rules and undefined behavior</a></li><li><a href="#example-6464-matrix-multiply-using-88-tiles" title="Example: 64×64 matrix multiply using 8×8 tiles">Example: 64×64 matrix multiply using 8×8 tiles</a></li><li><a href="#notes-and-best-practices" title="Notes and best practices">Notes and best practices</a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In wgpu::<wbr>documentation::<wbr>extensions</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../../index.html">wgpu</a>::<wbr><a href="../../index.html">documentation</a>::<wbr><a href="../index.html">extensions</a></div><h1>Module <span>cooperative_<wbr>matrices</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../../src/wgpu/documentation/extensions/cooperative_matrices.rs.html#1-471">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="experimental-cooperative-matrix-extensions"><a class="doc-anchor" href="#experimental-cooperative-matrix-extensions">§</a>🧪Experimental🧪 Cooperative Matrix Extensions</h2>
+<p><code>wgpu</code> supports an experimental cooperative matrix feature when <a href="../../../struct.Features.html#associatedconstant.EXPERIMENTAL_COOPERATIVE_MATRIX" title="associated constant wgpu::Features::EXPERIMENTAL_COOPERATIVE_MATRIX"><code>Features::EXPERIMENTAL_COOPERATIVE_MATRIX</code></a> is enabled.
+This exposes hardware-accelerated matrix multiply-accumulate (MMA) operations (for example, NVIDIA tensor cores,
+Metal SIMD-group matrices, and Vulkan <code>VK_KHR_cooperative_matrix</code>).</p>
+<p><strong>Note</strong>: The features documented here may have bugs and are subject to breaking changes. The API and shader
+semantics are expected to evolve. Please refer to the GitHub issue tracker for the latest status and discussions.</p>
+<hr />
+<h3 id="overview"><a class="doc-anchor" href="#overview">§</a>Overview</h3>
+<p>Cooperative matrices allow a <strong>workgroup</strong> (or equivalent execution group) to collectively:</p>
+<ul>
+<li>load small matrix tiles from memory,</li>
+<li>perform matrix multiply-accumulate operations on those tiles, and</li>
+<li>store the results back to memory.</li>
+</ul>
+<p>Conceptually, this is specialized hardware that evaluates:</p>
+<blockquote>
+<p><code>C = A * B + C</code></p>
+</blockquote>
+<p>for relatively small tiles, but at very high throughput compared to composing the same operation from
+scalar/vector instructions.</p>
+<p>Cooperative matrix operations are most useful in workloads such as:</p>
+<ul>
+<li>machine learning and inference,</li>
+<li>dense linear algebra and scientific computing,</li>
+<li>image processing, filtering, and transforms.</li>
+</ul>
+<p>The cooperative nature means that all lanes in the cooperating execution group must participate in
+the operations; individual invocations cannot diverge.</p>
+<p>Typical example:</p>
+<ul>
+<li><code>A</code> is an M×K matrix.</li>
+<li><code>B</code> is a K×N matrix.</li>
+<li><code>C</code> is an M×N matrix, acting as the accumulator and result.</li>
+</ul>
+<hr />
+<h3 id="querying-hardware-support-host-side"><a class="doc-anchor" href="#querying-hardware-support-host-side">§</a>Querying hardware support (host side)</h3>
+<p>Before using cooperative matrices in shaders, you must query what configurations your hardware and backend support.</p>
+<p>On the <code>Adapter</code>, <code>wgpu</code> exposes:</p>
+<ul>
+<li><code>Adapter::cooperative_matrix_properties() -&gt; Vec&lt;CooperativeMatrixProperties&gt;</code></li>
+</ul>
+<p>Each <code>CooperativeMatrixProperties</code> describes a single supported configuration. Fields are:</p>
+<ul>
+<li><code>m_size</code>: height of matrices A and C (type: <code>naga::CooperativeSize</code>)</li>
+<li><code>n_size</code>: width of matrices B and C (type: <code>naga::CooperativeSize</code>)</li>
+<li><code>k_size</code>: shared inner dimension of A and B (type: <code>naga::CooperativeSize</code>)</li>
+<li><code>ab_type</code>: scalar element type for A and B (type: <code>naga::Scalar</code>)</li>
+<li><code>cr_type</code>: scalar element type for C and the result (type: <code>naga::Scalar</code>)</li>
+<li><code>saturating_accumulation</code>: <code>bool</code> indicating whether overflow clamping on accumulation
+is supported for this configuration</li>
+</ul>
+<p>Example usage:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">let </span>coop_props = adapter.cooperative_matrix_properties();
+<span class="kw">for </span>prop <span class="kw">in </span><span class="kw-2">&amp;</span>coop_props {
+    <span class="macro">println!</span>(
+        <span class="string">"{:?}x{:?}x{:?} - AB: {:?}, CR: {:?}, saturating: {}"</span>,
+        prop.m_size, prop.n_size, prop.k_size,
+        prop.ab_type, prop.cr_type,
+        prop.saturating_accumulation,
+    );
+}</code></pre></div>
+<p>You <strong>must</strong>:</p>
+<ol>
+<li>Enable <a href="../../../struct.Features.html#associatedconstant.EXPERIMENTAL_COOPERATIVE_MATRIX" title="associated constant wgpu::Features::EXPERIMENTAL_COOPERATIVE_MATRIX"><code>Features::EXPERIMENTAL_COOPERATIVE_MATRIX</code></a> on the <code>Device</code>.</li>
+<li>Query <code>adapter.cooperative_matrix_properties()</code> and ensure that the configuration(s) you intend
+to use in WGSL are actually available on the running adapter/backend.</li>
+<li>Treat the sizes and types as a contract between your shaders and the underlying hardware implementation.
+Using unsupported configurations is an error.</li>
+</ol>
+<hr />
+<h3 id="feature-and-backend-requirements"><a class="doc-anchor" href="#feature-and-backend-requirements">§</a>Feature and backend requirements</h3><h4 id="wgpu-feature"><a class="doc-anchor" href="#wgpu-feature">§</a><code>wgpu</code> feature</h4>
+<ul>
+<li>Using cooperative matrices requires enabling:
+<ul>
+<li><a href="../../../struct.Features.html#associatedconstant.EXPERIMENTAL_COOPERATIVE_MATRIX" title="associated constant wgpu::Features::EXPERIMENTAL_COOPERATIVE_MATRIX"><code>Features::EXPERIMENTAL_COOPERATIVE_MATRIX</code></a></li>
+</ul>
+</li>
+</ul>
+<p>This feature may be restricted to certain backends and hardware.</p>
+<h4 id="hardware--backend-notes"><a class="doc-anchor" href="#hardware--backend-notes">§</a>Hardware / backend notes</h4>
+<p>These are general guidelines, not a complete compatibility matrix:</p>
+<ul>
+<li>
+<p><strong>Metal</strong>:</p>
+<ul>
+<li>Requires Apple7+ (A14) or Mac2+ (M1) GPU with MSL 2.3+.</li>
+<li>Strong support for 8×8 <code>f32</code>, 8×8 <code>f16</code>, and mixed-precision modes (e.g. <code>f16</code> A/B and <code>f32</code> accumulator C).</li>
+<li>Implementation is based on SIMD-group matrix operations.</li>
+</ul>
+</li>
+<li>
+<p><strong>Vulkan</strong>:</p>
+<ul>
+<li>Requires the <code>VK_KHR_cooperative_matrix</code> extension.</li>
+<li>Many NVIDIA and AMD GPUs support <code>f16</code> at 16×16 tile sizes and similar.</li>
+<li>8×8 <code>f32</code> support is hardware-dependent.</li>
+<li>Exact configurations are enumerated by <a href="../../../struct.Adapter.html#method.cooperative_matrix_properties" title="method wgpu::Adapter::cooperative_matrix_properties"><code>Adapter::cooperative_matrix_properties()</code></a>.</li>
+</ul>
+</li>
+<li>
+<p><strong>Other backends</strong>:</p>
+<ul>
+<li>May not support cooperative matrices at all. In that case the feature will not be exposed, and
+<code>adapter.cooperative_matrix_properties()</code> will return an empty list.</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>Always treat the properties returned at runtime as the source of truth.</p>
+</blockquote>
+<hr />
+<h3 id="wgpu-api-surface"><a class="doc-anchor" href="#wgpu-api-surface">§</a><code>wgpu</code> API surface</h3>
+<p>This section summarizes the host-side API elements related to cooperative matrices.
+(For exact signatures and details, refer to the Rust documentation.)</p>
+<h4 id="adapter"><a class="doc-anchor" href="#adapter">§</a>Adapter</h4>
+<ul>
+<li><code>Adapter::cooperative_matrix_properties() -&gt; Vec&lt;CooperativeMatrixProperties&gt;</code></li>
+</ul>
+<p>Returns all cooperative matrix configurations supported by the adapter/backend.</p>
+<h4 id="structures"><a class="doc-anchor" href="#structures">§</a>Structures</h4>
+<ul>
+<li><code>CooperativeMatrixProperties</code>
+<ul>
+<li><code>m_size: naga::CooperativeSize</code></li>
+<li><code>n_size: naga::CooperativeSize</code></li>
+<li><code>k_size: naga::CooperativeSize</code></li>
+<li><code>ab_type: naga::Scalar</code></li>
+<li><code>cr_type: naga::Scalar</code></li>
+<li><code>saturating_accumulation: bool</code></li>
+</ul>
+</li>
+</ul>
+<p>The <code>naga</code> types (<code>CooperativeSize</code>, <code>Scalar</code>) are part of the shader translation layer and
+determine the legal WGSL/cooperative matrix combinations.</p>
+<p>There are currently no dedicated <code>wgpu</code> buffer or texture types for cooperative matrices; they are
+expressed in WGSL as special value types accessed via pointers into ordinary <code>var&lt;storage&gt;</code> /
+<code>var&lt;workgroup&gt;</code> / <code>var&lt;private&gt;</code> / etc.</p>
+<hr />
+<h3 id="wgsl-extension-specification"><a class="doc-anchor" href="#wgsl-extension-specification">§</a>WGSL extension specification</h3>
+<p>Cooperative matrices are enabled and accessed via WGSL extensions. The exact extension spelling
+may change; the details below describe the intended semantics.</p>
+<h4 id="enabling-cooperative-matrices-in-wgsl"><a class="doc-anchor" href="#enabling-cooperative-matrices-in-wgsl">§</a>Enabling cooperative matrices in WGSL</h4>
+<p>Any WGSL program using cooperative matrices must declare an extension at the top of the shader, for example:</p>
+<div class="example-wrap"><pre class="language-wgsl"><code>enable wgpu_cooperative_matrix;</code></pre></div>
+<p>The shader is invalid if any cooperative matrix types or builtins are used without enabling this extension.</p>
+<h4 id="cooperative-matrix-types"><a class="doc-anchor" href="#cooperative-matrix-types">§</a>Cooperative matrix types</h4>
+<p>A cooperative matrix is a value type parameterized by:</p>
+<ul>
+<li>tile size (M×N),</li>
+<li>scalar element type <code>T</code>, and</li>
+<li>role <code>R</code> indicating how the matrix participates in the multiply-accumulate:
+<ul>
+<li><code>A</code>: left operand</li>
+<li><code>B</code>: right operand</li>
+<li><code>C</code>: accumulator / result</li>
+</ul>
+</li>
+</ul>
+<p>Conceptually:</p>
+<div class="example-wrap"><pre class="language-wgsl"><code>// A: MxK, B: KxN, C: MxN
+type coop_matMxN&lt;T, A&gt;;
+type coop_matMxN&lt;T, B&gt;;
+type coop_matMxN&lt;T, C&gt;;</code></pre></div>
+<p>Concrete examples (sizes and types must match a supported configuration from
+<code>Adapter::cooperative_matrix_properties</code>):</p>
+<div class="example-wrap"><pre class="language-wgsl"><code>// 8x8 single-precision tiles
+alias CoopMatA = coop_mat8x8&lt;f32, A&gt;;
+alias CoopMatB = coop_mat8x8&lt;f32, B&gt;;
+alias CoopMatC = coop_mat8x8&lt;f32, C&gt;;
+
+// 16x16 half-precision inputs, 16x16 f32 accumulator (mixed precision)
+alias CoopMat16x16A = coop_mat16x16&lt;f16, A&gt;;
+alias CoopMat16x16B = coop_mat16x16&lt;f16, B&gt;;
+alias CoopMat16x16C = coop_mat16x16&lt;f32, C&gt;;</code></pre></div>
+<p>The actual set of legal <code>(M, N, T, R)</code> combinations is defined by the cooperative matrix
+properties returned at runtime; shaders must not use arbitrary combinations.</p>
+<h4 id="roles-and-semantics"><a class="doc-anchor" href="#roles-and-semantics">§</a>Roles and semantics</h4>
+<ul>
+<li>
+<p><code>A</code> role:</p>
+<ul>
+<li>Treated as the left operand in the multiplication. Has shape M×K.</li>
+<li>Participates as <code>A</code> in <code>A * B + C</code>.</li>
+</ul>
+</li>
+<li>
+<p><code>B</code> role:</p>
+<ul>
+<li>Treated as the right operand in the multiplication. Has shape K×N.</li>
+<li>Participates as <code>B</code> in <code>A * B + C</code>.</li>
+</ul>
+</li>
+<li>
+<p><code>C</code> role:</p>
+<ul>
+<li>Treated as accumulator and result. Has shape M×N.</li>
+<li>Participates as <code>C</code> in <code>A * B + C</code>.</li>
+</ul>
+</li>
+</ul>
+<p>These roles are part of the type; they are not interchangeable.</p>
+<h4 id="cooperative-matrix-operations"><a class="doc-anchor" href="#cooperative-matrix-operations">§</a>Cooperative matrix operations</h4>
+<p>WGSL provides built-in functions for operating on cooperative matrices. The exact spelling may
+change; the semantics are:</p>
+<h5 id="coopload--cooploadt"><a class="doc-anchor" href="#coopload--cooploadt">§</a><code>coopLoad</code> / <code>coopLoadT</code></h5>
+<p>Collectively load a tile from memory into a cooperative matrix. Two variants
+select the memory layout:</p>
+<ul>
+<li><code>coopLoad</code> — matrix is stored <strong>column-major</strong> in memory; <code>stride</code> is the
+number of elements between adjacent columns.</li>
+<li><code>coopLoadT</code> — matrix is stored <strong>row-major</strong> in memory (i.e. transposed
+relative to the canonical column-major layout used by <code>coopLoad</code>);
+<code>stride</code> is the number of elements between adjacent rows. This is the
+natural fit for C-style <code>ptr[i * num_cols + j]</code> storage.</li>
+</ul>
+<div class="example-wrap"><pre class="language-wgsl"><code>fn coopLoad&lt;T, R&gt;(
+    ptr: ptr&lt;STORAGE_CLASS, T&gt;, // base pointer to scalar or vector elements
+    stride: u32                  // elements between adjacent columns
+) -&gt; coop_matMxN&lt;T, R&gt;;
+
+fn coopLoadT&lt;T, R&gt;(
+    ptr: ptr&lt;STORAGE_CLASS, T&gt;, // base pointer to scalar or vector elements
+    stride: u32                  // elements between adjacent rows
+) -&gt; coop_matMxN&lt;T, R&gt;;</code></pre></div>
+<ul>
+<li>Loads an M×N tile (or M×K / K×N, depending on role and operation) from memory pointed to by <code>ptr</code>.</li>
+<li>All invocations in the cooperative group must call the chosen variant in a converged fashion.</li>
+<li>Memory address range must be valid and properly aligned for the scalar type.</li>
+</ul>
+<blockquote>
+<p>Implementation note: Each lane contributes to filling the tile based on an implementation-defined mapping from
+invocation/lane ID to sub-fragment of the matrix.</p>
+</blockquote>
+<h5 id="coopstore--coopstoret"><a class="doc-anchor" href="#coopstore--coopstoret">§</a><code>coopStore</code> / <code>coopStoreT</code></h5>
+<p>Collectively store a cooperative matrix tile back to memory. Variant
+selection mirrors the load builtins:</p>
+<ul>
+<li><code>coopStore</code> — writes <strong>column-major</strong>; <code>stride</code> between columns.</li>
+<li><code>coopStoreT</code> — writes <strong>row-major</strong>; <code>stride</code> between rows.</li>
+</ul>
+<div class="example-wrap"><pre class="language-wgsl"><code>fn coopStore&lt;T, R&gt;(
+    value: coop_matMxN&lt;T, R&gt;,
+    ptr: ptr&lt;STORAGE_CLASS, T&gt;,
+    stride: u32
+);
+
+fn coopStoreT&lt;T, R&gt;(
+    value: coop_matMxN&lt;T, R&gt;,
+    ptr: ptr&lt;STORAGE_CLASS, T&gt;,
+    stride: u32
+);</code></pre></div>
+<ul>
+<li>Stores <code>value</code> into the memory region addressed by <code>ptr</code> with given <code>stride</code>.</li>
+<li>All invocations in the cooperative group must participate.</li>
+<li>The store must not alias overlapping tiles in undefined ways.</li>
+</ul>
+<h5 id="coopmultiplyadd"><a class="doc-anchor" href="#coopmultiplyadd">§</a><code>coopMultiplyAdd</code></h5>
+<p>Perform a matrix multiply-accumulate operation on cooperative matrices:</p>
+<div class="example-wrap"><pre class="language-wgsl"><code>fn coopMultiplyAdd&lt;Tab, Tcr, MA, KA, KB, NB&gt;(
+    a: coop_matMAxKA&lt;Tab, A&gt;, // A: MAxKA tile
+    b: coop_matKBxNB&lt;Tab, B&gt;, // B: KBxNB tile (KB == KA)
+    c: coop_matMAxNB&lt;Tcr, C&gt;  // C: MAxNB accumulator/result
+) -&gt; coop_matMAxNB&lt;Tcr, C&gt;;</code></pre></div>
+<p>Semantics:</p>
+<ul>
+<li>Computes <code>C' = A * B + C</code>.</li>
+<li>Returns the resulting accumulator tile <code>C'</code>.</li>
+<li>Implies:
+<ul>
+<li><code>KA == KB</code> (inner dimension must match).</li>
+<li>Types <code>(Tab, Tcr)</code> must be one of the supported AB/CR combinations given by
+<code>CooperativeMatrixProperties</code>.</li>
+<li>Sizes <code>(MA, NB, KA)</code> must match a supported <code>(m_size, n_size, k_size)</code> triple.</li>
+</ul>
+</li>
+</ul>
+<p>For example, with a supported configuration:</p>
+<div class="example-wrap"><pre class="language-wgsl"><code>enable wgpu_cooperative_matrix;
+
+alias MatA = coop_mat8x8&lt;f32, A&gt;;
+alias MatB = coop_mat8x8&lt;f32, B&gt;;
+alias MatC = coop_mat8x8&lt;f32, C&gt;;
+
+// Assumes each tile is stored column-major in memory (the plain `coopLoad`
+// / `coopStore` form); use `coopLoadT` / `coopStoreT` for row-major storage.
+fn matmul_tile(
+    ptr_a: ptr&lt;storage, f32&gt;,
+    ptr_b: ptr&lt;storage, f32&gt;,
+    ptr_c: ptr&lt;storage, f32&gt;,
+    stride: u32,
+) {
+    let a: MatA = coopLoad&lt;_, A&gt;(ptr_a, stride);
+    let b: MatB = coopLoad&lt;_, B&gt;(ptr_b, stride);
+    let c: MatC = coopLoad&lt;_, C&gt;(ptr_c, stride);
+
+    let result: MatC = coopMultiplyAdd(a, b, c);
+    coopStore(result, ptr_c, stride);
+}</code></pre></div>
+<p>If <code>saturating_accumulation</code> is true for the chosen configuration, then overflow during accumulation
+is clamped (e.g. saturating arithmetic). If false, overflow behavior for the accumulator follows the
+underlying scalar type semantics (e.g. IEEE-754 for floats).</p>
+<h4 id="workgroup-cooperation-and-execution-model"><a class="doc-anchor" href="#workgroup-cooperation-and-execution-model">§</a>Workgroup cooperation and execution model</h4>
+<p>Cooperative matrix operations are <strong>collective</strong>:</p>
+<ul>
+<li>
+<p>All invocations in the relevant execution group must execute each cooperative operation in uniform control flow:</p>
+<ul>
+<li>Using <code>coopLoad</code> / <code>coopLoadT</code>, <code>coopStore</code> / <code>coopStoreT</code>, or <code>coopMultiplyAdd</code> in divergent control flow
+(e.g. some lanes taking a branch, others not) is undefined behavior.</li>
+<li>The exact execution group may be a workgroup, a SIMD-group / subgroup, or another backend-specific
+granularity; shaders must treat it abstractly.</li>
+</ul>
+</li>
+<li>
+<p>The workgroup (or cooperating group) size is constrained by both:</p>
+<ul>
+<li>the cooperative matrix configuration, and</li>
+<li>backend-specific implementation details.</li>
+</ul>
+</li>
+</ul>
+<p>For portable code:</p>
+<ul>
+<li>
+<p>Choose a workgroup size that is known to be supported efficiently on your target backends, for example:</p>
+<ul>
+<li><code>@workgroup_size(8, 8, 1)</code> to operate on an 8×8 tile, or</li>
+<li>a multiple of the tile size where each subgroup handles a tile.</li>
+</ul>
+</li>
+<li>
+<p>Avoid control-flow divergence around cooperative operations.</p>
+</li>
+</ul>
+<p>Example:</p>
+<div class="example-wrap"><pre class="language-wgsl"><code>enable wgpu_cooperative_matrix;
+
+struct Matrices {
+    // Row-major tiles for A, B, C — use the `…T` load/store variants.
+    data: array&lt;f32&gt;,
+};
+
+@group(0) @binding(0)
+var&lt;storage, read&gt;  buf_a: Matrices;
+@group(0) @binding(1)
+var&lt;storage, read&gt;  buf_b: Matrices;
+@group(0) @binding(2)
+var&lt;storage, read_write&gt; buf_c: Matrices;
+
+alias MatA = coop_mat8x8&lt;f32, A&gt;;
+alias MatB = coop_mat8x8&lt;f32, B&gt;;
+alias MatC = coop_mat8x8&lt;f32, C&gt;;
+
+@compute @workgroup_size(8, 8, 1)
+fn main(
+    @builtin(workgroup_id) wg_id: vec3&lt;u32&gt;,
+    @builtin(local_invocation_id) lid: vec3&lt;u32&gt;,
+) {
+    // Compute tile offset; this is one of many possible mappings.
+    let tile_index = wg_id.x; // 1D tiling in this simple example
+    let tile_offset = tile_index * 64u; // 8x8 tile has 64 elements
+
+    // Base pointers for tiles of A, B, C.
+    let base_a = &amp;buf_a.data[tile_offset];
+    let base_b = &amp;buf_b.data[tile_offset];
+    let base_c = &amp;buf_c.data[tile_offset];
+
+    let a: MatA = coopLoadT&lt;f32, A&gt;(base_a, 8u);
+    let b: MatB = coopLoadT&lt;f32, B&gt;(base_b, 8u);
+    let c: MatC = coopLoadT&lt;f32, C&gt;(base_c, 8u);
+
+    let result: MatC = coopMultiplyAdd(a, b, c);
+    coopStoreT(result, base_c, 8u);
+}</code></pre></div>
+<hr />
+<h3 id="validation-rules-and-undefined-behavior"><a class="doc-anchor" href="#validation-rules-and-undefined-behavior">§</a>Validation rules and undefined behavior</h3>
+<p>Implementations must validate the following where possible:</p>
+<ul>
+<li>The <code>wgpu_cooperative_matrix</code> WGSL extension is enabled if any cooperative matrix types
+or builtins are used.</li>
+<li>Tile sizes <code>(M, N, K)</code> and scalar types <code>(ab_type, cr_type)</code> match at least one
+<a href="../../../struct.CooperativeMatrixProperties.html" title="struct wgpu::CooperativeMatrixProperties"><code>CooperativeMatrixProperties</code></a> entry for the current adapter/backend.</li>
+<li>Workgroup size, shader stage, and other pipeline configuration constraints required
+by the backend are satisfied.</li>
+</ul>
+<p>The following are examples of <strong>undefined behavior</strong> (non-exhaustive):</p>
+<ul>
+<li>Using cooperative matrix operations without enabling the WGSL extension.</li>
+<li>Using a cooperative matrix type <code>(M, N, T, R)</code> not supported by
+<a href="../../../struct.Adapter.html#method.cooperative_matrix_properties" title="method wgpu::Adapter::cooperative_matrix_properties"><code>Adapter::cooperative_matrix_properties()</code></a>.</li>
+<li>Mismatching sizes or roles in <code>coopMultiplyAdd</code> (e.g. incompatible M/N/K, or incorrect roles).</li>
+<li>Executing <code>coopLoad</code> / <code>coopLoadT</code>, <code>coopStore</code> / <code>coopStoreT</code>, or <code>coopMultiplyAdd</code> in divergent
+control flow within the cooperating execution group.</li>
+<li>Providing invalid, misaligned, or out-of-bounds pointers to any of the load/store builtins.</li>
+<li>Using a load/store variant (<code>coopLoad</code> vs <code>coopLoadT</code>, <code>coopStore</code> vs <code>coopStoreT</code>) whose memory
+layout does not match how the tile is actually stored.</li>
+<li>Overlapping <code>coopStore</code> / <code>coopStoreT</code> targets in a way that creates data races or aliasing that
+the memory model does not allow.</li>
+</ul>
+<hr />
+<h3 id="example-6464-matrix-multiply-using-88-tiles"><a class="doc-anchor" href="#example-6464-matrix-multiply-using-88-tiles">§</a>Example: 64×64 matrix multiply using 8×8 tiles</h3>
+<p>The example in <code>examples/features/src/cooperative_matrix</code> demonstrates using cooperative matrices to
+compute:</p>
+<ul>
+<li><code>C = A * B + C</code> where:
+<ul>
+<li><code>A</code> is 64×64,</li>
+<li><code>B</code> is 64×64,</li>
+<li><code>C</code> is 64×64.</li>
+</ul>
+</li>
+</ul>
+<p>A high-level tiling strategy:</p>
+<ol>
+<li>Partition A, B, and C into 8×8 tiles.</li>
+<li>Launch one workgroup per output tile of C (i.e. 8×8 tiles for a 64×64 matrix = 8×8 = 64 tiles).</li>
+<li>Within each workgroup:
+<ul>
+<li>Loop over K-dimension tiles.</li>
+<li>For each <code>k</code> tile:
+<ul>
+<li>Load an 8×8 tile of A (<code>MatA</code>).</li>
+<li>Load an 8×8 tile of B (<code>MatB</code>).</li>
+<li>Maintain an 8×8 accumulator tile (<code>MatC</code>) and repeatedly apply <code>coopMultiplyAdd</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>After the K loop, store the final accumulator tile back to C.</li>
+</ol>
+<p>Key points from the example:</p>
+<ul>
+<li>Workgroup size is chosen so that all cooperative operations are well-defined and efficient for 8×8 tiles.</li>
+<li>Host-side code:
+<ul>
+<li>Enables <a href="../../../struct.Features.html#associatedconstant.EXPERIMENTAL_COOPERATIVE_MATRIX" title="associated constant wgpu::Features::EXPERIMENTAL_COOPERATIVE_MATRIX"><code>Features::EXPERIMENTAL_COOPERATIVE_MATRIX</code></a>.</li>
+<li>Queries <code>cooperative_matrix_properties</code> and verifies that 8×8 <code>f32</code> or chosen configuration is supported.</li>
+<li>Dispatches the compute pipeline with appropriate grid dimensions.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="notes-and-best-practices"><a class="doc-anchor" href="#notes-and-best-practices">§</a>Notes and best practices</h3>
+<ul>
+<li>Always query <code>adapter.cooperative_matrix_properties()</code> and check that the configuration your shaders use exists.
+Do not hard-code assumptions about available tile sizes or element types.</li>
+<li>Treat the cooperative execution group as an abstract concept; avoid making assumptions about how
+tiles are mapped to lanes beyond what is guaranteed by the spec.</li>
+<li>Avoid divergent control flow around cooperative operations.</li>
+<li>Consider providing a fallback non-cooperative implementation for devices that do not support the feature.</li>
+<li>This is an experimental extension; API and semantics may change across versions of <code>wgpu</code> and <code>naga</code>.</li>
+</ul>
+</div></details></section></div></main></body></html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Debugging wgpu Applications"><title>wgpu::documentation::debugging::debugging_applications - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module debugging_applications</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="logo"></a><h2><a href="../../../../wgpu/index.html">wgpu</a><span class="version">30.0.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module debugging_<wbr>applications</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#debugging-wgpu-applications" title="Debugging wgpu Applications">Debugging wgpu Applications</a><ul><li><a href="#native-api-validation" title="Native API validation">Native API validation</a></li><li><a href="#gpu-debugging" title="GPU debugging">GPU debugging</a></li><li><a href="#cpu-debugging" title="CPU debugging">CPU debugging</a></li><li><a href="#rubber-duck-debugging" title="Rubber-duck debugging">Rubber-duck debugging</a></li><li><a href="#tracing-infrastructure" title="Tracing infrastructure">Tracing infrastructure</a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In wgpu::<wbr>documentation::<wbr>debugging</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../../index.html">wgpu</a>::<wbr><a href="../../index.html">documentation</a>::<wbr><a href="../index.html">debugging</a></div><h1>Module <span>debugging_<wbr>applications</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../../src/wgpu/documentation/debugging/debugging_applications.rs.html#1-178">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="debugging-wgpu-applications"><a class="doc-anchor" href="#debugging-wgpu-applications">§</a>Debugging wgpu Applications</h2>
+<p>This page describes the tricks and tools aimed at investigating issues
+related to <code>wgpu</code>.</p>
+<h3 id="native-api-validation"><a class="doc-anchor" href="#native-api-validation">§</a>Native API validation</h3>
+<p><code>wgpu</code>’s goal is to guarantee that only valid workloads reach the low-level
+APIs under the hood. If anything is not correct, we are going to complain
+about it. You should never need to listen to the low-level API’s complaints.</p>
+<p>This is a big <a href="https://github.com/gfx-rs/wgpu/labels/area%3A%20validation">work-in-progress</a>,
+however. So in the meantime, it’s useful to hear what the low-level
+validation has to say.</p>
+<h4 id="vulkan-and-opengl"><a class="doc-anchor" href="#vulkan-and-opengl">§</a>Vulkan and OpenGL</h4>
+<p>On Khronos APIs we redirect all the validation output to the console. You
+will see it as long as:</p>
+<ol>
+<li>you run a debug build,</li>
+<li>you have the validation layers installed (i.e. the LunarG SDK), and</li>
+<li>you capture logging (with something like
+<a href="https://crates.io/crates/env_logger"><code>env_logger</code></a>).</li>
+</ol>
+<p>To enable the validation layers in non-debug builds, manually turn on
+validation in the <a href="../../../struct.InstanceDescriptor.html" title="struct wgpu::InstanceDescriptor"><code>InstanceDescriptor</code></a> with <a href="../../../struct.InstanceFlags.html#associatedconstant.VALIDATION" title="associated constant wgpu::InstanceFlags::VALIDATION"><code>InstanceFlags::VALIDATION</code></a>.
+See also <a href="../vulkan_validation_layers/index.html" title="mod wgpu::documentation::debugging::vulkan_validation_layers">Enabling Vulkan Validation Layers</a>.</p>
+<h4 id="d3d"><a class="doc-anchor" href="#d3d">§</a>D3D</h4><h5 id="com"><a class="doc-anchor" href="#com">§</a>COM</h5>
+<p>The refcount of a COM object is 9 32-bit words behind the pointer’s
+destination and is 4 bytes. As such, subtract 36 from the pointer’s address
+to get a pointer to that object’s refcount. This allows you to use data
+breakpoints to see all changes to the object’s refcount, useful for
+detecting leaks and other such things.</p>
+<h4 id="metal"><a class="doc-anchor" href="#metal">§</a>Metal</h4>
+<p>You can either set <code>METAL_DEVICE_WRAPPER_TYPE=1</code> in the environment, or
+launch from Xcode, where validation options are configurable in the project
+menus (and enabled by default). To launch from Xcode, you can create a
+project of “External Build System” type, picking <code>cargo</code> or any other
+command as the build system. Then you’d need to edit the target
+configuration and select the executable.</p>
+<p>A full guide that explains how to launch from Xcode is available in
+<a href="../xcode/index.html" title="mod wgpu::documentation::debugging::xcode">Debugging with Xcode</a>.</p>
+<h5 id="mac-leaks"><a class="doc-anchor" href="#mac-leaks">§</a>Mac leaks</h5>
+<p>To look for leaks using “Instruments”, you need to add a special entitlement
+to your executable’s signature. Write the following to <code>entitle.xml</code>:</p>
+<div class="example-wrap"><pre class="language-xml"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;https://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;
+&lt;plist version=&quot;1.0&quot;&gt;
+    &lt;dict&gt;
+        &lt;key&gt;com.apple.security.get-task-allow&lt;/key&gt;
+        &lt;true/&gt;
+    &lt;/dict&gt;
+&lt;/plist&gt;</code></pre></div>
+<p>Then run <code>codesign -s - -v -f --entitlements=entitle.xml /path/to/my/app</code>.</p>
+<p>(<a href="https://stackoverflow.com/questions/74262518/why-required-kernel-recording-resources-are-in-use-by-another-document-error-i">Source</a>.)</p>
+<h3 id="gpu-debugging"><a class="doc-anchor" href="#gpu-debugging">§</a>GPU debugging</h3>
+<p>If the validation is clean, and you are getting incorrect rendering or
+computing, it’s time to dive into GPU debugging. Many tools exist today:</p>
+<ul>
+<li>RenderDoc can be used on Windows and Linux to capture Vulkan, D3D, and
+OpenGL.
+<ul>
+<li>If RenderDoc is used with a compute shader without any normal rendering
+components, wrap the work in <a href="../../../struct.Device.html#method.start_graphics_debugger_capture" title="method wgpu::Device::start_graphics_debugger_capture"><code>Device::start_graphics_debugger_capture</code></a>
+and <a href="../../../struct.Device.html#method.stop_graphics_debugger_capture" title="method wgpu::Device::stop_graphics_debugger_capture"><code>Device::stop_graphics_debugger_capture</code></a> so RenderDoc picks up the
+pipeline.</li>
+<li>Vulkan initialization may fail in RenderDoc under Wayland (see
+<a href="https://github.com/gfx-rs/wgpu/issues/3889">issue 3889</a>). To work around
+it, force winit to use X11 by setting the <code>WAYLAND_DISPLAY</code> environment
+variable to an empty string for winit versions <code>0.28.2</code> and onward, or
+the <code>WINIT_UNIX_BACKEND</code> environment variable to <code>"x11"</code> for winit
+versions up to <code>0.29.1</code>. When in doubt, do both.</li>
+</ul>
+</li>
+<li>PIX can be used on Windows to capture D3D12.</li>
+<li>Xcode has powerful Metal GPU capture support with full shader debugging.</li>
+</ul>
+<p>In order to run your application from Xcode, you can create an empty project,
+select your executable binary, and provide the command-line parameters in
+the project settings.</p>
+<h4 id="capturing-webgpu-in-chrome-with-pix"><a class="doc-anchor" href="#capturing-webgpu-in-chrome-with-pix">§</a>Capturing WebGPU in Chrome with PIX</h4>
+<p><a href="https://gist.github.com/Popov72/41f71cbf8d55f2cb8cae93f439eee347">https://gist.github.com/Popov72/41f71cbf8d55f2cb8cae93f439eee347</a></p>
+<h4 id="capturing-webgpu-in-chrome-with-xcode"><a class="doc-anchor" href="#capturing-webgpu-in-chrome-with-xcode">§</a>Capturing WebGPU in Chrome with Xcode</h4>
+<p><a href="https://ced.quest/chromium-metal-debugger.html">https://ced.quest/chromium-metal-debugger.html</a></p>
+<h3 id="cpu-debugging"><a class="doc-anchor" href="#cpu-debugging">§</a>CPU debugging</h3>
+<p>As <code>wgpu</code> is a Rust project, all the regular methods of debugging work. It’s
+convenient to launch an application from Xcode (e.g. as an “External Build
+System” type project), or Visual Studio (just go to “Open Project” and
+select the executable, adjusting the path and parameters).</p>
+<p>When looking at a crash/panic, the first step is typically enabling
+<code>RUST_BACKTRACE=1</code> in the environment. This will spew out the stack trace,
+which helps you locate the problem.</p>
+<h3 id="rubber-duck-debugging"><a class="doc-anchor" href="#rubber-duck-debugging">§</a>Rubber-duck debugging</h3>
+<p>Hop on to <a href="https://matrix.to/#/#wgpu:matrix.org"><code>#wgpu:matrix.org</code></a> and try
+to explain what happens and why. Maybe we listen. Maybe you’ll figure out
+the answer by then ;)</p>
+<h3 id="tracing-infrastructure"><a class="doc-anchor" href="#tracing-infrastructure">§</a>Tracing infrastructure</h3>
+<p>API tracing is built into <code>wgpu-core</code> under the <code>trace</code> feature. To record a
+trace, first make sure this feature is enabled, then set the <code>trace</code> field
+of the <a href="../../../type.DeviceDescriptor.html" title="type wgpu::DeviceDescriptor"><code>DeviceDescriptor</code></a> to <a href="../../../enum.Trace.html" title="enum wgpu::Trace"><code>Trace::Directory</code></a> with an existing folder
+path when calling <a href="../../../struct.Adapter.html#method.request_device" title="method wgpu::Adapter::request_device"><code>Adapter::request_device</code></a>. The device will then record a
+trace of everything that’s going on to that folder.</p>
+<p>Once the trace is recorded, you can zip the folder and attach it to an
+issue. This should allow anyone, including the developers, to reproduce the
+issue on their machines, using the <code>player</code>:</p>
+<div class="example-wrap"><pre class="language-bash"><code>cd player
+cargo run --features winit -- &lt;trace_folder_path&gt;</code></pre></div>
+<p>If the program crashed or was interrupted in the midst of recording, you may
+need to edit the trace folder’s <code>trace.ron</code> file and add a closing <code>]</code>
+bracket to the end. When that bracket is missing, the player exits with a
+message like:</p>
+<div class="example-wrap"><pre class="language-text"><code>thread &#39;main&#39; panicked at &#39;called `Result::unwrap()` on an `Err` value:
+Error { code: Eof, position: Position { line: 96233, col: 1 } }&#39;, player/src/bin/play.rs:28:70</code></pre></div><h4 id="running-in-gecko"><a class="doc-anchor" href="#running-in-gecko">§</a>Running in Gecko</h4>
+<p>If you encounter a problem with something that runs fine outside of Gecko
+but fails to run in Gecko, there is a way to trace the API use by the
+browser. Simply run Firefox Nightly (with prefs enabled for WebGPU,
+obviously) under <code>WGPU_TRACE</code> pointing to a writable folder, and it will
+record the API trace. Setting <code>MOZ_DISABLE_GPU_SANDBOX=1</code> might also be
+required if the GPU process is sandboxed by default. This trace can be
+replayed as usual, or even compared to a trace you get by running the same
+application natively, to find out what the browser doesn’t do right.</p>
+<p>To replay a capture from Firefox and inspect it in RenderDoc or similar
+tools, it is best not to build the player with the <code>winit</code> cargo feature.</p>
+<p>When Firefox renders a WebGPU canvas, the result is done in a texture rather
+than a window’s swapchain, and that texture is then shared and put onto the
+screen via other means that aren’t part of the <code>wgpu</code> trace. Since there is
+no window swapchain involved, RenderDoc can’t guess when a frame starts and
+ends, so it has to be helped by manually inserting begin/end capture
+markers. When built without the <code>winit</code> feature, the player replays the
+commands without rendering them into a window, and adds these markers at the
+beginning and end of the trace; it doesn’t when the <code>winit</code> feature is
+enabled, since it then assumes the trace will eventually render into the
+winit window’s swapchain.</p>
+<p>This applies to Firefox as well as any other software using <code>wgpu</code> to render
+content into a texture but not to present that texture into a window.</p>
+</div></details></section></div></main></body></html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/documentation/internals/architecture.rs`."><title>architecture.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu/documentation/internals/</div>architecture.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![doc = <span class="macro">crate::macros::doc_image!</span>(<span class="string">"architecture.webp"</span>)]
+<a href=#2 id=2 data-nosnippet>2</a>#![doc = <span class="macro">crate::macros::doc_image!</span>(<span class="string">"big-picture.webp"</span>)]
+<a href=#3 id=3 data-nosnippet>3</a></span><span class="doccomment">/*!
+<a href=#4 id=4 data-nosnippet>4</a># Architecture: wgpu, wgpu-core, and wgpu-hal
+<a href=#5 id=5 data-nosnippet>5</a>
+<a href=#6 id=6 data-nosnippet>6</a>Here's an overview of `wgpu`'s architecture.
+<a href=#7 id=7 data-nosnippet>7</a>
+<a href=#8 id=8 data-nosnippet>8</a>![wgpu architecture][architecture.webp]
+<a href=#9 id=9 data-nosnippet>9</a>
+<a href=#10 id=10 data-nosnippet>10</a>Working through this diagram from the bottom up:
+<a href=#11 id=11 data-nosnippet>11</a>
+<a href=#12 id=12 data-nosnippet>12</a>- Each operating system provides its own API (or APIs) for getting at the
+<a href=#13 id=13 data-nosnippet>13</a>  GPU:
+<a href=#14 id=14 data-nosnippet>14</a>
+<a href=#15 id=15 data-nosnippet>15</a>  - On Windows, [Direct3D] is the primary GPU programming API, but [Vulkan]
+<a href=#16 id=16 data-nosnippet>16</a>    and [OpenGL] are often also available.
+<a href=#17 id=17 data-nosnippet>17</a>
+<a href=#18 id=18 data-nosnippet>18</a>  - On macOS, [Metal] is the official GPU programming API, although OpenGL is
+<a href=#19 id=19 data-nosnippet>19</a>    still around for legacy programs, and the [MoltenVK] open-source project
+<a href=#20 id=20 data-nosnippet>20</a>    implements the Vulkan API on top of Metal.
+<a href=#21 id=21 data-nosnippet>21</a>
+<a href=#22 id=22 data-nosnippet>22</a>  - On Linux, the [Mesa] library supports Vulkan and OpenGL.
+<a href=#23 id=23 data-nosnippet>23</a>
+<a href=#24 id=24 data-nosnippet>24</a>  If you want to write an application that runs on all three of these
+<a href=#25 id=25 data-nosnippet>25</a>  platforms, you have a few options:
+<a href=#26 id=26 data-nosnippet>26</a>
+<a href=#27 id=27 data-nosnippet>27</a>  - You could target Vulkan, and for macOS support embed MoltenVK, or
+<a href=#28 id=28 data-nosnippet>28</a>    require your users to install it.
+<a href=#29 id=29 data-nosnippet>29</a>
+<a href=#30 id=30 data-nosnippet>30</a>  - You could target OpenGL, which is no longer being developed and is
+<a href=#31 id=31 data-nosnippet>31</a>    missing many modern features, and worry that macOS will drop support for
+<a href=#32 id=32 data-nosnippet>32</a>    it altogether.
+<a href=#33 id=33 data-nosnippet>33</a>
+<a href=#34 id=34 data-nosnippet>34</a>  - You could port it to all three native platform APIs: Direct3D, Vulkan,
+<a href=#35 id=35 data-nosnippet>35</a>    and Metal. This would be a lot of code.
+<a href=#36 id=36 data-nosnippet>36</a>
+<a href=#37 id=37 data-nosnippet>37</a>  - Or, you could just use `wgpu`!
+<a href=#38 id=38 data-nosnippet>38</a>
+<a href=#39 id=39 data-nosnippet>39</a>- The [`wgpu_hal`] crate implements a portable Rust API that can use any of
+<a href=#40 id=40 data-nosnippet>40</a>  the platform-specific APIs mentioned above as a backend: a program that
+<a href=#41 id=41 data-nosnippet>41</a>  uses `wgpu_hal` correctly should behave consistently regardless of what
+<a href=#42 id=42 data-nosnippet>42</a>  platform you're running on.
+<a href=#43 id=43 data-nosnippet>43</a>
+<a href=#44 id=44 data-nosnippet>44</a>  However, `wgpu_hal`'s interface is completely unsafe; you must follow all
+<a href=#45 id=45 data-nosnippet>45</a>  of its safety requirements to the letter to avoid provoking undefined
+<a href=#46 id=46 data-nosnippet>46</a>  behavior from the underlying platforms. These requirements are complex,
+<a href=#47 id=47 data-nosnippet>47</a>  and not well documented. And `wgpu_hal` performs almost no validation
+<a href=#48 id=48 data-nosnippet>48</a>  beyond the minimum necessary to ensure portability.
+<a href=#49 id=49 data-nosnippet>49</a>
+<a href=#50 id=50 data-nosnippet>50</a>- The [`wgpu_core`] crate builds on `wgpu_hal` to provide an API with a
+<a href=#51 id=51 data-nosnippet>51</a>  similar flavor, preserving its portability, and adding full bullet-proof
+<a href=#52 id=52 data-nosnippet>52</a>  validation. By "bullet-proof", we mean that `wgpu_core` is intended to be
+<a href=#53 id=53 data-nosnippet>53</a>  driven by untrusted code, like web content using the [WebGPU] API.
+<a href=#54 id=54 data-nosnippet>54</a>  `wgpu_core` only assumes that Rust's safety rules are respected. Safe Rust
+<a href=#55 id=55 data-nosnippet>55</a>  code should not be able to cause a crash using `wgpu_core`.
+<a href=#56 id=56 data-nosnippet>56</a>
+<a href=#57 id=57 data-nosnippet>57</a>  This means that `wgpu_core` is fully responsible for things like tracking
+<a href=#58 id=58 data-nosnippet>58</a>  resource lifetimes, generating barriers for usage transitions, checking
+<a href=#59 id=59 data-nosnippet>59</a>  parameters, and so on. We cover its duties in more detail below.
+<a href=#60 id=60 data-nosnippet>60</a>
+<a href=#61 id=61 data-nosnippet>61</a>  The `wgpu_core` crate's API is designed to be easy to use from other
+<a href=#62 id=62 data-nosnippet>62</a>  languages via foreign function interfaces (FFI). This restricts the Rust
+<a href=#63 id=63 data-nosnippet>63</a>  features we can use in the API somewhat. But this makes `wgpu_core` the
+<a href=#64 id=64 data-nosnippet>64</a>  best dependency for crates like `wgpu_native` and applications like Deno
+<a href=#65 id=65 data-nosnippet>65</a>  and Firefox that have their own binding systems.
+<a href=#66 id=66 data-nosnippet>66</a>
+<a href=#67 id=67 data-nosnippet>67</a>- The [`wgpu`](crate) crate provides an idiomatic Rust API on top of
+<a href=#68 id=68 data-nosnippet>68</a>  `wgpu_core`, inheriting its validation and portability. This is what most
+<a href=#69 id=69 data-nosnippet>69</a>  users in the Rust ecosystem will want.
+<a href=#70 id=70 data-nosnippet>70</a>
+<a href=#71 id=71 data-nosnippet>71</a>  You can also compile `wgpu` to WebAssembly and run it in a web browser,
+<a href=#72 id=72 data-nosnippet>72</a>  having it drive the browser's [WebGPU] implementation. In this mode of use,
+<a href=#73 id=73 data-nosnippet>73</a>  `wgpu_core` and `wgpu_hal` are not present. This can help you share code
+<a href=#74 id=74 data-nosnippet>74</a>  between in-browser and native versions of your app, by providing a single
+<a href=#75 id=75 data-nosnippet>75</a>  API for both versions to use.
+<a href=#76 id=76 data-nosnippet>76</a>
+<a href=#77 id=77 data-nosnippet>77</a>[WebGPU]: https://www.w3.org/TR/webgpu/
+<a href=#78 id=78 data-nosnippet>78</a>[Direct3D]: https://learn.microsoft.com/en-us/windows/win32/direct3d
+<a href=#79 id=79 data-nosnippet>79</a>[Vulkan]: https://www.vulkan.org/
+<a href=#80 id=80 data-nosnippet>80</a>[Metal]: https://developer.apple.com/metal/
+<a href=#81 id=81 data-nosnippet>81</a>[OpenGL]: https://www.opengl.org/
+<a href=#82 id=82 data-nosnippet>82</a>[MoltenVK]: https://github.com/KhronosGroup/MoltenVK
+<a href=#83 id=83 data-nosnippet>83</a>[Mesa]: https://mesa3d.org/
+<a href=#84 id=84 data-nosnippet>84</a>[`wgpu_hal`]: https://docs.rs/wgpu-hal/latest/wgpu_hal/
+<a href=#85 id=85 data-nosnippet>85</a>[`wgpu_core`]: https://docs.rs/wgpu-core/latest/wgpu_core/
+<a href=#86 id=86 data-nosnippet>86</a>
+<a href=#87 id=87 data-nosnippet>87</a>## wgpu
+<a href=#88 id=88 data-nosnippet>88</a>
+<a href=#89 id=89 data-nosnippet>89</a>The `wgpu` crate provides an idiomatic Rust API for cross-platform GPU-based
+<a href=#90 id=90 data-nosnippet>90</a>graphics and computation, modeled after the [WebGPU] JavaScript API.
+<a href=#91 id=91 data-nosnippet>91</a>
+<a href=#92 id=92 data-nosnippet>92</a>The `wgpu` crate itself doesn't contain much interesting graphics-related
+<a href=#93 id=93 data-nosnippet>93</a>code. It is mostly concerned with providing a consistent, idiomatic API that
+<a href=#94 id=94 data-nosnippet>94</a>applications can use to drive any one of several implementations:
+<a href=#95 id=95 data-nosnippet>95</a>
+<a href=#96 id=96 data-nosnippet>96</a>- The [`wgpu::backend::wgpu_core`][w:cwc] module is available in native or
+<a href=#97 id=97 data-nosnippet>97</a>  Emscripten environments. It forwards all operations to `wgpu_core`. Most
+<a href=#98 id=98 data-nosnippet>98</a>  [`Backend`] values, like `Vulkan` or `Metal`, go through this module.
+<a href=#99 id=99 data-nosnippet>99</a>
+<a href=#100 id=100 data-nosnippet>100</a>- The [`wgpu::backend::webgpu`][w:cwg] module, available when `wgpu` has been
+<a href=#101 id=101 data-nosnippet>101</a>  compiled to WebAssembly, forwards calls to a browser's WebGPU
+<a href=#102 id=102 data-nosnippet>102</a>  implementation. The [`Backend::BrowserWebGpu`] backend selects this module.
+<a href=#103 id=103 data-nosnippet>103</a>
+<a href=#104 id=104 data-nosnippet>104</a>- The [`wgpu::backend::custom`][w:cc] module uses dynamic dispatch to let the
+<a href=#105 id=105 data-nosnippet>105</a>  user supply their own implementation. These are created via a separate
+<a href=#106 id=106 data-nosnippet>106</a>  mechanism, so they don't use any [`Backend`] value.
+<a href=#107 id=107 data-nosnippet>107</a>
+<a href=#108 id=108 data-nosnippet>108</a>[w:cwc]: https://github.com/gfx-rs/wgpu/blob/trunk/wgpu/src/backend/wgpu_core.rs
+<a href=#109 id=109 data-nosnippet>109</a>[w:cwg]: https://github.com/gfx-rs/wgpu/blob/trunk/wgpu/src/backend/webgpu.rs
+<a href=#110 id=110 data-nosnippet>110</a>[w:cc]: https://github.com/gfx-rs/wgpu/blob/trunk/wgpu/src/backend/custom.rs
+<a href=#111 id=111 data-nosnippet>111</a>
+<a href=#112 id=112 data-nosnippet>112</a>## wgpu_core
+<a href=#113 id=113 data-nosnippet>113</a>
+<a href=#114 id=114 data-nosnippet>114</a>The `wgpu_core` crate implements a safe, cross-platform API on top of
+<a href=#115 id=115 data-nosnippet>115</a>`wgpu_hal`'s unsafe, cross-platform API. Almost every method in `wgpu_hal`'s
+<a href=#116 id=116 data-nosnippet>116</a>API is marked `unsafe`; it is `wgpu_core`'s job to satisfy or enforce every
+<a href=#117 id=117 data-nosnippet>117</a>requirement in `wgpu_hal`'s safety contracts. Then, `wgpu_hal`'s only
+<a href=#118 id=118 data-nosnippet>118</a>responsibility is to get consistent behavior across all its backends. This
+<a href=#119 id=119 data-nosnippet>119</a>relationship is explained more in
+<a href=#120 id=120 data-nosnippet>120</a>[`wgpu_hal`'s documentation][hal safety].
+<a href=#121 id=121 data-nosnippet>121</a>
+<a href=#122 id=122 data-nosnippet>122</a>Beyond safety, `wgpu_core` also implements a few convenience APIs (for
+<a href=#123 id=123 data-nosnippet>123</a>example, mapped-at-creation buffers) on top of `wgpu_hal`'s more primitive
+<a href=#124 id=124 data-nosnippet>124</a>features.
+<a href=#125 id=125 data-nosnippet>125</a>
+<a href=#126 id=126 data-nosnippet>126</a>[hal safety]: https://docs.rs/wgpu-hal/latest/wgpu_hal/#validation-is-the-calling-codes-responsibility-not-wgpu-hals
+<a href=#127 id=127 data-nosnippet>127</a>
+<a href=#128 id=128 data-nosnippet>128</a>### Lifetime tracking
+<a href=#129 id=129 data-nosnippet>129</a>
+<a href=#130 id=130 data-nosnippet>130</a>The `wgpu_hal` API requires some objects to outlive others. For example, a
+<a href=#131 id=131 data-nosnippet>131</a>[`wgpu_hal::Device`] must outlive all resources (`wgpu_hal::Buffer`,
+<a href=#132 id=132 data-nosnippet>132</a>`wgpu_hal::CommandEncoder`, etc.) created from it. The `wgpu_core` types
+<a href=#133 id=133 data-nosnippet>133</a>ensure that these requirements are upheld, mostly just by using `Arc`.
+<a href=#134 id=134 data-nosnippet>134</a>
+<a href=#135 id=135 data-nosnippet>135</a>TODO: Command-buffer resource usage through submission probably counts as
+<a href=#136 id=136 data-nosnippet>136</a>"lifetime tracking" too.
+<a href=#137 id=137 data-nosnippet>137</a>
+<a href=#138 id=138 data-nosnippet>138</a>This `wgpu_hal` requirement arises mostly from the Vulkan backend. Direct3D
+<a href=#139 id=139 data-nosnippet>139</a>and Metal both use reference counting internally for most operations, but
+<a href=#140 id=140 data-nosnippet>140</a>Vulkan foists the entire problem off on its users.
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a>[`wgpu_hal::Device`]: https://docs.rs/wgpu-hal/latest/wgpu_hal/trait.Device.html
+<a href=#143 id=143 data-nosnippet>143</a>
+<a href=#144 id=144 data-nosnippet>144</a>### Synchronization
+<a href=#145 id=145 data-nosnippet>145</a>
+<a href=#146 id=146 data-nosnippet>146</a>Some types in the `wgpu_hal` API cannot be accessed simultaneously by
+<a href=#147 id=147 data-nosnippet>147</a>multiple threads. For example, most [`wgpu_hal::CommandEncoder`] methods take
+<a href=#148 id=148 data-nosnippet>148</a>`&amp;mut self`. `wgpu_core` protects these hal types with `Mutex` as
+<a href=#149 id=149 data-nosnippet>149</a>appropriate.
+<a href=#150 id=150 data-nosnippet>150</a>
+<a href=#151 id=151 data-nosnippet>151</a>There are a few other interesting requirements; for example, calls to
+<a href=#152 id=152 data-nosnippet>152</a>[`wgpu_hal::Queue::submit`] on a given `Queue` that could occur
+<a href=#153 id=153 data-nosnippet>153</a>simultaneously must use different `Fence`s. `wgpu_core` addresses this by
+<a href=#154 id=154 data-nosnippet>154</a>simply wrapping `wgpu_hal::Queue` in a `Mutex`.
+<a href=#155 id=155 data-nosnippet>155</a>
+<a href=#156 id=156 data-nosnippet>156</a>[`wgpu_hal::CommandEncoder`]: https://docs.rs/wgpu-hal/latest/wgpu_hal/trait.CommandEncoder.html
+<a href=#157 id=157 data-nosnippet>157</a>[`wgpu_hal::Queue::submit`]: https://docs.rs/wgpu-hal/latest/wgpu_hal/trait.Queue.html#tymethod.submit
+<a href=#158 id=158 data-nosnippet>158</a>
+<a href=#159 id=159 data-nosnippet>159</a>### Barrier generation
+<a href=#160 id=160 data-nosnippet>160</a>
+<a href=#161 id=161 data-nosnippet>161</a>Vulkan and Direct3D require the user to include barriers in the command
+<a href=#162 id=162 data-nosnippet>162</a>stream to notify the driver when a particular buffer or texture is
+<a href=#163 id=163 data-nosnippet>163</a>transitioning from one kind of use to another. For example, if a texture is
+<a href=#164 id=164 data-nosnippet>164</a>used as a render target and then sampled by a shader, Direct3D 12 requires a
+<a href=#165 id=165 data-nosnippet>165</a>[ResourceBarrier] command between the two uses. Similarly, Vulkan requires
+<a href=#166 id=166 data-nosnippet>166</a>[VkCmdPipelineBarrier] commands in some cases to ensure that values written
+<a href=#167 id=167 data-nosnippet>167</a>to a resource by one operation will be seen by reads in a subsequent
+<a href=#168 id=168 data-nosnippet>168</a>operation.
+<a href=#169 id=169 data-nosnippet>169</a>
+<a href=#170 id=170 data-nosnippet>170</a>The `wgpu_hal` API passes these backends' requirements through to its own
+<a href=#171 id=171 data-nosnippet>171</a>users, requiring calls to [`transition_buffers`] and [`transition_textures`]
+<a href=#172 id=172 data-nosnippet>172</a>between different kinds of access to such resources. But, following the lead
+<a href=#173 id=173 data-nosnippet>173</a>of [WebGPU], the `wgpu` API does not require its users to record barriers.
+<a href=#174 id=174 data-nosnippet>174</a>This means that `wgpu_core` must track how each resource was last used, and
+<a href=#175 id=175 data-nosnippet>175</a>generate the barriers itself.
+<a href=#176 id=176 data-nosnippet>176</a>
+<a href=#177 id=177 data-nosnippet>177</a>Since `wgpu` encourages users to record `CommandBuffer`s in advance (ideally
+<a href=#178 id=178 data-nosnippet>178</a>in multiple threads), and then submit them in whatever order they please,
+<a href=#179 id=179 data-nosnippet>179</a>`wgpu_core` cannot know what states the resources that a `CommandBuffer` uses
+<a href=#180 id=180 data-nosnippet>180</a>will be in until it is actually submitted. Thus, each
+<a href=#181 id=181 data-nosnippet>181</a>`wgpu_core::CommandBuffer` merely records what states it expects the
+<a href=#182 id=182 data-nosnippet>182</a>resources it uses to be in initially, and which states it will leave those
+<a href=#183 id=183 data-nosnippet>183</a>resources in when it is done. Submission is then responsible for comparing
+<a href=#184 id=184 data-nosnippet>184</a>resources' actual states with those expected by each
+<a href=#185 id=185 data-nosnippet>185</a>`wgpu_core::CommandBuffer`, and recording the necessary barriers in a fresh
+<a href=#186 id=186 data-nosnippet>186</a>`wgpu_hal::CommandBuffer` submitted ahead of it.
+<a href=#187 id=187 data-nosnippet>187</a>
+<a href=#188 id=188 data-nosnippet>188</a>When recording a command buffer, since the commands are only being recorded
+<a href=#189 id=189 data-nosnippet>189</a>for later execution, and not executed immediately, a `CommandEncoder` tracks
+<a href=#190 id=190 data-nosnippet>190</a>the state each resource *will be in* when the given commands are executed,
+<a href=#191 id=191 data-nosnippet>191</a>and adds barriers to the recorded stream as appropriate. Naturally, the
+<a href=#192 id=192 data-nosnippet>192</a>`CommandEncoder` must treat each resource's initial state as unknown, as it
+<a href=#193 id=193 data-nosnippet>193</a>has no way to know what other commands will be submitted ahead of it.
+<a href=#194 id=194 data-nosnippet>194</a>
+<a href=#195 id=195 data-nosnippet>195</a>Note that, within a single `wgpu_hal::Texture`, individual array elements and
+<a href=#196 id=196 data-nosnippet>196</a>mip levels can be in different states. `wgpu_hal::Buffer`s, however, have only
+<a href=#197 id=197 data-nosnippet>197</a>a single state.
+<a href=#198 id=198 data-nosnippet>198</a>
+<a href=#199 id=199 data-nosnippet>199</a>Within `wgpu_core`, the `Tracker` type records a set of resources, their
+<a href=#200 id=200 data-nosnippet>200</a>current states, and (for command buffers being recorded) the initial state
+<a href=#201 id=201 data-nosnippet>201</a>they should be in. `Tracker` also notes which stateless resources (samplers;
+<a href=#202 id=202 data-nosnippet>202</a>render pipelines) a `CommandBuffer` uses, in order to keep them alive until
+<a href=#203 id=203 data-nosnippet>203</a>the commands have been submitted and finished running.
+<a href=#204 id=204 data-nosnippet>204</a>
+<a href=#205 id=205 data-nosnippet>205</a>[ResourceBarrier]: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-resourcebarrier
+<a href=#206 id=206 data-nosnippet>206</a>[VkCmdPipelineBarrier]: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdPipelineBarrier.html
+<a href=#207 id=207 data-nosnippet>207</a>[`transition_buffers`]: https://docs.rs/wgpu-hal/latest/wgpu_hal/trait.DynCommandEncoder.html#tymethod.transition_buffers
+<a href=#208 id=208 data-nosnippet>208</a>[`transition_textures`]: https://docs.rs/wgpu-hal/latest/wgpu_hal/trait.DynCommandEncoder.html#tymethod.transition_textures
+<a href=#209 id=209 data-nosnippet>209</a>
+<a href=#210 id=210 data-nosnippet>210</a>### MemoryInitTracker
+<a href=#211 id=211 data-nosnippet>211</a>
+<a href=#212 id=212 data-nosnippet>212</a>Tracks the memory-initialization state of buffer resources, i.e. whether
+<a href=#213 id=213 data-nosnippet>213</a>they have been written to either by the user or by `wgpu` previously
+<a href=#214 id=214 data-nosnippet>214</a>zero-initializing them (WebGPU requires all buffers to behave *as if* they
+<a href=#215 id=215 data-nosnippet>215</a>are zero-initialized). A `MemoryInitTracker` tracks a single buffer and
+<a href=#216 id=216 data-nosnippet>216</a>allows inserting zero-initialization lazily on use. Zero-init is inserted if
+<a href=#217 id=217 data-nosnippet>217</a>necessary at:
+<a href=#218 id=218 data-nosnippet>218</a>
+<a href=#219 id=219 data-nosnippet>219</a>- memory mapping, and
+<a href=#220 id=220 data-nosnippet>220</a>- `queue_submit` (for all bindings).
+<a href=#221 id=221 data-nosnippet>221</a>
+<a href=#222 id=222 data-nosnippet>222</a>### Device maintain
+<a href=#223 id=223 data-nosnippet>223</a>
+<a href=#224 id=224 data-nosnippet>224</a>TODO (what/why).
+<a href=#225 id=225 data-nosnippet>225</a>
+<a href=#226 id=226 data-nosnippet>226</a>### Cross-device use
+<a href=#227 id=227 data-nosnippet>227</a>
+<a href=#228 id=228 data-nosnippet>228</a>The `wgpu_hal` API requires that a resource created with one
+<a href=#229 id=229 data-nosnippet>229</a>[`wgpu_hal::Device`] may not be used with a different `Device`. `wgpu_core`
+<a href=#230 id=230 data-nosnippet>230</a>tracks the `Device` to which each resource belongs, and checks for
+<a href=#231 id=231 data-nosnippet>231</a>cross-device use where necessary.
+<a href=#232 id=232 data-nosnippet>232</a>
+<a href=#233 id=233 data-nosnippet>233</a>### General parameter validation
+<a href=#234 id=234 data-nosnippet>234</a>
+<a href=#235 id=235 data-nosnippet>235</a>The `wgpu_core` crate is responsible for all the usual parameter validation
+<a href=#236 id=236 data-nosnippet>236</a>for graphics operations: a texture's format must be supported by the device;
+<a href=#237 id=237 data-nosnippet>237</a>copies must not exceed the bounds of the buffers or textures involved; bind
+<a href=#238 id=238 data-nosnippet>238</a>groups need to have the right layout for the pipeline; and so on.
+<a href=#239 id=239 data-nosnippet>239</a>
+<a href=#240 id=240 data-nosnippet>240</a>## API tracing
+<a href=#241 id=241 data-nosnippet>241</a>
+<a href=#242 id=242 data-nosnippet>242</a>Enabled via a feature flag. Allows recording all usage (WebGPU API functions,
+<a href=#243 id=243 data-nosnippet>243</a>essentially) to a `.ron` file. Any additional data (data uploaded to a
+<a href=#244 id=244 data-nosnippet>244</a>buffer, etc.) is stored in additional files. A trace can be replayed with the
+<a href=#245 id=245 data-nosnippet>245</a>`player` compiled from the same `wgpu` revision. Used for testing and bug
+<a href=#246 id=246 data-nosnippet>246</a>reporting. See
+<a href=#247 id=247 data-nosnippet>247</a>[Debugging wgpu Applications](crate::documentation::debugging::debugging_applications#tracing-infrastructure).
+<a href=#248 id=248 data-nosnippet>248</a>
+<a href=#249 id=249 data-nosnippet>249</a>## Other WebGPU implementations
+<a href=#250 id=250 data-nosnippet>250</a>
+<a href=#251 id=251 data-nosnippet>251</a>Note that `wgpu` represents only one possible way to implement the
+<a href=#252 id=252 data-nosnippet>252</a>[WebGPU][WebGPU API] API; Google's [Dawn] and
+<a href=#253 id=253 data-nosnippet>253</a>[WebKit's WebGPU module][webkit] are other WebGPU implementations used in
+<a href=#254 id=254 data-nosnippet>254</a>production.
+<a href=#255 id=255 data-nosnippet>255</a>
+<a href=#256 id=256 data-nosnippet>256</a>[WebGPU API]: https://www.w3.org/TR/webgpu/
+<a href=#257 id=257 data-nosnippet>257</a>[Dawn]: https://dawn.googlesource.com/dawn
+<a href=#258 id=258 data-nosnippet>258</a>[webkit]: https://github.com/WebKit/WebKit/tree/main/Source/WebCore/Modules/WebGPU
+<a href=#259 id=259 data-nosnippet>259</a>
+<a href=#260 id=260 data-nosnippet>260</a>## The wider gfx-rs ecosystem
+<a href=#261 id=261 data-nosnippet>261</a>
+<a href=#262 id=262 data-nosnippet>262</a>`wgpu` is one piece of the larger gfx-rs ecosystem. For a map of all the
+<a href=#263 id=263 data-nosnippet>263</a>components and how they fit together, see the big picture:
+<a href=#264 id=264 data-nosnippet>264</a>
+<a href=#265 id=265 data-nosnippet>265</a>![The gfx-rs big picture][big-picture.webp]
+<a href=#266 id=266 data-nosnippet>266</a>
+<a href=#267 id=267 data-nosnippet>267</a>*/
+<a href=#268 id=268 data-nosnippet>268</a>
+<a href=#269 id=269 data-nosnippet>269</a></span><span class="kw">use </span><span class="kw">crate</span>::Backend;
+</code></pre></div></section></main></body></html>

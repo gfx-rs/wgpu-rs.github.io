@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Texture Color Formats and sRGB Conversions"><title>wgpu::documentation::color::srgb - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module srgb</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="logo"></a><h2><a href="../../../../wgpu/index.html">wgpu</a><span class="version">30.0.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module srgb</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#texture-color-formats-and-srgb-conversions" title="Texture Color Formats and sRGB Conversions">Texture Color Formats and sRGB Conversions</a><ul><li><a href="#what-do-textureformats-do" title="What do `TextureFormat`s do?">What do <code>TextureFormat</code>s do?</a></li><li><a href="#what-are-unorm-and-unormsrgb" title="What are Unorm and UnormSrgb?">What are Unorm and UnormSrgb?</a></li><li><a href="#common-misconceptions" title="Common misconceptions">Common misconceptions</a></li><li><a href="#tips" title="Tips">Tips</a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In wgpu::<wbr>documentation::<wbr>color</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../../index.html">wgpu</a>::<wbr><a href="../../index.html">documentation</a>::<wbr><a href="../index.html">color</a></div><h1>Module <span>srgb</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../../src/wgpu/documentation/color/srgb.rs.html#1-119">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="texture-color-formats-and-srgb-conversions"><a class="doc-anchor" href="#texture-color-formats-and-srgb-conversions">§</a>Texture Color Formats and sRGB Conversions</h2>
+<p>Tips and common misconceptions about color formats. For surface output,
+wide-gamut, and high-dynamic-range color, see
+<a href="../hdr_surfaces/index.html" title="mod wgpu::documentation::color::hdr_surfaces">HDR and Wide-Gamut Color Spaces</a>.</p>
+<p><em>(The following is adapted from conversations on the <code>wgpu</code> users Matrix
+channel, saved here as a useful resource for future <code>wgpu</code> developers.)</em></p>
+<p>Digital color can be an extremely confusing topic, and the resources in
+common circulation aren’t always great. Modern low-level graphics APIs (such
+as those under the hood of <code>wgpu</code>) give us powerful tools to manipulate color
+data, though this comes at the cost of having to understand several low-level
+principles in how digital color works.</p>
+<p>The best place to start is to have an understanding of the problems and
+history of gamma correction. This page won’t go deeply into the topic, but
+some useful links can be found here:</p>
+<ul>
+<li><a href="https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/">What every coder should know about gamma</a></li>
+<li><a href="https://hg2dc.com/">Hitchhiker’s Guide to Digital Color</a></li>
+<li><a href="https://learnopengl.com/Advanced-Lighting/Gamma-Correction">Learn OpenGL — Gamma Correction</a></li>
+</ul>
+<h3 id="what-do-textureformats-do"><a class="doc-anchor" href="#what-do-textureformats-do">§</a>What do <code>TextureFormat</code>s do?</h3>
+<p>There are many different texture formats you can specify for the format of
+your color data. This can be image data you upload from the CPU, shaded
+geometry rendered to intermediate textures (what we used to call frame
+buffers in OpenGL), compute shader targets, or geometry shaded to the window
+surface itself.</p>
+<p>We won’t go into all the different formats here, but it’s useful to talk
+about two of the most commonly used formats and some misconceptions about
+what they do (and don’t) do.</p>
+<h3 id="what-are-unorm-and-unormsrgb"><a class="doc-anchor" href="#what-are-unorm-and-unormsrgb">§</a>What are Unorm and UnormSrgb?</h3>
+<p>Some of the most common formats you will see used for texture data, render
+targets, etc. are <a href="../../../enum.TextureFormat.html#variant.Rgba8Unorm" title="variant wgpu::TextureFormat::Rgba8Unorm"><code>Rgba8Unorm</code></a> and
+<a href="../../../enum.TextureFormat.html#variant.Rgba8UnormSrgb" title="variant wgpu::TextureFormat::Rgba8UnormSrgb"><code>Rgba8UnormSrgb</code></a>. So what are they, and how
+do they relate to the issues of gamma correction, perceptually-linear “sRGB”
+space, and physically-accurate “linear” space (as described in detail in the
+links above)?</p>
+<p>First of all, it will be useful to clarify some terminology, as the words
+“linear” and “sRGB” can be overloaded and lead to confusion:</p>
+<ul>
+<li><strong>sRGB space</strong> is a set of color primaries — this defines what red, green,
+and blue are.</li>
+</ul>
+<p>In this sense (and perhaps counter-intuitively), texture formats ending in
+“Unorm” and “UnormSrgb” are BOTH in the sRGB color space, and encode their
+data in the same way without losing precision (as might be implied by some
+descriptions of “linear” vs. “sRGB”); more on this later.</p>
+<p>Here is some useful terminology to help avoid “linear” and “sRGB” confusion:</p>
+<ul>
+<li>What we traditionally called “linear space” is more accurately called
+“scene-referred color”.</li>
+<li>What we traditionally called “sRGB space” is more accurately called
+“monitor-referred color”.</li>
+<li>The conversion from scene-referred color to monitor-referred color is done
+by the sRGB OETF (opto-electrical transfer function [light → bits]).</li>
+<li>The conversion from monitor-referred color to scene-referred color is done
+by the sRGB EOTF (electro-optical transfer function [bits → light]).</li>
+</ul>
+<p>Let’s walk our way up the color pipeline. The OS assumes that the bits you
+are sending to the screen are monitor-referred and in the sRGB space (unless
+otherwise specified). It will interpret the bits this way no matter what.</p>
+<ul>
+<li>
+<p>If you write/shade to a texture which is in a <strong>Unorm</strong> format, it will
+take the output of your shader and do a float → int conversion, and that’s
+it (Unorm floats are written as ints under the hood, though you don’t need
+to worry about this).</p>
+<p>This means that if you’re using this <strong>Unorm</strong> texture as a surface, <em>the
+floats you are writing from your shader need to be <strong>monitor-referred</strong></em> (i.e.
+numbers that the OS can safely assume are already in sRGB space).</p>
+</li>
+<li>
+<p>If you write/shade to a texture which is in a <strong>UnormSrgb</strong> format, it will
+take the output of your shader and then apply the sRGB OETF to it, then
+afterwards do the float → int conversion to store the data.</p>
+<p>This means that if you’re using this <strong>UnormSrgb</strong> texture as a surface,
+<em>the floats you are writing from your shader need to be <strong>scene-referred</strong></em>,
+as the GPU will do the conversion to monitor-referred as part of the write!</p>
+</li>
+</ul>
+<p>The inverse happens when you read from a texture:</p>
+<ul>
+<li>a <strong>Unorm</strong> texture just does int → float on read.</li>
+<li>a <strong>UnormSrgb</strong> texture applies the sRGB EOTF to do monitor → scene and
+then does the int → float read.</li>
+</ul>
+<h3 id="common-misconceptions"><a class="doc-anchor" href="#common-misconceptions">§</a>Common misconceptions</h3>
+<p><strong>Q: So Unorm textures are in “linear” space and UnormSrgb textures are in
+“sRGB” space?</strong></p>
+<p><strong>A:</strong> No. Despite the naming, you are responsible for whether the outputs of
+your shader represent “scene”- or “monitor”-referred values. The “Srgb” tag on
+the texture format just lets the shader know that you want it to do a
+conversion from sRGB to linear (or, more specifically, “monitor” to “scene”)
+when you sample it, or the inverse when you write to it.</p>
+<h3 id="tips"><a class="doc-anchor" href="#tips">§</a>Tips</h3>
+<ul>
+<li>Think of texture formats as a combination of data resolution and data
+conversion functions. For example:
+<a href="../../../enum.TextureFormat.html#variant.Rgba8UnormSrgb" title="variant wgpu::TextureFormat::Rgba8UnormSrgb"><code>Rgba8UnormSrgb</code></a> = <code>Rgba8</code> data +
+<code>UnormSrgb</code> conversion step.</li>
+<li>Let the GPU do the conversion work for you. Historically in WebGL, for
+example, if you wanted to do physically-accurate lighting you would need to
+convert from linear to sRGB manually (often with an approximation like
+<code>pow(col, 2.2)</code>). By being aware of the textures you are sampling and
+writing to, you should be able to avoid manual conversions.</li>
+</ul>
+</div></details></section></div></main></body></html>

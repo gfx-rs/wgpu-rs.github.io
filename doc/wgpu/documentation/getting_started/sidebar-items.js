@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["learning_wgpu","running_the_examples"]};
