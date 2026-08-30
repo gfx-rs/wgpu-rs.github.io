@@ -85,99 +85,101 @@
 <a href=#85 id=85 data-nosnippet>85</a>            mip_level_count: <span class="prelude-val">None</span>,
 <a href=#86 id=86 data-nosnippet>86</a>            base_array_layer: <span class="number">0</span>,
 <a href=#87 id=87 data-nosnippet>87</a>            array_layer_count: <span class="prelude-val">Some</span>(NUM_LAYERS),
-<a href=#88 id=88 data-nosnippet>88</a>        });
-<a href=#89 id=89 data-nosnippet>89</a>        <span class="kw">let </span><span class="kw-2">mut </span>views = Vec::new();
-<a href=#90 id=90 data-nosnippet>90</a>        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..NUM_LAYERS {
-<a href=#91 id=91 data-nosnippet>91</a>            views.push(texture.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor {
-<a href=#92 id=92 data-nosnippet>92</a>                label: <span class="prelude-val">None</span>,
-<a href=#93 id=93 data-nosnippet>93</a>                format: <span class="prelude-val">Some</span>(wgpu::TextureFormat::Rgba8Unorm),
-<a href=#94 id=94 data-nosnippet>94</a>                dimension: <span class="prelude-val">Some</span>(wgpu::TextureViewDimension::D2),
-<a href=#95 id=95 data-nosnippet>95</a>                usage: <span class="prelude-val">Some</span>(wgpu::TextureUsages::TEXTURE_BINDING),
-<a href=#96 id=96 data-nosnippet>96</a>                aspect: wgpu::TextureAspect::All,
-<a href=#97 id=97 data-nosnippet>97</a>                base_mip_level: <span class="number">0</span>,
-<a href=#98 id=98 data-nosnippet>98</a>                mip_level_count: <span class="prelude-val">None</span>,
-<a href=#99 id=99 data-nosnippet>99</a>                base_array_layer: i,
-<a href=#100 id=100 data-nosnippet>100</a>                array_layer_count: <span class="prelude-val">Some</span>(<span class="number">1</span>),
-<a href=#101 id=101 data-nosnippet>101</a>            }));
-<a href=#102 id=102 data-nosnippet>102</a>        }
-<a href=#103 id=103 data-nosnippet>103</a>        <span class="kw">let </span>blitter = wgpu::util::TextureBlitter::new(device, config.format);
-<a href=#104 id=104 data-nosnippet>104</a>        <span class="self">Self </span>{
-<a href=#105 id=105 data-nosnippet>105</a>            pipeline,
-<a href=#106 id=106 data-nosnippet>106</a>            entire_texture_view,
-<a href=#107 id=107 data-nosnippet>107</a>            views,
-<a href=#108 id=108 data-nosnippet>108</a>            blitter,
-<a href=#109 id=109 data-nosnippet>109</a>            start_time: Instant::now(),
-<a href=#110 id=110 data-nosnippet>110</a>        }
-<a href=#111 id=111 data-nosnippet>111</a>    }
-<a href=#112 id=112 data-nosnippet>112</a>
-<a href=#113 id=113 data-nosnippet>113</a>    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, view: <span class="kw-2">&amp;</span>wgpu::TextureView, device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
-<a href=#114 id=114 data-nosnippet>114</a>        <span class="kw">let </span><span class="kw-2">mut </span>encoder = device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor::default());
-<a href=#115 id=115 data-nosnippet>115</a>        {
-<a href=#116 id=116 data-nosnippet>116</a>            <span class="kw">let </span><span class="kw-2">mut </span>rpass = encoder.begin_render_pass(<span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
-<a href=#117 id=117 data-nosnippet>117</a>                label: <span class="prelude-val">None</span>,
-<a href=#118 id=118 data-nosnippet>118</a>                color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(wgpu::RenderPassColorAttachment {
-<a href=#119 id=119 data-nosnippet>119</a>                    view: <span class="kw-2">&amp;</span><span class="self">self</span>.entire_texture_view,
-<a href=#120 id=120 data-nosnippet>120</a>                    depth_slice: <span class="prelude-val">None</span>,
-<a href=#121 id=121 data-nosnippet>121</a>                    resolve_target: <span class="prelude-val">None</span>,
-<a href=#122 id=122 data-nosnippet>122</a>                    ops: wgpu::Operations {
-<a href=#123 id=123 data-nosnippet>123</a>                        load: wgpu::LoadOp::Clear(wgpu::Color {
-<a href=#124 id=124 data-nosnippet>124</a>                            r: <span class="number">0.02</span>,
-<a href=#125 id=125 data-nosnippet>125</a>                            g: <span class="number">0.02</span>,
-<a href=#126 id=126 data-nosnippet>126</a>                            b: <span class="number">0.02</span>,
-<a href=#127 id=127 data-nosnippet>127</a>                            a: <span class="number">1.0</span>,
-<a href=#128 id=128 data-nosnippet>128</a>                        }),
-<a href=#129 id=129 data-nosnippet>129</a>                        store: wgpu::StoreOp::Store,
-<a href=#130 id=130 data-nosnippet>130</a>                    },
-<a href=#131 id=131 data-nosnippet>131</a>                })],
-<a href=#132 id=132 data-nosnippet>132</a>                depth_stencil_attachment: <span class="prelude-val">None</span>,
-<a href=#133 id=133 data-nosnippet>133</a>                timestamp_writes: <span class="prelude-val">None</span>,
-<a href=#134 id=134 data-nosnippet>134</a>                occlusion_query_set: <span class="prelude-val">None</span>,
-<a href=#135 id=135 data-nosnippet>135</a>                multiview_mask: NonZero::new(LAYER_MASK),
-<a href=#136 id=136 data-nosnippet>136</a>            });
-<a href=#137 id=137 data-nosnippet>137</a>            rpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.pipeline);
-<a href=#138 id=138 data-nosnippet>138</a>            rpass.draw(<span class="number">0</span>..<span class="number">6</span>, <span class="number">0</span>..<span class="number">1</span>);
-<a href=#139 id=139 data-nosnippet>139</a>        }
-<a href=#140 id=140 data-nosnippet>140</a>
-<a href=#141 id=141 data-nosnippet>141</a>        <span class="kw">let </span>layer = (Instant::now() - <span class="self">self</span>.start_time).as_secs() % NUM_LAYERS <span class="kw">as </span>u64;
-<a href=#142 id=142 data-nosnippet>142</a>        <span class="self">self</span>.blitter
-<a href=#143 id=143 data-nosnippet>143</a>            .copy(device, <span class="kw-2">&amp;mut </span>encoder, <span class="kw-2">&amp;</span><span class="self">self</span>.views[layer <span class="kw">as </span>usize], view);
-<a href=#144 id=144 data-nosnippet>144</a>        queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
-<a href=#145 id=145 data-nosnippet>145</a>    }
-<a href=#146 id=146 data-nosnippet>146</a>
-<a href=#147 id=147 data-nosnippet>147</a>    <span class="kw">fn </span>required_downlevel_capabilities() -&gt; wgpu::DownlevelCapabilities {
-<a href=#148 id=148 data-nosnippet>148</a>        Default::default()
-<a href=#149 id=149 data-nosnippet>149</a>    }
-<a href=#150 id=150 data-nosnippet>150</a>
-<a href=#151 id=151 data-nosnippet>151</a>    <span class="kw">fn </span>required_features() -&gt; wgpu::Features {
-<a href=#152 id=152 data-nosnippet>152</a>        wgpu::Features::MULTIVIEW
-<a href=#153 id=153 data-nosnippet>153</a>            | <span class="kw">if </span>!(LAYER_MASK + <span class="number">1</span>).is_power_of_two() {
-<a href=#154 id=154 data-nosnippet>154</a>                wgpu::Features::SELECTIVE_MULTIVIEW
-<a href=#155 id=155 data-nosnippet>155</a>            } <span class="kw">else </span>{
-<a href=#156 id=156 data-nosnippet>156</a>                wgpu::Features::empty()
-<a href=#157 id=157 data-nosnippet>157</a>            }
-<a href=#158 id=158 data-nosnippet>158</a>    }
-<a href=#159 id=159 data-nosnippet>159</a>
-<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">fn </span>required_limits() -&gt; wgpu::Limits {
-<a href=#161 id=161 data-nosnippet>161</a>        wgpu::Limits {
-<a href=#162 id=162 data-nosnippet>162</a>            max_multiview_view_count: NUM_LAYERS,
-<a href=#163 id=163 data-nosnippet>163</a>            ..Default::default()
-<a href=#164 id=164 data-nosnippet>164</a>        }
-<a href=#165 id=165 data-nosnippet>165</a>    }
-<a href=#166 id=166 data-nosnippet>166</a>
-<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">fn </span>resize(
-<a href=#168 id=168 data-nosnippet>168</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#169 id=169 data-nosnippet>169</a>        _config: <span class="kw-2">&amp;</span>wgpu::SurfaceConfiguration,
-<a href=#170 id=170 data-nosnippet>170</a>        _device: <span class="kw-2">&amp;</span>wgpu::Device,
-<a href=#171 id=171 data-nosnippet>171</a>        _queue: <span class="kw-2">&amp;</span>wgpu::Queue,
-<a href=#172 id=172 data-nosnippet>172</a>    ) {
-<a href=#173 id=173 data-nosnippet>173</a>        <span class="comment">// empty
-<a href=#174 id=174 data-nosnippet>174</a>    </span>}
-<a href=#175 id=175 data-nosnippet>175</a>    <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _event: winit::event::WindowEvent) {
-<a href=#176 id=176 data-nosnippet>176</a>        <span class="comment">// empty
-<a href=#177 id=177 data-nosnippet>177</a>    </span>}
-<a href=#178 id=178 data-nosnippet>178</a>}
-<a href=#179 id=179 data-nosnippet>179</a>
-<a href=#180 id=180 data-nosnippet>180</a><span class="kw">pub fn </span>main() {
-<a href=#181 id=181 data-nosnippet>181</a>    <span class="kw">crate</span>::framework::run::&lt;Example&gt;(<span class="string">"multiview"</span>);
-<a href=#182 id=182 data-nosnippet>182</a>}
+<a href=#88 id=88 data-nosnippet>88</a>            swizzle: wgpu::TextureComponentSwizzle::default(),
+<a href=#89 id=89 data-nosnippet>89</a>        });
+<a href=#90 id=90 data-nosnippet>90</a>        <span class="kw">let </span><span class="kw-2">mut </span>views = Vec::new();
+<a href=#91 id=91 data-nosnippet>91</a>        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..NUM_LAYERS {
+<a href=#92 id=92 data-nosnippet>92</a>            views.push(texture.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor {
+<a href=#93 id=93 data-nosnippet>93</a>                label: <span class="prelude-val">None</span>,
+<a href=#94 id=94 data-nosnippet>94</a>                format: <span class="prelude-val">Some</span>(wgpu::TextureFormat::Rgba8Unorm),
+<a href=#95 id=95 data-nosnippet>95</a>                dimension: <span class="prelude-val">Some</span>(wgpu::TextureViewDimension::D2),
+<a href=#96 id=96 data-nosnippet>96</a>                usage: <span class="prelude-val">Some</span>(wgpu::TextureUsages::TEXTURE_BINDING),
+<a href=#97 id=97 data-nosnippet>97</a>                aspect: wgpu::TextureAspect::All,
+<a href=#98 id=98 data-nosnippet>98</a>                base_mip_level: <span class="number">0</span>,
+<a href=#99 id=99 data-nosnippet>99</a>                mip_level_count: <span class="prelude-val">None</span>,
+<a href=#100 id=100 data-nosnippet>100</a>                base_array_layer: i,
+<a href=#101 id=101 data-nosnippet>101</a>                array_layer_count: <span class="prelude-val">Some</span>(<span class="number">1</span>),
+<a href=#102 id=102 data-nosnippet>102</a>                swizzle: wgpu::TextureComponentSwizzle::default(),
+<a href=#103 id=103 data-nosnippet>103</a>            }));
+<a href=#104 id=104 data-nosnippet>104</a>        }
+<a href=#105 id=105 data-nosnippet>105</a>        <span class="kw">let </span>blitter = wgpu::util::TextureBlitter::new(device, config.format);
+<a href=#106 id=106 data-nosnippet>106</a>        <span class="self">Self </span>{
+<a href=#107 id=107 data-nosnippet>107</a>            pipeline,
+<a href=#108 id=108 data-nosnippet>108</a>            entire_texture_view,
+<a href=#109 id=109 data-nosnippet>109</a>            views,
+<a href=#110 id=110 data-nosnippet>110</a>            blitter,
+<a href=#111 id=111 data-nosnippet>111</a>            start_time: Instant::now(),
+<a href=#112 id=112 data-nosnippet>112</a>        }
+<a href=#113 id=113 data-nosnippet>113</a>    }
+<a href=#114 id=114 data-nosnippet>114</a>
+<a href=#115 id=115 data-nosnippet>115</a>    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, view: <span class="kw-2">&amp;</span>wgpu::TextureView, device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
+<a href=#116 id=116 data-nosnippet>116</a>        <span class="kw">let </span><span class="kw-2">mut </span>encoder = device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor::default());
+<a href=#117 id=117 data-nosnippet>117</a>        {
+<a href=#118 id=118 data-nosnippet>118</a>            <span class="kw">let </span><span class="kw-2">mut </span>rpass = encoder.begin_render_pass(<span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
+<a href=#119 id=119 data-nosnippet>119</a>                label: <span class="prelude-val">None</span>,
+<a href=#120 id=120 data-nosnippet>120</a>                color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(wgpu::RenderPassColorAttachment {
+<a href=#121 id=121 data-nosnippet>121</a>                    view: <span class="kw-2">&amp;</span><span class="self">self</span>.entire_texture_view,
+<a href=#122 id=122 data-nosnippet>122</a>                    depth_slice: <span class="prelude-val">None</span>,
+<a href=#123 id=123 data-nosnippet>123</a>                    resolve_target: <span class="prelude-val">None</span>,
+<a href=#124 id=124 data-nosnippet>124</a>                    ops: wgpu::Operations {
+<a href=#125 id=125 data-nosnippet>125</a>                        load: wgpu::LoadOp::Clear(wgpu::Color {
+<a href=#126 id=126 data-nosnippet>126</a>                            r: <span class="number">0.02</span>,
+<a href=#127 id=127 data-nosnippet>127</a>                            g: <span class="number">0.02</span>,
+<a href=#128 id=128 data-nosnippet>128</a>                            b: <span class="number">0.02</span>,
+<a href=#129 id=129 data-nosnippet>129</a>                            a: <span class="number">1.0</span>,
+<a href=#130 id=130 data-nosnippet>130</a>                        }),
+<a href=#131 id=131 data-nosnippet>131</a>                        store: wgpu::StoreOp::Store,
+<a href=#132 id=132 data-nosnippet>132</a>                    },
+<a href=#133 id=133 data-nosnippet>133</a>                })],
+<a href=#134 id=134 data-nosnippet>134</a>                depth_stencil_attachment: <span class="prelude-val">None</span>,
+<a href=#135 id=135 data-nosnippet>135</a>                timestamp_writes: <span class="prelude-val">None</span>,
+<a href=#136 id=136 data-nosnippet>136</a>                occlusion_query_set: <span class="prelude-val">None</span>,
+<a href=#137 id=137 data-nosnippet>137</a>                multiview_mask: NonZero::new(LAYER_MASK),
+<a href=#138 id=138 data-nosnippet>138</a>            });
+<a href=#139 id=139 data-nosnippet>139</a>            rpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.pipeline);
+<a href=#140 id=140 data-nosnippet>140</a>            rpass.draw(<span class="number">0</span>..<span class="number">6</span>, <span class="number">0</span>..<span class="number">1</span>);
+<a href=#141 id=141 data-nosnippet>141</a>        }
+<a href=#142 id=142 data-nosnippet>142</a>
+<a href=#143 id=143 data-nosnippet>143</a>        <span class="kw">let </span>layer = (Instant::now() - <span class="self">self</span>.start_time).as_secs() % NUM_LAYERS <span class="kw">as </span>u64;
+<a href=#144 id=144 data-nosnippet>144</a>        <span class="self">self</span>.blitter
+<a href=#145 id=145 data-nosnippet>145</a>            .copy(device, <span class="kw-2">&amp;mut </span>encoder, <span class="kw-2">&amp;</span><span class="self">self</span>.views[layer <span class="kw">as </span>usize], view);
+<a href=#146 id=146 data-nosnippet>146</a>        queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
+<a href=#147 id=147 data-nosnippet>147</a>    }
+<a href=#148 id=148 data-nosnippet>148</a>
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="kw">fn </span>required_downlevel_capabilities() -&gt; wgpu::DownlevelCapabilities {
+<a href=#150 id=150 data-nosnippet>150</a>        Default::default()
+<a href=#151 id=151 data-nosnippet>151</a>    }
+<a href=#152 id=152 data-nosnippet>152</a>
+<a href=#153 id=153 data-nosnippet>153</a>    <span class="kw">fn </span>required_features() -&gt; wgpu::Features {
+<a href=#154 id=154 data-nosnippet>154</a>        wgpu::Features::MULTIVIEW
+<a href=#155 id=155 data-nosnippet>155</a>            | <span class="kw">if </span>!(LAYER_MASK + <span class="number">1</span>).is_power_of_two() {
+<a href=#156 id=156 data-nosnippet>156</a>                wgpu::Features::SELECTIVE_MULTIVIEW
+<a href=#157 id=157 data-nosnippet>157</a>            } <span class="kw">else </span>{
+<a href=#158 id=158 data-nosnippet>158</a>                wgpu::Features::empty()
+<a href=#159 id=159 data-nosnippet>159</a>            }
+<a href=#160 id=160 data-nosnippet>160</a>    }
+<a href=#161 id=161 data-nosnippet>161</a>
+<a href=#162 id=162 data-nosnippet>162</a>    <span class="kw">fn </span>required_limits() -&gt; wgpu::Limits {
+<a href=#163 id=163 data-nosnippet>163</a>        wgpu::Limits {
+<a href=#164 id=164 data-nosnippet>164</a>            max_multiview_view_count: NUM_LAYERS,
+<a href=#165 id=165 data-nosnippet>165</a>            ..Default::default()
+<a href=#166 id=166 data-nosnippet>166</a>        }
+<a href=#167 id=167 data-nosnippet>167</a>    }
+<a href=#168 id=168 data-nosnippet>168</a>
+<a href=#169 id=169 data-nosnippet>169</a>    <span class="kw">fn </span>resize(
+<a href=#170 id=170 data-nosnippet>170</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#171 id=171 data-nosnippet>171</a>        _config: <span class="kw-2">&amp;</span>wgpu::SurfaceConfiguration,
+<a href=#172 id=172 data-nosnippet>172</a>        _device: <span class="kw-2">&amp;</span>wgpu::Device,
+<a href=#173 id=173 data-nosnippet>173</a>        _queue: <span class="kw-2">&amp;</span>wgpu::Queue,
+<a href=#174 id=174 data-nosnippet>174</a>    ) {
+<a href=#175 id=175 data-nosnippet>175</a>        <span class="comment">// empty
+<a href=#176 id=176 data-nosnippet>176</a>    </span>}
+<a href=#177 id=177 data-nosnippet>177</a>    <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _event: winit::event::WindowEvent) {
+<a href=#178 id=178 data-nosnippet>178</a>        <span class="comment">// empty
+<a href=#179 id=179 data-nosnippet>179</a>    </span>}
+<a href=#180 id=180 data-nosnippet>180</a>}
+<a href=#181 id=181 data-nosnippet>181</a>
+<a href=#182 id=182 data-nosnippet>182</a><span class="kw">pub fn </span>main() {
+<a href=#183 id=183 data-nosnippet>183</a>    <span class="kw">crate</span>::framework::run::&lt;Example&gt;(<span class="string">"multiview"</span>);
+<a href=#184 id=184 data-nosnippet>184</a>}
 </code></pre></div></section></main></body></html>
