@@ -5623,12 +5623,12 @@
 <a href=#5623 id=5623 data-nosnippet>5623</a>    <span class="kw">pub fn </span>create_query_set(
 <a href=#5624 id=5624 data-nosnippet>5624</a>        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
 <a href=#5625 id=5625 data-nosnippet>5625</a>        desc: <span class="kw-2">&amp;</span>resource::QuerySetDescriptor,
-<a href=#5626 id=5626 data-nosnippet>5626</a>    ) -&gt; (Arc&lt;QuerySet&gt;, <span class="prelude-ty">Option</span>&lt;resource::CreateQuerySetError&gt;) {
+<a href=#5626 id=5626 data-nosnippet>5626</a>    ) -&gt; Arc&lt;QuerySet&gt; {
 <a href=#5627 id=5627 data-nosnippet>5627</a>        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_query_set"</span>);
-<a href=#5628 id=5628 data-nosnippet>5628</a>        <span class="kw">let </span>(query_set, error) = <span class="kw">match </span><span class="self">self</span>.create_query_set_inner(desc) {
-<a href=#5629 id=5629 data-nosnippet>5629</a>            <span class="prelude-val">Ok</span>(query_set) =&gt; (query_set, <span class="prelude-val">None</span>),
-<a href=#5630 id=5630 data-nosnippet>5630</a>            <span class="prelude-val">Err</span>(e) =&gt; (QuerySet::invalid(Arc::clone(<span class="self">self</span>), desc), <span class="prelude-val">Some</span>(e)),
-<a href=#5631 id=5631 data-nosnippet>5631</a>        };
+<a href=#5628 id=5628 data-nosnippet>5628</a>        <span class="kw">let </span>query_set = <span class="self">self</span>.create_query_set_inner(desc).unwrap_or_else(|err| {
+<a href=#5629 id=5629 data-nosnippet>5629</a>            <span class="self">self</span>.handle_error(err, desc.label.as_deref(), <span class="string">"Device::create_query_set"</span>);
+<a href=#5630 id=5630 data-nosnippet>5630</a>            QuerySet::invalid(Arc::clone(<span class="self">self</span>), desc)
+<a href=#5631 id=5631 data-nosnippet>5631</a>        });
 <a href=#5632 id=5632 data-nosnippet>5632</a>        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 <a href=#5633 id=5633 data-nosnippet>5633</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span><span class="self">self</span>.trace.lock() {
 <a href=#5634 id=5634 data-nosnippet>5634</a>            <span class="kw">use </span>trace::IntoTrace;
@@ -5638,7 +5638,7 @@
 <a href=#5638 id=5638 data-nosnippet>5638</a>            });
 <a href=#5639 id=5639 data-nosnippet>5639</a>        }
 <a href=#5640 id=5640 data-nosnippet>5640</a>        <span class="macro">api_log!</span>(<span class="string">"Device::create_query_set -&gt; {:?}"</span>, Arc::as_ptr(<span class="kw-2">&amp;</span>query_set));
-<a href=#5641 id=5641 data-nosnippet>5641</a>        (query_set, error)
+<a href=#5641 id=5641 data-nosnippet>5641</a>        query_set
 <a href=#5642 id=5642 data-nosnippet>5642</a>    }
 <a href=#5643 id=5643 data-nosnippet>5643</a>
 <a href=#5644 id=5644 data-nosnippet>5644</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_query_set_inner(
