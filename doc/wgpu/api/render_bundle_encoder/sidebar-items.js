@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["CreateRenderBundleEncoderError","RenderBundleEncoder","RenderBundleEncoderDescriptor"]};
+window.SIDEBAR_ITEMS = {"struct":["RenderBundleEncoder","RenderBundleEncoderDescriptor"]};
