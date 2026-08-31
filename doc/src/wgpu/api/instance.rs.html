@@ -390,50 +390,41 @@
 <a href=#390 id=390 data-nosnippet>390</a>    ) -&gt; Adapter {
 <a href=#391 id=391 data-nosnippet>391</a>        <span class="kw">let </span>core_instance = <span class="self">self</span>.inner.as_core();
 <a href=#392 id=392 data-nosnippet>392</a>        <span class="kw">let </span>wgpu_adapter = <span class="kw">unsafe </span>{ core_instance.create_adapter_from_hal(hal_adapter) };
-<a href=#393 id=393 data-nosnippet>393</a>        <span class="kw">let </span>core = backend::wgpu_core::CoreAdapter {
-<a href=#394 id=394 data-nosnippet>394</a>            context: core_instance.clone(),
-<a href=#395 id=395 data-nosnippet>395</a>            wgpu_adapter,
-<a href=#396 id=396 data-nosnippet>396</a>        };
-<a href=#397 id=397 data-nosnippet>397</a>
-<a href=#398 id=398 data-nosnippet>398</a>        Adapter { inner: core.into() }
-<a href=#399 id=399 data-nosnippet>399</a>    }
-<a href=#400 id=400 data-nosnippet>400</a>}
-<a href=#401 id=401 data-nosnippet>401</a>
-<a href=#402 id=402 data-nosnippet>402</a><span class="doccomment">/// Interop with wgpu-core.
-<a href=#403 id=403 data-nosnippet>403</a></span><span class="attr">#[cfg(wgpu_core)]
-<a href=#404 id=404 data-nosnippet>404</a></span><span class="kw">impl </span>Instance {
-<a href=#405 id=405 data-nosnippet>405</a>    <span class="doccomment">/// Create an new instance of wgpu from a wgpu-core instance.
-<a href=#406 id=406 data-nosnippet>406</a>    ///
-<a href=#407 id=407 data-nosnippet>407</a>    /// # Arguments
-<a href=#408 id=408 data-nosnippet>408</a>    ///
-<a href=#409 id=409 data-nosnippet>409</a>    /// - `core_instance` - wgpu-core instance.
-<a href=#410 id=410 data-nosnippet>410</a>    ///
-<a href=#411 id=411 data-nosnippet>411</a>    /// # Safety
-<a href=#412 id=412 data-nosnippet>412</a>    ///
-<a href=#413 id=413 data-nosnippet>413</a>    /// Refer to the creation of wgpu-core Instance.
-<a href=#414 id=414 data-nosnippet>414</a>    </span><span class="kw">pub unsafe fn </span>from_core(core_instance: Arc&lt;wgc::instance::Instance&gt;) -&gt; <span class="self">Self </span>{
-<a href=#415 id=415 data-nosnippet>415</a>        <span class="self">Self </span>{
-<a href=#416 id=416 data-nosnippet>416</a>            inner: <span class="kw">unsafe </span>{
-<a href=#417 id=417 data-nosnippet>417</a>                <span class="kw">crate</span>::backend::ContextWgpuCore::from_core_instance(core_instance).into()
-<a href=#418 id=418 data-nosnippet>418</a>            },
-<a href=#419 id=419 data-nosnippet>419</a>        }
-<a href=#420 id=420 data-nosnippet>420</a>    }
-<a href=#421 id=421 data-nosnippet>421</a>}
-<a href=#422 id=422 data-nosnippet>422</a>
-<a href=#423 id=423 data-nosnippet>423</a><span class="doccomment">/// Interop with custom backends.
-<a href=#424 id=424 data-nosnippet>424</a></span><span class="attr">#[cfg(custom)]
-<a href=#425 id=425 data-nosnippet>425</a></span><span class="kw">impl </span>Instance {
-<a href=#426 id=426 data-nosnippet>426</a>    <span class="doccomment">/// Creates instance from custom context implementation
-<a href=#427 id=427 data-nosnippet>427</a>    </span><span class="kw">pub fn </span>from_custom&lt;T: InstanceInterface&gt;(instance: T) -&gt; <span class="self">Self </span>{
-<a href=#428 id=428 data-nosnippet>428</a>        <span class="self">Self </span>{
-<a href=#429 id=429 data-nosnippet>429</a>            inner: dispatch::DispatchInstance::Custom(backend::custom::DynContext::new(instance)),
-<a href=#430 id=430 data-nosnippet>430</a>        }
-<a href=#431 id=431 data-nosnippet>431</a>    }
-<a href=#432 id=432 data-nosnippet>432</a>
-<a href=#433 id=433 data-nosnippet>433</a>    <span class="attr">#[cfg(custom)]
-<a href=#434 id=434 data-nosnippet>434</a>    </span><span class="doccomment">/// Returns custom implementation of Instance (if custom backend and is internally T)
-<a href=#435 id=435 data-nosnippet>435</a>    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::InstanceInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
-<a href=#436 id=436 data-nosnippet>436</a>        <span class="self">self</span>.inner.as_custom()
-<a href=#437 id=437 data-nosnippet>437</a>    }
-<a href=#438 id=438 data-nosnippet>438</a>}
+<a href=#393 id=393 data-nosnippet>393</a>        <span class="kw">let </span>core = backend::wgpu_core::CoreAdapter { wgpu_adapter };
+<a href=#394 id=394 data-nosnippet>394</a>
+<a href=#395 id=395 data-nosnippet>395</a>        Adapter { inner: core.into() }
+<a href=#396 id=396 data-nosnippet>396</a>    }
+<a href=#397 id=397 data-nosnippet>397</a>}
+<a href=#398 id=398 data-nosnippet>398</a>
+<a href=#399 id=399 data-nosnippet>399</a><span class="doccomment">/// Interop with wgpu-core.
+<a href=#400 id=400 data-nosnippet>400</a></span><span class="attr">#[cfg(wgpu_core)]
+<a href=#401 id=401 data-nosnippet>401</a></span><span class="kw">impl </span>Instance {
+<a href=#402 id=402 data-nosnippet>402</a>    <span class="doccomment">/// Create an new instance of wgpu from a wgpu-core instance.
+<a href=#403 id=403 data-nosnippet>403</a>    ///
+<a href=#404 id=404 data-nosnippet>404</a>    /// # Arguments
+<a href=#405 id=405 data-nosnippet>405</a>    ///
+<a href=#406 id=406 data-nosnippet>406</a>    /// - `core_instance` - wgpu-core instance.
+<a href=#407 id=407 data-nosnippet>407</a>    </span><span class="kw">pub fn </span>from_core(core_instance: Arc&lt;wgc::instance::Instance&gt;) -&gt; <span class="self">Self </span>{
+<a href=#408 id=408 data-nosnippet>408</a>        <span class="self">Self </span>{
+<a href=#409 id=409 data-nosnippet>409</a>            inner: <span class="kw">crate</span>::backend::ContextWgpuCore::from_core_instance(core_instance).into(),
+<a href=#410 id=410 data-nosnippet>410</a>        }
+<a href=#411 id=411 data-nosnippet>411</a>    }
+<a href=#412 id=412 data-nosnippet>412</a>}
+<a href=#413 id=413 data-nosnippet>413</a>
+<a href=#414 id=414 data-nosnippet>414</a><span class="doccomment">/// Interop with custom backends.
+<a href=#415 id=415 data-nosnippet>415</a></span><span class="attr">#[cfg(custom)]
+<a href=#416 id=416 data-nosnippet>416</a></span><span class="kw">impl </span>Instance {
+<a href=#417 id=417 data-nosnippet>417</a>    <span class="doccomment">/// Creates instance from custom context implementation
+<a href=#418 id=418 data-nosnippet>418</a>    </span><span class="kw">pub fn </span>from_custom&lt;T: InstanceInterface&gt;(instance: T) -&gt; <span class="self">Self </span>{
+<a href=#419 id=419 data-nosnippet>419</a>        <span class="self">Self </span>{
+<a href=#420 id=420 data-nosnippet>420</a>            inner: dispatch::DispatchInstance::Custom(backend::custom::DynContext::new(instance)),
+<a href=#421 id=421 data-nosnippet>421</a>        }
+<a href=#422 id=422 data-nosnippet>422</a>    }
+<a href=#423 id=423 data-nosnippet>423</a>
+<a href=#424 id=424 data-nosnippet>424</a>    <span class="attr">#[cfg(custom)]
+<a href=#425 id=425 data-nosnippet>425</a>    </span><span class="doccomment">/// Returns custom implementation of Instance (if custom backend and is internally T)
+<a href=#426 id=426 data-nosnippet>426</a>    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::InstanceInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+<a href=#427 id=427 data-nosnippet>427</a>        <span class="self">self</span>.inner.as_custom()
+<a href=#428 id=428 data-nosnippet>428</a>    }
+<a href=#429 id=429 data-nosnippet>429</a>}
 </code></pre></div></section></main></body></html>
