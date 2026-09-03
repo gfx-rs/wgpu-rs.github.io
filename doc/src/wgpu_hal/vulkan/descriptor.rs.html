@@ -318,23 +318,34 @@
 <a href=#318 id=318 data-nosnippet>318</a>        })
 <a href=#319 id=319 data-nosnippet>319</a>        .collect::&lt;ArrayVec&lt;<span class="kw">_</span>, NR_OF_DESCRIPTOR_TYPES&gt;&gt;();
 <a href=#320 id=320 data-nosnippet>320</a>
-<a href=#321 id=321 data-nosnippet>321</a>    <span class="kw">let </span><span class="kw-2">mut </span>flags = vk::DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET;
-<a href=#322 id=322 data-nosnippet>322</a>    <span class="kw">if </span>key.update_after_bind {
-<a href=#323 id=323 data-nosnippet>323</a>        flags |= vk::DescriptorPoolCreateFlags::UPDATE_AFTER_BIND;
-<a href=#324 id=324 data-nosnippet>324</a>    };
-<a href=#325 id=325 data-nosnippet>325</a>
-<a href=#326 id=326 data-nosnippet>326</a>    <span class="kw">let </span>vk_info = vk::DescriptorPoolCreateInfo::default()
-<a href=#327 id=327 data-nosnippet>327</a>        .flags(flags)
-<a href=#328 id=328 data-nosnippet>328</a>        .max_sets(capacity)
-<a href=#329 id=329 data-nosnippet>329</a>        .pool_sizes(<span class="kw-2">&amp;</span>pool_sizes);
-<a href=#330 id=330 data-nosnippet>330</a>
-<a href=#331 id=331 data-nosnippet>331</a>    <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ device.create_descriptor_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }
-<a href=#332 id=332 data-nosnippet>332</a>        .map_err(<span class="kw">super</span>::map_host_device_oom_and_fragmentation_err)<span class="question-mark">?</span>;
-<a href=#333 id=333 data-nosnippet>333</a>
-<a href=#334 id=334 data-nosnippet>334</a>    <span class="prelude-val">Ok</span>(Pool {
-<a href=#335 id=335 data-nosnippet>335</a>        raw,
-<a href=#336 id=336 data-nosnippet>336</a>        capacity,
-<a href=#337 id=337 data-nosnippet>337</a>        available: capacity,
-<a href=#338 id=338 data-nosnippet>338</a>    })
-<a href=#339 id=339 data-nosnippet>339</a>}
+<a href=#321 id=321 data-nosnippet>321</a>    <span class="comment">// Prior to Vulkan 1.3.215 `poolSizeCount` was required to be non-zero, so
+<a href=#322 id=322 data-nosnippet>322</a>    // add a single small sampler entry if `pool_sizes` would otherwise be
+<a href=#323 id=323 data-nosnippet>323</a>    // empty.
+<a href=#324 id=324 data-nosnippet>324</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>pool_sizes = pool_sizes;
+<a href=#325 id=325 data-nosnippet>325</a>    <span class="kw">if </span>pool_sizes.is_empty() {
+<a href=#326 id=326 data-nosnippet>326</a>        pool_sizes.push(vk::DescriptorPoolSize {
+<a href=#327 id=327 data-nosnippet>327</a>            ty: Dt::SAMPLER,
+<a href=#328 id=328 data-nosnippet>328</a>            descriptor_count: <span class="number">1</span>,
+<a href=#329 id=329 data-nosnippet>329</a>        });
+<a href=#330 id=330 data-nosnippet>330</a>    }
+<a href=#331 id=331 data-nosnippet>331</a>
+<a href=#332 id=332 data-nosnippet>332</a>    <span class="kw">let </span><span class="kw-2">mut </span>flags = vk::DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET;
+<a href=#333 id=333 data-nosnippet>333</a>    <span class="kw">if </span>key.update_after_bind {
+<a href=#334 id=334 data-nosnippet>334</a>        flags |= vk::DescriptorPoolCreateFlags::UPDATE_AFTER_BIND;
+<a href=#335 id=335 data-nosnippet>335</a>    };
+<a href=#336 id=336 data-nosnippet>336</a>
+<a href=#337 id=337 data-nosnippet>337</a>    <span class="kw">let </span>vk_info = vk::DescriptorPoolCreateInfo::default()
+<a href=#338 id=338 data-nosnippet>338</a>        .flags(flags)
+<a href=#339 id=339 data-nosnippet>339</a>        .max_sets(capacity)
+<a href=#340 id=340 data-nosnippet>340</a>        .pool_sizes(<span class="kw-2">&amp;</span>pool_sizes);
+<a href=#341 id=341 data-nosnippet>341</a>
+<a href=#342 id=342 data-nosnippet>342</a>    <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ device.create_descriptor_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }
+<a href=#343 id=343 data-nosnippet>343</a>        .map_err(<span class="kw">super</span>::map_host_device_oom_and_fragmentation_err)<span class="question-mark">?</span>;
+<a href=#344 id=344 data-nosnippet>344</a>
+<a href=#345 id=345 data-nosnippet>345</a>    <span class="prelude-val">Ok</span>(Pool {
+<a href=#346 id=346 data-nosnippet>346</a>        raw,
+<a href=#347 id=347 data-nosnippet>347</a>        capacity,
+<a href=#348 id=348 data-nosnippet>348</a>        available: capacity,
+<a href=#349 id=349 data-nosnippet>349</a>    })
+<a href=#350 id=350 data-nosnippet>350</a>}
 </code></pre></div></section></main></body></html>
