@@ -120,72 +120,73 @@
 <a href=#120 id=120 data-nosnippet>120</a>            | BuiltIn::RayTCurrentMax
 <a href=#121 id=121 data-nosnippet>121</a>            | BuiltIn::ObjectToWorld
 <a href=#122 id=122 data-nosnippet>122</a>            | BuiltIn::WorldToObject
-<a href=#123 id=123 data-nosnippet>123</a>            | BuiltIn::HitKind =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-<a href=#124 id=124 data-nosnippet>124</a>        }))
-<a href=#125 id=125 data-nosnippet>125</a>    }
-<a href=#126 id=126 data-nosnippet>126</a>}
-<a href=#127 id=127 data-nosnippet>127</a>
-<a href=#128 id=128 data-nosnippet>128</a><span class="doccomment">/// A [`naga::BuiltIn`] that counts towards
-<a href=#129 id=129 data-nosnippet>129</a>/// a [`MaxFragmentShaderInputDeduction::InterStageBuiltIn`].
-<a href=#130 id=130 data-nosnippet>130</a>///
-<a href=#131 id=131 data-nosnippet>131</a>/// See also &lt;https://www.w3.org/TR/webgpu/#inter-stage-builtins&gt;.
-<a href=#132 id=132 data-nosnippet>132</a></span><span class="attr">#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-<a href=#133 id=133 data-nosnippet>133</a></span><span class="kw">pub enum </span>InterStageBuiltIn {
-<a href=#134 id=134 data-nosnippet>134</a>    <span class="comment">// Standard for WebGPU
-<a href=#135 id=135 data-nosnippet>135</a>    </span>Position,
-<a href=#136 id=136 data-nosnippet>136</a>    FrontFacing,
-<a href=#137 id=137 data-nosnippet>137</a>    SampleIndex,
-<a href=#138 id=138 data-nosnippet>138</a>    SampleMask,
-<a href=#139 id=139 data-nosnippet>139</a>    PrimitiveIndex,
-<a href=#140 id=140 data-nosnippet>140</a>    SubgroupInvocationId,
-<a href=#141 id=141 data-nosnippet>141</a>    SubgroupSize,
-<a href=#142 id=142 data-nosnippet>142</a>
-<a href=#143 id=143 data-nosnippet>143</a>    <span class="comment">// Non-standard
-<a href=#144 id=144 data-nosnippet>144</a>    </span>PointCoord,
-<a href=#145 id=145 data-nosnippet>145</a>    Barycentric,
-<a href=#146 id=146 data-nosnippet>146</a>    ViewIndex,
-<a href=#147 id=147 data-nosnippet>147</a>}
-<a href=#148 id=148 data-nosnippet>148</a>
-<a href=#149 id=149 data-nosnippet>149</a><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::validation) <span class="kw">fn </span>display_deductions_as_optional_list&lt;T&gt;(
-<a href=#150 id=150 data-nosnippet>150</a>    deductions: <span class="kw-2">&amp;</span>[T],
-<a href=#151 id=151 data-nosnippet>151</a>    accessor: <span class="kw">fn</span>(<span class="kw-2">&amp;</span>T) -&gt; u32,
-<a href=#152 id=152 data-nosnippet>152</a>) -&gt; <span class="kw">impl </span>Display + <span class="lifetime">'_
-<a href=#153 id=153 data-nosnippet>153</a></span><span class="kw">where
-<a href=#154 id=154 data-nosnippet>154</a>    </span>T: Debug,
-<a href=#155 id=155 data-nosnippet>155</a>{
-<a href=#156 id=156 data-nosnippet>156</a>    <span class="kw">struct </span>DisplayFromFn&lt;F&gt;(F);
-<a href=#157 id=157 data-nosnippet>157</a>
-<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">impl</span>&lt;F&gt; Display <span class="kw">for </span>DisplayFromFn&lt;F&gt;
-<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">where
-<a href=#160 id=160 data-nosnippet>160</a>        </span>F: Fn(<span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result,
-<a href=#161 id=161 data-nosnippet>161</a>    {
-<a href=#162 id=162 data-nosnippet>162</a>        <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-<a href=#163 id=163 data-nosnippet>163</a>            <span class="kw">let </span><span class="self">Self</span>(inner) = <span class="self">self</span>;
-<a href=#164 id=164 data-nosnippet>164</a>            inner(f)
-<a href=#165 id=165 data-nosnippet>165</a>        }
-<a href=#166 id=166 data-nosnippet>166</a>    }
-<a href=#167 id=167 data-nosnippet>167</a>
-<a href=#168 id=168 data-nosnippet>168</a>    DisplayFromFn(<span class="kw">move </span>|f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;| {
-<a href=#169 id=169 data-nosnippet>169</a>        <span class="kw">let </span>relevant_deductions = deductions
-<a href=#170 id=170 data-nosnippet>170</a>            .iter()
-<a href=#171 id=171 data-nosnippet>171</a>            .map(|deduction| (deduction, accessor(deduction)))
-<a href=#172 id=172 data-nosnippet>172</a>            .filter(|(<span class="kw">_</span>, effective_deduction)| <span class="kw-2">*</span>effective_deduction &gt; <span class="number">0</span>);
-<a href=#173 id=173 data-nosnippet>173</a>        <span class="kw">if </span>relevant_deductions.clone().next().is_some() {
-<a href=#174 id=174 data-nosnippet>174</a>            <span class="macro">writeln!</span>(f, <span class="string">"; note that some deductions apply during validation:"</span>)<span class="question-mark">?</span>;
-<a href=#175 id=175 data-nosnippet>175</a>            <span class="kw">let </span><span class="kw-2">mut </span>wrote_something = <span class="bool-val">false</span>;
-<a href=#176 id=176 data-nosnippet>176</a>            <span class="kw">for </span>deduction <span class="kw">in </span>deductions {
-<a href=#177 id=177 data-nosnippet>177</a>                <span class="kw">let </span>deducted_amount = accessor(deduction);
-<a href=#178 id=178 data-nosnippet>178</a>                <span class="kw">if </span>deducted_amount &gt; <span class="number">0 </span>{
-<a href=#179 id=179 data-nosnippet>179</a>                    <span class="macro">writeln!</span>(f, <span class="string">"\n- {deduction:?}: {}"</span>, accessor(deduction))<span class="question-mark">?</span>;
-<a href=#180 id=180 data-nosnippet>180</a>                    wrote_something = <span class="bool-val">true</span>;
-<a href=#181 id=181 data-nosnippet>181</a>                }
-<a href=#182 id=182 data-nosnippet>182</a>            }
-<a href=#183 id=183 data-nosnippet>183</a>            <span class="macro">debug_assert!</span>(
-<a href=#184 id=184 data-nosnippet>184</a>                wrote_something,
-<a href=#185 id=185 data-nosnippet>185</a>                <span class="string">"no substantial deductions found in error display"
-<a href=#186 id=186 data-nosnippet>186</a>            </span>);
-<a href=#187 id=187 data-nosnippet>187</a>        }
-<a href=#188 id=188 data-nosnippet>188</a>        <span class="prelude-val">Ok</span>(())
-<a href=#189 id=189 data-nosnippet>189</a>    })
-<a href=#190 id=190 data-nosnippet>190</a>}
+<a href=#123 id=123 data-nosnippet>123</a>            | BuiltIn::HitKind
+<a href=#124 id=124 data-nosnippet>124</a>            | BuiltIn::HitBarycentrics =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+<a href=#125 id=125 data-nosnippet>125</a>        }))
+<a href=#126 id=126 data-nosnippet>126</a>    }
+<a href=#127 id=127 data-nosnippet>127</a>}
+<a href=#128 id=128 data-nosnippet>128</a>
+<a href=#129 id=129 data-nosnippet>129</a><span class="doccomment">/// A [`naga::BuiltIn`] that counts towards
+<a href=#130 id=130 data-nosnippet>130</a>/// a [`MaxFragmentShaderInputDeduction::InterStageBuiltIn`].
+<a href=#131 id=131 data-nosnippet>131</a>///
+<a href=#132 id=132 data-nosnippet>132</a>/// See also &lt;https://www.w3.org/TR/webgpu/#inter-stage-builtins&gt;.
+<a href=#133 id=133 data-nosnippet>133</a></span><span class="attr">#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+<a href=#134 id=134 data-nosnippet>134</a></span><span class="kw">pub enum </span>InterStageBuiltIn {
+<a href=#135 id=135 data-nosnippet>135</a>    <span class="comment">// Standard for WebGPU
+<a href=#136 id=136 data-nosnippet>136</a>    </span>Position,
+<a href=#137 id=137 data-nosnippet>137</a>    FrontFacing,
+<a href=#138 id=138 data-nosnippet>138</a>    SampleIndex,
+<a href=#139 id=139 data-nosnippet>139</a>    SampleMask,
+<a href=#140 id=140 data-nosnippet>140</a>    PrimitiveIndex,
+<a href=#141 id=141 data-nosnippet>141</a>    SubgroupInvocationId,
+<a href=#142 id=142 data-nosnippet>142</a>    SubgroupSize,
+<a href=#143 id=143 data-nosnippet>143</a>
+<a href=#144 id=144 data-nosnippet>144</a>    <span class="comment">// Non-standard
+<a href=#145 id=145 data-nosnippet>145</a>    </span>PointCoord,
+<a href=#146 id=146 data-nosnippet>146</a>    Barycentric,
+<a href=#147 id=147 data-nosnippet>147</a>    ViewIndex,
+<a href=#148 id=148 data-nosnippet>148</a>}
+<a href=#149 id=149 data-nosnippet>149</a>
+<a href=#150 id=150 data-nosnippet>150</a><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::validation) <span class="kw">fn </span>display_deductions_as_optional_list&lt;T&gt;(
+<a href=#151 id=151 data-nosnippet>151</a>    deductions: <span class="kw-2">&amp;</span>[T],
+<a href=#152 id=152 data-nosnippet>152</a>    accessor: <span class="kw">fn</span>(<span class="kw-2">&amp;</span>T) -&gt; u32,
+<a href=#153 id=153 data-nosnippet>153</a>) -&gt; <span class="kw">impl </span>Display + <span class="lifetime">'_
+<a href=#154 id=154 data-nosnippet>154</a></span><span class="kw">where
+<a href=#155 id=155 data-nosnippet>155</a>    </span>T: Debug,
+<a href=#156 id=156 data-nosnippet>156</a>{
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="kw">struct </span>DisplayFromFn&lt;F&gt;(F);
+<a href=#158 id=158 data-nosnippet>158</a>
+<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">impl</span>&lt;F&gt; Display <span class="kw">for </span>DisplayFromFn&lt;F&gt;
+<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">where
+<a href=#161 id=161 data-nosnippet>161</a>        </span>F: Fn(<span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result,
+<a href=#162 id=162 data-nosnippet>162</a>    {
+<a href=#163 id=163 data-nosnippet>163</a>        <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+<a href=#164 id=164 data-nosnippet>164</a>            <span class="kw">let </span><span class="self">Self</span>(inner) = <span class="self">self</span>;
+<a href=#165 id=165 data-nosnippet>165</a>            inner(f)
+<a href=#166 id=166 data-nosnippet>166</a>        }
+<a href=#167 id=167 data-nosnippet>167</a>    }
+<a href=#168 id=168 data-nosnippet>168</a>
+<a href=#169 id=169 data-nosnippet>169</a>    DisplayFromFn(<span class="kw">move </span>|f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;| {
+<a href=#170 id=170 data-nosnippet>170</a>        <span class="kw">let </span>relevant_deductions = deductions
+<a href=#171 id=171 data-nosnippet>171</a>            .iter()
+<a href=#172 id=172 data-nosnippet>172</a>            .map(|deduction| (deduction, accessor(deduction)))
+<a href=#173 id=173 data-nosnippet>173</a>            .filter(|(<span class="kw">_</span>, effective_deduction)| <span class="kw-2">*</span>effective_deduction &gt; <span class="number">0</span>);
+<a href=#174 id=174 data-nosnippet>174</a>        <span class="kw">if </span>relevant_deductions.clone().next().is_some() {
+<a href=#175 id=175 data-nosnippet>175</a>            <span class="macro">writeln!</span>(f, <span class="string">"; note that some deductions apply during validation:"</span>)<span class="question-mark">?</span>;
+<a href=#176 id=176 data-nosnippet>176</a>            <span class="kw">let </span><span class="kw-2">mut </span>wrote_something = <span class="bool-val">false</span>;
+<a href=#177 id=177 data-nosnippet>177</a>            <span class="kw">for </span>deduction <span class="kw">in </span>deductions {
+<a href=#178 id=178 data-nosnippet>178</a>                <span class="kw">let </span>deducted_amount = accessor(deduction);
+<a href=#179 id=179 data-nosnippet>179</a>                <span class="kw">if </span>deducted_amount &gt; <span class="number">0 </span>{
+<a href=#180 id=180 data-nosnippet>180</a>                    <span class="macro">writeln!</span>(f, <span class="string">"\n- {deduction:?}: {}"</span>, accessor(deduction))<span class="question-mark">?</span>;
+<a href=#181 id=181 data-nosnippet>181</a>                    wrote_something = <span class="bool-val">true</span>;
+<a href=#182 id=182 data-nosnippet>182</a>                }
+<a href=#183 id=183 data-nosnippet>183</a>            }
+<a href=#184 id=184 data-nosnippet>184</a>            <span class="macro">debug_assert!</span>(
+<a href=#185 id=185 data-nosnippet>185</a>                wrote_something,
+<a href=#186 id=186 data-nosnippet>186</a>                <span class="string">"no substantial deductions found in error display"
+<a href=#187 id=187 data-nosnippet>187</a>            </span>);
+<a href=#188 id=188 data-nosnippet>188</a>        }
+<a href=#189 id=189 data-nosnippet>189</a>        <span class="prelude-val">Ok</span>(())
+<a href=#190 id=190 data-nosnippet>190</a>    })
+<a href=#191 id=191 data-nosnippet>191</a>}
 </code></pre></div></section></main></body></html>

@@ -393,17 +393,45 @@
 <a href=#393 id=393 data-nosnippet>393</a>fn miss() {}
 <a href=#394 id=394 data-nosnippet>394</a>```
 <a href=#395 id=395 data-nosnippet>395</a>
-<a href=#396 id=396 data-nosnippet>396</a>### Acceleration structure tags
+<a href=#396 id=396 data-nosnippet>396</a>Ray Tracing pipeline-specific builtins
 <a href=#397 id=397 data-nosnippet>397</a>
-<a href=#398 id=398 data-nosnippet>398</a>These are tags that can be added to a acceleration structure (`acceleration_structure` -&gt;
-<a href=#399 id=399 data-nosnippet>399</a>`acceleration_structure&lt;... insert tags here! ...&gt;`) and to a ray query (`ray_query` -&gt;
-<a href=#400 id=400 data-nosnippet>400</a>`ray_query&lt;... insert tags here! ...&gt;`). These require more features.
-<a href=#401 id=401 data-nosnippet>401</a>
-<a href=#402 id=402 data-nosnippet>402</a>| Tag             | Requirements                          | Description                                                            |
-<a href=#403 id=403 data-nosnippet>403</a>| --------------- | ------------------------------------- | ---------------------------------------------------------------------- |
-<a href=#404 id=404 data-nosnippet>404</a>| `vertex_return` | `enable wgpu_ray_query_vertex_return` | Allows getting the vertices of the hit triangle when using ray queries |
-<a href=#405 id=405 data-nosnippet>405</a>
-<a href=#406 id=406 data-nosnippet>406</a>*/
-<a href=#407 id=407 data-nosnippet>407</a>
-<a href=#408 id=408 data-nosnippet>408</a></span><span class="kw">use crate</span>::{Blas, CommandEncoder, Device, Features, Queue, Tlas, TlasInstance};
+<a href=#398 id=398 data-nosnippet>398</a>| Builtin                | Type          | Stages                     | Description                                                                                                                                                  |
+<a href=#399 id=399 data-nosnippet>399</a>| ---------------------- | ------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+<a href=#400 id=400 data-nosnippet>400</a>| `ray_invocation_id`    | `vec3&lt;u32&gt;`   | all                        | The id of this ray within the rays created.                                                                                                                  |
+<a href=#401 id=401 data-nosnippet>401</a>| `num_ray_invocations`  | `vec3&lt;u32&gt;`   | all                        | The number of rays created.                                                                                                                                  |
+<a href=#402 id=402 data-nosnippet>402</a>| `world_ray_origin`     | `vec3&lt;f32&gt;`   | any hit, closest hit, miss | The origin of the ray in world space.                                                                                                                        |
+<a href=#403 id=403 data-nosnippet>403</a>| `world_ray_direction`  | `vec3&lt;f32&gt;`   | any hit, closest hit, miss | The direction of the ray in world space.                                                                                                                     |
+<a href=#404 id=404 data-nosnippet>404</a>| `ray_t_min`            | `f32`         | any hit, closest hit, miss | The `t_min` given in the `RayDesc`.                                                                                                                          |
+<a href=#405 id=405 data-nosnippet>405</a>| `ray_t_current_max`    | `f32`         | any hit, closest hit, miss | The closest committed hit if there is one, otherwise the `t_max` in the `RayDesc`.                                                                           |
+<a href=#406 id=406 data-nosnippet>406</a>| `object_ray_origin`    | `vec3&lt;f32&gt;`   | any hit, closest hit       | The origin of the ray in the space of the hit object.                                                                                                        |
+<a href=#407 id=407 data-nosnippet>407</a>| `object_ray_direction` | `vec3&lt;f32&gt;`   | any hit, closest hit       | The direction of the ray in the space of the hit object.                                                                                                     |
+<a href=#408 id=408 data-nosnippet>408</a>| `instance_custom_data` | `u32`         | any hit, closest hit       | Corresponds to `TlasInstance::custom_data` for the intersected object.                                                                                       |
+<a href=#409 id=409 data-nosnippet>409</a>| `geometry_index`       | `u32`         | any hit, closest hit       | The index of the geometry in the `Blas`.                                                                                                                     |
+<a href=#410 id=410 data-nosnippet>410</a>| `object_to_world`      | `mat4x3&lt;f32&gt;` | any hit, closest hit       | Matrix for converting from the space of the hit object to world-space.                                                                                       |
+<a href=#411 id=411 data-nosnippet>411</a>| `world_to_object`      | `mat4x3&lt;f32&gt;` | any hit, closest hit       | Matrix for converting from world-space to the space of the hit object.                                                                                       |
+<a href=#412 id=412 data-nosnippet>412</a>| `hit_kind`             | `u32`         | any hit, closest hit       | The kind of hit: 254 (0xFE) for a front facing triangle, 255 (0xFF) for a back facing one.                                                                   |
+<a href=#413 id=413 data-nosnippet>413</a>| `hit_barycentrics`     | `vec2&lt;f32&gt;`   | any hit, closest hit       | Two of the barycentric coordinates of the hit point, the first is `1.0 - x - y`, followed by the two others (only allowed if the hit object was a triangle). |
+<a href=#414 id=414 data-nosnippet>414</a>
+<a href=#415 id=415 data-nosnippet>415</a>Builtins usable in ray tracing pipelines that are not specific to them
+<a href=#416 id=416 data-nosnippet>416</a>
+<a href=#417 id=417 data-nosnippet>417</a>| Builtin                  | Type  | Stages               | Description                                                                                    |
+<a href=#418 id=418 data-nosnippet>418</a>| ------------------------ | ----- | -------------------- | ---------------------------------------------------------------------------------------------- |
+<a href=#419 id=419 data-nosnippet>419</a>| `instance_index`         | `u32` | any hit, closest hit | The index of the intersected instance in the `Tlas`.                                           |
+<a href=#420 id=420 data-nosnippet>420</a>| `primitive_index`        | `u32` | any hit, closest hit | The index of the intersected primitive within the geometry, requires `enable primitive_index`. |
+<a href=#421 id=421 data-nosnippet>421</a>| `subgroup_size`          | `u32` | all                  | The number of invocations in the subgroup, requires `enable subgroups`.                        |
+<a href=#422 id=422 data-nosnippet>422</a>| `subgroup_invocation_id` | `u32` | all                  | The id of this invocation within the subgroup, requires `enable subgroups`.                    |
+<a href=#423 id=423 data-nosnippet>423</a>
+<a href=#424 id=424 data-nosnippet>424</a>### Acceleration structure tags
+<a href=#425 id=425 data-nosnippet>425</a>
+<a href=#426 id=426 data-nosnippet>426</a>These are tags that can be added to a acceleration structure (`acceleration_structure` -&gt;
+<a href=#427 id=427 data-nosnippet>427</a>`acceleration_structure&lt;... insert tags here! ...&gt;`) and to a ray query (`ray_query` -&gt;
+<a href=#428 id=428 data-nosnippet>428</a>`ray_query&lt;... insert tags here! ...&gt;`). These require more features.
+<a href=#429 id=429 data-nosnippet>429</a>
+<a href=#430 id=430 data-nosnippet>430</a>| Tag             | Requirements                          | Description                                                            |
+<a href=#431 id=431 data-nosnippet>431</a>| --------------- | ------------------------------------- | ---------------------------------------------------------------------- |
+<a href=#432 id=432 data-nosnippet>432</a>| `vertex_return` | `enable wgpu_ray_query_vertex_return` | Allows getting the vertices of the hit triangle when using ray queries |
+<a href=#433 id=433 data-nosnippet>433</a>
+<a href=#434 id=434 data-nosnippet>434</a>*/
+<a href=#435 id=435 data-nosnippet>435</a>
+<a href=#436 id=436 data-nosnippet>436</a></span><span class="kw">use crate</span>::{Blas, CommandEncoder, Device, Features, Queue, Tlas, TlasInstance};
 </code></pre></div></section></main></body></html>
