@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["CreateSurfaceError","GetSurfaceSupportError","RequestDeviceError"],"fn":["adapter_allowed","filter_features_and_limits"],"struct":["Adapter","Instance","InstanceDevices","Surface"]};
+window.SIDEBAR_ITEMS = {"enum":["CreateSurfaceError","GetSurfaceSupportError","RequestDeviceError"],"fn":["adapter_allowed","filter_features_and_limits","normalize_max_resource_per_shader_stage_limits"],"struct":["Adapter","Instance","InstanceDevices","Surface"]};
