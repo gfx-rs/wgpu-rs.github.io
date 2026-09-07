@@ -728,8 +728,24 @@ function __wbg_get_imports() {
             const ret = arg0.maxStorageBufferBindingSize;
             return ret;
         },
+        __wbg_maxStorageBuffersInFragmentStage_2a7e0663edaa7055: function(arg0) {
+            const ret = arg0.maxStorageBuffersInFragmentStage;
+            return ret;
+        },
+        __wbg_maxStorageBuffersInVertexStage_781f0e12842424b7: function(arg0) {
+            const ret = arg0.maxStorageBuffersInVertexStage;
+            return ret;
+        },
         __wbg_maxStorageBuffersPerShaderStage_eb663f6d7521b6a7: function(arg0) {
             const ret = arg0.maxStorageBuffersPerShaderStage;
+            return ret;
+        },
+        __wbg_maxStorageTexturesInFragmentStage_5aac711e4cb616b0: function(arg0) {
+            const ret = arg0.maxStorageTexturesInFragmentStage;
+            return ret;
+        },
+        __wbg_maxStorageTexturesInVertexStage_5c835176c23c81bd: function(arg0) {
+            const ret = arg0.maxStorageTexturesInVertexStage;
             return ret;
         },
         __wbg_maxStorageTexturesPerShaderStage_bb3ad93b53e618c0: function(arg0) {
