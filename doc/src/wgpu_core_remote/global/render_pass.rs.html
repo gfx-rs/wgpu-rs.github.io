@@ -8,7 +8,7 @@
 <a href=#8 id=8 data-nosnippet>8</a>    ResolvedRenderPassDescriptor,
 <a href=#9 id=9 data-nosnippet>9</a>};
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>wgpu_core_remote_types::ffi::FfiOption;
-<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>wgt::{BufferAddress, BufferSize, Color, DynamicOffset, IndexFormat};
+<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>wgt::{BufferAddress, Color, DynamicOffset, IndexFormat};
 <a href=#12 id=12 data-nosnippet>12</a>
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use </span><span class="kw">crate</span>::global::Global;
 <a href=#14 id=14 data-nosnippet>14</a><span class="kw">use </span><span class="kw">crate</span>::hub::Hub;
@@ -162,7 +162,7 @@
 <a href=#162 id=162 data-nosnippet>162</a>        buffer_id: id::BufferId,
 <a href=#163 id=163 data-nosnippet>163</a>        index_format: IndexFormat,
 <a href=#164 id=164 data-nosnippet>164</a>        offset: BufferAddress,
-<a href=#165 id=165 data-nosnippet>165</a>        size: <span class="prelude-ty">Option</span>&lt;BufferSize&gt;,
+<a href=#165 id=165 data-nosnippet>165</a>        size: <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;,
 <a href=#166 id=166 data-nosnippet>166</a>    ) {
 <a href=#167 id=167 data-nosnippet>167</a>        <span class="kw">let </span><span class="kw-2">mut </span>hub = <span class="self">self</span>.hub.borrow_mut();
 <a href=#168 id=168 data-nosnippet>168</a>        <span class="kw">let </span>Hub {
@@ -180,7 +180,7 @@
 <a href=#180 id=180 data-nosnippet>180</a>        slot: u32,
 <a href=#181 id=181 data-nosnippet>181</a>        buffer_id: <span class="prelude-ty">Option</span>&lt;id::BufferId&gt;,
 <a href=#182 id=182 data-nosnippet>182</a>        offset: BufferAddress,
-<a href=#183 id=183 data-nosnippet>183</a>        size: <span class="prelude-ty">Option</span>&lt;BufferSize&gt;,
+<a href=#183 id=183 data-nosnippet>183</a>        size: <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;,
 <a href=#184 id=184 data-nosnippet>184</a>    ) {
 <a href=#185 id=185 data-nosnippet>185</a>        <span class="kw">let </span><span class="kw-2">mut </span>hub = <span class="self">self</span>.hub.borrow_mut();
 <a href=#186 id=186 data-nosnippet>186</a>        <span class="kw">let </span>Hub {
@@ -466,75 +466,63 @@
 <a href=#466 id=466 data-nosnippet>466</a>                    index_format,
 <a href=#467 id=467 data-nosnippet>467</a>                    offset,
 <a href=#468 id=468 data-nosnippet>468</a>                    size,
-<a href=#469 id=469 data-nosnippet>469</a>                } =&gt; <span class="self">self</span>.render_pass_set_index_buffer(
-<a href=#470 id=470 data-nosnippet>470</a>                    pass_id,
-<a href=#471 id=471 data-nosnippet>471</a>                    buffer,
-<a href=#472 id=472 data-nosnippet>472</a>                    index_format,
+<a href=#469 id=469 data-nosnippet>469</a>                } =&gt; <span class="self">self</span>.render_pass_set_index_buffer(pass_id, buffer, index_format, offset, size),
+<a href=#470 id=470 data-nosnippet>470</a>                RenderCommand::SetVertexBuffer {
+<a href=#471 id=471 data-nosnippet>471</a>                    slot,
+<a href=#472 id=472 data-nosnippet>472</a>                    buffer,
 <a href=#473 id=473 data-nosnippet>473</a>                    offset,
-<a href=#474 id=474 data-nosnippet>474</a>                    size.and_then(core::num::NonZeroU64::new), <span class="comment">// pass size directly once https://github.com/gfx-rs/wgpu/issues/3170 is resolved
-<a href=#475 id=475 data-nosnippet>475</a>                </span>),
-<a href=#476 id=476 data-nosnippet>476</a>                RenderCommand::SetVertexBuffer {
-<a href=#477 id=477 data-nosnippet>477</a>                    slot,
-<a href=#478 id=478 data-nosnippet>478</a>                    buffer,
-<a href=#479 id=479 data-nosnippet>479</a>                    offset,
-<a href=#480 id=480 data-nosnippet>480</a>                    size,
-<a href=#481 id=481 data-nosnippet>481</a>                } =&gt; <span class="self">self</span>.render_pass_set_vertex_buffer(
+<a href=#474 id=474 data-nosnippet>474</a>                    size,
+<a href=#475 id=475 data-nosnippet>475</a>                } =&gt; <span class="self">self</span>.render_pass_set_vertex_buffer(pass_id, slot, buffer, offset, size),
+<a href=#476 id=476 data-nosnippet>476</a>                RenderCommand::Draw {
+<a href=#477 id=477 data-nosnippet>477</a>                    vertex_count,
+<a href=#478 id=478 data-nosnippet>478</a>                    instance_count,
+<a href=#479 id=479 data-nosnippet>479</a>                    first_vertex,
+<a href=#480 id=480 data-nosnippet>480</a>                    first_instance,
+<a href=#481 id=481 data-nosnippet>481</a>                } =&gt; <span class="self">self</span>.render_pass_draw(
 <a href=#482 id=482 data-nosnippet>482</a>                    pass_id,
-<a href=#483 id=483 data-nosnippet>483</a>                    slot,
-<a href=#484 id=484 data-nosnippet>484</a>                    buffer,
-<a href=#485 id=485 data-nosnippet>485</a>                    offset,
-<a href=#486 id=486 data-nosnippet>486</a>                    size.and_then(core::num::NonZeroU64::new), <span class="comment">// pass size directly once https://github.com/gfx-rs/wgpu/issues/3170 is resolved
-<a href=#487 id=487 data-nosnippet>487</a>                </span>),
-<a href=#488 id=488 data-nosnippet>488</a>                RenderCommand::Draw {
-<a href=#489 id=489 data-nosnippet>489</a>                    vertex_count,
+<a href=#483 id=483 data-nosnippet>483</a>                    vertex_count,
+<a href=#484 id=484 data-nosnippet>484</a>                    instance_count,
+<a href=#485 id=485 data-nosnippet>485</a>                    first_vertex,
+<a href=#486 id=486 data-nosnippet>486</a>                    first_instance,
+<a href=#487 id=487 data-nosnippet>487</a>                ),
+<a href=#488 id=488 data-nosnippet>488</a>                RenderCommand::DrawIndexed {
+<a href=#489 id=489 data-nosnippet>489</a>                    index_count,
 <a href=#490 id=490 data-nosnippet>490</a>                    instance_count,
-<a href=#491 id=491 data-nosnippet>491</a>                    first_vertex,
-<a href=#492 id=492 data-nosnippet>492</a>                    first_instance,
-<a href=#493 id=493 data-nosnippet>493</a>                } =&gt; <span class="self">self</span>.render_pass_draw(
-<a href=#494 id=494 data-nosnippet>494</a>                    pass_id,
-<a href=#495 id=495 data-nosnippet>495</a>                    vertex_count,
-<a href=#496 id=496 data-nosnippet>496</a>                    instance_count,
-<a href=#497 id=497 data-nosnippet>497</a>                    first_vertex,
-<a href=#498 id=498 data-nosnippet>498</a>                    first_instance,
-<a href=#499 id=499 data-nosnippet>499</a>                ),
-<a href=#500 id=500 data-nosnippet>500</a>                RenderCommand::DrawIndexed {
-<a href=#501 id=501 data-nosnippet>501</a>                    index_count,
-<a href=#502 id=502 data-nosnippet>502</a>                    instance_count,
-<a href=#503 id=503 data-nosnippet>503</a>                    first_index,
-<a href=#504 id=504 data-nosnippet>504</a>                    base_vertex,
-<a href=#505 id=505 data-nosnippet>505</a>                    first_instance,
-<a href=#506 id=506 data-nosnippet>506</a>                } =&gt; <span class="self">self</span>.render_pass_draw_indexed(
-<a href=#507 id=507 data-nosnippet>507</a>                    pass_id,
-<a href=#508 id=508 data-nosnippet>508</a>                    index_count,
-<a href=#509 id=509 data-nosnippet>509</a>                    instance_count,
-<a href=#510 id=510 data-nosnippet>510</a>                    first_index,
-<a href=#511 id=511 data-nosnippet>511</a>                    base_vertex,
-<a href=#512 id=512 data-nosnippet>512</a>                    first_instance,
+<a href=#491 id=491 data-nosnippet>491</a>                    first_index,
+<a href=#492 id=492 data-nosnippet>492</a>                    base_vertex,
+<a href=#493 id=493 data-nosnippet>493</a>                    first_instance,
+<a href=#494 id=494 data-nosnippet>494</a>                } =&gt; <span class="self">self</span>.render_pass_draw_indexed(
+<a href=#495 id=495 data-nosnippet>495</a>                    pass_id,
+<a href=#496 id=496 data-nosnippet>496</a>                    index_count,
+<a href=#497 id=497 data-nosnippet>497</a>                    instance_count,
+<a href=#498 id=498 data-nosnippet>498</a>                    first_index,
+<a href=#499 id=499 data-nosnippet>499</a>                    base_vertex,
+<a href=#500 id=500 data-nosnippet>500</a>                    first_instance,
+<a href=#501 id=501 data-nosnippet>501</a>                ),
+<a href=#502 id=502 data-nosnippet>502</a>                RenderCommand::DrawIndirect {
+<a href=#503 id=503 data-nosnippet>503</a>                    indirect_buffer,
+<a href=#504 id=504 data-nosnippet>504</a>                    indirect_offset,
+<a href=#505 id=505 data-nosnippet>505</a>                } =&gt; <span class="self">self</span>.render_pass_draw_indirect(pass_id, indirect_buffer, indirect_offset),
+<a href=#506 id=506 data-nosnippet>506</a>                RenderCommand::DrawIndexedIndirect {
+<a href=#507 id=507 data-nosnippet>507</a>                    indirect_buffer,
+<a href=#508 id=508 data-nosnippet>508</a>                    indirect_offset,
+<a href=#509 id=509 data-nosnippet>509</a>                } =&gt; <span class="self">self</span>.render_pass_draw_indexed_indirect(
+<a href=#510 id=510 data-nosnippet>510</a>                    pass_id,
+<a href=#511 id=511 data-nosnippet>511</a>                    indirect_buffer,
+<a href=#512 id=512 data-nosnippet>512</a>                    indirect_offset,
 <a href=#513 id=513 data-nosnippet>513</a>                ),
-<a href=#514 id=514 data-nosnippet>514</a>                RenderCommand::DrawIndirect {
-<a href=#515 id=515 data-nosnippet>515</a>                    indirect_buffer,
-<a href=#516 id=516 data-nosnippet>516</a>                    indirect_offset,
-<a href=#517 id=517 data-nosnippet>517</a>                } =&gt; <span class="self">self</span>.render_pass_draw_indirect(pass_id, indirect_buffer, indirect_offset),
-<a href=#518 id=518 data-nosnippet>518</a>                RenderCommand::DrawIndexedIndirect {
-<a href=#519 id=519 data-nosnippet>519</a>                    indirect_buffer,
-<a href=#520 id=520 data-nosnippet>520</a>                    indirect_offset,
-<a href=#521 id=521 data-nosnippet>521</a>                } =&gt; <span class="self">self</span>.render_pass_draw_indexed_indirect(
-<a href=#522 id=522 data-nosnippet>522</a>                    pass_id,
-<a href=#523 id=523 data-nosnippet>523</a>                    indirect_buffer,
-<a href=#524 id=524 data-nosnippet>524</a>                    indirect_offset,
-<a href=#525 id=525 data-nosnippet>525</a>                ),
-<a href=#526 id=526 data-nosnippet>526</a>            },
-<a href=#527 id=527 data-nosnippet>527</a>            RenderPassEncoderCommand::DebugCommand(debug_command) =&gt; <span class="kw">match </span>debug_command {
-<a href=#528 id=528 data-nosnippet>528</a>                DebugCommand::PushDebugGroup(label) =&gt; {
-<a href=#529 id=529 data-nosnippet>529</a>                    <span class="self">self</span>.render_pass_push_debug_group(pass_id, <span class="kw-2">&amp;</span>label, <span class="number">0</span>)
-<a href=#530 id=530 data-nosnippet>530</a>                }
-<a href=#531 id=531 data-nosnippet>531</a>                DebugCommand::PopDebugGroup =&gt; <span class="self">self</span>.render_pass_pop_debug_group(pass_id),
-<a href=#532 id=532 data-nosnippet>532</a>                DebugCommand::InsertDebugMarker(label) =&gt; {
-<a href=#533 id=533 data-nosnippet>533</a>                    <span class="self">self</span>.render_pass_insert_debug_marker(pass_id, <span class="kw-2">&amp;</span>label, <span class="number">0</span>)
-<a href=#534 id=534 data-nosnippet>534</a>                }
-<a href=#535 id=535 data-nosnippet>535</a>            },
-<a href=#536 id=536 data-nosnippet>536</a>            RenderPassEncoderCommand::End =&gt; <span class="self">self</span>.render_pass_end(pass_id),
-<a href=#537 id=537 data-nosnippet>537</a>        }
-<a href=#538 id=538 data-nosnippet>538</a>    }
-<a href=#539 id=539 data-nosnippet>539</a>}
+<a href=#514 id=514 data-nosnippet>514</a>            },
+<a href=#515 id=515 data-nosnippet>515</a>            RenderPassEncoderCommand::DebugCommand(debug_command) =&gt; <span class="kw">match </span>debug_command {
+<a href=#516 id=516 data-nosnippet>516</a>                DebugCommand::PushDebugGroup(label) =&gt; {
+<a href=#517 id=517 data-nosnippet>517</a>                    <span class="self">self</span>.render_pass_push_debug_group(pass_id, <span class="kw-2">&amp;</span>label, <span class="number">0</span>)
+<a href=#518 id=518 data-nosnippet>518</a>                }
+<a href=#519 id=519 data-nosnippet>519</a>                DebugCommand::PopDebugGroup =&gt; <span class="self">self</span>.render_pass_pop_debug_group(pass_id),
+<a href=#520 id=520 data-nosnippet>520</a>                DebugCommand::InsertDebugMarker(label) =&gt; {
+<a href=#521 id=521 data-nosnippet>521</a>                    <span class="self">self</span>.render_pass_insert_debug_marker(pass_id, <span class="kw-2">&amp;</span>label, <span class="number">0</span>)
+<a href=#522 id=522 data-nosnippet>522</a>                }
+<a href=#523 id=523 data-nosnippet>523</a>            },
+<a href=#524 id=524 data-nosnippet>524</a>            RenderPassEncoderCommand::End =&gt; <span class="self">self</span>.render_pass_end(pass_id),
+<a href=#525 id=525 data-nosnippet>525</a>        }
+<a href=#526 id=526 data-nosnippet>526</a>    }
+<a href=#527 id=527 data-nosnippet>527</a>}
 </code></pre></div></section></main></body></html>

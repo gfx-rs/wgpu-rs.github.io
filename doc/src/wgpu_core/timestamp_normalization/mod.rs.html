@@ -253,179 +253,187 @@
 <a href=#253 id=253 data-nosnippet>253</a>
 <a href=#254 id=254 data-nosnippet>254</a>    <span class="doccomment">/// Create a bind group for normalizing timestamps in `buffer`.
 <a href=#255 id=255 data-nosnippet>255</a>    ///
-<a href=#256 id=256 data-nosnippet>256</a>    /// This function is unsafe because it does not know that `buffer_size` is
-<a href=#257 id=257 data-nosnippet>257</a>    /// the true size of the buffer.
-<a href=#258 id=258 data-nosnippet>258</a>    </span><span class="kw">pub unsafe fn </span>create_normalization_bind_group(
-<a href=#259 id=259 data-nosnippet>259</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#260 id=260 data-nosnippet>260</a>        device: <span class="kw-2">&amp;</span>Device,
-<a href=#261 id=261 data-nosnippet>261</a>        buffer: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynBuffer,
-<a href=#262 id=262 data-nosnippet>262</a>        buffer_label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-<a href=#263 id=263 data-nosnippet>263</a>        buffer_size: wgt::BufferSize,
-<a href=#264 id=264 data-nosnippet>264</a>        buffer_usages: wgt::BufferUsages,
-<a href=#265 id=265 data-nosnippet>265</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;TimestampNormalizationBindGroup, DeviceError&gt; {
-<a href=#266 id=266 data-nosnippet>266</a>        <span class="kw">unsafe </span>{
-<a href=#267 id=267 data-nosnippet>267</a>            <span class="kw">let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>state) = <span class="kw-2">&amp;</span><span class="self">self</span>.state <span class="kw">else </span>{
-<a href=#268 id=268 data-nosnippet>268</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(TimestampNormalizationBindGroup { raw: <span class="prelude-val">None </span>});
-<a href=#269 id=269 data-nosnippet>269</a>            };
-<a href=#270 id=270 data-nosnippet>270</a>
-<a href=#271 id=271 data-nosnippet>271</a>            <span class="kw">if </span>!buffer_usages.contains(wgt::BufferUsages::QUERY_RESOLVE) {
-<a href=#272 id=272 data-nosnippet>272</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(TimestampNormalizationBindGroup { raw: <span class="prelude-val">None </span>});
-<a href=#273 id=273 data-nosnippet>273</a>            }
-<a href=#274 id=274 data-nosnippet>274</a>
-<a href=#275 id=275 data-nosnippet>275</a>            <span class="comment">// If this buffer is large enough that we wouldn't be able to bind the entire thing
-<a href=#276 id=276 data-nosnippet>276</a>            // at once to normalize the timestamps, we can't use it. We force the buffer to fail
-<a href=#277 id=277 data-nosnippet>277</a>            // to allocate. The lowest max binding size is 128MB, and query sets must be small
-<a href=#278 id=278 data-nosnippet>278</a>            // (no more than 4096), so this should never be hit in practice by sane programs.
-<a href=#279 id=279 data-nosnippet>279</a>            </span><span class="kw">if </span>buffer_size.get() &gt; device.adapter.limits().max_storage_buffer_binding_size {
-<a href=#280 id=280 data-nosnippet>280</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::OutOfMemory);
+<a href=#256 id=256 data-nosnippet>256</a>    /// `buffer_size` must be 4B-aligned, so that it is valid as a storage binding,
+<a href=#257 id=257 data-nosnippet>257</a>    /// must be the same or more than the application-visible buffer size, and must
+<a href=#258 id=258 data-nosnippet>258</a>    /// not overrun the buffer. This function is unsafe because it does not know and
+<a href=#259 id=259 data-nosnippet>259</a>    /// cannot check whether `buffer_size` meets these requirements.
+<a href=#260 id=260 data-nosnippet>260</a>    ///
+<a href=#261 id=261 data-nosnippet>261</a>    /// The buffer size passed here is used to construct a binding that must be
+<a href=#262 id=262 data-nosnippet>262</a>    /// able to access the full application-visible range of the buffer. It is
+<a href=#263 id=263 data-nosnippet>263</a>    /// not used to check the destination range of query resolution requests. That
+<a href=#264 id=264 data-nosnippet>264</a>    /// uses the application-requested buffer size, obtained from the `wgpu_core`
+<a href=#265 id=265 data-nosnippet>265</a>    /// `Buffer`.
+<a href=#266 id=266 data-nosnippet>266</a>    </span><span class="kw">pub unsafe fn </span>create_normalization_bind_group(
+<a href=#267 id=267 data-nosnippet>267</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#268 id=268 data-nosnippet>268</a>        device: <span class="kw-2">&amp;</span>Device,
+<a href=#269 id=269 data-nosnippet>269</a>        buffer: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynBuffer,
+<a href=#270 id=270 data-nosnippet>270</a>        buffer_label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+<a href=#271 id=271 data-nosnippet>271</a>        buffer_size: wgt::BufferSize,
+<a href=#272 id=272 data-nosnippet>272</a>        buffer_usages: wgt::BufferUsages,
+<a href=#273 id=273 data-nosnippet>273</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;TimestampNormalizationBindGroup, DeviceError&gt; {
+<a href=#274 id=274 data-nosnippet>274</a>        <span class="kw">unsafe </span>{
+<a href=#275 id=275 data-nosnippet>275</a>            <span class="kw">let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>state) = <span class="kw-2">&amp;</span><span class="self">self</span>.state <span class="kw">else </span>{
+<a href=#276 id=276 data-nosnippet>276</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(TimestampNormalizationBindGroup { raw: <span class="prelude-val">None </span>});
+<a href=#277 id=277 data-nosnippet>277</a>            };
+<a href=#278 id=278 data-nosnippet>278</a>
+<a href=#279 id=279 data-nosnippet>279</a>            <span class="kw">if </span>!buffer_usages.contains(wgt::BufferUsages::QUERY_RESOLVE) {
+<a href=#280 id=280 data-nosnippet>280</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(TimestampNormalizationBindGroup { raw: <span class="prelude-val">None </span>});
 <a href=#281 id=281 data-nosnippet>281</a>            }
 <a href=#282 id=282 data-nosnippet>282</a>
-<a href=#283 id=283 data-nosnippet>283</a>            <span class="kw">let </span>bg_label_alloc;
-<a href=#284 id=284 data-nosnippet>284</a>            <span class="kw">let </span>label = <span class="kw">match </span>buffer_label {
-<a href=#285 id=285 data-nosnippet>285</a>                <span class="prelude-val">Some</span>(label) =&gt; {
-<a href=#286 id=286 data-nosnippet>286</a>                    bg_label_alloc = <span class="macro">alloc::format!</span>(<span class="string">"Timestamp normalization bind group ({label})"</span>);
-<a href=#287 id=287 data-nosnippet>287</a>                    <span class="kw-2">&amp;*</span>bg_label_alloc
-<a href=#288 id=288 data-nosnippet>288</a>                }
-<a href=#289 id=289 data-nosnippet>289</a>                <span class="prelude-val">None </span>=&gt; <span class="string">"Timestamp normalization bind group"</span>,
-<a href=#290 id=290 data-nosnippet>290</a>            };
-<a href=#291 id=291 data-nosnippet>291</a>
-<a href=#292 id=292 data-nosnippet>292</a>            <span class="kw">let </span>bg = device
-<a href=#293 id=293 data-nosnippet>293</a>                .raw()
-<a href=#294 id=294 data-nosnippet>294</a>                .create_bind_group(<span class="kw-2">&amp;</span>hal::BindGroupDescriptor {
-<a href=#295 id=295 data-nosnippet>295</a>                    label: hal_label(<span class="prelude-val">Some</span>(label), device.instance_flags),
-<a href=#296 id=296 data-nosnippet>296</a>                    layout: <span class="kw-2">&amp;*</span>state.temporary_bind_group_layout,
-<a href=#297 id=297 data-nosnippet>297</a>                    buffers: <span class="kw-2">&amp;</span>[hal::BufferBinding::new_unchecked(buffer, <span class="number">0</span>, buffer_size)],
-<a href=#298 id=298 data-nosnippet>298</a>                    samplers: <span class="kw-2">&amp;</span>[],
-<a href=#299 id=299 data-nosnippet>299</a>                    textures: <span class="kw-2">&amp;</span>[],
-<a href=#300 id=300 data-nosnippet>300</a>                    acceleration_structures: <span class="kw-2">&amp;</span>[],
-<a href=#301 id=301 data-nosnippet>301</a>                    external_textures: <span class="kw-2">&amp;</span>[],
-<a href=#302 id=302 data-nosnippet>302</a>                    entries: <span class="kw-2">&amp;</span>[hal::BindGroupEntry {
-<a href=#303 id=303 data-nosnippet>303</a>                        binding: <span class="number">0</span>,
-<a href=#304 id=304 data-nosnippet>304</a>                        resource_index: <span class="number">0</span>,
-<a href=#305 id=305 data-nosnippet>305</a>                        count: <span class="number">1</span>,
-<a href=#306 id=306 data-nosnippet>306</a>                    }],
-<a href=#307 id=307 data-nosnippet>307</a>                })
-<a href=#308 id=308 data-nosnippet>308</a>                .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
-<a href=#309 id=309 data-nosnippet>309</a>
-<a href=#310 id=310 data-nosnippet>310</a>            <span class="prelude-val">Ok</span>(TimestampNormalizationBindGroup { raw: <span class="prelude-val">Some</span>(bg) })
-<a href=#311 id=311 data-nosnippet>311</a>        }
-<a href=#312 id=312 data-nosnippet>312</a>    }
-<a href=#313 id=313 data-nosnippet>313</a>
-<a href=#314 id=314 data-nosnippet>314</a>    <span class="kw">pub fn </span>normalize(
-<a href=#315 id=315 data-nosnippet>315</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#316 id=316 data-nosnippet>316</a>        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
-<a href=#317 id=317 data-nosnippet>317</a>        encoder: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>hal::DynCommandEncoder,
-<a href=#318 id=318 data-nosnippet>318</a>        tracker: <span class="kw-2">&amp;mut </span>BufferTracker,
-<a href=#319 id=319 data-nosnippet>319</a>        bind_group: <span class="kw-2">&amp;</span>TimestampNormalizationBindGroup,
-<a href=#320 id=320 data-nosnippet>320</a>        buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&gt;,
-<a href=#321 id=321 data-nosnippet>321</a>        buffer_offset_bytes: u64,
-<a href=#322 id=322 data-nosnippet>322</a>        total_timestamps: u32,
-<a href=#323 id=323 data-nosnippet>323</a>    ) {
-<a href=#324 id=324 data-nosnippet>324</a>        <span class="kw">let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>state) = <span class="kw-2">&amp;</span><span class="self">self</span>.state <span class="kw">else </span>{
-<a href=#325 id=325 data-nosnippet>325</a>            <span class="kw">return</span>;
-<a href=#326 id=326 data-nosnippet>326</a>        };
-<a href=#327 id=327 data-nosnippet>327</a>
-<a href=#328 id=328 data-nosnippet>328</a>        <span class="kw">let </span><span class="prelude-val">Some</span>(bind_group) = bind_group.raw.as_deref() <span class="kw">else </span>{
-<a href=#329 id=329 data-nosnippet>329</a>            <span class="kw">return</span>;
-<a href=#330 id=330 data-nosnippet>330</a>        };
-<a href=#331 id=331 data-nosnippet>331</a>
-<a href=#332 id=332 data-nosnippet>332</a>        <span class="kw">let </span>buffer_offset_timestamps: u32 = (buffer_offset_bytes / <span class="number">8</span>).try_into().unwrap(); <span class="comment">// Unreachable as MAX_QUERIES is way less than u32::MAX
-<a href=#333 id=333 data-nosnippet>333</a>
-<a href=#334 id=334 data-nosnippet>334</a>        </span><span class="kw">let </span>pending_barrier = tracker.set_single(buffer, wgt::BufferUses::STORAGE_READ_WRITE);
+<a href=#283 id=283 data-nosnippet>283</a>            <span class="comment">// If this buffer is large enough that we wouldn't be able to bind the entire thing
+<a href=#284 id=284 data-nosnippet>284</a>            // at once to normalize the timestamps, we can't use it. We force the buffer to fail
+<a href=#285 id=285 data-nosnippet>285</a>            // to allocate. The lowest max binding size is 128MB, and query sets must be small
+<a href=#286 id=286 data-nosnippet>286</a>            // (no more than 4096), so this should never be hit in practice by sane programs.
+<a href=#287 id=287 data-nosnippet>287</a>            </span><span class="kw">if </span>buffer_size.get() &gt; device.adapter.limits().max_storage_buffer_binding_size {
+<a href=#288 id=288 data-nosnippet>288</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::OutOfMemory);
+<a href=#289 id=289 data-nosnippet>289</a>            }
+<a href=#290 id=290 data-nosnippet>290</a>
+<a href=#291 id=291 data-nosnippet>291</a>            <span class="kw">let </span>bg_label_alloc;
+<a href=#292 id=292 data-nosnippet>292</a>            <span class="kw">let </span>label = <span class="kw">match </span>buffer_label {
+<a href=#293 id=293 data-nosnippet>293</a>                <span class="prelude-val">Some</span>(label) =&gt; {
+<a href=#294 id=294 data-nosnippet>294</a>                    bg_label_alloc = <span class="macro">alloc::format!</span>(<span class="string">"Timestamp normalization bind group ({label})"</span>);
+<a href=#295 id=295 data-nosnippet>295</a>                    <span class="kw-2">&amp;*</span>bg_label_alloc
+<a href=#296 id=296 data-nosnippet>296</a>                }
+<a href=#297 id=297 data-nosnippet>297</a>                <span class="prelude-val">None </span>=&gt; <span class="string">"Timestamp normalization bind group"</span>,
+<a href=#298 id=298 data-nosnippet>298</a>            };
+<a href=#299 id=299 data-nosnippet>299</a>
+<a href=#300 id=300 data-nosnippet>300</a>            <span class="kw">let </span>bg = device
+<a href=#301 id=301 data-nosnippet>301</a>                .raw()
+<a href=#302 id=302 data-nosnippet>302</a>                .create_bind_group(<span class="kw-2">&amp;</span>hal::BindGroupDescriptor {
+<a href=#303 id=303 data-nosnippet>303</a>                    label: hal_label(<span class="prelude-val">Some</span>(label), device.instance_flags),
+<a href=#304 id=304 data-nosnippet>304</a>                    layout: <span class="kw-2">&amp;*</span>state.temporary_bind_group_layout,
+<a href=#305 id=305 data-nosnippet>305</a>                    buffers: <span class="kw-2">&amp;</span>[hal::BufferBinding::new_unchecked(buffer, <span class="number">0</span>, buffer_size)],
+<a href=#306 id=306 data-nosnippet>306</a>                    samplers: <span class="kw-2">&amp;</span>[],
+<a href=#307 id=307 data-nosnippet>307</a>                    textures: <span class="kw-2">&amp;</span>[],
+<a href=#308 id=308 data-nosnippet>308</a>                    acceleration_structures: <span class="kw-2">&amp;</span>[],
+<a href=#309 id=309 data-nosnippet>309</a>                    external_textures: <span class="kw-2">&amp;</span>[],
+<a href=#310 id=310 data-nosnippet>310</a>                    entries: <span class="kw-2">&amp;</span>[hal::BindGroupEntry {
+<a href=#311 id=311 data-nosnippet>311</a>                        binding: <span class="number">0</span>,
+<a href=#312 id=312 data-nosnippet>312</a>                        resource_index: <span class="number">0</span>,
+<a href=#313 id=313 data-nosnippet>313</a>                        count: <span class="number">1</span>,
+<a href=#314 id=314 data-nosnippet>314</a>                    }],
+<a href=#315 id=315 data-nosnippet>315</a>                })
+<a href=#316 id=316 data-nosnippet>316</a>                .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
+<a href=#317 id=317 data-nosnippet>317</a>
+<a href=#318 id=318 data-nosnippet>318</a>            <span class="prelude-val">Ok</span>(TimestampNormalizationBindGroup { raw: <span class="prelude-val">Some</span>(bg) })
+<a href=#319 id=319 data-nosnippet>319</a>        }
+<a href=#320 id=320 data-nosnippet>320</a>    }
+<a href=#321 id=321 data-nosnippet>321</a>
+<a href=#322 id=322 data-nosnippet>322</a>    <span class="kw">pub fn </span>normalize(
+<a href=#323 id=323 data-nosnippet>323</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#324 id=324 data-nosnippet>324</a>        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#325 id=325 data-nosnippet>325</a>        encoder: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>hal::DynCommandEncoder,
+<a href=#326 id=326 data-nosnippet>326</a>        tracker: <span class="kw-2">&amp;mut </span>BufferTracker,
+<a href=#327 id=327 data-nosnippet>327</a>        bind_group: <span class="kw-2">&amp;</span>TimestampNormalizationBindGroup,
+<a href=#328 id=328 data-nosnippet>328</a>        buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&gt;,
+<a href=#329 id=329 data-nosnippet>329</a>        buffer_offset_bytes: u64,
+<a href=#330 id=330 data-nosnippet>330</a>        total_timestamps: u32,
+<a href=#331 id=331 data-nosnippet>331</a>    ) {
+<a href=#332 id=332 data-nosnippet>332</a>        <span class="kw">let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>state) = <span class="kw-2">&amp;</span><span class="self">self</span>.state <span class="kw">else </span>{
+<a href=#333 id=333 data-nosnippet>333</a>            <span class="kw">return</span>;
+<a href=#334 id=334 data-nosnippet>334</a>        };
 <a href=#335 id=335 data-nosnippet>335</a>
-<a href=#336 id=336 data-nosnippet>336</a>        <span class="kw">let </span>barrier = pending_barrier.map(|pending| pending.into_hal(buffer, snatch_guard));
-<a href=#337 id=337 data-nosnippet>337</a>
-<a href=#338 id=338 data-nosnippet>338</a>        <span class="kw">let </span>needed_workgroups = total_timestamps.div_ceil(<span class="number">64</span>);
+<a href=#336 id=336 data-nosnippet>336</a>        <span class="kw">let </span><span class="prelude-val">Some</span>(bind_group) = bind_group.raw.as_deref() <span class="kw">else </span>{
+<a href=#337 id=337 data-nosnippet>337</a>            <span class="kw">return</span>;
+<a href=#338 id=338 data-nosnippet>338</a>        };
 <a href=#339 id=339 data-nosnippet>339</a>
-<a href=#340 id=340 data-nosnippet>340</a>        <span class="kw">unsafe </span>{
-<a href=#341 id=341 data-nosnippet>341</a>            encoder.transition_buffers(barrier.as_slice());
-<a href=#342 id=342 data-nosnippet>342</a>            encoder.begin_compute_pass(<span class="kw-2">&amp;</span>hal::ComputePassDescriptor {
-<a href=#343 id=343 data-nosnippet>343</a>                label: hal_label(
-<a href=#344 id=344 data-nosnippet>344</a>                    <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Timestamp normalization pass"</span>),
-<a href=#345 id=345 data-nosnippet>345</a>                    buffer.device.instance_flags,
-<a href=#346 id=346 data-nosnippet>346</a>                ),
-<a href=#347 id=347 data-nosnippet>347</a>                timestamp_writes: <span class="prelude-val">None</span>,
-<a href=#348 id=348 data-nosnippet>348</a>            });
-<a href=#349 id=349 data-nosnippet>349</a>            encoder.set_compute_pipeline(<span class="kw-2">&amp;*</span>state.pipeline);
-<a href=#350 id=350 data-nosnippet>350</a>            encoder.set_bind_group(<span class="kw-2">&amp;*</span>state.pipeline_layout, <span class="number">0</span>, bind_group, <span class="kw-2">&amp;</span>[]);
-<a href=#351 id=351 data-nosnippet>351</a>            encoder.set_immediates(
-<a href=#352 id=352 data-nosnippet>352</a>                <span class="kw-2">&amp;*</span>state.pipeline_layout,
-<a href=#353 id=353 data-nosnippet>353</a>                <span class="number">0</span>,
-<a href=#354 id=354 data-nosnippet>354</a>                <span class="kw-2">&amp;</span>[buffer_offset_timestamps, total_timestamps],
-<a href=#355 id=355 data-nosnippet>355</a>            );
-<a href=#356 id=356 data-nosnippet>356</a>            encoder.dispatch_workgroups([needed_workgroups, <span class="number">1</span>, <span class="number">1</span>]);
-<a href=#357 id=357 data-nosnippet>357</a>            encoder.end_compute_pass();
-<a href=#358 id=358 data-nosnippet>358</a>        }
-<a href=#359 id=359 data-nosnippet>359</a>    }
-<a href=#360 id=360 data-nosnippet>360</a>
-<a href=#361 id=361 data-nosnippet>361</a>    <span class="kw">pub fn </span>dispose(<span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynDevice) {
-<a href=#362 id=362 data-nosnippet>362</a>        <span class="kw">unsafe </span>{
-<a href=#363 id=363 data-nosnippet>363</a>            <span class="kw">let </span><span class="prelude-val">Some</span>(state) = <span class="self">self</span>.state <span class="kw">else </span>{
-<a href=#364 id=364 data-nosnippet>364</a>                <span class="kw">return</span>;
-<a href=#365 id=365 data-nosnippet>365</a>            };
-<a href=#366 id=366 data-nosnippet>366</a>
-<a href=#367 id=367 data-nosnippet>367</a>            device.destroy_compute_pipeline(state.pipeline);
-<a href=#368 id=368 data-nosnippet>368</a>            device.destroy_pipeline_layout(state.pipeline_layout);
-<a href=#369 id=369 data-nosnippet>369</a>            device.destroy_bind_group_layout(state.temporary_bind_group_layout);
-<a href=#370 id=370 data-nosnippet>370</a>        }
-<a href=#371 id=371 data-nosnippet>371</a>    }
-<a href=#372 id=372 data-nosnippet>372</a>
-<a href=#373 id=373 data-nosnippet>373</a>    <span class="kw">pub fn </span>enabled(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-<a href=#374 id=374 data-nosnippet>374</a>        <span class="self">self</span>.state.is_some()
-<a href=#375 id=375 data-nosnippet>375</a>    }
-<a href=#376 id=376 data-nosnippet>376</a>}
-<a href=#377 id=377 data-nosnippet>377</a>
-<a href=#378 id=378 data-nosnippet>378</a><span class="attr">#[derive(Debug)]
-<a href=#379 id=379 data-nosnippet>379</a></span><span class="kw">pub struct </span>TimestampNormalizationBindGroup {
-<a href=#380 id=380 data-nosnippet>380</a>    raw: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>hal::DynBindGroup&gt;&gt;,
-<a href=#381 id=381 data-nosnippet>381</a>}
-<a href=#382 id=382 data-nosnippet>382</a>
-<a href=#383 id=383 data-nosnippet>383</a><span class="kw">impl </span>TimestampNormalizationBindGroup {
-<a href=#384 id=384 data-nosnippet>384</a>    <span class="kw">pub fn </span>dispose(<span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynDevice) {
-<a href=#385 id=385 data-nosnippet>385</a>        <span class="kw">unsafe </span>{
-<a href=#386 id=386 data-nosnippet>386</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw {
-<a href=#387 id=387 data-nosnippet>387</a>                device.destroy_bind_group(raw);
-<a href=#388 id=388 data-nosnippet>388</a>            }
-<a href=#389 id=389 data-nosnippet>389</a>        }
-<a href=#390 id=390 data-nosnippet>390</a>    }
-<a href=#391 id=391 data-nosnippet>391</a>}
-<a href=#392 id=392 data-nosnippet>392</a>
-<a href=#393 id=393 data-nosnippet>393</a><span class="kw">fn </span>compute_timestamp_period(input: f32) -&gt; (u32, u32) {
-<a href=#394 id=394 data-nosnippet>394</a>    <span class="attr">#[cfg(not(feature = <span class="string">"std"</span>))]
-<a href=#395 id=395 data-nosnippet>395</a>    </span><span class="kw">use </span>num_traits::float::Float <span class="kw">as _</span>;
-<a href=#396 id=396 data-nosnippet>396</a>
-<a href=#397 id=397 data-nosnippet>397</a>    <span class="kw">let </span>pow2 = input.log2().ceil() <span class="kw">as </span>i32;
-<a href=#398 id=398 data-nosnippet>398</a>    <span class="kw">let </span>clamped_pow2 = pow2.clamp(-<span class="number">32</span>, <span class="number">32</span>).unsigned_abs();
-<a href=#399 id=399 data-nosnippet>399</a>    <span class="kw">let </span>shift = <span class="number">32 </span>- clamped_pow2;
+<a href=#340 id=340 data-nosnippet>340</a>        <span class="kw">let </span>buffer_offset_timestamps: u32 = (buffer_offset_bytes / <span class="number">8</span>).try_into().unwrap(); <span class="comment">// Unreachable as MAX_QUERIES is way less than u32::MAX
+<a href=#341 id=341 data-nosnippet>341</a>
+<a href=#342 id=342 data-nosnippet>342</a>        </span><span class="kw">let </span>pending_barrier = tracker.set_single(buffer, wgt::BufferUses::STORAGE_READ_WRITE);
+<a href=#343 id=343 data-nosnippet>343</a>
+<a href=#344 id=344 data-nosnippet>344</a>        <span class="kw">let </span>barrier = pending_barrier.map(|pending| pending.into_hal(buffer, snatch_guard));
+<a href=#345 id=345 data-nosnippet>345</a>
+<a href=#346 id=346 data-nosnippet>346</a>        <span class="kw">let </span>needed_workgroups = total_timestamps.div_ceil(<span class="number">64</span>);
+<a href=#347 id=347 data-nosnippet>347</a>
+<a href=#348 id=348 data-nosnippet>348</a>        <span class="kw">unsafe </span>{
+<a href=#349 id=349 data-nosnippet>349</a>            encoder.transition_buffers(barrier.as_slice());
+<a href=#350 id=350 data-nosnippet>350</a>            encoder.begin_compute_pass(<span class="kw-2">&amp;</span>hal::ComputePassDescriptor {
+<a href=#351 id=351 data-nosnippet>351</a>                label: hal_label(
+<a href=#352 id=352 data-nosnippet>352</a>                    <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Timestamp normalization pass"</span>),
+<a href=#353 id=353 data-nosnippet>353</a>                    buffer.device.instance_flags,
+<a href=#354 id=354 data-nosnippet>354</a>                ),
+<a href=#355 id=355 data-nosnippet>355</a>                timestamp_writes: <span class="prelude-val">None</span>,
+<a href=#356 id=356 data-nosnippet>356</a>            });
+<a href=#357 id=357 data-nosnippet>357</a>            encoder.set_compute_pipeline(<span class="kw-2">&amp;*</span>state.pipeline);
+<a href=#358 id=358 data-nosnippet>358</a>            encoder.set_bind_group(<span class="kw-2">&amp;*</span>state.pipeline_layout, <span class="number">0</span>, bind_group, <span class="kw-2">&amp;</span>[]);
+<a href=#359 id=359 data-nosnippet>359</a>            encoder.set_immediates(
+<a href=#360 id=360 data-nosnippet>360</a>                <span class="kw-2">&amp;*</span>state.pipeline_layout,
+<a href=#361 id=361 data-nosnippet>361</a>                <span class="number">0</span>,
+<a href=#362 id=362 data-nosnippet>362</a>                <span class="kw-2">&amp;</span>[buffer_offset_timestamps, total_timestamps],
+<a href=#363 id=363 data-nosnippet>363</a>            );
+<a href=#364 id=364 data-nosnippet>364</a>            encoder.dispatch_workgroups([needed_workgroups, <span class="number">1</span>, <span class="number">1</span>]);
+<a href=#365 id=365 data-nosnippet>365</a>            encoder.end_compute_pass();
+<a href=#366 id=366 data-nosnippet>366</a>        }
+<a href=#367 id=367 data-nosnippet>367</a>    }
+<a href=#368 id=368 data-nosnippet>368</a>
+<a href=#369 id=369 data-nosnippet>369</a>    <span class="kw">pub fn </span>dispose(<span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynDevice) {
+<a href=#370 id=370 data-nosnippet>370</a>        <span class="kw">unsafe </span>{
+<a href=#371 id=371 data-nosnippet>371</a>            <span class="kw">let </span><span class="prelude-val">Some</span>(state) = <span class="self">self</span>.state <span class="kw">else </span>{
+<a href=#372 id=372 data-nosnippet>372</a>                <span class="kw">return</span>;
+<a href=#373 id=373 data-nosnippet>373</a>            };
+<a href=#374 id=374 data-nosnippet>374</a>
+<a href=#375 id=375 data-nosnippet>375</a>            device.destroy_compute_pipeline(state.pipeline);
+<a href=#376 id=376 data-nosnippet>376</a>            device.destroy_pipeline_layout(state.pipeline_layout);
+<a href=#377 id=377 data-nosnippet>377</a>            device.destroy_bind_group_layout(state.temporary_bind_group_layout);
+<a href=#378 id=378 data-nosnippet>378</a>        }
+<a href=#379 id=379 data-nosnippet>379</a>    }
+<a href=#380 id=380 data-nosnippet>380</a>
+<a href=#381 id=381 data-nosnippet>381</a>    <span class="kw">pub fn </span>enabled(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+<a href=#382 id=382 data-nosnippet>382</a>        <span class="self">self</span>.state.is_some()
+<a href=#383 id=383 data-nosnippet>383</a>    }
+<a href=#384 id=384 data-nosnippet>384</a>}
+<a href=#385 id=385 data-nosnippet>385</a>
+<a href=#386 id=386 data-nosnippet>386</a><span class="attr">#[derive(Debug)]
+<a href=#387 id=387 data-nosnippet>387</a></span><span class="kw">pub struct </span>TimestampNormalizationBindGroup {
+<a href=#388 id=388 data-nosnippet>388</a>    raw: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>hal::DynBindGroup&gt;&gt;,
+<a href=#389 id=389 data-nosnippet>389</a>}
+<a href=#390 id=390 data-nosnippet>390</a>
+<a href=#391 id=391 data-nosnippet>391</a><span class="kw">impl </span>TimestampNormalizationBindGroup {
+<a href=#392 id=392 data-nosnippet>392</a>    <span class="kw">pub fn </span>dispose(<span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynDevice) {
+<a href=#393 id=393 data-nosnippet>393</a>        <span class="kw">unsafe </span>{
+<a href=#394 id=394 data-nosnippet>394</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw {
+<a href=#395 id=395 data-nosnippet>395</a>                device.destroy_bind_group(raw);
+<a href=#396 id=396 data-nosnippet>396</a>            }
+<a href=#397 id=397 data-nosnippet>397</a>        }
+<a href=#398 id=398 data-nosnippet>398</a>    }
+<a href=#399 id=399 data-nosnippet>399</a>}
 <a href=#400 id=400 data-nosnippet>400</a>
-<a href=#401 id=401 data-nosnippet>401</a>    <span class="kw">let </span>denominator = (<span class="number">1u64 </span>&lt;&lt; shift) <span class="kw">as </span>f64;
-<a href=#402 id=402 data-nosnippet>402</a>
-<a href=#403 id=403 data-nosnippet>403</a>    <span class="comment">// float -&gt; int conversions are defined to saturate.
-<a href=#404 id=404 data-nosnippet>404</a>    </span><span class="kw">let </span>multiplier = (input <span class="kw">as </span>f64 * denominator).round() <span class="kw">as </span>u32;
-<a href=#405 id=405 data-nosnippet>405</a>
-<a href=#406 id=406 data-nosnippet>406</a>    (multiplier, shift)
-<a href=#407 id=407 data-nosnippet>407</a>}
+<a href=#401 id=401 data-nosnippet>401</a><span class="kw">fn </span>compute_timestamp_period(input: f32) -&gt; (u32, u32) {
+<a href=#402 id=402 data-nosnippet>402</a>    <span class="attr">#[cfg(not(feature = <span class="string">"std"</span>))]
+<a href=#403 id=403 data-nosnippet>403</a>    </span><span class="kw">use </span>num_traits::float::Float <span class="kw">as _</span>;
+<a href=#404 id=404 data-nosnippet>404</a>
+<a href=#405 id=405 data-nosnippet>405</a>    <span class="kw">let </span>pow2 = input.log2().ceil() <span class="kw">as </span>i32;
+<a href=#406 id=406 data-nosnippet>406</a>    <span class="kw">let </span>clamped_pow2 = pow2.clamp(-<span class="number">32</span>, <span class="number">32</span>).unsigned_abs();
+<a href=#407 id=407 data-nosnippet>407</a>    <span class="kw">let </span>shift = <span class="number">32 </span>- clamped_pow2;
 <a href=#408 id=408 data-nosnippet>408</a>
-<a href=#409 id=409 data-nosnippet>409</a><span class="attr">#[cfg(test)]
-<a href=#410 id=410 data-nosnippet>410</a></span><span class="kw">mod </span>tests {
-<a href=#411 id=411 data-nosnippet>411</a>    <span class="kw">use </span>core::f64;
-<a href=#412 id=412 data-nosnippet>412</a>
-<a href=#413 id=413 data-nosnippet>413</a>    <span class="kw">fn </span>assert_timestamp_case(input: f32) {
-<a href=#414 id=414 data-nosnippet>414</a>        <span class="kw">let </span>(multiplier, shift) = <span class="kw">super</span>::compute_timestamp_period(input);
-<a href=#415 id=415 data-nosnippet>415</a>
-<a href=#416 id=416 data-nosnippet>416</a>        <span class="kw">let </span>output = multiplier <span class="kw">as </span>f64 / (<span class="number">1u64 </span>&lt;&lt; shift) <span class="kw">as </span>f64;
-<a href=#417 id=417 data-nosnippet>417</a>
-<a href=#418 id=418 data-nosnippet>418</a>        <span class="macro">assert!</span>((input <span class="kw">as </span>f64 - output).abs() &lt; <span class="number">0.0000001</span>);
-<a href=#419 id=419 data-nosnippet>419</a>    }
+<a href=#409 id=409 data-nosnippet>409</a>    <span class="kw">let </span>denominator = (<span class="number">1u64 </span>&lt;&lt; shift) <span class="kw">as </span>f64;
+<a href=#410 id=410 data-nosnippet>410</a>
+<a href=#411 id=411 data-nosnippet>411</a>    <span class="comment">// float -&gt; int conversions are defined to saturate.
+<a href=#412 id=412 data-nosnippet>412</a>    </span><span class="kw">let </span>multiplier = (input <span class="kw">as </span>f64 * denominator).round() <span class="kw">as </span>u32;
+<a href=#413 id=413 data-nosnippet>413</a>
+<a href=#414 id=414 data-nosnippet>414</a>    (multiplier, shift)
+<a href=#415 id=415 data-nosnippet>415</a>}
+<a href=#416 id=416 data-nosnippet>416</a>
+<a href=#417 id=417 data-nosnippet>417</a><span class="attr">#[cfg(test)]
+<a href=#418 id=418 data-nosnippet>418</a></span><span class="kw">mod </span>tests {
+<a href=#419 id=419 data-nosnippet>419</a>    <span class="kw">use </span>core::f64;
 <a href=#420 id=420 data-nosnippet>420</a>
-<a href=#421 id=421 data-nosnippet>421</a>    <span class="attr">#[test]
-<a href=#422 id=422 data-nosnippet>422</a>    </span><span class="kw">fn </span>compute_timestamp_period() {
-<a href=#423 id=423 data-nosnippet>423</a>        assert_timestamp_case(<span class="number">0.01</span>);
-<a href=#424 id=424 data-nosnippet>424</a>        assert_timestamp_case(<span class="number">0.5</span>);
-<a href=#425 id=425 data-nosnippet>425</a>        assert_timestamp_case(<span class="number">1.0</span>);
-<a href=#426 id=426 data-nosnippet>426</a>        assert_timestamp_case(<span class="number">2.0</span>);
-<a href=#427 id=427 data-nosnippet>427</a>        assert_timestamp_case(<span class="number">2.7</span>);
-<a href=#428 id=428 data-nosnippet>428</a>        assert_timestamp_case(<span class="number">1000.7</span>);
-<a href=#429 id=429 data-nosnippet>429</a>    }
-<a href=#430 id=430 data-nosnippet>430</a>}
+<a href=#421 id=421 data-nosnippet>421</a>    <span class="kw">fn </span>assert_timestamp_case(input: f32) {
+<a href=#422 id=422 data-nosnippet>422</a>        <span class="kw">let </span>(multiplier, shift) = <span class="kw">super</span>::compute_timestamp_period(input);
+<a href=#423 id=423 data-nosnippet>423</a>
+<a href=#424 id=424 data-nosnippet>424</a>        <span class="kw">let </span>output = multiplier <span class="kw">as </span>f64 / (<span class="number">1u64 </span>&lt;&lt; shift) <span class="kw">as </span>f64;
+<a href=#425 id=425 data-nosnippet>425</a>
+<a href=#426 id=426 data-nosnippet>426</a>        <span class="macro">assert!</span>((input <span class="kw">as </span>f64 - output).abs() &lt; <span class="number">0.0000001</span>);
+<a href=#427 id=427 data-nosnippet>427</a>    }
+<a href=#428 id=428 data-nosnippet>428</a>
+<a href=#429 id=429 data-nosnippet>429</a>    <span class="attr">#[test]
+<a href=#430 id=430 data-nosnippet>430</a>    </span><span class="kw">fn </span>compute_timestamp_period() {
+<a href=#431 id=431 data-nosnippet>431</a>        assert_timestamp_case(<span class="number">0.01</span>);
+<a href=#432 id=432 data-nosnippet>432</a>        assert_timestamp_case(<span class="number">0.5</span>);
+<a href=#433 id=433 data-nosnippet>433</a>        assert_timestamp_case(<span class="number">1.0</span>);
+<a href=#434 id=434 data-nosnippet>434</a>        assert_timestamp_case(<span class="number">2.0</span>);
+<a href=#435 id=435 data-nosnippet>435</a>        assert_timestamp_case(<span class="number">2.7</span>);
+<a href=#436 id=436 data-nosnippet>436</a>        assert_timestamp_case(<span class="number">1000.7</span>);
+<a href=#437 id=437 data-nosnippet>437</a>    }
+<a href=#438 id=438 data-nosnippet>438</a>}
 </code></pre></div></section></main></body></html>
