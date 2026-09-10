@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["BufferDescriptor","BufferTransition","BufferUsages","BufferUses"]};
+window.SIDEBAR_ITEMS = {"struct":["BufferDescriptor","BufferTransition","BufferUsages","BufferUsagesBits","BufferUsagesWGPU","BufferUsagesWebGPU","BufferUses"]};
