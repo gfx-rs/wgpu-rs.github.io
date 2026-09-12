@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["NativeSurface","NativeSurfaceTextureMetadata","NativeSwapchain","NativeSwapchainSubmissionSemaphoreGuard","SwapchainAcquireSemaphore","SwapchainPresentSemaphores"]};
+window.SIDEBAR_ITEMS = {"fn":["destroy_swapchain_semaphores"],"struct":["NativeSurface","NativeSurfaceTextureMetadata","NativeSwapchain","NativeSwapchainSubmissionSemaphoreGuard","SwapchainAcquireSemaphore","SwapchainPresentSemaphores"]};
