@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/constant_evaluator.rs`."><title>constant_evaluator.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/proc/</div>constant_evaluator.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="comment">// Code in this file intentionally uses `for` loops and `.push()` rather than
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/constant_evaluator.rs`."><title>constant_evaluator.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">naga/proc/</div>constant_evaluator.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="comment">// Code in this file intentionally uses `for` loops and `.push()` rather than
 <a href=#2 id=2 data-nosnippet>2</a>// `ArrayVec::from_iter`, because the latter is monomorphized by all three of
 <a href=#3 id=3 data-nosnippet>3</a>// the item type, the capacity, and the iterator type, which can easily bloat
 <a href=#4 id=4 data-nosnippet>4</a>// the compiled executable (by ~260 KiB, when it was removed).
@@ -15,7 +15,7 @@
 <a href=#15 id=15 data-nosnippet>15</a><span class="kw">use </span>half::f16;
 <a href=#16 id=16 data-nosnippet>16</a><span class="kw">use </span>num_traits::{real::Real, FromPrimitive, One, ToPrimitive, Zero};
 <a href=#17 id=17 data-nosnippet>17</a>
-<a href=#18 id=18 data-nosnippet>18</a><span class="kw">use crate</span>::{
+<a href=#18 id=18 data-nosnippet>18</a><span class="kw">use </span>crate::{
 <a href=#19 id=19 data-nosnippet>19</a>    arena::{Arena, Handle, HandleVec, UniqueArena},
 <a href=#20 id=20 data-nosnippet>20</a>    ArraySize, BinaryOperator, Constant, Expression, Literal, Override, RelationalFunction,
 <a href=#21 id=21 data-nosnippet>21</a>    ScalarKind, Span, Type, TypeInner, UnaryOperator,
@@ -60,7 +60,7 @@
 <a href=#60 id=60 data-nosnippet>60</a>            <span class="kw">fn </span>from(value: <span class="macro-nonterminal">$target</span>&lt;<span class="number">1</span>&gt;) -&gt; <span class="self">Self </span>{
 <a href=#61 id=61 data-nosnippet>61</a>                <span class="kw">match </span>value {
 <a href=#62 id=62 data-nosnippet>62</a>                    $(
-<a href=#63 id=63 data-nosnippet>63</a>                        <span class="macro-nonterminal">$target</span>::<span class="macro-nonterminal">$mapping</span>([value]) =&gt; {
+<a href=#63 id=63 data-nosnippet>63</a>                        <span class="macro-nonterminal">$target:</span>:<span class="macro-nonterminal">$mapping</span>([value]) =&gt; {
 <a href=#64 id=64 data-nosnippet>64</a>                            Expression::Literal(Literal::<span class="macro-nonterminal">$literal</span>(value))
 <a href=#65 id=65 data-nosnippet>65</a>                        }
 <a href=#66 id=66 data-nosnippet>66</a>                    )+
@@ -110,7 +110,7 @@
 <a href=#110 id=110 data-nosnippet>110</a>                                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(err),
 <a href=#111 id=111 data-nosnippet>111</a>                            }
 <a href=#112 id=112 data-nosnippet>112</a>                        }
-<a href=#113 id=113 data-nosnippet>113</a>                        <span class="kw">let </span>comps = <span class="macro-nonterminal">$target</span>::<span class="macro-nonterminal">$mapping</span>(arr.into_inner().unwrap());
+<a href=#113 id=113 data-nosnippet>113</a>                        <span class="kw">let </span>comps = <span class="macro-nonterminal">$target:</span>:<span class="macro-nonterminal">$mapping</span>(arr.into_inner().unwrap());
 <a href=#114 id=114 data-nosnippet>114</a>                        <span class="prelude-val">Ok</span>(handler(comps)<span class="question-mark">?</span>.into())
 <a href=#115 id=115 data-nosnippet>115</a>                    },
 <a href=#116 id=116 data-nosnippet>116</a>                )+
@@ -194,7 +194,7 @@
 <a href=#194 id=194 data-nosnippet>194</a>                    <span class="macro">stringify!</span>(<span class="macro-nonterminal">$ident</span>),
 <a href=#195 id=195 data-nosnippet>195</a>                    <span class="string">"`]."</span>,
 <a href=#196 id=196 data-nosnippet>196</a>                )]
-<a href=#197 id=197 data-nosnippet>197</a>                </span><span class="macro">macro_rules!</span> <span class="macro-nonterminal">$ident </span>{
+<a href=#197 id=197 data-nosnippet>197</a>                </span>macro_rules! <span class="macro-nonterminal">$ident </span>{
 <a href=#198 id=198 data-nosnippet>198</a>                    (
 <a href=#199 id=199 data-nosnippet>199</a>                        <span class="macro-nonterminal">$eval</span>:expr,
 <a href=#200 id=200 data-nosnippet>200</a>                        <span class="macro-nonterminal">$span</span>:expr,
@@ -203,9 +203,9 @@
 <a href=#203 id=203 data-nosnippet>203</a>                    ) =&gt; {
 <a href=#204 id=204 data-nosnippet>204</a>                        <span class="macro-nonterminal">$ident</span>(<span class="macro-nonterminal">$eval</span>, <span class="macro-nonterminal">$span</span>, [<span class="macro-nonterminal">$d </span>(<span class="macro-nonterminal">$d </span>expr),+], |args| <span class="kw">match </span>args {
 <a href=#205 id=205 data-nosnippet>205</a>                            $(
-<a href=#206 id=206 data-nosnippet>206</a>                                <span class="macro-nonterminal">$target</span>::<span class="macro-nonterminal">$mapping</span>([<span class="macro-nonterminal">$d </span>(<span class="macro-nonterminal">$d </span>arg),+]) =&gt; {
+<a href=#206 id=206 data-nosnippet>206</a>                                <span class="macro-nonterminal">$target:</span>:<span class="macro-nonterminal">$mapping</span>([<span class="macro-nonterminal">$d </span>(<span class="macro-nonterminal">$d </span>arg),+]) =&gt; {
 <a href=#207 id=207 data-nosnippet>207</a>                                    <span class="kw">let </span>res = <span class="macro-nonterminal">$d </span>tt;
-<a href=#208 id=208 data-nosnippet>208</a>                                    Result::map(res, <span class="macro-nonterminal">$target</span>::<span class="macro-nonterminal">$mapping</span>)
+<a href=#208 id=208 data-nosnippet>208</a>                                    Result::map(res, <span class="macro-nonterminal">$target:</span>:<span class="macro-nonterminal">$mapping</span>)
 <a href=#209 id=209 data-nosnippet>209</a>                                },
 <a href=#210 id=210 data-nosnippet>210</a>                            )+
 <a href=#211 id=211 data-nosnippet>211</a>                        })
@@ -356,7 +356,7 @@
 <a href=#356 id=356 data-nosnippet>356</a>                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidMathArg),
 <a href=#357 id=357 data-nosnippet>357</a>                    }
 <a href=#358 id=358 data-nosnippet>358</a>                }
-<a href=#359 id=359 data-nosnippet>359</a>                <span class="self">Self</span>::<span class="macro-nonterminal">$self_variant</span>(out)
+<a href=#359 id=359 data-nosnippet>359</a>                Self::<span class="macro-nonterminal">$self_variant</span>(out)
 <a href=#360 id=360 data-nosnippet>360</a>            }};
 <a href=#361 id=361 data-nosnippet>361</a>        }
 <a href=#362 id=362 data-nosnippet>362</a>        <span class="prelude-val">Ok</span>(<span class="kw">match </span>components[<span class="number">0</span>] {
@@ -612,10 +612,10 @@
 <a href=#612 id=612 data-nosnippet>612</a>        }
 <a href=#613 id=613 data-nosnippet>613</a>    };
 <a href=#614 id=614 data-nosnippet>614</a>    (@expand_ret <span class="macro-nonterminal">$out</span>:ident; <span class="macro-nonterminal">$ty</span>:ident; <span class="macro-nonterminal">$body</span>:expr) =&gt; {
-<a href=#615 id=615 data-nosnippet>615</a>        <span class="macro-nonterminal">$out</span>::<span class="macro-nonterminal">$ty</span>(<span class="macro-nonterminal">$body</span>)
+<a href=#615 id=615 data-nosnippet>615</a>        <span class="macro-nonterminal">$out:</span>:<span class="macro-nonterminal">$ty</span>(<span class="macro-nonterminal">$body</span>)
 <a href=#616 id=616 data-nosnippet>616</a>    };
 <a href=#617 id=617 data-nosnippet>617</a>    (@expand_ret <span class="macro-nonterminal">$out</span>:ident; <span class="macro-nonterminal">$_ty</span>:ident; <span class="macro-nonterminal">$ret</span>:ident; <span class="macro-nonterminal">$body</span>:expr) =&gt; {
-<a href=#618 id=618 data-nosnippet>618</a>        <span class="macro-nonterminal">$out</span>::<span class="macro-nonterminal">$ret</span>(<span class="macro-nonterminal">$body</span>)
+<a href=#618 id=618 data-nosnippet>618</a>        <span class="macro-nonterminal">$out:</span>:<span class="macro-nonterminal">$ret</span>(<span class="macro-nonterminal">$body</span>)
 <a href=#619 id=619 data-nosnippet>619</a>    };
 <a href=#620 id=620 data-nosnippet>620</a>}
 <a href=#621 id=621 data-nosnippet>621</a>
@@ -1479,7 +1479,7 @@
 <a href=#1479 id=1479 data-nosnippet>1479</a>            .chain(arg2)
 <a href=#1480 id=1480 data-nosnippet>1480</a>            .chain(arg3)
 <a href=#1481 id=1481 data-nosnippet>1481</a>            .count();
-<a href=#1482 id=1482 data-nosnippet>1482</a>        <span class="kw">if </span><span class="macro">expected !</span>= given {
+<a href=#1482 id=1482 data-nosnippet>1482</a>        <span class="kw">if </span>expected != given {
 <a href=#1483 id=1483 data-nosnippet>1483</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidMathArgCount(
 <a href=#1484 id=1484 data-nosnippet>1484</a>                fun, expected, given,
 <a href=#1485 id=1485 data-nosnippet>1485</a>            ));
@@ -2527,15 +2527,15 @@
 <a href=#2527 id=2527 data-nosnippet>2527</a>                        Literal::AbstractFloat(v) =&gt; f64::try_from_abstract(v)<span class="question-mark">?</span>,
 <a href=#2528 id=2528 data-nosnippet>2528</a>                    }),
 <a href=#2529 id=2529 data-nosnippet>2529</a>                    Sc::BOOL =&gt; Literal::Bool(<span class="kw">match </span>literal {
-<a href=#2530 id=2530 data-nosnippet>2530</a>                        Literal::I16(v) =&gt; <span class="macro">v !</span>= <span class="number">0</span>,
-<a href=#2531 id=2531 data-nosnippet>2531</a>                        Literal::U16(v) =&gt; <span class="macro">v !</span>= <span class="number">0</span>,
-<a href=#2532 id=2532 data-nosnippet>2532</a>                        Literal::I32(v) =&gt; <span class="macro">v !</span>= <span class="number">0</span>,
-<a href=#2533 id=2533 data-nosnippet>2533</a>                        Literal::U32(v) =&gt; <span class="macro">v !</span>= <span class="number">0</span>,
-<a href=#2534 id=2534 data-nosnippet>2534</a>                        Literal::F32(v) =&gt; <span class="macro">v !</span>= <span class="number">0.0</span>,
-<a href=#2535 id=2535 data-nosnippet>2535</a>                        Literal::F16(v) =&gt; <span class="macro">v !</span>= f16::zero(),
+<a href=#2530 id=2530 data-nosnippet>2530</a>                        Literal::I16(v) =&gt; v != <span class="number">0</span>,
+<a href=#2531 id=2531 data-nosnippet>2531</a>                        Literal::U16(v) =&gt; v != <span class="number">0</span>,
+<a href=#2532 id=2532 data-nosnippet>2532</a>                        Literal::I32(v) =&gt; v != <span class="number">0</span>,
+<a href=#2533 id=2533 data-nosnippet>2533</a>                        Literal::U32(v) =&gt; v != <span class="number">0</span>,
+<a href=#2534 id=2534 data-nosnippet>2534</a>                        Literal::F32(v) =&gt; v != <span class="number">0.0</span>,
+<a href=#2535 id=2535 data-nosnippet>2535</a>                        Literal::F16(v) =&gt; v != f16::zero(),
 <a href=#2536 id=2536 data-nosnippet>2536</a>                        Literal::Bool(v) =&gt; v,
-<a href=#2537 id=2537 data-nosnippet>2537</a>                        Literal::AbstractInt(v) =&gt; <span class="macro">v !</span>= <span class="number">0</span>,
-<a href=#2538 id=2538 data-nosnippet>2538</a>                        Literal::AbstractFloat(v) =&gt; <span class="macro">v !</span>= <span class="number">0.0</span>,
+<a href=#2537 id=2537 data-nosnippet>2537</a>                        Literal::AbstractInt(v) =&gt; v != <span class="number">0</span>,
+<a href=#2538 id=2538 data-nosnippet>2538</a>                        Literal::AbstractFloat(v) =&gt; v != <span class="number">0.0</span>,
 <a href=#2539 id=2539 data-nosnippet>2539</a>                        Literal::F64(<span class="kw">_</span>) | Literal::I64(<span class="kw">_</span>) | Literal::U64(<span class="kw">_</span>) =&gt; {
 <a href=#2540 id=2540 data-nosnippet>2540</a>                            <span class="kw">return </span>make_error();
 <a href=#2541 id=2541 data-nosnippet>2541</a>                        }
@@ -2779,7 +2779,7 @@
 <a href=#2779 id=2779 data-nosnippet>2779</a>
 <a href=#2780 id=2780 data-nosnippet>2780</a>                <span class="kw">let </span>literal = <span class="kw">match </span>op {
 <a href=#2781 id=2781 data-nosnippet>2781</a>                    BinaryOperator::Equal =&gt; Literal::Bool(left_value == right_value),
-<a href=#2782 id=2782 data-nosnippet>2782</a>                    BinaryOperator::NotEqual =&gt; Literal::Bool(<span class="macro">left_value !</span>= right_value),
+<a href=#2782 id=2782 data-nosnippet>2782</a>                    BinaryOperator::NotEqual =&gt; Literal::Bool(left_value != right_value),
 <a href=#2783 id=2783 data-nosnippet>2783</a>                    BinaryOperator::Less =&gt; Literal::Bool(left_value &lt; right_value),
 <a href=#2784 id=2784 data-nosnippet>2784</a>                    BinaryOperator::LessEqual =&gt; Literal::Bool(left_value &lt;= right_value),
 <a href=#2785 id=2785 data-nosnippet>2785</a>                    BinaryOperator::Greater =&gt; Literal::Bool(left_value &gt; right_value),
@@ -3079,7 +3079,7 @@
 <a href=#3079 id=3079 data-nosnippet>3079</a>        <span class="kw">fn </span>is_allowed_compose_literal_op(compose_ty: <span class="kw-2">&amp;</span>TypeInner, op: BinaryOperator) -&gt; bool {
 <a href=#3080 id=3080 data-nosnippet>3080</a>            <span class="kw">let </span>is_numeric_vec = <span class="macro">matches!</span>(
 <a href=#3081 id=3081 data-nosnippet>3081</a>                compose_ty, TypeInner::Vector { scalar, .. }
-<a href=#3082 id=3082 data-nosnippet>3082</a>                <span class="kw">if </span>scalar.<span class="macro">kind !</span>= ScalarKind::Bool
+<a href=#3082 id=3082 data-nosnippet>3082</a>                <span class="kw">if </span>scalar.kind != ScalarKind::Bool
 <a href=#3083 id=3083 data-nosnippet>3083</a>            );
 <a href=#3084 id=3084 data-nosnippet>3084</a>            <span class="kw">let </span>is_allowed_vec_scalar_op = <span class="macro">matches!</span>(
 <a href=#3085 id=3085 data-nosnippet>3085</a>                op,
@@ -3512,7 +3512,7 @@
 <a href=#3512 id=3512 data-nosnippet>3512</a>            <span class="kw">if let </span>TypeInner::Vector { size, scalar: <span class="kw">_ </span>} = <span class="self">self</span>.types[ty].inner {
 <a href=#3513 id=3513 data-nosnippet>3513</a>                <span class="kw">let </span>expected = size <span class="kw">as </span>usize;
 <a href=#3514 id=3514 data-nosnippet>3514</a>                <span class="kw">let </span>actual = <span class="self">self</span>.vector_compose_flattened_size(components)<span class="question-mark">?</span>;
-<a href=#3515 id=3515 data-nosnippet>3515</a>                <span class="kw">if </span><span class="macro">expected !</span>= actual {
+<a href=#3515 id=3515 data-nosnippet>3515</a>                <span class="kw">if </span>expected != actual {
 <a href=#3516 id=3516 data-nosnippet>3516</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidVectorComposeLength {
 <a href=#3517 id=3517 data-nosnippet>3517</a>                        expected,
 <a href=#3518 id=3518 data-nosnippet>3518</a>                        actual,
@@ -3635,7 +3635,7 @@
 <a href=#3635 id=3635 data-nosnippet>3635</a>                    <span class="kw">let </span>[(reject_vec_size, <span class="kw">_</span>), (accept_vec_size, <span class="kw">_</span>)] =
 <a href=#3636 id=3636 data-nosnippet>3636</a>                        [reject_ty, accept_ty].map(ty_deets);
 <a href=#3637 id=3637 data-nosnippet>3637</a>
-<a href=#3638 id=3638 data-nosnippet>3638</a>                    <span class="kw">if </span><span class="macro">reject_vec_size !</span>= accept_vec_size {
+<a href=#3638 id=3638 data-nosnippet>3638</a>                    <span class="kw">if </span>reject_vec_size != accept_vec_size {
 <a href=#3639 id=3639 data-nosnippet>3639</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::SelectVecRejectAcceptSizeMismatch {
 <a href=#3640 id=3640 data-nosnippet>3640</a>                            reject: reject_vec_size,
 <a href=#3641 id=3641 data-nosnippet>3641</a>                            accept: accept_vec_size,
@@ -3653,10 +3653,10 @@
 <a href=#3653 id=3653 data-nosnippet>3653</a>                        components: <span class="kw-2">ref </span>condition_components,
 <a href=#3654 id=3654 data-nosnippet>3654</a>                    } =&gt; {
 <a href=#3655 id=3655 data-nosnippet>3655</a>                        <span class="kw">let </span>(condition_vec_size, condition_scalar) = ty_deets(condition_ty);
-<a href=#3656 id=3656 data-nosnippet>3656</a>                        <span class="kw">if </span>condition_scalar.<span class="macro">kind !</span>= ScalarKind::Bool {
+<a href=#3656 id=3656 data-nosnippet>3656</a>                        <span class="kw">if </span>condition_scalar.kind != ScalarKind::Bool {
 <a href=#3657 id=3657 data-nosnippet>3657</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::SelectConditionNotAVecBool);
 <a href=#3658 id=3658 data-nosnippet>3658</a>                        }
-<a href=#3659 id=3659 data-nosnippet>3659</a>                        <span class="kw">if </span><span class="macro">condition_vec_size !</span>= expected_vec_size {
+<a href=#3659 id=3659 data-nosnippet>3659</a>                        <span class="kw">if </span>condition_vec_size != expected_vec_size {
 <a href=#3660 id=3660 data-nosnippet>3660</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::SelectConditionVecSizeMismatch);
 <a href=#3661 id=3661 data-nosnippet>3661</a>                        }
 <a href=#3662 id=3662 data-nosnippet>3662</a>                        condition_components
@@ -3677,8 +3677,8 @@
 <a href=#3677 id=3677 data-nosnippet>3677</a>                    components: reject_components
 <a href=#3678 id=3678 data-nosnippet>3678</a>                        .clone()
 <a href=#3679 id=3679 data-nosnippet>3679</a>                        .into_iter()
-<a href=#3680 id=3680 data-nosnippet>3680</a>                        .zip(accept_components.clone().into_iter())
-<a href=#3681 id=3681 data-nosnippet>3681</a>                        .zip(condition_components.into_iter())
+<a href=#3680 id=3680 data-nosnippet>3680</a>                        .zip(accept_components.clone())
+<a href=#3681 id=3681 data-nosnippet>3681</a>                        .zip(condition_components)
 <a href=#3682 id=3682 data-nosnippet>3682</a>                        .map(|((reject, accept), condition)| {
 <a href=#3683 id=3683 data-nosnippet>3683</a>                            <span class="kw">let </span>reject_scalar = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.expressions[reject] {
 <a href=#3684 id=3684 data-nosnippet>3684</a>                                <span class="kw-2">&amp;</span>Expression::Literal(lit) =&gt; lit.scalar(),
@@ -4048,12 +4048,12 @@
 <a href=#4048 id=4048 data-nosnippet>4048</a></span><span class="kw">mod </span>tests {
 <a href=#4049 id=4049 data-nosnippet>4049</a>    <span class="kw">use </span>alloc::{vec, vec::Vec};
 <a href=#4050 id=4050 data-nosnippet>4050</a>
-<a href=#4051 id=4051 data-nosnippet>4051</a>    <span class="kw">use crate</span>::{
+<a href=#4051 id=4051 data-nosnippet>4051</a>    <span class="kw">use </span>crate::{
 <a href=#4052 id=4052 data-nosnippet>4052</a>        Arena, BinaryOperator, Constant, Expression, FastHashMap, Handle, Literal, ScalarKind,
 <a href=#4053 id=4053 data-nosnippet>4053</a>        Type, TypeInner, UnaryOperator, UniqueArena, VectorSize,
 <a href=#4054 id=4054 data-nosnippet>4054</a>    };
 <a href=#4055 id=4055 data-nosnippet>4055</a>
-<a href=#4056 id=4056 data-nosnippet>4056</a>    <span class="kw">use super</span>::{Behavior, ConstantEvaluator, ExpressionKindTracker, WgslRestrictions};
+<a href=#4056 id=4056 data-nosnippet>4056</a>    <span class="kw">use </span>super::{Behavior, ConstantEvaluator, ExpressionKindTracker, WgslRestrictions};
 <a href=#4057 id=4057 data-nosnippet>4057</a>
 <a href=#4058 id=4058 data-nosnippet>4058</a>    <span class="attr">#[test]
 <a href=#4059 id=4059 data-nosnippet>4059</a>    </span><span class="kw">fn </span>unary_op() {

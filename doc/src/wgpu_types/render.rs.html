@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-types/src/render.rs`."><title>render.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_types" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_types/</div>render.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Types for configuring render passes and render pipelines (except for vertex attributes).
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-types/src/render.rs`."><title>render.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_types" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">wgpu_types/</div>render.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Types for configuring render passes and render pipelines (except for vertex attributes).
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>macro_rules_attribute::derive;
@@ -6,10 +6,10 @@
 <a href=#6 id=6 data-nosnippet>6</a><span class="attr">#[cfg(any(feature = <span class="string">"serde"</span>, test))]
 <a href=#7 id=7 data-nosnippet>7</a></span><span class="kw">use </span>serde::{Deserialize, Serialize};
 <a href=#8 id=8 data-nosnippet>8</a>
-<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use crate</span>::{link_to_wgpu_docs, ConstDefault, LoadOpDontCare};
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>crate::{link_to_wgpu_docs, ConstDefault, LoadOpDontCare};
 <a href=#10 id=10 data-nosnippet>10</a>
 <a href=#11 id=11 data-nosnippet>11</a><span class="attr">#[cfg(doc)]
-<a href=#12 id=12 data-nosnippet>12</a></span><span class="kw">use crate</span>::{Features, TextureFormat};
+<a href=#12 id=12 data-nosnippet>12</a></span><span class="kw">use </span>crate::{Features, TextureFormat};
 <a href=#13 id=13 data-nosnippet>13</a>
 <a href=#14 id=14 data-nosnippet>14</a><span class="doccomment">/// Alpha blend factor.
 <a href=#15 id=15 data-nosnippet>15</a>///
@@ -98,7 +98,7 @@
 <a href=#98 id=98 data-nosnippet>98</a>/// For further details on how the blend operations are applied, see
 <a href=#99 id=99 data-nosnippet>99</a>/// the analogous functionality in OpenGL: &lt;https://www.khronos.org/opengl/wiki/Blending#Blend_Equations&gt;.
 <a href=#100 id=100 data-nosnippet>100</a></span><span class="attr">#[repr(C)]
-<a href=#101 id=101 data-nosnippet>101</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Hash, Eq, PartialEq)]
+<a href=#101 id=101 data-nosnippet>101</a>#[derive(Copy, Clone, Debug, ConstDefault!, Hash, Eq, PartialEq)]
 <a href=#102 id=102 data-nosnippet>102</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#103 id=103 data-nosnippet>103</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#104 id=104 data-nosnippet>104</a></span><span class="kw">pub enum </span>BlendOperation {
@@ -294,7 +294,7 @@
 <a href=#294 id=294 data-nosnippet>294</a>/// Corresponds to [WebGPU `GPUPrimitiveTopology`](
 <a href=#295 id=295 data-nosnippet>295</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpuprimitivetopology).
 <a href=#296 id=296 data-nosnippet>296</a></span><span class="attr">#[repr(C)]
-<a href=#297 id=297 data-nosnippet>297</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Hash, Eq, PartialEq)]
+<a href=#297 id=297 data-nosnippet>297</a>#[derive(Copy, Clone, Debug, ConstDefault!, Hash, Eq, PartialEq)]
 <a href=#298 id=298 data-nosnippet>298</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#299 id=299 data-nosnippet>299</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#300 id=300 data-nosnippet>300</a></span><span class="kw">pub enum </span>PrimitiveTopology {
@@ -344,7 +344,7 @@
 <a href=#344 id=344 data-nosnippet>344</a>/// Corresponds to [WebGPU `GPUFrontFace`](
 <a href=#345 id=345 data-nosnippet>345</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpufrontface).
 <a href=#346 id=346 data-nosnippet>346</a></span><span class="attr">#[repr(C)]
-<a href=#347 id=347 data-nosnippet>347</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, PartialEq, Eq, Hash)]
+<a href=#347 id=347 data-nosnippet>347</a>#[derive(Copy, Clone, Debug, ConstDefault!, PartialEq, Eq, Hash)]
 <a href=#348 id=348 data-nosnippet>348</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#349 id=349 data-nosnippet>349</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#350 id=350 data-nosnippet>350</a></span><span class="kw">pub enum </span>FrontFace {
@@ -377,7 +377,7 @@
 <a href=#377 id=377 data-nosnippet>377</a>
 <a href=#378 id=378 data-nosnippet>378</a><span class="doccomment">/// Type of drawing mode for polygons
 <a href=#379 id=379 data-nosnippet>379</a></span><span class="attr">#[repr(C)]
-<a href=#380 id=380 data-nosnippet>380</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, PartialEq, Eq, Hash)]
+<a href=#380 id=380 data-nosnippet>380</a>#[derive(Copy, Clone, Debug, ConstDefault!, PartialEq, Eq, Hash)]
 <a href=#381 id=381 data-nosnippet>381</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#382 id=382 data-nosnippet>382</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#383 id=383 data-nosnippet>383</a></span><span class="kw">pub enum </span>PolygonMode {
@@ -395,7 +395,7 @@
 <a href=#395 id=395 data-nosnippet>395</a>/// Corresponds to [WebGPU `GPUPrimitiveState`](
 <a href=#396 id=396 data-nosnippet>396</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gpuprimitivestate).
 <a href=#397 id=397 data-nosnippet>397</a></span><span class="attr">#[repr(C)]
-<a href=#398 id=398 data-nosnippet>398</a>#[derive(Clone, Copy, Debug, <span class="macro">ConstDefault!</span>, PartialEq, Eq, Hash)]
+<a href=#398 id=398 data-nosnippet>398</a>#[derive(Clone, Copy, Debug, ConstDefault!, PartialEq, Eq, Hash)]
 <a href=#399 id=399 data-nosnippet>399</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#400 id=400 data-nosnippet>400</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"camelCase"</span>))]
 <a href=#401 id=401 data-nosnippet>401</a></span><span class="kw">pub struct </span>PrimitiveState {
@@ -463,7 +463,7 @@
 <a href=#463 id=463 data-nosnippet>463</a>    </span><span class="kw">pub const fn </span>default() -&gt; <span class="self">Self </span>{
 <a href=#464 id=464 data-nosnippet>464</a>        MultisampleState {
 <a href=#465 id=465 data-nosnippet>465</a>            count: <span class="number">1</span>,
-<a href=#466 id=466 data-nosnippet>466</a>            <span class="macro">mask: !</span><span class="number">0</span>,
+<a href=#466 id=466 data-nosnippet>466</a>            mask: !<span class="number">0</span>,
 <a href=#467 id=467 data-nosnippet>467</a>            alpha_to_coverage_enabled: <span class="bool-val">false</span>,
 <a href=#468 id=468 data-nosnippet>468</a>        }
 <a href=#469 id=469 data-nosnippet>469</a>    }
@@ -480,7 +480,7 @@
 <a href=#480 id=480 data-nosnippet>480</a>/// Corresponds to [WebGPU `GPUIndexFormat`](
 <a href=#481 id=481 data-nosnippet>481</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpuindexformat).
 <a href=#482 id=482 data-nosnippet>482</a></span><span class="attr">#[repr(C)]
-<a href=#483 id=483 data-nosnippet>483</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Hash, Eq, PartialEq)]
+<a href=#483 id=483 data-nosnippet>483</a>#[derive(Copy, Clone, Debug, ConstDefault!, Hash, Eq, PartialEq)]
 <a href=#484 id=484 data-nosnippet>484</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#485 id=485 data-nosnippet>485</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#486 id=486 data-nosnippet>486</a></span><span class="kw">pub enum </span>IndexFormat {
@@ -506,7 +506,7 @@
 <a href=#506 id=506 data-nosnippet>506</a>/// Corresponds to [WebGPU `GPUStencilOperation`](
 <a href=#507 id=507 data-nosnippet>507</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpustenciloperation).
 <a href=#508 id=508 data-nosnippet>508</a></span><span class="attr">#[repr(C)]
-<a href=#509 id=509 data-nosnippet>509</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Hash, Eq, PartialEq)]
+<a href=#509 id=509 data-nosnippet>509</a>#[derive(Copy, Clone, Debug, ConstDefault!, Hash, Eq, PartialEq)]
 <a href=#510 id=510 data-nosnippet>510</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#511 id=511 data-nosnippet>511</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#512 id=512 data-nosnippet>512</a></span><span class="kw">pub enum </span>StencilOperation {
@@ -595,7 +595,7 @@
 <a href=#595 id=595 data-nosnippet>595</a>/// Corresponds to [WebGPU `GPUCompareFunction`](
 <a href=#596 id=596 data-nosnippet>596</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpucomparefunction).
 <a href=#597 id=597 data-nosnippet>597</a></span><span class="attr">#[repr(C)]
-<a href=#598 id=598 data-nosnippet>598</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Hash, Eq, PartialEq)]
+<a href=#598 id=598 data-nosnippet>598</a>#[derive(Copy, Clone, Debug, ConstDefault!, Hash, Eq, PartialEq)]
 <a href=#599 id=599 data-nosnippet>599</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#600 id=600 data-nosnippet>600</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#601 id=601 data-nosnippet>601</a></span><span class="kw">pub enum </span>CompareFunction {
@@ -640,7 +640,7 @@
 <a href=#640 id=640 data-nosnippet>640</a>/// Corresponds to a portion of [WebGPU `GPUDepthStencilState`](
 <a href=#641 id=641 data-nosnippet>641</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gpudepthstencilstate).
 <a href=#642 id=642 data-nosnippet>642</a></span><span class="attr">#[repr(C)]
-<a href=#643 id=643 data-nosnippet>643</a>#[derive(Clone, Debug, <span class="macro">ConstDefault!</span>, PartialEq, Eq, Hash)]
+<a href=#643 id=643 data-nosnippet>643</a>#[derive(Clone, Debug, ConstDefault!, PartialEq, Eq, Hash)]
 <a href=#644 id=644 data-nosnippet>644</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#645 id=645 data-nosnippet>645</a></span><span class="kw">pub struct </span>StencilState {
 <a href=#646 id=646 data-nosnippet>646</a>    <span class="doccomment">/// Front face mode.
@@ -657,8 +657,8 @@
 <a href=#657 id=657 data-nosnippet>657</a>    <span class="doccomment">/// Returns true if the stencil test is enabled.
 <a href=#658 id=658 data-nosnippet>658</a>    </span><span class="attr">#[must_use]
 <a href=#659 id=659 data-nosnippet>659</a>    </span><span class="kw">pub fn </span>is_enabled(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-<a href=#660 id=660 data-nosnippet>660</a>        (<span class="self">self</span>.<span class="macro">front !</span>= StencilFaceState::IGNORE || <span class="self">self</span>.<span class="macro">back !</span>= StencilFaceState::IGNORE)
-<a href=#661 id=661 data-nosnippet>661</a>            &amp;&amp; (<span class="self">self</span>.<span class="macro">read_mask !</span>= <span class="number">0 </span>|| <span class="self">self</span>.<span class="macro">write_mask !</span>= <span class="number">0</span>)
+<a href=#660 id=660 data-nosnippet>660</a>        (<span class="self">self</span>.front != StencilFaceState::IGNORE || <span class="self">self</span>.back != StencilFaceState::IGNORE)
+<a href=#661 id=661 data-nosnippet>661</a>            &amp;&amp; (<span class="self">self</span>.read_mask != <span class="number">0 </span>|| <span class="self">self</span>.write_mask != <span class="number">0</span>)
 <a href=#662 id=662 data-nosnippet>662</a>    }
 <a href=#663 id=663 data-nosnippet>663</a>    <span class="doccomment">/// Returns true if the state doesn't mutate the target values.
 <a href=#664 id=664 data-nosnippet>664</a>    </span><span class="attr">#[must_use]
@@ -690,7 +690,7 @@
 <a href=#690 id=690 data-nosnippet>690</a>/// Corresponds to a portion of [WebGPU `GPUDepthStencilState`](
 <a href=#691 id=691 data-nosnippet>691</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gpudepthstencilstate).
 <a href=#692 id=692 data-nosnippet>692</a></span><span class="attr">#[repr(C)]
-<a href=#693 id=693 data-nosnippet>693</a>#[derive(Clone, Copy, Debug, <span class="macro">ConstDefault!</span>)]
+<a href=#693 id=693 data-nosnippet>693</a>#[derive(Clone, Copy, Debug, ConstDefault!)]
 <a href=#694 id=694 data-nosnippet>694</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#695 id=695 data-nosnippet>695</a></span><span class="kw">pub struct </span>DepthBiasState {
 <a href=#696 id=696 data-nosnippet>696</a>    <span class="doccomment">/// Constant depth biasing factor, in basic units of the depth format.
@@ -705,7 +705,7 @@
 <a href=#705 id=705 data-nosnippet>705</a>    <span class="doccomment">/// Returns true if the depth biasing is enabled.
 <a href=#706 id=706 data-nosnippet>706</a>    </span><span class="attr">#[must_use]
 <a href=#707 id=707 data-nosnippet>707</a>    </span><span class="kw">pub fn </span>is_enabled(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-<a href=#708 id=708 data-nosnippet>708</a>        <span class="self">self</span>.<span class="macro">constant !</span>= <span class="number">0 </span>|| <span class="self">self</span>.<span class="macro">slope_scale !</span>= <span class="number">0.0
+<a href=#708 id=708 data-nosnippet>708</a>        <span class="self">self</span>.constant != <span class="number">0 </span>|| <span class="self">self</span>.slope_scale != <span class="number">0.0
 <a href=#709 id=709 data-nosnippet>709</a>    </span>}
 <a href=#710 id=710 data-nosnippet>710</a>}
 <a href=#711 id=711 data-nosnippet>711</a>
@@ -792,7 +792,7 @@
 <a href=#792 id=792 data-nosnippet>792</a>///
 <a href=#793 id=793 data-nosnippet>793</a>/// Corresponds to [WebGPU `GPUStoreOp`](https://gpuweb.github.io/gpuweb/#enumdef-gpustoreop).
 <a href=#794 id=794 data-nosnippet>794</a></span><span class="attr">#[repr(C)]
-<a href=#795 id=795 data-nosnippet>795</a>#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, <span class="macro">ConstDefault!</span>)]
+<a href=#795 id=795 data-nosnippet>795</a>#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, ConstDefault!)]
 <a href=#796 id=796 data-nosnippet>796</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 <a href=#797 id=797 data-nosnippet>797</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#798 id=798 data-nosnippet>798</a></span><span class="kw">pub enum </span>StoreOp {
@@ -965,7 +965,7 @@
 <a href=#965 id=965 data-nosnippet>965</a>
 <a href=#966 id=966 data-nosnippet>966</a><span class="doccomment">/// Argument buffer layout for `draw_indirect` commands.
 <a href=#967 id=967 data-nosnippet>967</a></span><span class="attr">#[repr(C)]
-<a href=#968 id=968 data-nosnippet>968</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Pod, Zeroable)]
+<a href=#968 id=968 data-nosnippet>968</a>#[derive(Copy, Clone, Debug, ConstDefault!, Pod, Zeroable)]
 <a href=#969 id=969 data-nosnippet>969</a></span><span class="kw">pub struct </span>DrawIndirectArgs {
 <a href=#970 id=970 data-nosnippet>970</a>    <span class="doccomment">/// The number of vertices to draw.
 <a href=#971 id=971 data-nosnippet>971</a>    </span><span class="kw">pub </span>vertex_count: u32,
@@ -989,7 +989,7 @@
 <a href=#989 id=989 data-nosnippet>989</a>
 <a href=#990 id=990 data-nosnippet>990</a><span class="doccomment">/// Argument buffer layout for `draw_indexed_indirect` commands.
 <a href=#991 id=991 data-nosnippet>991</a></span><span class="attr">#[repr(C)]
-<a href=#992 id=992 data-nosnippet>992</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Pod, Zeroable)]
+<a href=#992 id=992 data-nosnippet>992</a>#[derive(Copy, Clone, Debug, ConstDefault!, Pod, Zeroable)]
 <a href=#993 id=993 data-nosnippet>993</a></span><span class="kw">pub struct </span>DrawIndexedIndirectArgs {
 <a href=#994 id=994 data-nosnippet>994</a>    <span class="doccomment">/// The number of indices to draw.
 <a href=#995 id=995 data-nosnippet>995</a>    </span><span class="kw">pub </span>index_count: u32,
@@ -1015,7 +1015,7 @@
 <a href=#1015 id=1015 data-nosnippet>1015</a>
 <a href=#1016 id=1016 data-nosnippet>1016</a><span class="doccomment">/// Argument buffer layout for `dispatch_workgroups_indirect` commands.
 <a href=#1017 id=1017 data-nosnippet>1017</a></span><span class="attr">#[repr(C)]
-<a href=#1018 id=1018 data-nosnippet>1018</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Pod, Zeroable)]
+<a href=#1018 id=1018 data-nosnippet>1018</a>#[derive(Copy, Clone, Debug, ConstDefault!, Pod, Zeroable)]
 <a href=#1019 id=1019 data-nosnippet>1019</a></span><span class="kw">pub struct </span>DispatchIndirectArgs {
 <a href=#1020 id=1020 data-nosnippet>1020</a>    <span class="doccomment">/// The number of work groups in X dimension.
 <a href=#1021 id=1021 data-nosnippet>1021</a>    </span><span class="kw">pub </span>x: u32,

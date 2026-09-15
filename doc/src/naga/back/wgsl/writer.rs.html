@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/wgsl/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/back/wgsl/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/wgsl/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">naga/back/wgsl/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
 <a href=#2 id=2 data-nosnippet>2</a>    format,
 <a href=#3 id=3 data-nosnippet>3</a>    string::{String, ToString},
 <a href=#4 id=4 data-nosnippet>4</a>    vec,
@@ -8,8 +8,8 @@
 <a href=#8 id=8 data-nosnippet>8</a>
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span><span class="kw">super</span>::Error;
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span><span class="kw">super</span>::ToWgslIfImplemented <span class="kw">as _</span>;
-<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use crate</span>::{back::wgsl::polyfill::InversePolyfill, common::wgsl::TypeContext};
-<a href=#12 id=12 data-nosnippet>12</a><span class="kw">use crate</span>::{
+<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>crate::{back::wgsl::polyfill::InversePolyfill, common::wgsl::TypeContext};
+<a href=#12 id=12 data-nosnippet>12</a><span class="kw">use </span>crate::{
 <a href=#13 id=13 data-nosnippet>13</a>    back::{<span class="self">self</span>, Baked},
 <a href=#14 id=14 data-nosnippet>14</a>    common::{
 <a href=#15 id=15 data-nosnippet>15</a>        <span class="self">self</span>,
@@ -618,14 +618,14 @@
 <a href=#618 id=618 data-nosnippet>618</a>                Attribute::Group(id) =&gt; <span class="macro">write!</span>(out, <span class="string">"@group({id}) "</span>)<span class="question-mark">?</span>,
 <a href=#619 id=619 data-nosnippet>619</a>                Attribute::Invariant =&gt; <span class="macro">write!</span>(out, <span class="string">"@invariant "</span>)<span class="question-mark">?</span>,
 <a href=#620 id=620 data-nosnippet>620</a>                Attribute::Interpolate(interpolation, sampling) =&gt; {
-<a href=#621 id=621 data-nosnippet>621</a>                    <span class="kw">if </span>sampling.is_some() &amp;&amp; <span class="macro">sampling !</span>= <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Sampling::Center) {
+<a href=#621 id=621 data-nosnippet>621</a>                    <span class="kw">if </span>sampling.is_some() &amp;&amp; sampling != <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Sampling::Center) {
 <a href=#622 id=622 data-nosnippet>622</a>                        <span class="kw">let </span>interpolation = interpolation
 <a href=#623 id=623 data-nosnippet>623</a>                            .unwrap_or(<span class="kw">crate</span>::Interpolation::Perspective)
 <a href=#624 id=624 data-nosnippet>624</a>                            .to_wgsl();
 <a href=#625 id=625 data-nosnippet>625</a>                        <span class="kw">let </span>sampling = sampling.unwrap_or(<span class="kw">crate</span>::Sampling::Center).to_wgsl();
 <a href=#626 id=626 data-nosnippet>626</a>                        <span class="macro">write!</span>(out, <span class="string">"@interpolate({interpolation}, {sampling}) "</span>)<span class="question-mark">?</span>;
 <a href=#627 id=627 data-nosnippet>627</a>                    } <span class="kw">else if </span>interpolation.is_some()
-<a href=#628 id=628 data-nosnippet>628</a>                        &amp;&amp; <span class="macro">interpolation !</span>= <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Interpolation::Perspective)
+<a href=#628 id=628 data-nosnippet>628</a>                        &amp;&amp; interpolation != <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Interpolation::Perspective)
 <a href=#629 id=629 data-nosnippet>629</a>                    {
 <a href=#630 id=630 data-nosnippet>630</a>                        <span class="kw">let </span>interpolation = interpolation
 <a href=#631 id=631 data-nosnippet>631</a>                            .unwrap_or(<span class="kw">crate</span>::Interpolation::Perspective)
@@ -743,7 +743,7 @@
 <a href=#743 id=743 data-nosnippet>743</a>        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
 <a href=#744 id=744 data-nosnippet>744</a>        level: back::Level,
 <a href=#745 id=745 data-nosnippet>745</a>    ) -&gt; BackendResult {
-<a href=#746 id=746 data-nosnippet>746</a>        <span class="kw">use crate</span>::{Expression, Statement};
+<a href=#746 id=746 data-nosnippet>746</a>        <span class="kw">use </span>crate::{Expression, Statement};
 <a href=#747 id=747 data-nosnippet>747</a>
 <a href=#748 id=748 data-nosnippet>748</a>        <span class="kw">match </span><span class="kw-2">*</span>stmt {
 <a href=#749 id=749 data-nosnippet>749</a>            Statement::Emit(<span class="kw-2">ref </span>range) =&gt; {
@@ -865,7 +865,7 @@
 <a href=#865 id=865 data-nosnippet>865</a>                <span class="kw">let </span>func_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Function(function)];
 <a href=#866 id=866 data-nosnippet>866</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{func_name}("</span>)<span class="question-mark">?</span>;
 <a href=#867 id=867 data-nosnippet>867</a>                <span class="kw">for </span>(index, <span class="kw-2">&amp;</span>argument) <span class="kw">in </span>arguments.iter().enumerate() {
-<a href=#868 id=868 data-nosnippet>868</a>                    <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
+<a href=#868 id=868 data-nosnippet>868</a>                    <span class="kw">if </span>index != <span class="number">0 </span>{
 <a href=#869 id=869 data-nosnippet>869</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#870 id=870 data-nosnippet>870</a>                    }
 <a href=#871 id=871 data-nosnippet>871</a>                    <span class="self">self</span>.write_expr(module, argument, func_ctx)<span class="question-mark">?</span>;
@@ -1452,7 +1452,7 @@
 <a href=#1452 id=1452 data-nosnippet>1452</a>                <span class="self">self</span>.write_type(module, ty)<span class="question-mark">?</span>;
 <a href=#1453 id=1453 data-nosnippet>1453</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
 <a href=#1454 id=1454 data-nosnippet>1454</a>                <span class="kw">for </span>(index, component) <span class="kw">in </span>components.iter().enumerate() {
-<a href=#1455 id=1455 data-nosnippet>1455</a>                    <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
+<a href=#1455 id=1455 data-nosnippet>1455</a>                    <span class="kw">if </span>index != <span class="number">0 </span>{
 <a href=#1456 id=1456 data-nosnippet>1456</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#1457 id=1457 data-nosnippet>1457</a>                    }
 <a href=#1458 id=1458 data-nosnippet>1458</a>                    write_expression(<span class="self">self</span>, <span class="kw-2">*</span>component)<span class="question-mark">?</span>;
@@ -1920,7 +1920,7 @@
 <a href=#1920 id=1920 data-nosnippet>1920</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?
 <a href=#1921 id=1921 data-nosnippet>1921</a>            </span>}
 <a href=#1922 id=1922 data-nosnippet>1922</a>            Expression::Derivative { axis, ctrl, expr } =&gt; {
-<a href=#1923 id=1923 data-nosnippet>1923</a>                <span class="kw">use crate</span>::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
+<a href=#1923 id=1923 data-nosnippet>1923</a>                <span class="kw">use </span>crate::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
 <a href=#1924 id=1924 data-nosnippet>1924</a>                <span class="kw">let </span>op = <span class="kw">match </span>(axis, ctrl) {
 <a href=#1925 id=1925 data-nosnippet>1925</a>                    (Axis::X, Ctrl::Coarse) =&gt; <span class="string">"dpdxCoarse"</span>,
 <a href=#1926 id=1926 data-nosnippet>1926</a>                    (Axis::X, Ctrl::Fine) =&gt; <span class="string">"dpdxFine"</span>,

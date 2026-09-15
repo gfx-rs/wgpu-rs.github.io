@@ -1,11 +1,11 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/queue.rs`."><title>queue.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_hal/gles/</div>queue.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::sync::Arc;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/queue.rs`."><title>queue.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">wgpu_hal/gles/</div>queue.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::sync::Arc;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>alloc::vec;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>core::sync::atomic::Ordering;
 <a href=#4 id=4 data-nosnippet>4</a>
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>arrayvec::ArrayVec;
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>glow::HasContext;
 <a href=#7 id=7 data-nosnippet>7</a>
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use super</span>::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>super::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
 <a href=#9 id=9 data-nosnippet>9</a>
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">const </span>DEBUG_ID: u32 = <span class="number">0</span>;
 <a href=#11 id=11 data-nosnippet>11</a>
@@ -76,7 +76,7 @@
 <a href=#76 id=76 data-nosnippet>76</a>        <span class="kw">unsafe </span>{ gl.draw_arrays(glow::TRIANGLES, <span class="number">0</span>, <span class="number">3</span>) };
 <a href=#77 id=77 data-nosnippet>77</a>
 <a href=#78 id=78 data-nosnippet>78</a>        <span class="kw">let </span>draw_buffer_count = <span class="self">self</span>.draw_buffer_count.load(Ordering::Relaxed);
-<a href=#79 id=79 data-nosnippet>79</a>        <span class="kw">if </span><span class="macro">draw_buffer_count !</span>= <span class="number">0 </span>{
+<a href=#79 id=79 data-nosnippet>79</a>        <span class="kw">if </span>draw_buffer_count != <span class="number">0 </span>{
 <a href=#80 id=80 data-nosnippet>80</a>            <span class="comment">// Reset the draw buffers to what they were before the clear
 <a href=#81 id=81 data-nosnippet>81</a>            </span><span class="kw">let </span>indices = (<span class="number">0</span>..draw_buffer_count <span class="kw">as </span>u32)
 <a href=#82 id=82 data-nosnippet>82</a>                .map(|i| glow::COLOR_ATTACHMENT0 + i)
@@ -157,7 +157,7 @@
 <a href=#157 id=157 data-nosnippet>157</a>                } <span class="kw">else </span>{
 <a href=#158 id=158 data-nosnippet>158</a>                    <span class="kw">unsafe </span>{
 <a href=#159 id=159 data-nosnippet>159</a>                        <span class="macro">assert_eq!</span>(view.mip_levels.len(), <span class="number">1</span>);
-<a href=#160 id=160 data-nosnippet>160</a>                        <span class="kw">if </span><span class="macro">sample_count !</span>= <span class="number">1 </span>{
+<a href=#160 id=160 data-nosnippet>160</a>                        <span class="kw">if </span>sample_count != <span class="number">1 </span>{
 <a href=#161 id=161 data-nosnippet>161</a>                            gl.framebuffer_texture_2d_multisample(
 <a href=#162 id=162 data-nosnippet>162</a>                                fbo_target,
 <a href=#163 id=163 data-nosnippet>163</a>                                attachment,
@@ -349,7 +349,7 @@
 <a href=#349 id=349 data-nosnippet>349</a>                        </span>.shared
 <a href=#350 id=350 data-nosnippet>350</a>                        .private_caps
 <a href=#351 id=351 data-nosnippet>351</a>                        .contains(PrivateCapabilities::INDEX_BUFFER_ROLE_CHANGE)
-<a href=#352 id=352 data-nosnippet>352</a>                        || <span class="macro">dst_target !</span>= glow::ELEMENT_ARRAY_BUFFER;
+<a href=#352 id=352 data-nosnippet>352</a>                        || dst_target != glow::ELEMENT_ARRAY_BUFFER;
 <a href=#353 id=353 data-nosnippet>353</a>
 <a href=#354 id=354 data-nosnippet>354</a>                    <span class="kw">if </span>can_use_zero_buffer {
 <a href=#355 id=355 data-nosnippet>355</a>                        <span class="kw">unsafe </span>{ gl.bind_buffer(glow::COPY_READ_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.zero_buffer)) };
@@ -1491,7 +1491,7 @@
 <a href=#1491 id=1491 data-nosnippet>1491</a>            }
 <a href=#1492 id=1492 data-nosnippet>1492</a>            C::SetPrimitive(<span class="kw-2">ref </span>state) =&gt; {
 <a href=#1493 id=1493 data-nosnippet>1493</a>                <span class="kw">unsafe </span>{ gl.front_face(state.front_face) };
-<a href=#1494 id=1494 data-nosnippet>1494</a>                <span class="kw">if </span>state.<span class="macro">cull_face !</span>= <span class="number">0 </span>{
+<a href=#1494 id=1494 data-nosnippet>1494</a>                <span class="kw">if </span>state.cull_face != <span class="number">0 </span>{
 <a href=#1495 id=1495 data-nosnippet>1495</a>                    <span class="kw">unsafe </span>{ gl.enable(glow::CULL_FACE) };
 <a href=#1496 id=1496 data-nosnippet>1496</a>                    <span class="kw">unsafe </span>{ gl.cull_face(state.cull_face) };
 <a href=#1497 id=1497 data-nosnippet>1497</a>                } <span class="kw">else </span>{
@@ -1530,7 +1530,7 @@
 <a href=#1530 id=1530 data-nosnippet>1530</a>                    };
 <a href=#1531 id=1531 data-nosnippet>1531</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>blend) = <span class="kw-2">*</span>blend {
 <a href=#1532 id=1532 data-nosnippet>1532</a>                        <span class="kw">unsafe </span>{ gl.enable_draw_buffer(glow::BLEND, index) };
-<a href=#1533 id=1533 data-nosnippet>1533</a>                        <span class="kw">if </span>blend.<span class="macro">color !</span>= blend.alpha {
+<a href=#1533 id=1533 data-nosnippet>1533</a>                        <span class="kw">if </span>blend.color != blend.alpha {
 <a href=#1534 id=1534 data-nosnippet>1534</a>                            <span class="kw">unsafe </span>{
 <a href=#1535 id=1535 data-nosnippet>1535</a>                                gl.blend_equation_separate_draw_buffer(
 <a href=#1536 id=1536 data-nosnippet>1536</a>                                    index,
@@ -1567,7 +1567,7 @@
 <a href=#1567 id=1567 data-nosnippet>1567</a>                    };
 <a href=#1568 id=1568 data-nosnippet>1568</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>blend) = <span class="kw-2">*</span>blend {
 <a href=#1569 id=1569 data-nosnippet>1569</a>                        <span class="kw">unsafe </span>{ gl.enable(glow::BLEND) };
-<a href=#1570 id=1570 data-nosnippet>1570</a>                        <span class="kw">if </span>blend.<span class="macro">color !</span>= blend.alpha {
+<a href=#1570 id=1570 data-nosnippet>1570</a>                        <span class="kw">if </span>blend.color != blend.alpha {
 <a href=#1571 id=1571 data-nosnippet>1571</a>                            <span class="kw">unsafe </span>{
 <a href=#1572 id=1572 data-nosnippet>1572</a>                                gl.blend_equation_separate(
 <a href=#1573 id=1573 data-nosnippet>1573</a>                                    blend.color.equation,

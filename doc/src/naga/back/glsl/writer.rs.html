@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/glsl/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/back/glsl/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/glsl/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">naga/back/glsl/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>super::<span class="kw-2">*</span>;
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a><span class="doccomment">/// Writer responsible for all code generation.
 <a href=#4 id=4 data-nosnippet>4</a></span><span class="attr">#[expect(missing_debug_implementations, reason = <span class="string">"would be way too verbose?"</span>)]
@@ -1364,7 +1364,7 @@
 <a href=#1364 id=1364 data-nosnippet>1364</a>                                stage,
 <a href=#1365 id=1365 data-nosnippet>1365</a>                                options: VaryingOptions::from_writer_options(<span class="self">self</span>.options, <span class="bool-val">false</span>),
 <a href=#1366 id=1366 data-nosnippet>1366</a>                            };
-<a href=#1367 id=1367 data-nosnippet>1367</a>                            <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
+<a href=#1367 id=1367 data-nosnippet>1367</a>                            <span class="kw">if </span>index != <span class="number">0 </span>{
 <a href=#1368 id=1368 data-nosnippet>1368</a>                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#1369 id=1369 data-nosnippet>1369</a>                            }
 <a href=#1370 id=1370 data-nosnippet>1370</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{varying_name}"</span>)<span class="question-mark">?</span>;
@@ -1480,7 +1480,7 @@
 <a href=#1480 id=1480 data-nosnippet>1480</a>    ) -&gt; BackendResult {
 <a href=#1481 id=1481 data-nosnippet>1481</a>        <span class="comment">// Loop through `data` invoking `f` for each element
 <a href=#1482 id=1482 data-nosnippet>1482</a>        </span><span class="kw">for </span>(index, item) <span class="kw">in </span>data.iter().enumerate() {
-<a href=#1483 id=1483 data-nosnippet>1483</a>            <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
+<a href=#1483 id=1483 data-nosnippet>1483</a>            <span class="kw">if </span>index != <span class="number">0 </span>{
 <a href=#1484 id=1484 data-nosnippet>1484</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#1485 id=1485 data-nosnippet>1485</a>            }
 <a href=#1486 id=1486 data-nosnippet>1486</a>            f(<span class="self">self</span>, index <span class="kw">as </span>u32, item)<span class="question-mark">?</span>;
@@ -2398,7 +2398,7 @@
 <a href=#2398 id=2398 data-nosnippet>2398</a>
 <a href=#2399 id=2399 data-nosnippet>2399</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
 <a href=#2400 id=2400 data-nosnippet>2400</a>                <span class="kw">for </span>(index, component) <span class="kw">in </span>components.iter().enumerate() {
-<a href=#2401 id=2401 data-nosnippet>2401</a>                    <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
+<a href=#2401 id=2401 data-nosnippet>2401</a>                    <span class="kw">if </span>index != <span class="number">0 </span>{
 <a href=#2402 id=2402 data-nosnippet>2402</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#2403 id=2403 data-nosnippet>2403</a>                    }
 <a href=#2404 id=2404 data-nosnippet>2404</a>                    write_expression(<span class="self">self</span>, <span class="kw-2">*</span>component)<span class="question-mark">?</span>;
@@ -2586,7 +2586,7 @@
 <a href=#2586 id=2586 data-nosnippet>2586</a>                        err = <span class="prelude-val">Some</span>(<span class="string">"samplerCubeArrayShadow don't support textureGrad"</span>);
 <a href=#2587 id=2587 data-nosnippet>2587</a>                    }
 <a href=#2588 id=2588 data-nosnippet>2588</a>                }
-<a href=#2589 id=2589 data-nosnippet>2589</a>                <span class="kw">if </span>gather.is_some() &amp;&amp; <span class="macro">level !</span>= <span class="kw">crate</span>::SampleLevel::Zero {
+<a href=#2589 id=2589 data-nosnippet>2589</a>                <span class="kw">if </span>gather.is_some() &amp;&amp; level != <span class="kw">crate</span>::SampleLevel::Zero {
 <a href=#2590 id=2590 data-nosnippet>2590</a>                    err = <span class="prelude-val">Some</span>(<span class="string">"textureGather doesn't support LOD parameters"</span>);
 <a href=#2591 id=2591 data-nosnippet>2591</a>                }
 <a href=#2592 id=2592 data-nosnippet>2592</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = err {
@@ -2642,7 +2642,7 @@
 <a href=#2642 id=2642 data-nosnippet>2642</a>                }
 <a href=#2643 id=2643 data-nosnippet>2643</a>
 <a href=#2644 id=2644 data-nosnippet>2644</a>                <span class="kw">let </span>tex_1d_hack = dim == <span class="kw">crate</span>::ImageDimension::D1 &amp;&amp; <span class="self">self</span>.options.version.is_es();
-<a href=#2645 id=2645 data-nosnippet>2645</a>                <span class="kw">let </span>is_vec = tex_1d_hack || <span class="macro">coord_dim !</span>= <span class="number">1</span>;
+<a href=#2645 id=2645 data-nosnippet>2645</a>                <span class="kw">let </span>is_vec = tex_1d_hack || coord_dim != <span class="number">1</span>;
 <a href=#2646 id=2646 data-nosnippet>2646</a>                <span class="comment">// Compose a new texture coordinates vector
 <a href=#2647 id=2647 data-nosnippet>2647</a>                </span><span class="kw">if </span>is_vec {
 <a href=#2648 id=2648 data-nosnippet>2648</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"vec{}("</span>, coord_dim + tex_1d_hack <span class="kw">as </span>u8)<span class="question-mark">?</span>;
@@ -2812,7 +2812,7 @@
 <a href=#2812 id=2812 data-nosnippet>2812</a>                            ImageClass::External =&gt; <span class="macro">unimplemented!</span>(),
 <a href=#2813 id=2813 data-nosnippet>2813</a>                        }
 <a href=#2814 id=2814 data-nosnippet>2814</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
-<a href=#2815 id=2815 data-nosnippet>2815</a>                        <span class="kw">if </span><span class="macro">components !</span>= <span class="number">1 </span>|| <span class="self">self</span>.options.version.is_es() {
+<a href=#2815 id=2815 data-nosnippet>2815</a>                        <span class="kw">if </span>components != <span class="number">1 </span>|| <span class="self">self</span>.options.version.is_es() {
 <a href=#2816 id=2816 data-nosnippet>2816</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".{}"</span>, <span class="kw-2">&amp;</span><span class="string">"xyz"</span>[..components])<span class="question-mark">?</span>;
 <a href=#2817 id=2817 data-nosnippet>2817</a>                        }
 <a href=#2818 id=2818 data-nosnippet>2818</a>                    }
@@ -2835,7 +2835,7 @@
 <a href=#2835 id=2835 data-nosnippet>2835</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", 0"</span>)<span class="question-mark">?</span>;
 <a href=#2836 id=2836 data-nosnippet>2836</a>                        }
 <a href=#2837 id=2837 data-nosnippet>2837</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
-<a href=#2838 id=2838 data-nosnippet>2838</a>                        <span class="kw">if </span><span class="macro">components !</span>= <span class="number">1 </span>|| <span class="self">self</span>.options.version.is_es() {
+<a href=#2838 id=2838 data-nosnippet>2838</a>                        <span class="kw">if </span>components != <span class="number">1 </span>|| <span class="self">self</span>.options.version.is_es() {
 <a href=#2839 id=2839 data-nosnippet>2839</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".{}"</span>, back::COMPONENTS[components])<span class="question-mark">?</span>;
 <a href=#2840 id=2840 data-nosnippet>2840</a>                        }
 <a href=#2841 id=2841 data-nosnippet>2841</a>                    }
@@ -2883,7 +2883,7 @@
 <a href=#2883 id=2883 data-nosnippet>2883</a>            } =&gt; {
 <a href=#2884 id=2884 data-nosnippet>2884</a>                <span class="comment">// Holds `Some(function_name)` if the binary operation is
 <a href=#2885 id=2885 data-nosnippet>2885</a>                // implemented as a function call
-<a href=#2886 id=2886 data-nosnippet>2886</a>                </span><span class="kw">use crate</span>::{BinaryOperator <span class="kw">as </span>Bo, ScalarKind <span class="kw">as </span>Sk, TypeInner <span class="kw">as </span>Ti};
+<a href=#2886 id=2886 data-nosnippet>2886</a>                </span><span class="kw">use </span>crate::{BinaryOperator <span class="kw">as </span>Bo, ScalarKind <span class="kw">as </span>Sk, TypeInner <span class="kw">as </span>Ti};
 <a href=#2887 id=2887 data-nosnippet>2887</a>
 <a href=#2888 id=2888 data-nosnippet>2888</a>                <span class="kw">let </span>left_inner = ctx.resolve_type(left, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types);
 <a href=#2889 id=2889 data-nosnippet>2889</a>                <span class="kw">let </span>right_inner = ctx.resolve_type(right, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types);
@@ -2962,7 +2962,7 @@
 <a href=#2962 id=2962 data-nosnippet>2962</a>                        };
 <a href=#2963 id=2963 data-nosnippet>2963</a>
 <a href=#2964 id=2964 data-nosnippet>2964</a>                        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..size <span class="kw">as </span>usize {
-<a href=#2965 id=2965 data-nosnippet>2965</a>                            <span class="kw">if </span><span class="macro">i !</span>= <span class="number">0 </span>{
+<a href=#2965 id=2965 data-nosnippet>2965</a>                            <span class="kw">if </span>i != <span class="number">0 </span>{
 <a href=#2966 id=2966 data-nosnippet>2966</a>                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#2967 id=2967 data-nosnippet>2967</a>                            }
 <a href=#2968 id=2968 data-nosnippet>2968</a>
@@ -3063,7 +3063,7 @@
 <a href=#3063 id=3063 data-nosnippet>3063</a>            </span>}
 <a href=#3064 id=3064 data-nosnippet>3064</a>            <span class="comment">// `Derivative` is a function call to a glsl provided function
 <a href=#3065 id=3065 data-nosnippet>3065</a>            </span>Expression::Derivative { axis, ctrl, expr } =&gt; {
-<a href=#3066 id=3066 data-nosnippet>3066</a>                <span class="kw">use crate</span>::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
+<a href=#3066 id=3066 data-nosnippet>3066</a>                <span class="kw">use </span>crate::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
 <a href=#3067 id=3067 data-nosnippet>3067</a>                <span class="kw">let </span>fun_name = <span class="kw">if </span><span class="self">self</span>.options.version.supports_derivative_control() {
 <a href=#3068 id=3068 data-nosnippet>3068</a>                    <span class="kw">match </span>(axis, ctrl) {
 <a href=#3069 id=3069 data-nosnippet>3069</a>                        (Axis::X, Ctrl::Coarse) =&gt; <span class="string">"dFdxCoarse"</span>,
@@ -3234,7 +3234,7 @@
 <a href=#3234 id=3234 data-nosnippet>3234</a>                            <span class="self">self</span>.write_expr(arg1, ctx)<span class="question-mark">?</span>;
 <a href=#3235 id=3235 data-nosnippet>3235</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"), {}, 8)"</span>, i * <span class="number">8</span>)<span class="question-mark">?</span>;
 <a href=#3236 id=3236 data-nosnippet>3236</a>
-<a href=#3237 id=3237 data-nosnippet>3237</a>                            <span class="kw">if </span><span class="macro">i !</span>= <span class="number">3 </span>{
+<a href=#3237 id=3237 data-nosnippet>3237</a>                            <span class="kw">if </span>i != <span class="number">3 </span>{
 <a href=#3238 id=3238 data-nosnippet>3238</a>                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" + "</span>)<span class="question-mark">?</span>;
 <a href=#3239 id=3239 data-nosnippet>3239</a>                            }
 <a href=#3240 id=3240 data-nosnippet>3240</a>                        }
@@ -3654,7 +3654,7 @@
 <a href=#3654 id=3654 data-nosnippet>3654</a>                                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
 <a href=#3655 id=3655 data-nosnippet>3655</a>                            };
 <a href=#3656 id=3656 data-nosnippet>3656</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {}, 8)"</span>, i * <span class="number">8</span>)<span class="question-mark">?</span>;
-<a href=#3657 id=3657 data-nosnippet>3657</a>                            <span class="kw">if </span><span class="macro">i !</span>= <span class="number">3 </span>{
+<a href=#3657 id=3657 data-nosnippet>3657</a>                            <span class="kw">if </span>i != <span class="number">3 </span>{
 <a href=#3658 id=3658 data-nosnippet>3658</a>                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#3659 id=3659 data-nosnippet>3659</a>                            }
 <a href=#3660 id=3660 data-nosnippet>3660</a>                        }
@@ -4204,14 +4204,14 @@
 <a href=#4204 id=4204 data-nosnippet>4204</a>            //    for arrayed images
 <a href=#4205 id=4205 data-nosnippet>4205</a>            // - `all(lessThan(coord, textureSize(image)))` for multi sampled images
 <a href=#4206 id=4206 data-nosnippet>4206</a>
-<a href=#4207 id=4207 data-nosnippet>4207</a>            </span><span class="kw">if </span><span class="macro">vector_size !</span>= <span class="number">1 </span>{
+<a href=#4207 id=4207 data-nosnippet>4207</a>            </span><span class="kw">if </span>vector_size != <span class="number">1 </span>{
 <a href=#4208 id=4208 data-nosnippet>4208</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"all(lessThan("</span>)<span class="question-mark">?</span>;
 <a href=#4209 id=4209 data-nosnippet>4209</a>            }
 <a href=#4210 id=4210 data-nosnippet>4210</a>
 <a href=#4211 id=4211 data-nosnippet>4211</a>            <span class="comment">// Write the coordinate vector
 <a href=#4212 id=4212 data-nosnippet>4212</a>            </span><span class="self">self</span>.write_texture_coord(ctx, vector_size, coordinate, array_index, tex_1d_hack)<span class="question-mark">?</span>;
 <a href=#4213 id=4213 data-nosnippet>4213</a>
-<a href=#4214 id=4214 data-nosnippet>4214</a>            <span class="kw">if </span><span class="macro">vector_size !</span>= <span class="number">1 </span>{
+<a href=#4214 id=4214 data-nosnippet>4214</a>            <span class="kw">if </span>vector_size != <span class="number">1 </span>{
 <a href=#4215 id=4215 data-nosnippet>4215</a>                <span class="comment">// If we used the `lessThan` function we need to separate the
 <a href=#4216 id=4216 data-nosnippet>4216</a>                // coordinates from the image size.
 <a href=#4217 id=4217 data-nosnippet>4217</a>                </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
@@ -4233,7 +4233,7 @@
 <a href=#4233 id=4233 data-nosnippet>4233</a>            <span class="comment">// Close the `textureSize` call
 <a href=#4234 id=4234 data-nosnippet>4234</a>            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
 <a href=#4235 id=4235 data-nosnippet>4235</a>
-<a href=#4236 id=4236 data-nosnippet>4236</a>            <span class="kw">if </span><span class="macro">vector_size !</span>= <span class="number">1 </span>{
+<a href=#4236 id=4236 data-nosnippet>4236</a>            <span class="kw">if </span>vector_size != <span class="number">1 </span>{
 <a href=#4237 id=4237 data-nosnippet>4237</a>                <span class="comment">// Close the `all` and `lessThan` calls
 <a href=#4238 id=4238 data-nosnippet>4238</a>                </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
 <a href=#4239 id=4239 data-nosnippet>4239</a>            }
@@ -4441,7 +4441,7 @@
 <a href=#4441 id=4441 data-nosnippet>4441</a>                <span class="kw">let </span>name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Type(ty)];
 <a href=#4442 id=4442 data-nosnippet>4442</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{name}("</span>)<span class="question-mark">?</span>;
 <a href=#4443 id=4443 data-nosnippet>4443</a>                <span class="kw">for </span>(index, member) <span class="kw">in </span>members.iter().enumerate() {
-<a href=#4444 id=4444 data-nosnippet>4444</a>                    <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
+<a href=#4444 id=4444 data-nosnippet>4444</a>                    <span class="kw">if </span>index != <span class="number">0 </span>{
 <a href=#4445 id=4445 data-nosnippet>4445</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#4446 id=4446 data-nosnippet>4446</a>                    }
 <a href=#4447 id=4447 data-nosnippet>4447</a>                    <span class="self">self</span>.write_zero_init_value(member.ty)<span class="question-mark">?</span>;
@@ -4534,7 +4534,7 @@
 <a href=#4534 id=4534 data-nosnippet>4534</a>                    });
 <a href=#4535 id=4535 data-nosnippet>4535</a>                }
 <a href=#4536 id=4536 data-nosnippet>4536</a>                hash_map::Entry::Occupied(e) =&gt; {
-<a href=#4537 id=4537 data-nosnippet>4537</a>                    <span class="kw">if </span>e.get().<span class="macro">sampler !</span>= <span class="prelude-val">Some</span>(sampling.sampler) {
+<a href=#4537 id=4537 data-nosnippet>4537</a>                    <span class="kw">if </span>e.get().sampler != <span class="prelude-val">Some</span>(sampling.sampler) {
 <a href=#4538 id=4538 data-nosnippet>4538</a>                        <span class="macro">log::error!</span>(<span class="string">"Conflicting samplers for {}"</span>, e.key());
 <a href=#4539 id=4539 data-nosnippet>4539</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::ImageMultipleSamplers);
 <a href=#4540 id=4540 data-nosnippet>4540</a>                    }

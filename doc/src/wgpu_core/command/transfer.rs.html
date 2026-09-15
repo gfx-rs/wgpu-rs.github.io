@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/transfer.rs`."><title>transfer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>transfer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{format, string::String, sync::Arc, vec::Vec};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/transfer.rs`."><title>transfer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>transfer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{format, string::String, sync::Arc, vec::Vec};
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>arrayvec::ArrayVec;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>thiserror::Error;
@@ -8,7 +8,7 @@
 <a href=#8 id=8 data-nosnippet>8</a>    TextureUsages,
 <a href=#9 id=9 data-nosnippet>9</a>};
 <a href=#10 id=10 data-nosnippet>10</a>
-<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use crate</span>::{
+<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>crate::{
 <a href=#12 id=12 data-nosnippet>12</a>    api_log,
 <a href=#13 id=13 data-nosnippet>13</a>    command::{
 <a href=#14 id=14 data-nosnippet>14</a>        clear_texture, encoder::EncodingState, ArcCommand, CommandEncoderError, EncoderStateError,
@@ -452,7 +452,7 @@
 <a href=#452 id=452 data-nosnippet>452</a>    layout: <span class="kw-2">&amp;</span>wgt::TexelCopyBufferLayout,
 <a href=#453 id=453 data-nosnippet>453</a>    aligned: bool,
 <a href=#454 id=454 data-nosnippet>454</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(), TransferError&gt; {
-<a href=#455 id=455 data-nosnippet>455</a>    <span class="kw">if </span>desc.<span class="macro">sample_count !</span>= <span class="number">1 </span>{
+<a href=#455 id=455 data-nosnippet>455</a>    <span class="kw">if </span>desc.sample_count != <span class="number">1 </span>{
 <a href=#456 id=456 data-nosnippet>456</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidSampleCount {
 <a href=#457 id=457 data-nosnippet>457</a>            sample_count: desc.sample_count,
 <a href=#458 id=458 data-nosnippet>458</a>        });
@@ -479,7 +479,7 @@
 <a href=#479 id=479 data-nosnippet>479</a>    }
 <a href=#480 id=480 data-nosnippet>480</a>
 <a href=#481 id=481 data-nosnippet>481</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(bytes_per_row) = layout.bytes_per_row {
-<a href=#482 id=482 data-nosnippet>482</a>        <span class="kw">if </span>aligned &amp;&amp; bytes_per_row % <span class="macro">wgt::COPY_BYTES_PER_ROW_ALIGNMENT !</span>= <span class="number">0 </span>{
+<a href=#482 id=482 data-nosnippet>482</a>        <span class="kw">if </span>aligned &amp;&amp; bytes_per_row % wgt::COPY_BYTES_PER_ROW_ALIGNMENT != <span class="number">0 </span>{
 <a href=#483 id=483 data-nosnippet>483</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedBytesPerRow);
 <a href=#484 id=484 data-nosnippet>484</a>        }
 <a href=#485 id=485 data-nosnippet>485</a>    }
@@ -526,7 +526,7 @@
 <a href=#526 id=526 data-nosnippet>526</a>                           texture_size: u32,
 <a href=#527 id=527 data-nosnippet>527</a>                           requires_exact_size: bool|
 <a href=#528 id=528 data-nosnippet>528</a>     -&gt; <span class="prelude-ty">Result</span>&lt;(), TransferError&gt; {
-<a href=#529 id=529 data-nosnippet>529</a>        <span class="kw">if </span>requires_exact_size &amp;&amp; (<span class="macro">start_offset !</span>= <span class="number">0 </span>|| <span class="macro">size !</span>= texture_size) {
+<a href=#529 id=529 data-nosnippet>529</a>        <span class="kw">if </span>requires_exact_size &amp;&amp; (start_offset != <span class="number">0 </span>|| size != texture_size) {
 <a href=#530 id=530 data-nosnippet>530</a>            <span class="prelude-val">Err</span>(TransferError::UnsupportedPartialTransfer {
 <a href=#531 id=531 data-nosnippet>531</a>                format: desc.format,
 <a href=#532 id=532 data-nosnippet>532</a>                sample_count: desc.sample_count,
@@ -630,7 +630,7 @@
 <a href=#630 id=630 data-nosnippet>630</a>        </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
 <a href=#631 id=631 data-nosnippet>631</a>    }
 <a href=#632 id=632 data-nosnippet>632</a>
-<a href=#633 id=633 data-nosnippet>633</a>    <span class="kw">if </span>src.<span class="macro">mip_level !</span>= dst.mip_level {
+<a href=#633 id=633 data-nosnippet>633</a>    <span class="kw">if </span>src.mip_level != dst.mip_level {
 <a href=#634 id=634 data-nosnippet>634</a>        <span class="comment">// Copying between different mip levels is okay.
 <a href=#635 id=635 data-nosnippet>635</a>        </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
 <a href=#636 id=636 data-nosnippet>636</a>    }
@@ -804,7 +804,7 @@
 <a href=#804 id=804 data-nosnippet>804</a>        // first/last pieces differently.
 <a href=#805 id=805 data-nosnippet>805</a>        </span><span class="kw">let </span>aligned_start = (start + ALIGN_MASK) &amp; !ALIGN_MASK;
 <a href=#806 id=806 data-nosnippet>806</a>        <span class="kw">let </span>aligned_end = end &amp; !ALIGN_MASK;
-<a href=#807 id=807 data-nosnippet>807</a>        <span class="kw">if </span><span class="macro">aligned_start !</span>= start {
+<a href=#807 id=807 data-nosnippet>807</a>        <span class="kw">if </span>aligned_start != start {
 <a href=#808 id=808 data-nosnippet>808</a>            state.buffer_memory_init_actions.extend(
 <a href=#809 id=809 data-nosnippet>809</a>                buffer.initialization_status.read().create_action(
 <a href=#810 id=810 data-nosnippet>810</a>                    buffer,
@@ -813,7 +813,7 @@
 <a href=#813 id=813 data-nosnippet>813</a>                ),
 <a href=#814 id=814 data-nosnippet>814</a>            );
 <a href=#815 id=815 data-nosnippet>815</a>        }
-<a href=#816 id=816 data-nosnippet>816</a>        <span class="kw">if </span><span class="macro">aligned_start !</span>= aligned_end {
+<a href=#816 id=816 data-nosnippet>816</a>        <span class="kw">if </span>aligned_start != aligned_end {
 <a href=#817 id=817 data-nosnippet>817</a>            state.buffer_memory_init_actions.extend(
 <a href=#818 id=818 data-nosnippet>818</a>                buffer.initialization_status.read().create_action(
 <a href=#819 id=819 data-nosnippet>819</a>                    buffer,
@@ -822,7 +822,7 @@
 <a href=#822 id=822 data-nosnippet>822</a>                ),
 <a href=#823 id=823 data-nosnippet>823</a>            );
 <a href=#824 id=824 data-nosnippet>824</a>        }
-<a href=#825 id=825 data-nosnippet>825</a>        <span class="kw">if </span><span class="macro">aligned_end !</span>= end {
+<a href=#825 id=825 data-nosnippet>825</a>        <span class="kw">if </span>aligned_end != end {
 <a href=#826 id=826 data-nosnippet>826</a>            <span class="comment">// It is possible that `aligned_end + ALIGN_SIZE &gt; dst_buffer.size`,
 <a href=#827 id=827 data-nosnippet>827</a>            // because `dst_buffer.size` is the user-requested size, not the
 <a href=#828 id=828 data-nosnippet>828</a>            // final size of the buffer. The final size of the buffer is not
@@ -1479,7 +1479,7 @@
 <a href=#1479 id=1479 data-nosnippet>1479</a>    <span class="kw">let </span>dst_fmt_no_srgb = dst_texture.desc.format.remove_srgb_suffix();
 <a href=#1480 id=1480 data-nosnippet>1480</a>    <span class="kw">let </span>planar_split_ok = src_fmt_no_srgb.is_multi_planar_format()
 <a href=#1481 id=1481 data-nosnippet>1481</a>        &amp;&amp; src_fmt_no_srgb.aspect_specific_format(source.aspect) == <span class="prelude-val">Some</span>(dst_fmt_no_srgb);
-<a href=#1482 id=1482 data-nosnippet>1482</a>    <span class="kw">if </span><span class="macro">src_fmt_no_srgb !</span>= dst_fmt_no_srgb &amp;&amp; !planar_split_ok {
+<a href=#1482 id=1482 data-nosnippet>1482</a>    <span class="kw">if </span>src_fmt_no_srgb != dst_fmt_no_srgb &amp;&amp; !planar_split_ok {
 <a href=#1483 id=1483 data-nosnippet>1483</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::TextureFormatsNotCopyCompatible {
 <a href=#1484 id=1484 data-nosnippet>1484</a>            src_format: src_texture.desc.format,
 <a href=#1485 id=1485 data-nosnippet>1485</a>            dst_format: dst_texture.desc.format,
@@ -1549,14 +1549,14 @@
 <a href=#1549 id=1549 data-nosnippet>1549</a>    <span class="kw">let </span>src_texture_aspects = hal::FormatAspects::from(src_texture.desc.format);
 <a href=#1550 id=1550 data-nosnippet>1550</a>    <span class="kw">let </span>dst_texture_aspects = hal::FormatAspects::from(dst_texture.desc.format);
 <a href=#1551 id=1551 data-nosnippet>1551</a>    <span class="comment">// `planar_split_ok` already constrains `source.aspect` to a single plane.
-<a href=#1552 id=1552 data-nosnippet>1552</a>    </span><span class="kw">if </span>src_tex_base.<span class="macro">aspect !</span>= src_texture_aspects &amp;&amp; !planar_split_ok {
+<a href=#1552 id=1552 data-nosnippet>1552</a>    </span><span class="kw">if </span>src_tex_base.aspect != src_texture_aspects &amp;&amp; !planar_split_ok {
 <a href=#1553 id=1553 data-nosnippet>1553</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::CopySrcMissingAspects.into());
 <a href=#1554 id=1554 data-nosnippet>1554</a>    }
-<a href=#1555 id=1555 data-nosnippet>1555</a>    <span class="kw">if </span>dst_tex_base.<span class="macro">aspect !</span>= dst_texture_aspects {
+<a href=#1555 id=1555 data-nosnippet>1555</a>    <span class="kw">if </span>dst_tex_base.aspect != dst_texture_aspects {
 <a href=#1556 id=1556 data-nosnippet>1556</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::CopyDstMissingAspects.into());
 <a href=#1557 id=1557 data-nosnippet>1557</a>    }
 <a href=#1558 id=1558 data-nosnippet>1558</a>
-<a href=#1559 id=1559 data-nosnippet>1559</a>    <span class="kw">if </span>src_texture.desc.<span class="macro">sample_count !</span>= dst_texture.desc.sample_count {
+<a href=#1559 id=1559 data-nosnippet>1559</a>    <span class="kw">if </span>src_texture.desc.sample_count != dst_texture.desc.sample_count {
 <a href=#1560 id=1560 data-nosnippet>1560</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::SampleCountNotEqual {
 <a href=#1561 id=1561 data-nosnippet>1561</a>            src_sample_count: src_texture.desc.sample_count,
 <a href=#1562 id=1562 data-nosnippet>1562</a>            dst_sample_count: dst_texture.desc.sample_count,

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/ray_tracing.rs`."><title>ray_tracing.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>ray_tracing.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/ray_tracing.rs`."><title>ray_tracing.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>ray_tracing.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::{
 <a href=#3 id=3 data-nosnippet>3</a>    cmp::max,
 <a href=#4 id=4 data-nosnippet>4</a>    mem,
@@ -8,13 +8,13 @@
 <a href=#8 id=8 data-nosnippet>8</a>
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>wgt::{math::align_to, BufferUsages, BufferUses, Features};
 <a href=#10 id=10 data-nosnippet>10</a>
-<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use crate</span>::{
+<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>crate::{
 <a href=#12 id=12 data-nosnippet>12</a>    command::encoder::EncodingState,
 <a href=#13 id=13 data-nosnippet>13</a>    ray_tracing::{AsAction, AsBuild, TlasBuild, ValidateAsActionsError},
 <a href=#14 id=14 data-nosnippet>14</a>    resource::{Buffer, InvalidResourceError},
 <a href=#15 id=15 data-nosnippet>15</a>};
-<a href=#16 id=16 data-nosnippet>16</a><span class="kw">use crate</span>::{command::EncoderStateError, device::resource::CommandIndices};
-<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use crate</span>::{
+<a href=#16 id=16 data-nosnippet>16</a><span class="kw">use </span>crate::{command::EncoderStateError, device::resource::CommandIndices};
+<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use </span>crate::{
 <a href=#18 id=18 data-nosnippet>18</a>    command::{ArcCommand, ArcReferences, CommandBufferMutable},
 <a href=#19 id=19 data-nosnippet>19</a>    device::queue::TempResource,
 <a href=#20 id=20 data-nosnippet>20</a>    init_tracker::MemoryInitKind,
@@ -29,7 +29,7 @@
 <a href=#29 id=29 data-nosnippet>29</a>    track::TrackerIndex,
 <a href=#30 id=30 data-nosnippet>30</a>    FastHashSet,
 <a href=#31 id=31 data-nosnippet>31</a>};
-<a href=#32 id=32 data-nosnippet>32</a><span class="kw">use crate</span>::{lock::RwLockWriteGuard, resource::RawResourceAccess};
+<a href=#32 id=32 data-nosnippet>32</a><span class="kw">use </span>crate::{lock::RwLockWriteGuard, resource::RawResourceAccess};
 <a href=#33 id=33 data-nosnippet>33</a>
 <a href=#34 id=34 data-nosnippet>34</a><span class="kw">struct </span>BlasStore&lt;<span class="lifetime">'a</span>&gt; {
 <a href=#35 id=35 data-nosnippet>35</a>    blas: Arc&lt;Blas&gt;,
@@ -637,7 +637,7 @@
 <a href=#637 id=637 data-nosnippet>637</a>                    }
 <a href=#638 id=638 data-nosnippet>638</a>                    <span class="kw">let </span>size_desc = <span class="kw-2">&amp;</span>size_desc[i];
 <a href=#639 id=639 data-nosnippet>639</a>
-<a href=#640 id=640 data-nosnippet>640</a>                    <span class="kw">if </span>size_desc.<span class="macro">flags !</span>= mesh.size.flags {
+<a href=#640 id=640 data-nosnippet>640</a>                    <span class="kw">if </span>size_desc.flags != mesh.size.flags {
 <a href=#641 id=641 data-nosnippet>641</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(BuildAccelerationStructureError::IncompatibleBlasFlags(
 <a href=#642 id=642 data-nosnippet>642</a>                            blas.error_ident(),
 <a href=#643 id=643 data-nosnippet>643</a>                            size_desc.flags,
@@ -655,7 +655,7 @@
 <a href=#655 id=655 data-nosnippet>655</a>                        );
 <a href=#656 id=656 data-nosnippet>656</a>                    }
 <a href=#657 id=657 data-nosnippet>657</a>
-<a href=#658 id=658 data-nosnippet>658</a>                    <span class="kw">if </span>size_desc.<span class="macro">vertex_format !</span>= mesh.size.vertex_format {
+<a href=#658 id=658 data-nosnippet>658</a>                    <span class="kw">if </span>size_desc.vertex_format != mesh.size.vertex_format {
 <a href=#659 id=659 data-nosnippet>659</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(BuildAccelerationStructureError::DifferentBlasVertexFormats(
 <a href=#660 id=660 data-nosnippet>660</a>                            blas.error_ident(),
 <a href=#661 id=661 data-nosnippet>661</a>                            size_desc.vertex_format,
@@ -712,7 +712,7 @@
 <a href=#712 id=712 data-nosnippet>712</a>                        <span class="kw">_ </span>=&gt; {}
 <a href=#713 id=713 data-nosnippet>713</a>                    }
 <a href=#714 id=714 data-nosnippet>714</a>
-<a href=#715 id=715 data-nosnippet>715</a>                    <span class="kw">if </span>size_desc.<span class="macro">index_format !</span>= mesh.size.index_format {
+<a href=#715 id=715 data-nosnippet>715</a>                    <span class="kw">if </span>size_desc.index_format != mesh.size.index_format {
 <a href=#716 id=716 data-nosnippet>716</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(BuildAccelerationStructureError::DifferentBlasIndexFormats(
 <a href=#717 id=717 data-nosnippet>717</a>                            blas.error_ident(),
 <a href=#718 id=718 data-nosnippet>718</a>                            size_desc.index_format,
@@ -886,7 +886,7 @@
 <a href=#886 id=886 data-nosnippet>886</a>                            });
 <a href=#887 id=887 data-nosnippet>887</a>                        };
 <a href=#888 id=888 data-nosnippet>888</a>
-<a href=#889 id=889 data-nosnippet>889</a>                        <span class="kw">if </span>offset % wgt::TRANSFORM_BUFFER_ALIGNMENT <span class="kw">as </span><span class="macro">u32 !</span>= <span class="number">0 </span>{
+<a href=#889 id=889 data-nosnippet>889</a>                        <span class="kw">if </span>offset % wgt::TRANSFORM_BUFFER_ALIGNMENT <span class="kw">as </span>u32 != <span class="number">0 </span>{
 <a href=#890 id=890 data-nosnippet>890</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(
 <a href=#891 id=891 data-nosnippet>891</a>                                BuildAccelerationStructureError::UnalignedTransformBufferOffset(
 <a href=#892 id=892 data-nosnippet>892</a>                                    transform_buffer.error_ident(),
@@ -982,7 +982,7 @@
 <a href=#982 id=982 data-nosnippet>982</a>                    }
 <a href=#983 id=983 data-nosnippet>983</a>                    <span class="kw">let </span>size_desc = <span class="kw-2">&amp;</span>size_desc[i];
 <a href=#984 id=984 data-nosnippet>984</a>
-<a href=#985 id=985 data-nosnippet>985</a>                    <span class="kw">if </span>size_desc.<span class="macro">flags !</span>= aabb.size.flags {
+<a href=#985 id=985 data-nosnippet>985</a>                    <span class="kw">if </span>size_desc.flags != aabb.size.flags {
 <a href=#986 id=986 data-nosnippet>986</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(BuildAccelerationStructureError::IncompatibleBlasFlags(
 <a href=#987 id=987 data-nosnippet>987</a>                            blas.error_ident(),
 <a href=#988 id=988 data-nosnippet>988</a>                            size_desc.flags,

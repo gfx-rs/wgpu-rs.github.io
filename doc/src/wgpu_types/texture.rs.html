@@ -1,14 +1,14 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-types/src/texture.rs`."><title>texture.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_types" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_types/</div>texture.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::ops::Range;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-types/src/texture.rs`."><title>texture.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_types" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">wgpu_types/</div>texture.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::ops::Range;
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>macro_rules_attribute::derive;
 <a href=#4 id=4 data-nosnippet>4</a>
-<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use crate</span>::{link_to_wgpu_docs, link_to_wgpu_item, ConstDefault, Extent3d, Origin3d};
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>crate::{link_to_wgpu_docs, link_to_wgpu_item, ConstDefault, Extent3d, Origin3d};
 <a href=#6 id=6 data-nosnippet>6</a>
 <a href=#7 id=7 data-nosnippet>7</a><span class="attr">#[cfg(any(feature = <span class="string">"serde"</span>, test))]
 <a href=#8 id=8 data-nosnippet>8</a></span><span class="kw">use </span>serde::{Deserialize, Serialize};
 <a href=#9 id=9 data-nosnippet>9</a>
 <a href=#10 id=10 data-nosnippet>10</a><span class="attr">#[cfg(doc)]
-<a href=#11 id=11 data-nosnippet>11</a></span><span class="kw">use crate</span>::{BindingType, Features};
+<a href=#11 id=11 data-nosnippet>11</a></span><span class="kw">use </span>crate::{BindingType, Features};
 <a href=#12 id=12 data-nosnippet>12</a>
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">mod </span>external_image;
 <a href=#14 id=14 data-nosnippet>14</a><span class="kw">mod </span>external_texture;
@@ -38,7 +38,7 @@
 <a href=#38 id=38 data-nosnippet>38</a>}
 <a href=#39 id=39 data-nosnippet>39</a>
 <a href=#40 id=40 data-nosnippet>40</a><span class="doccomment">/// Order in which texture data is laid out in memory.
-<a href=#41 id=41 data-nosnippet>41</a></span><span class="attr">#[derive(Clone, Copy, <span class="macro">ConstDefault!</span>, Debug, PartialEq, Eq, Hash)]
+<a href=#41 id=41 data-nosnippet>41</a></span><span class="attr">#[derive(Clone, Copy, ConstDefault!, Debug, PartialEq, Eq, Hash)]
 <a href=#42 id=42 data-nosnippet>42</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#43 id=43 data-nosnippet>43</a></span><span class="kw">pub enum </span>TextureDataOrder {
 <a href=#44 id=44 data-nosnippet>44</a>    <span class="doccomment">/// The texture is laid out densely in memory as:
@@ -69,7 +69,7 @@
 <a href=#69 id=69 data-nosnippet>69</a>/// Corresponds to [WebGPU `GPUTextureViewDimension`](
 <a href=#70 id=70 data-nosnippet>70</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gputextureviewdimension).
 <a href=#71 id=71 data-nosnippet>71</a></span><span class="attr">#[repr(C)]
-<a href=#72 id=72 data-nosnippet>72</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Hash, Eq, PartialEq)]
+<a href=#72 id=72 data-nosnippet>72</a>#[derive(Copy, Clone, Debug, ConstDefault!, Hash, Eq, PartialEq)]
 <a href=#73 id=73 data-nosnippet>73</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#74 id=74 data-nosnippet>74</a></span><span class="kw">pub enum </span>TextureViewDimension {
 <a href=#75 id=75 data-nosnippet>75</a>    <span class="doccomment">/// A one dimensional texture. `texture_1d` in WGSL and `texture1D` in GLSL.
@@ -115,7 +115,7 @@
 <a href=#115 id=115 data-nosnippet>115</a>///
 <a href=#116 id=116 data-nosnippet>116</a></span><span class="attr">#[doc = <span class="macro">link_to_wgpu_item!</span>(<span class="kw">struct </span>Texture)]
 <a href=#117 id=117 data-nosnippet>117</a>#[repr(C)]
-<a href=#118 id=118 data-nosnippet>118</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Hash, Eq, PartialEq)]
+<a href=#118 id=118 data-nosnippet>118</a>#[derive(Copy, Clone, Debug, ConstDefault!, Hash, Eq, PartialEq)]
 <a href=#119 id=119 data-nosnippet>119</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#120 id=120 data-nosnippet>120</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#121 id=121 data-nosnippet>121</a></span><span class="kw">pub enum </span>TextureAspect {
@@ -843,7 +843,7 @@
 <a href=#843 id=843 data-nosnippet>843</a>/// Corresponds to [WebGPU `GPUAddressMode`](
 <a href=#844 id=844 data-nosnippet>844</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpuaddressmode).
 <a href=#845 id=845 data-nosnippet>845</a></span><span class="attr">#[repr(C)]
-<a href=#846 id=846 data-nosnippet>846</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Hash, Eq, PartialEq)]
+<a href=#846 id=846 data-nosnippet>846</a>#[derive(Copy, Clone, Debug, ConstDefault!, Hash, Eq, PartialEq)]
 <a href=#847 id=847 data-nosnippet>847</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#848 id=848 data-nosnippet>848</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#849 id=849 data-nosnippet>849</a></span><span class="kw">pub enum </span>AddressMode {
@@ -876,7 +876,7 @@
 <a href=#876 id=876 data-nosnippet>876</a>/// Corresponds to [WebGPU `GPUFilterMode`](
 <a href=#877 id=877 data-nosnippet>877</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpufiltermode).
 <a href=#878 id=878 data-nosnippet>878</a></span><span class="attr">#[repr(C)]
-<a href=#879 id=879 data-nosnippet>879</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Hash, Eq, PartialEq)]
+<a href=#879 id=879 data-nosnippet>879</a>#[derive(Copy, Clone, Debug, ConstDefault!, Hash, Eq, PartialEq)]
 <a href=#880 id=880 data-nosnippet>880</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#881 id=881 data-nosnippet>881</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#882 id=882 data-nosnippet>882</a></span><span class="kw">pub enum </span>FilterMode {
@@ -896,7 +896,7 @@
 <a href=#896 id=896 data-nosnippet>896</a>/// Corresponds to [WebGPU `GPUMipmapFilterMode`](
 <a href=#897 id=897 data-nosnippet>897</a>/// https://gpuweb.github.io/gpuweb/#enumdef-gpumipmapfiltermode).
 <a href=#898 id=898 data-nosnippet>898</a></span><span class="attr">#[repr(C)]
-<a href=#899 id=899 data-nosnippet>899</a>#[derive(Copy, Clone, Debug, <span class="macro">ConstDefault!</span>, Hash, Eq, PartialEq)]
+<a href=#899 id=899 data-nosnippet>899</a>#[derive(Copy, Clone, Debug, ConstDefault!, Hash, Eq, PartialEq)]
 <a href=#900 id=900 data-nosnippet>900</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 <a href=#901 id=901 data-nosnippet>901</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 <a href=#902 id=902 data-nosnippet>902</a></span><span class="kw">pub enum </span>MipmapFilterMode {
@@ -945,7 +945,7 @@
 <a href=#945 id=945 data-nosnippet>945</a>/// Corresponds to [WebGPU `GPUTexelCopyBufferLayout`](
 <a href=#946 id=946 data-nosnippet>946</a>/// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagedatalayout).
 <a href=#947 id=947 data-nosnippet>947</a></span><span class="attr">#[repr(C)]
-<a href=#948 id=948 data-nosnippet>948</a>#[derive(Clone, Copy, Debug, <span class="macro">ConstDefault!</span>)]
+<a href=#948 id=948 data-nosnippet>948</a>#[derive(Clone, Copy, Debug, ConstDefault!)]
 <a href=#949 id=949 data-nosnippet>949</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 <a href=#950 id=950 data-nosnippet>950</a></span><span class="kw">pub struct </span>TexelCopyBufferLayout {
 <a href=#951 id=951 data-nosnippet>951</a>    <span class="doccomment">/// Offset into the buffer that is the start of the texture. Must be a multiple of texture block size.
@@ -1039,7 +1039,7 @@
 <a href=#1039 id=1039 data-nosnippet>1039</a>
 <a href=#1040 id=1040 data-nosnippet>1040</a><span class="doccomment">/// Subresource range within an image
 <a href=#1041 id=1041 data-nosnippet>1041</a></span><span class="attr">#[repr(C)]
-<a href=#1042 id=1042 data-nosnippet>1042</a>#[derive(Clone, Copy, Debug, <span class="macro">ConstDefault!</span>, Eq, PartialEq)]
+<a href=#1042 id=1042 data-nosnippet>1042</a>#[derive(Clone, Copy, Debug, ConstDefault!, Eq, PartialEq)]
 <a href=#1043 id=1043 data-nosnippet>1043</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 <a href=#1044 id=1044 data-nosnippet>1044</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"camelCase"</span>))]
 <a href=#1045 id=1045 data-nosnippet>1045</a></span><span class="kw">pub struct </span>ImageSubresourceRange {
@@ -1143,7 +1143,7 @@
 <a href=#1143 id=1143 data-nosnippet>1143</a>
 <a href=#1144 id=1144 data-nosnippet>1144</a><span class="attr">#[cfg(test)]
 <a href=#1145 id=1145 data-nosnippet>1145</a></span><span class="kw">mod </span>tests {
-<a href=#1146 id=1146 data-nosnippet>1146</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#1146 id=1146 data-nosnippet>1146</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
 <a href=#1147 id=1147 data-nosnippet>1147</a>    <span class="kw">use </span><span class="kw">crate</span>::Extent3d;
 <a href=#1148 id=1148 data-nosnippet>1148</a>
 <a href=#1149 id=1149 data-nosnippet>1149</a>    <span class="attr">#[test]

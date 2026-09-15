@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/hlsl/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/back/hlsl/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/hlsl/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">naga/back/hlsl/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{
 <a href=#2 id=2 data-nosnippet>2</a>    format,
 <a href=#3 id=3 data-nosnippet>3</a>    string::{String, ToString},
 <a href=#4 id=4 data-nosnippet>4</a>    vec::Vec,
@@ -8,7 +8,7 @@
 <a href=#8 id=8 data-nosnippet>8</a>    mem,
 <a href=#9 id=9 data-nosnippet>9</a>};
 <a href=#10 id=10 data-nosnippet>10</a>
-<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use super</span>::{
+<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>super::{
 <a href=#12 id=12 data-nosnippet>12</a>    help,
 <a href=#13 id=13 data-nosnippet>13</a>    help::{
 <a href=#14 id=14 data-nosnippet>14</a>        WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
@@ -17,7 +17,7 @@
 <a href=#17 id=17 data-nosnippet>17</a>    storage::StoreValue,
 <a href=#18 id=18 data-nosnippet>18</a>    BackendResult, Error, FragmentEntryPoint, Options, PipelineOptions, ShaderModel,
 <a href=#19 id=19 data-nosnippet>19</a>};
-<a href=#20 id=20 data-nosnippet>20</a><span class="kw">use crate</span>::{
+<a href=#20 id=20 data-nosnippet>20</a><span class="kw">use </span>crate::{
 <a href=#21 id=21 data-nosnippet>21</a>    back::{<span class="self">self</span>, get_entry_points, Baked},
 <a href=#22 id=22 data-nosnippet>22</a>    common,
 <a href=#23 id=23 data-nosnippet>23</a>    proc::{<span class="self">self</span>, index, ExternalTextureNameKey, NameKey},
@@ -286,7 +286,7 @@
 <a href=#286 id=286 data-nosnippet>286</a>            }
 <a href=#287 id=287 data-nosnippet>287</a>
 <a href=#288 id=288 data-nosnippet>288</a>            <span class="kw">if let </span>Expression::Derivative { axis, ctrl, expr } = <span class="kw-2">*</span>expr {
-<a href=#289 id=289 data-nosnippet>289</a>                <span class="kw">use crate</span>::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
+<a href=#289 id=289 data-nosnippet>289</a>                <span class="kw">use </span>crate::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
 <a href=#290 id=290 data-nosnippet>290</a>                <span class="kw">if </span>axis == Axis::Width &amp;&amp; (ctrl == Ctrl::Coarse || ctrl == Ctrl::Fine) {
 <a href=#291 id=291 data-nosnippet>291</a>                    <span class="self">self</span>.need_bake_expressions.insert(expr);
 <a href=#292 id=292 data-nosnippet>292</a>                }
@@ -348,7 +348,7 @@
 <a href=#348 id=348 data-nosnippet>348</a>                <span class="string">"ConstantBuffer&lt;{}&gt; {}: register(b{}"</span>,
 <a href=#349 id=349 data-nosnippet>349</a>                SPECIAL_CBUF_TYPE, SPECIAL_CBUF_VAR, bt.register
 <a href=#350 id=350 data-nosnippet>350</a>            )<span class="question-mark">?</span>;
-<a href=#351 id=351 data-nosnippet>351</a>            <span class="kw">if </span>bt.<span class="macro">space !</span>= <span class="number">0 </span>{
+<a href=#351 id=351 data-nosnippet>351</a>            <span class="kw">if </span>bt.space != <span class="number">0 </span>{
 <a href=#352 id=352 data-nosnippet>352</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", space{}"</span>, bt.space)<span class="question-mark">?</span>;
 <a href=#353 id=353 data-nosnippet>353</a>            }
 <a href=#354 id=354 data-nosnippet>354</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
@@ -992,7 +992,7 @@
 <a href=#992 id=992 data-nosnippet>992</a>                TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
 <a href=#993 id=993 data-nosnippet>993</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = {{ "</span>)<span class="question-mark">?</span>;
 <a href=#994 id=994 data-nosnippet>994</a>                    <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..members.len() {
-<a href=#995 id=995 data-nosnippet>995</a>                        <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
+<a href=#995 id=995 data-nosnippet>995</a>                        <span class="kw">if </span>index != <span class="number">0 </span>{
 <a href=#996 id=996 data-nosnippet>996</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#997 id=997 data-nosnippet>997</a>                        }
 <a href=#998 id=998 data-nosnippet>998</a>                        <span class="self">self</span>.write_ep_argument_initialization(
@@ -1158,7 +1158,7 @@
 <a href=#1158 id=1158 data-nosnippet>1158</a>                .as_ref()
 <a href=#1159 id=1159 data-nosnippet>1159</a>                .expect(<span class="string">"No bind target was defined for the immediates block"</span>);
 <a href=#1160 id=1160 data-nosnippet>1160</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">": register(b{}"</span>, target.register)<span class="question-mark">?</span>;
-<a href=#1161 id=1161 data-nosnippet>1161</a>            <span class="kw">if </span>target.<span class="macro">space !</span>= <span class="number">0 </span>{
+<a href=#1161 id=1161 data-nosnippet>1161</a>            <span class="kw">if </span>target.space != <span class="number">0 </span>{
 <a href=#1162 id=1162 data-nosnippet>1162</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", space{}"</span>, target.space)<span class="question-mark">?</span>;
 <a href=#1163 id=1163 data-nosnippet>1163</a>            }
 <a href=#1164 id=1164 data-nosnippet>1164</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
@@ -1178,7 +1178,7 @@
 <a href=#1178 id=1178 data-nosnippet>1178</a>            }
 <a href=#1179 id=1179 data-nosnippet>1179</a>
 <a href=#1180 id=1180 data-nosnippet>1180</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" : register({}{}"</span>, register_ty, bt.register)<span class="question-mark">?</span>;
-<a href=#1181 id=1181 data-nosnippet>1181</a>            <span class="kw">if </span>bt.<span class="macro">space !</span>= <span class="number">0 </span>{
+<a href=#1181 id=1181 data-nosnippet>1181</a>            <span class="kw">if </span>bt.space != <span class="number">0 </span>{
 <a href=#1182 id=1182 data-nosnippet>1182</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", space{}"</span>, bt.space)<span class="question-mark">?</span>;
 <a href=#1183 id=1183 data-nosnippet>1183</a>            }
 <a href=#1184 id=1184 data-nosnippet>1184</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
@@ -1316,7 +1316,7 @@
 <a href=#1316 id=1316 data-nosnippet>1316</a>                <span class="string">"Texture2D&lt;float4&gt; {}: register(t{}"</span>,
 <a href=#1317 id=1317 data-nosnippet>1317</a>                name, bt.register
 <a href=#1318 id=1318 data-nosnippet>1318</a>            )<span class="question-mark">?</span>;
-<a href=#1319 id=1319 data-nosnippet>1319</a>            <span class="kw">if </span>bt.<span class="macro">space !</span>= <span class="number">0 </span>{
+<a href=#1319 id=1319 data-nosnippet>1319</a>            <span class="kw">if </span>bt.space != <span class="number">0 </span>{
 <a href=#1320 id=1320 data-nosnippet>1320</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", space{}"</span>, bt.space)<span class="question-mark">?</span>;
 <a href=#1321 id=1321 data-nosnippet>1321</a>            }
 <a href=#1322 id=1322 data-nosnippet>1322</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
@@ -1337,7 +1337,7 @@
 <a href=#1337 id=1337 data-nosnippet>1337</a>            <span class="string">"cbuffer {}: register(b{}"</span>,
 <a href=#1338 id=1338 data-nosnippet>1338</a>            params_name, ext_tex_bindings.params.register
 <a href=#1339 id=1339 data-nosnippet>1339</a>        )<span class="question-mark">?</span>;
-<a href=#1340 id=1340 data-nosnippet>1340</a>        <span class="kw">if </span>ext_tex_bindings.params.<span class="macro">space !</span>= <span class="number">0 </span>{
+<a href=#1340 id=1340 data-nosnippet>1340</a>        <span class="kw">if </span>ext_tex_bindings.params.space != <span class="number">0 </span>{
 <a href=#1341 id=1341 data-nosnippet>1341</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", space{}"</span>, ext_tex_bindings.params.space)<span class="question-mark">?</span>;
 <a href=#1342 id=1342 data-nosnippet>1342</a>        }
 <a href=#1343 id=1343 data-nosnippet>1343</a>        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">") {{ {params_ty_name} {params_name}; }};"</span>)<span class="question-mark">?</span>;
@@ -1457,7 +1457,7 @@
 <a href=#1457 id=1457 data-nosnippet>1457</a>                    <span class="kw">let </span>field_name_key = NameKey::StructMember(handle, index <span class="kw">as </span>u32);
 <a href=#1458 id=1458 data-nosnippet>1458</a>
 <a href=#1459 id=1459 data-nosnippet>1459</a>                    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..columns <span class="kw">as </span>u8 {
-<a href=#1460 id=1460 data-nosnippet>1460</a>                        <span class="kw">if </span><span class="macro">i !</span>= <span class="number">0 </span>{
+<a href=#1460 id=1460 data-nosnippet>1460</a>                        <span class="kw">if </span>i != <span class="number">0 </span>{
 <a href=#1461 id=1461 data-nosnippet>1461</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"; "</span>)<span class="question-mark">?</span>;
 <a href=#1462 id=1462 data-nosnippet>1462</a>                        }
 <a href=#1463 id=1463 data-nosnippet>1463</a>                        <span class="self">self</span>.write_value_type(module, <span class="kw-2">&amp;</span>vec_ty)<span class="question-mark">?</span>;
@@ -2311,7 +2311,7 @@
 <a href=#2311 id=2311 data-nosnippet>2311</a>                                level, ep_output.ty_name, final_name,
 <a href=#2312 id=2312 data-nosnippet>2312</a>                            )<span class="question-mark">?</span>;
 <a href=#2313 id=2313 data-nosnippet>2313</a>                            <span class="kw">for </span>(index, m) <span class="kw">in </span>ep_output.members.iter().enumerate() {
-<a href=#2314 id=2314 data-nosnippet>2314</a>                                <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
+<a href=#2314 id=2314 data-nosnippet>2314</a>                                <span class="kw">if </span>index != <span class="number">0 </span>{
 <a href=#2315 id=2315 data-nosnippet>2315</a>                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#2316 id=2316 data-nosnippet>2316</a>                                }
 <a href=#2317 id=2317 data-nosnippet>2317</a>                                <span class="kw">let </span>member_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::StructMember(ty, m.index)];
@@ -3509,7 +3509,7 @@
 <a href=#3509 id=3509 data-nosnippet>3509</a>
 <a href=#3510 id=3510 data-nosnippet>3510</a>                        <span class="kw">let </span>scalar_width_bits = scalar.width * <span class="number">8</span>;
 <a href=#3511 id=3511 data-nosnippet>3511</a>
-<a href=#3512 id=3512 data-nosnippet>3512</a>                        <span class="kw">if </span>scalar.kind == ScalarKind::Uint || scalar.<span class="macro">width !</span>= <span class="number">4 </span>{
+<a href=#3512 id=3512 data-nosnippet>3512</a>                        <span class="kw">if </span>scalar.kind == ScalarKind::Uint || scalar.width != <span class="number">4 </span>{
 <a href=#3513 id=3513 data-nosnippet>3513</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min(({scalar_width_bits}u){s}, firstbitlow("</span>)<span class="question-mark">?</span>;
 <a href=#3514 id=3514 data-nosnippet>3514</a>                            <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
 <a href=#3515 id=3515 data-nosnippet>3515</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
@@ -3526,7 +3526,7 @@
 <a href=#3526 id=3526 data-nosnippet>3526</a>                    TypeInner::Scalar(scalar) =&gt; {
 <a href=#3527 id=3527 data-nosnippet>3527</a>                        <span class="kw">let </span>scalar_width_bits = scalar.width * <span class="number">8</span>;
 <a href=#3528 id=3528 data-nosnippet>3528</a>
-<a href=#3529 id=3529 data-nosnippet>3529</a>                        <span class="kw">if </span>scalar.kind == ScalarKind::Uint || scalar.<span class="macro">width !</span>= <span class="number">4 </span>{
+<a href=#3529 id=3529 data-nosnippet>3529</a>                        <span class="kw">if </span>scalar.kind == ScalarKind::Uint || scalar.width != <span class="number">4 </span>{
 <a href=#3530 id=3530 data-nosnippet>3530</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min({scalar_width_bits}u, firstbitlow("</span>)<span class="question-mark">?</span>;
 <a href=#3531 id=3531 data-nosnippet>3531</a>                            <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
 <a href=#3532 id=3532 data-nosnippet>3532</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
@@ -3693,7 +3693,7 @@
 <a href=#3693 id=3693 data-nosnippet>3693</a>                };
 <a href=#3694 id=3694 data-nosnippet>3694</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
 <a href=#3695 id=3695 data-nosnippet>3695</a>                <span class="kw">for </span>(index, component) <span class="kw">in </span>components.iter().enumerate() {
-<a href=#3696 id=3696 data-nosnippet>3696</a>                    <span class="kw">if </span><span class="macro">index !</span>= <span class="number">0 </span>{
+<a href=#3696 id=3696 data-nosnippet>3696</a>                    <span class="kw">if </span>index != <span class="number">0 </span>{
 <a href=#3697 id=3697 data-nosnippet>3697</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
 <a href=#3698 id=3698 data-nosnippet>3698</a>                    }
 <a href=#3699 id=3699 data-nosnippet>3699</a>                    write_expression(<span class="self">self</span>, <span class="kw-2">*</span>component)<span class="question-mark">?</span>;
@@ -4579,7 +4579,7 @@
 <a href=#4579 id=4579 data-nosnippet>4579</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"({var_name}) - {offset}) / {stride})"</span>)<span class="question-mark">?
 <a href=#4580 id=4580 data-nosnippet>4580</a>            </span>}
 <a href=#4581 id=4581 data-nosnippet>4581</a>            Expression::Derivative { axis, ctrl, expr } =&gt; {
-<a href=#4582 id=4582 data-nosnippet>4582</a>                <span class="kw">use crate</span>::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
+<a href=#4582 id=4582 data-nosnippet>4582</a>                <span class="kw">use </span>crate::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
 <a href=#4583 id=4583 data-nosnippet>4583</a>                <span class="kw">if </span>axis == Axis::Width &amp;&amp; (ctrl == Ctrl::Coarse || ctrl == Ctrl::Fine) {
 <a href=#4584 id=4584 data-nosnippet>4584</a>                    <span class="kw">let </span>tail = <span class="kw">match </span>ctrl {
 <a href=#4585 id=4585 data-nosnippet>4585</a>                        Ctrl::Coarse =&gt; <span class="string">"coarse"</span>,
@@ -4703,420 +4703,418 @@
 <a href=#4703 id=4703 data-nosnippet>4703</a>            TypeInner::Image {
 <a href=#4704 id=4704 data-nosnippet>4704</a>                class: <span class="kw">crate</span>::ImageClass::Storage { format, .. },
 <a href=#4705 id=4705 data-nosnippet>4705</a>                ..
-<a href=#4706 id=4706 data-nosnippet>4706</a>            } =&gt; {
-<a href=#4707 id=4707 data-nosnippet>4707</a>                <span class="kw">if </span>format.single_component() {
-<a href=#4708 id=4708 data-nosnippet>4708</a>                    wrapping_type = <span class="prelude-val">Some</span>(Scalar::from(format));
-<a href=#4709 id=4709 data-nosnippet>4709</a>                }
-<a href=#4710 id=4710 data-nosnippet>4710</a>            }
-<a href=#4711 id=4711 data-nosnippet>4711</a>            <span class="kw">_ </span>=&gt; {}
-<a href=#4712 id=4712 data-nosnippet>4712</a>        }
-<a href=#4713 id=4713 data-nosnippet>4713</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = wrapping_type {
-<a href=#4714 id=4714 data-nosnippet>4714</a>            <span class="macro">write!</span>(
-<a href=#4715 id=4715 data-nosnippet>4715</a>                <span class="self">self</span>.out,
-<a href=#4716 id=4716 data-nosnippet>4716</a>                <span class="string">"{}{}("</span>,
-<a href=#4717 id=4717 data-nosnippet>4717</a>                help::IMAGE_STORAGE_LOAD_SCALAR_WRAPPER,
-<a href=#4718 id=4718 data-nosnippet>4718</a>                scalar.to_hlsl_str()<span class="question-mark">?
-<a href=#4719 id=4719 data-nosnippet>4719</a>            </span>)<span class="question-mark">?</span>;
-<a href=#4720 id=4720 data-nosnippet>4720</a>        }
-<a href=#4721 id=4721 data-nosnippet>4721</a>        <span class="comment">// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-load
-<a href=#4722 id=4722 data-nosnippet>4722</a>        </span><span class="self">self</span>.write_expr(module, image, func_ctx)<span class="question-mark">?</span>;
-<a href=#4723 id=4723 data-nosnippet>4723</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".Load("</span>)<span class="question-mark">?</span>;
+<a href=#4706 id=4706 data-nosnippet>4706</a>            } <span class="kw">if </span>format.single_component() =&gt; {
+<a href=#4707 id=4707 data-nosnippet>4707</a>                wrapping_type = <span class="prelude-val">Some</span>(Scalar::from(format));
+<a href=#4708 id=4708 data-nosnippet>4708</a>            }
+<a href=#4709 id=4709 data-nosnippet>4709</a>            <span class="kw">_ </span>=&gt; {}
+<a href=#4710 id=4710 data-nosnippet>4710</a>        }
+<a href=#4711 id=4711 data-nosnippet>4711</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = wrapping_type {
+<a href=#4712 id=4712 data-nosnippet>4712</a>            <span class="macro">write!</span>(
+<a href=#4713 id=4713 data-nosnippet>4713</a>                <span class="self">self</span>.out,
+<a href=#4714 id=4714 data-nosnippet>4714</a>                <span class="string">"{}{}("</span>,
+<a href=#4715 id=4715 data-nosnippet>4715</a>                help::IMAGE_STORAGE_LOAD_SCALAR_WRAPPER,
+<a href=#4716 id=4716 data-nosnippet>4716</a>                scalar.to_hlsl_str()<span class="question-mark">?
+<a href=#4717 id=4717 data-nosnippet>4717</a>            </span>)<span class="question-mark">?</span>;
+<a href=#4718 id=4718 data-nosnippet>4718</a>        }
+<a href=#4719 id=4719 data-nosnippet>4719</a>        <span class="comment">// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-load
+<a href=#4720 id=4720 data-nosnippet>4720</a>        </span><span class="self">self</span>.write_expr(module, image, func_ctx)<span class="question-mark">?</span>;
+<a href=#4721 id=4721 data-nosnippet>4721</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".Load("</span>)<span class="question-mark">?</span>;
+<a href=#4722 id=4722 data-nosnippet>4722</a>
+<a href=#4723 id=4723 data-nosnippet>4723</a>        <span class="self">self</span>.write_texture_coordinates(<span class="string">"int"</span>, coordinate, array_index, level, module, func_ctx)<span class="question-mark">?</span>;
 <a href=#4724 id=4724 data-nosnippet>4724</a>
-<a href=#4725 id=4725 data-nosnippet>4725</a>        <span class="self">self</span>.write_texture_coordinates(<span class="string">"int"</span>, coordinate, array_index, level, module, func_ctx)<span class="question-mark">?</span>;
-<a href=#4726 id=4726 data-nosnippet>4726</a>
-<a href=#4727 id=4727 data-nosnippet>4727</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(sample) = sample {
-<a href=#4728 id=4728 data-nosnippet>4728</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-<a href=#4729 id=4729 data-nosnippet>4729</a>            <span class="self">self</span>.write_expr(module, sample, func_ctx)<span class="question-mark">?</span>;
-<a href=#4730 id=4730 data-nosnippet>4730</a>        }
-<a href=#4731 id=4731 data-nosnippet>4731</a>
-<a href=#4732 id=4732 data-nosnippet>4732</a>        <span class="comment">// close bracket for Load function
-<a href=#4733 id=4733 data-nosnippet>4733</a>        </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
-<a href=#4734 id=4734 data-nosnippet>4734</a>
-<a href=#4735 id=4735 data-nosnippet>4735</a>        <span class="kw">if </span>wrapping_type.is_some() {
-<a href=#4736 id=4736 data-nosnippet>4736</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
-<a href=#4737 id=4737 data-nosnippet>4737</a>        }
-<a href=#4738 id=4738 data-nosnippet>4738</a>
-<a href=#4739 id=4739 data-nosnippet>4739</a>        <span class="comment">// return x component if return type is scalar
-<a href=#4740 id=4740 data-nosnippet>4740</a>        </span><span class="kw">if let </span>TypeInner::Scalar(<span class="kw">_</span>) = <span class="kw-2">*</span>func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types) {
-<a href=#4741 id=4741 data-nosnippet>4741</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".x"</span>)<span class="question-mark">?</span>;
-<a href=#4742 id=4742 data-nosnippet>4742</a>        }
-<a href=#4743 id=4743 data-nosnippet>4743</a>        <span class="prelude-val">Ok</span>(())
-<a href=#4744 id=4744 data-nosnippet>4744</a>    }
-<a href=#4745 id=4745 data-nosnippet>4745</a>
-<a href=#4746 id=4746 data-nosnippet>4746</a>    <span class="doccomment">/// Find the [`BindingArraySamplerInfo`] from an expression so that such an access
-<a href=#4747 id=4747 data-nosnippet>4747</a>    /// can be generated later.
-<a href=#4748 id=4748 data-nosnippet>4748</a>    </span><span class="kw">fn </span>sampler_binding_array_info_from_expression(
-<a href=#4749 id=4749 data-nosnippet>4749</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#4750 id=4750 data-nosnippet>4750</a>        module: <span class="kw-2">&amp;</span>Module,
-<a href=#4751 id=4751 data-nosnippet>4751</a>        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
-<a href=#4752 id=4752 data-nosnippet>4752</a>        base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-<a href=#4753 id=4753 data-nosnippet>4753</a>        resolved: <span class="kw-2">&amp;</span>TypeInner,
-<a href=#4754 id=4754 data-nosnippet>4754</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;BindingArraySamplerInfo&gt; {
-<a href=#4755 id=4755 data-nosnippet>4755</a>        <span class="kw">if let </span>TypeInner::BindingArray {
-<a href=#4756 id=4756 data-nosnippet>4756</a>            base: base_ty_handle,
-<a href=#4757 id=4757 data-nosnippet>4757</a>            ..
-<a href=#4758 id=4758 data-nosnippet>4758</a>        } = <span class="kw-2">*</span>resolved
-<a href=#4759 id=4759 data-nosnippet>4759</a>        {
-<a href=#4760 id=4760 data-nosnippet>4760</a>            <span class="kw">let </span>base_ty = <span class="kw-2">&amp;</span>module.types[base_ty_handle].inner;
-<a href=#4761 id=4761 data-nosnippet>4761</a>            <span class="kw">if let </span>TypeInner::Sampler { comparison, .. } = <span class="kw-2">*</span>base_ty {
-<a href=#4762 id=4762 data-nosnippet>4762</a>                <span class="kw">let </span>base = <span class="kw-2">&amp;</span>func_ctx.expressions[base];
-<a href=#4763 id=4763 data-nosnippet>4763</a>
-<a href=#4764 id=4764 data-nosnippet>4764</a>                <span class="kw">if let </span><span class="kw">crate</span>::Expression::GlobalVariable(handle) = <span class="kw-2">*</span>base {
-<a href=#4765 id=4765 data-nosnippet>4765</a>                    <span class="kw">let </span>variable = <span class="kw-2">&amp;</span>module.global_variables[handle];
-<a href=#4766 id=4766 data-nosnippet>4766</a>
-<a href=#4767 id=4767 data-nosnippet>4767</a>                    <span class="kw">let </span>sampler_heap_name = <span class="kw">match </span>comparison {
-<a href=#4768 id=4768 data-nosnippet>4768</a>                        <span class="bool-val">true </span>=&gt; COMPARISON_SAMPLER_HEAP_VAR,
-<a href=#4769 id=4769 data-nosnippet>4769</a>                        <span class="bool-val">false </span>=&gt; SAMPLER_HEAP_VAR,
-<a href=#4770 id=4770 data-nosnippet>4770</a>                    };
-<a href=#4771 id=4771 data-nosnippet>4771</a>
-<a href=#4772 id=4772 data-nosnippet>4772</a>                    <span class="kw">return </span><span class="prelude-val">Some</span>(BindingArraySamplerInfo {
-<a href=#4773 id=4773 data-nosnippet>4773</a>                        sampler_heap_name,
-<a href=#4774 id=4774 data-nosnippet>4774</a>                        sampler_index_buffer_name: <span class="self">self
-<a href=#4775 id=4775 data-nosnippet>4775</a>                            </span>.wrapped
-<a href=#4776 id=4776 data-nosnippet>4776</a>                            .sampler_index_buffers
-<a href=#4777 id=4777 data-nosnippet>4777</a>                            .get(<span class="kw-2">&amp;</span><span class="kw">super</span>::SamplerIndexBufferKey {
-<a href=#4778 id=4778 data-nosnippet>4778</a>                                group: variable.binding.unwrap().group,
-<a href=#4779 id=4779 data-nosnippet>4779</a>                            })
-<a href=#4780 id=4780 data-nosnippet>4780</a>                            .unwrap()
+<a href=#4725 id=4725 data-nosnippet>4725</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(sample) = sample {
+<a href=#4726 id=4726 data-nosnippet>4726</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+<a href=#4727 id=4727 data-nosnippet>4727</a>            <span class="self">self</span>.write_expr(module, sample, func_ctx)<span class="question-mark">?</span>;
+<a href=#4728 id=4728 data-nosnippet>4728</a>        }
+<a href=#4729 id=4729 data-nosnippet>4729</a>
+<a href=#4730 id=4730 data-nosnippet>4730</a>        <span class="comment">// close bracket for Load function
+<a href=#4731 id=4731 data-nosnippet>4731</a>        </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+<a href=#4732 id=4732 data-nosnippet>4732</a>
+<a href=#4733 id=4733 data-nosnippet>4733</a>        <span class="kw">if </span>wrapping_type.is_some() {
+<a href=#4734 id=4734 data-nosnippet>4734</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+<a href=#4735 id=4735 data-nosnippet>4735</a>        }
+<a href=#4736 id=4736 data-nosnippet>4736</a>
+<a href=#4737 id=4737 data-nosnippet>4737</a>        <span class="comment">// return x component if return type is scalar
+<a href=#4738 id=4738 data-nosnippet>4738</a>        </span><span class="kw">if let </span>TypeInner::Scalar(<span class="kw">_</span>) = <span class="kw-2">*</span>func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types) {
+<a href=#4739 id=4739 data-nosnippet>4739</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".x"</span>)<span class="question-mark">?</span>;
+<a href=#4740 id=4740 data-nosnippet>4740</a>        }
+<a href=#4741 id=4741 data-nosnippet>4741</a>        <span class="prelude-val">Ok</span>(())
+<a href=#4742 id=4742 data-nosnippet>4742</a>    }
+<a href=#4743 id=4743 data-nosnippet>4743</a>
+<a href=#4744 id=4744 data-nosnippet>4744</a>    <span class="doccomment">/// Find the [`BindingArraySamplerInfo`] from an expression so that such an access
+<a href=#4745 id=4745 data-nosnippet>4745</a>    /// can be generated later.
+<a href=#4746 id=4746 data-nosnippet>4746</a>    </span><span class="kw">fn </span>sampler_binding_array_info_from_expression(
+<a href=#4747 id=4747 data-nosnippet>4747</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#4748 id=4748 data-nosnippet>4748</a>        module: <span class="kw-2">&amp;</span>Module,
+<a href=#4749 id=4749 data-nosnippet>4749</a>        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#4750 id=4750 data-nosnippet>4750</a>        base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+<a href=#4751 id=4751 data-nosnippet>4751</a>        resolved: <span class="kw-2">&amp;</span>TypeInner,
+<a href=#4752 id=4752 data-nosnippet>4752</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;BindingArraySamplerInfo&gt; {
+<a href=#4753 id=4753 data-nosnippet>4753</a>        <span class="kw">if let </span>TypeInner::BindingArray {
+<a href=#4754 id=4754 data-nosnippet>4754</a>            base: base_ty_handle,
+<a href=#4755 id=4755 data-nosnippet>4755</a>            ..
+<a href=#4756 id=4756 data-nosnippet>4756</a>        } = <span class="kw-2">*</span>resolved
+<a href=#4757 id=4757 data-nosnippet>4757</a>        {
+<a href=#4758 id=4758 data-nosnippet>4758</a>            <span class="kw">let </span>base_ty = <span class="kw-2">&amp;</span>module.types[base_ty_handle].inner;
+<a href=#4759 id=4759 data-nosnippet>4759</a>            <span class="kw">if let </span>TypeInner::Sampler { comparison, .. } = <span class="kw-2">*</span>base_ty {
+<a href=#4760 id=4760 data-nosnippet>4760</a>                <span class="kw">let </span>base = <span class="kw-2">&amp;</span>func_ctx.expressions[base];
+<a href=#4761 id=4761 data-nosnippet>4761</a>
+<a href=#4762 id=4762 data-nosnippet>4762</a>                <span class="kw">if let </span><span class="kw">crate</span>::Expression::GlobalVariable(handle) = <span class="kw-2">*</span>base {
+<a href=#4763 id=4763 data-nosnippet>4763</a>                    <span class="kw">let </span>variable = <span class="kw-2">&amp;</span>module.global_variables[handle];
+<a href=#4764 id=4764 data-nosnippet>4764</a>
+<a href=#4765 id=4765 data-nosnippet>4765</a>                    <span class="kw">let </span>sampler_heap_name = <span class="kw">match </span>comparison {
+<a href=#4766 id=4766 data-nosnippet>4766</a>                        <span class="bool-val">true </span>=&gt; COMPARISON_SAMPLER_HEAP_VAR,
+<a href=#4767 id=4767 data-nosnippet>4767</a>                        <span class="bool-val">false </span>=&gt; SAMPLER_HEAP_VAR,
+<a href=#4768 id=4768 data-nosnippet>4768</a>                    };
+<a href=#4769 id=4769 data-nosnippet>4769</a>
+<a href=#4770 id=4770 data-nosnippet>4770</a>                    <span class="kw">return </span><span class="prelude-val">Some</span>(BindingArraySamplerInfo {
+<a href=#4771 id=4771 data-nosnippet>4771</a>                        sampler_heap_name,
+<a href=#4772 id=4772 data-nosnippet>4772</a>                        sampler_index_buffer_name: <span class="self">self
+<a href=#4773 id=4773 data-nosnippet>4773</a>                            </span>.wrapped
+<a href=#4774 id=4774 data-nosnippet>4774</a>                            .sampler_index_buffers
+<a href=#4775 id=4775 data-nosnippet>4775</a>                            .get(<span class="kw-2">&amp;</span><span class="kw">super</span>::SamplerIndexBufferKey {
+<a href=#4776 id=4776 data-nosnippet>4776</a>                                group: variable.binding.unwrap().group,
+<a href=#4777 id=4777 data-nosnippet>4777</a>                            })
+<a href=#4778 id=4778 data-nosnippet>4778</a>                            .unwrap()
+<a href=#4779 id=4779 data-nosnippet>4779</a>                            .clone(),
+<a href=#4780 id=4780 data-nosnippet>4780</a>                        binding_array_base_index_name: <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(handle)]
 <a href=#4781 id=4781 data-nosnippet>4781</a>                            .clone(),
-<a href=#4782 id=4782 data-nosnippet>4782</a>                        binding_array_base_index_name: <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(handle)]
-<a href=#4783 id=4783 data-nosnippet>4783</a>                            .clone(),
-<a href=#4784 id=4784 data-nosnippet>4784</a>                    });
-<a href=#4785 id=4785 data-nosnippet>4785</a>                }
-<a href=#4786 id=4786 data-nosnippet>4786</a>            }
-<a href=#4787 id=4787 data-nosnippet>4787</a>        }
-<a href=#4788 id=4788 data-nosnippet>4788</a>
-<a href=#4789 id=4789 data-nosnippet>4789</a>        <span class="prelude-val">None
-<a href=#4790 id=4790 data-nosnippet>4790</a>    </span>}
-<a href=#4791 id=4791 data-nosnippet>4791</a>
-<a href=#4792 id=4792 data-nosnippet>4792</a>    <span class="kw">fn </span>write_named_expr(
-<a href=#4793 id=4793 data-nosnippet>4793</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#4794 id=4794 data-nosnippet>4794</a>        module: <span class="kw-2">&amp;</span>Module,
-<a href=#4795 id=4795 data-nosnippet>4795</a>        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-<a href=#4796 id=4796 data-nosnippet>4796</a>        name: String,
-<a href=#4797 id=4797 data-nosnippet>4797</a>        <span class="comment">// The expression which is being named.
-<a href=#4798 id=4798 data-nosnippet>4798</a>        // Generally, this is the same as handle, except in WorkGroupUniformLoad
-<a href=#4799 id=4799 data-nosnippet>4799</a>        </span>expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-<a href=#4800 id=4800 data-nosnippet>4800</a>        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx,
-<a href=#4801 id=4801 data-nosnippet>4801</a>    ) -&gt; BackendResult {
-<a href=#4802 id=4802 data-nosnippet>4802</a>        <span class="kw">if let </span><span class="kw">crate</span>::Expression::Load { pointer } = func_ctx.expressions[expr] {
-<a href=#4803 id=4803 data-nosnippet>4803</a>            <span class="kw">let </span>ty_inner = func_ctx.resolve_type(pointer, <span class="kw-2">&amp;</span>module.types);
-<a href=#4804 id=4804 data-nosnippet>4804</a>            <span class="kw">if </span>ty_inner.is_atomic_pointer(<span class="kw-2">&amp;</span>module.types) {
-<a href=#4805 id=4805 data-nosnippet>4805</a>                <span class="kw">let </span>pointer_space = ty_inner.pointer_space().unwrap();
-<a href=#4806 id=4806 data-nosnippet>4806</a>                <span class="self">self</span>.write_value_type(module, func_ctx.info[handle].ty.inner_with(<span class="kw-2">&amp;</span>module.types))<span class="question-mark">?</span>;
-<a href=#4807 id=4807 data-nosnippet>4807</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name}; "</span>)<span class="question-mark">?</span>;
-<a href=#4808 id=4808 data-nosnippet>4808</a>                <span class="kw">match </span>pointer_space {
-<a href=#4809 id=4809 data-nosnippet>4809</a>                    <span class="kw">crate</span>::AddressSpace::WorkGroup =&gt; {
-<a href=#4810 id=4810 data-nosnippet>4810</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"InterlockedOr("</span>)<span class="question-mark">?</span>;
-<a href=#4811 id=4811 data-nosnippet>4811</a>                        <span class="self">self</span>.write_expr(module, pointer, func_ctx)<span class="question-mark">?</span>;
-<a href=#4812 id=4812 data-nosnippet>4812</a>                    }
-<a href=#4813 id=4813 data-nosnippet>4813</a>                    <span class="kw">crate</span>::AddressSpace::Storage { .. } =&gt; {
-<a href=#4814 id=4814 data-nosnippet>4814</a>                        <span class="kw">let </span>var_handle = <span class="self">self</span>.fill_access_chain(module, pointer, func_ctx)<span class="question-mark">?</span>;
-<a href=#4815 id=4815 data-nosnippet>4815</a>                        <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
-<a href=#4816 id=4816 data-nosnippet>4816</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{var_name}.InterlockedOr("</span>)<span class="question-mark">?</span>;
-<a href=#4817 id=4817 data-nosnippet>4817</a>                        <span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
-<a href=#4818 id=4818 data-nosnippet>4818</a>                        <span class="self">self</span>.write_storage_address(module, <span class="kw-2">&amp;</span>chain, func_ctx)<span class="question-mark">?</span>;
-<a href=#4819 id=4819 data-nosnippet>4819</a>                        <span class="self">self</span>.temp_access_chain = chain;
-<a href=#4820 id=4820 data-nosnippet>4820</a>                    }
-<a href=#4821 id=4821 data-nosnippet>4821</a>                    <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-<a href=#4822 id=4822 data-nosnippet>4822</a>                }
-<a href=#4823 id=4823 data-nosnippet>4823</a>                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">", 0, {name});"</span>)<span class="question-mark">?</span>;
-<a href=#4824 id=4824 data-nosnippet>4824</a>                <span class="self">self</span>.named_expressions.insert(expr, name);
-<a href=#4825 id=4825 data-nosnippet>4825</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-<a href=#4826 id=4826 data-nosnippet>4826</a>            }
-<a href=#4827 id=4827 data-nosnippet>4827</a>        }
-<a href=#4828 id=4828 data-nosnippet>4828</a>        <span class="kw">match </span>func_ctx.info[expr].ty {
-<a href=#4829 id=4829 data-nosnippet>4829</a>            proc::TypeResolution::Handle(ty_handle) =&gt; <span class="kw">match </span>module.types[ty_handle].inner {
-<a href=#4830 id=4830 data-nosnippet>4830</a>                TypeInner::Struct { .. } =&gt; {
-<a href=#4831 id=4831 data-nosnippet>4831</a>                    <span class="kw">let </span>ty_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Type(ty_handle)];
-<a href=#4832 id=4832 data-nosnippet>4832</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{ty_name}"</span>)<span class="question-mark">?</span>;
-<a href=#4833 id=4833 data-nosnippet>4833</a>                }
-<a href=#4834 id=4834 data-nosnippet>4834</a>                <span class="kw">_ </span>=&gt; {
-<a href=#4835 id=4835 data-nosnippet>4835</a>                    <span class="self">self</span>.write_type(module, ty_handle)<span class="question-mark">?</span>;
-<a href=#4836 id=4836 data-nosnippet>4836</a>                }
-<a href=#4837 id=4837 data-nosnippet>4837</a>            },
-<a href=#4838 id=4838 data-nosnippet>4838</a>            proc::TypeResolution::Value(<span class="kw-2">ref </span>inner) =&gt; {
-<a href=#4839 id=4839 data-nosnippet>4839</a>                <span class="self">self</span>.write_value_type(module, inner)<span class="question-mark">?</span>;
-<a href=#4840 id=4840 data-nosnippet>4840</a>            }
-<a href=#4841 id=4841 data-nosnippet>4841</a>        }
+<a href=#4782 id=4782 data-nosnippet>4782</a>                    });
+<a href=#4783 id=4783 data-nosnippet>4783</a>                }
+<a href=#4784 id=4784 data-nosnippet>4784</a>            }
+<a href=#4785 id=4785 data-nosnippet>4785</a>        }
+<a href=#4786 id=4786 data-nosnippet>4786</a>
+<a href=#4787 id=4787 data-nosnippet>4787</a>        <span class="prelude-val">None
+<a href=#4788 id=4788 data-nosnippet>4788</a>    </span>}
+<a href=#4789 id=4789 data-nosnippet>4789</a>
+<a href=#4790 id=4790 data-nosnippet>4790</a>    <span class="kw">fn </span>write_named_expr(
+<a href=#4791 id=4791 data-nosnippet>4791</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#4792 id=4792 data-nosnippet>4792</a>        module: <span class="kw-2">&amp;</span>Module,
+<a href=#4793 id=4793 data-nosnippet>4793</a>        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+<a href=#4794 id=4794 data-nosnippet>4794</a>        name: String,
+<a href=#4795 id=4795 data-nosnippet>4795</a>        <span class="comment">// The expression which is being named.
+<a href=#4796 id=4796 data-nosnippet>4796</a>        // Generally, this is the same as handle, except in WorkGroupUniformLoad
+<a href=#4797 id=4797 data-nosnippet>4797</a>        </span>expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+<a href=#4798 id=4798 data-nosnippet>4798</a>        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx,
+<a href=#4799 id=4799 data-nosnippet>4799</a>    ) -&gt; BackendResult {
+<a href=#4800 id=4800 data-nosnippet>4800</a>        <span class="kw">if let </span><span class="kw">crate</span>::Expression::Load { pointer } = func_ctx.expressions[expr] {
+<a href=#4801 id=4801 data-nosnippet>4801</a>            <span class="kw">let </span>ty_inner = func_ctx.resolve_type(pointer, <span class="kw-2">&amp;</span>module.types);
+<a href=#4802 id=4802 data-nosnippet>4802</a>            <span class="kw">if </span>ty_inner.is_atomic_pointer(<span class="kw-2">&amp;</span>module.types) {
+<a href=#4803 id=4803 data-nosnippet>4803</a>                <span class="kw">let </span>pointer_space = ty_inner.pointer_space().unwrap();
+<a href=#4804 id=4804 data-nosnippet>4804</a>                <span class="self">self</span>.write_value_type(module, func_ctx.info[handle].ty.inner_with(<span class="kw-2">&amp;</span>module.types))<span class="question-mark">?</span>;
+<a href=#4805 id=4805 data-nosnippet>4805</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name}; "</span>)<span class="question-mark">?</span>;
+<a href=#4806 id=4806 data-nosnippet>4806</a>                <span class="kw">match </span>pointer_space {
+<a href=#4807 id=4807 data-nosnippet>4807</a>                    <span class="kw">crate</span>::AddressSpace::WorkGroup =&gt; {
+<a href=#4808 id=4808 data-nosnippet>4808</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"InterlockedOr("</span>)<span class="question-mark">?</span>;
+<a href=#4809 id=4809 data-nosnippet>4809</a>                        <span class="self">self</span>.write_expr(module, pointer, func_ctx)<span class="question-mark">?</span>;
+<a href=#4810 id=4810 data-nosnippet>4810</a>                    }
+<a href=#4811 id=4811 data-nosnippet>4811</a>                    <span class="kw">crate</span>::AddressSpace::Storage { .. } =&gt; {
+<a href=#4812 id=4812 data-nosnippet>4812</a>                        <span class="kw">let </span>var_handle = <span class="self">self</span>.fill_access_chain(module, pointer, func_ctx)<span class="question-mark">?</span>;
+<a href=#4813 id=4813 data-nosnippet>4813</a>                        <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
+<a href=#4814 id=4814 data-nosnippet>4814</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{var_name}.InterlockedOr("</span>)<span class="question-mark">?</span>;
+<a href=#4815 id=4815 data-nosnippet>4815</a>                        <span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
+<a href=#4816 id=4816 data-nosnippet>4816</a>                        <span class="self">self</span>.write_storage_address(module, <span class="kw-2">&amp;</span>chain, func_ctx)<span class="question-mark">?</span>;
+<a href=#4817 id=4817 data-nosnippet>4817</a>                        <span class="self">self</span>.temp_access_chain = chain;
+<a href=#4818 id=4818 data-nosnippet>4818</a>                    }
+<a href=#4819 id=4819 data-nosnippet>4819</a>                    <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+<a href=#4820 id=4820 data-nosnippet>4820</a>                }
+<a href=#4821 id=4821 data-nosnippet>4821</a>                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">", 0, {name});"</span>)<span class="question-mark">?</span>;
+<a href=#4822 id=4822 data-nosnippet>4822</a>                <span class="self">self</span>.named_expressions.insert(expr, name);
+<a href=#4823 id=4823 data-nosnippet>4823</a>                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+<a href=#4824 id=4824 data-nosnippet>4824</a>            }
+<a href=#4825 id=4825 data-nosnippet>4825</a>        }
+<a href=#4826 id=4826 data-nosnippet>4826</a>        <span class="kw">match </span>func_ctx.info[expr].ty {
+<a href=#4827 id=4827 data-nosnippet>4827</a>            proc::TypeResolution::Handle(ty_handle) =&gt; <span class="kw">match </span>module.types[ty_handle].inner {
+<a href=#4828 id=4828 data-nosnippet>4828</a>                TypeInner::Struct { .. } =&gt; {
+<a href=#4829 id=4829 data-nosnippet>4829</a>                    <span class="kw">let </span>ty_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Type(ty_handle)];
+<a href=#4830 id=4830 data-nosnippet>4830</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{ty_name}"</span>)<span class="question-mark">?</span>;
+<a href=#4831 id=4831 data-nosnippet>4831</a>                }
+<a href=#4832 id=4832 data-nosnippet>4832</a>                <span class="kw">_ </span>=&gt; {
+<a href=#4833 id=4833 data-nosnippet>4833</a>                    <span class="self">self</span>.write_type(module, ty_handle)<span class="question-mark">?</span>;
+<a href=#4834 id=4834 data-nosnippet>4834</a>                }
+<a href=#4835 id=4835 data-nosnippet>4835</a>            },
+<a href=#4836 id=4836 data-nosnippet>4836</a>            proc::TypeResolution::Value(<span class="kw-2">ref </span>inner) =&gt; {
+<a href=#4837 id=4837 data-nosnippet>4837</a>                <span class="self">self</span>.write_value_type(module, inner)<span class="question-mark">?</span>;
+<a href=#4838 id=4838 data-nosnippet>4838</a>            }
+<a href=#4839 id=4839 data-nosnippet>4839</a>        }
+<a href=#4840 id=4840 data-nosnippet>4840</a>
+<a href=#4841 id=4841 data-nosnippet>4841</a>        <span class="kw">let </span>resolved = func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types);
 <a href=#4842 id=4842 data-nosnippet>4842</a>
-<a href=#4843 id=4843 data-nosnippet>4843</a>        <span class="kw">let </span>resolved = func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types);
-<a href=#4844 id=4844 data-nosnippet>4844</a>
-<a href=#4845 id=4845 data-nosnippet>4845</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name}"</span>)<span class="question-mark">?</span>;
-<a href=#4846 id=4846 data-nosnippet>4846</a>        <span class="comment">// If rhs is a array type, we should write array size
-<a href=#4847 id=4847 data-nosnippet>4847</a>        </span><span class="kw">if let </span>TypeInner::Array { base, size, .. } = <span class="kw-2">*</span>resolved {
-<a href=#4848 id=4848 data-nosnippet>4848</a>            <span class="self">self</span>.write_array_size(module, base, size)<span class="question-mark">?</span>;
-<a href=#4849 id=4849 data-nosnippet>4849</a>        }
-<a href=#4850 id=4850 data-nosnippet>4850</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
-<a href=#4851 id=4851 data-nosnippet>4851</a>        <span class="self">self</span>.write_expr(module, handle, func_ctx)<span class="question-mark">?</span>;
-<a href=#4852 id=4852 data-nosnippet>4852</a>        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
-<a href=#4853 id=4853 data-nosnippet>4853</a>        <span class="self">self</span>.named_expressions.insert(expr, name);
-<a href=#4854 id=4854 data-nosnippet>4854</a>
-<a href=#4855 id=4855 data-nosnippet>4855</a>        <span class="prelude-val">Ok</span>(())
-<a href=#4856 id=4856 data-nosnippet>4856</a>    }
-<a href=#4857 id=4857 data-nosnippet>4857</a>
-<a href=#4858 id=4858 data-nosnippet>4858</a>    <span class="doccomment">/// Helper function that write default zero initialization
-<a href=#4859 id=4859 data-nosnippet>4859</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_default_init(
-<a href=#4860 id=4860 data-nosnippet>4860</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#4861 id=4861 data-nosnippet>4861</a>        module: <span class="kw-2">&amp;</span>Module,
-<a href=#4862 id=4862 data-nosnippet>4862</a>        ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
-<a href=#4863 id=4863 data-nosnippet>4863</a>    ) -&gt; BackendResult {
-<a href=#4864 id=4864 data-nosnippet>4864</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
-<a href=#4865 id=4865 data-nosnippet>4865</a>        <span class="self">self</span>.write_type(module, ty)<span class="question-mark">?</span>;
-<a href=#4866 id=4866 data-nosnippet>4866</a>        <span class="kw">if let </span>TypeInner::Array { base, size, .. } = module.types[ty].inner {
-<a href=#4867 id=4867 data-nosnippet>4867</a>            <span class="self">self</span>.write_array_size(module, base, size)<span class="question-mark">?</span>;
-<a href=#4868 id=4868 data-nosnippet>4868</a>        }
-<a href=#4869 id=4869 data-nosnippet>4869</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")0"</span>)<span class="question-mark">?</span>;
-<a href=#4870 id=4870 data-nosnippet>4870</a>        <span class="prelude-val">Ok</span>(())
-<a href=#4871 id=4871 data-nosnippet>4871</a>    }
-<a href=#4872 id=4872 data-nosnippet>4872</a>
-<a href=#4873 id=4873 data-nosnippet>4873</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_control_barrier(
-<a href=#4874 id=4874 data-nosnippet>4874</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#4875 id=4875 data-nosnippet>4875</a>        barrier: <span class="kw">crate</span>::Barrier,
-<a href=#4876 id=4876 data-nosnippet>4876</a>        level: back::Level,
-<a href=#4877 id=4877 data-nosnippet>4877</a>    ) -&gt; BackendResult {
-<a href=#4878 id=4878 data-nosnippet>4878</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::STORAGE) {
-<a href=#4879 id=4879 data-nosnippet>4879</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrierWithGroupSync();"</span>)<span class="question-mark">?</span>;
-<a href=#4880 id=4880 data-nosnippet>4880</a>        }
-<a href=#4881 id=4881 data-nosnippet>4881</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::WORK_GROUP) {
-<a href=#4882 id=4882 data-nosnippet>4882</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}GroupMemoryBarrierWithGroupSync();"</span>)<span class="question-mark">?</span>;
-<a href=#4883 id=4883 data-nosnippet>4883</a>        }
-<a href=#4884 id=4884 data-nosnippet>4884</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::SUB_GROUP) {
-<a href=#4885 id=4885 data-nosnippet>4885</a>            <span class="comment">// Does not exist in DirectX
-<a href=#4886 id=4886 data-nosnippet>4886</a>        </span>}
-<a href=#4887 id=4887 data-nosnippet>4887</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::TEXTURE) {
-<a href=#4888 id=4888 data-nosnippet>4888</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrierWithGroupSync();"</span>)<span class="question-mark">?</span>;
-<a href=#4889 id=4889 data-nosnippet>4889</a>        }
-<a href=#4890 id=4890 data-nosnippet>4890</a>        <span class="prelude-val">Ok</span>(())
-<a href=#4891 id=4891 data-nosnippet>4891</a>    }
-<a href=#4892 id=4892 data-nosnippet>4892</a>
-<a href=#4893 id=4893 data-nosnippet>4893</a>    <span class="kw">fn </span>write_memory_barrier(
-<a href=#4894 id=4894 data-nosnippet>4894</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#4895 id=4895 data-nosnippet>4895</a>        barrier: <span class="kw">crate</span>::Barrier,
-<a href=#4896 id=4896 data-nosnippet>4896</a>        level: back::Level,
-<a href=#4897 id=4897 data-nosnippet>4897</a>    ) -&gt; BackendResult {
-<a href=#4898 id=4898 data-nosnippet>4898</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::STORAGE) {
-<a href=#4899 id=4899 data-nosnippet>4899</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrier();"</span>)<span class="question-mark">?</span>;
-<a href=#4900 id=4900 data-nosnippet>4900</a>        }
-<a href=#4901 id=4901 data-nosnippet>4901</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::WORK_GROUP) {
-<a href=#4902 id=4902 data-nosnippet>4902</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}GroupMemoryBarrier();"</span>)<span class="question-mark">?</span>;
-<a href=#4903 id=4903 data-nosnippet>4903</a>        }
-<a href=#4904 id=4904 data-nosnippet>4904</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::SUB_GROUP) {
-<a href=#4905 id=4905 data-nosnippet>4905</a>            <span class="comment">// Does not exist in DirectX
-<a href=#4906 id=4906 data-nosnippet>4906</a>        </span>}
-<a href=#4907 id=4907 data-nosnippet>4907</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::TEXTURE) {
-<a href=#4908 id=4908 data-nosnippet>4908</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrier();"</span>)<span class="question-mark">?</span>;
-<a href=#4909 id=4909 data-nosnippet>4909</a>        }
-<a href=#4910 id=4910 data-nosnippet>4910</a>        <span class="prelude-val">Ok</span>(())
-<a href=#4911 id=4911 data-nosnippet>4911</a>    }
-<a href=#4912 id=4912 data-nosnippet>4912</a>
-<a href=#4913 id=4913 data-nosnippet>4913</a>    <span class="doccomment">/// Helper to emit the shared tail of an HLSL atomic call (arguments, value, result)
-<a href=#4914 id=4914 data-nosnippet>4914</a>    </span><span class="kw">fn </span>emit_hlsl_atomic_tail(
-<a href=#4915 id=4915 data-nosnippet>4915</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#4916 id=4916 data-nosnippet>4916</a>        module: <span class="kw-2">&amp;</span>Module,
-<a href=#4917 id=4917 data-nosnippet>4917</a>        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
-<a href=#4918 id=4918 data-nosnippet>4918</a>        fun: <span class="kw-2">&amp;</span><span class="kw">crate</span>::AtomicFunction,
-<a href=#4919 id=4919 data-nosnippet>4919</a>        compare_expr: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
-<a href=#4920 id=4920 data-nosnippet>4920</a>        value: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-<a href=#4921 id=4921 data-nosnippet>4921</a>        res_var_info: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;(Handle&lt;<span class="kw">crate</span>::Expression&gt;, String)&gt;,
-<a href=#4922 id=4922 data-nosnippet>4922</a>    ) -&gt; BackendResult {
-<a href=#4923 id=4923 data-nosnippet>4923</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(cmp) = compare_expr {
-<a href=#4924 id=4924 data-nosnippet>4924</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-<a href=#4925 id=4925 data-nosnippet>4925</a>            <span class="self">self</span>.write_expr(module, cmp, func_ctx)<span class="question-mark">?</span>;
-<a href=#4926 id=4926 data-nosnippet>4926</a>        }
-<a href=#4927 id=4927 data-nosnippet>4927</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-<a href=#4928 id=4928 data-nosnippet>4928</a>        <span class="kw">if let </span><span class="kw">crate</span>::AtomicFunction::Subtract = <span class="kw-2">*</span>fun {
-<a href=#4929 id=4929 data-nosnippet>4929</a>            <span class="comment">// we just wrote `InterlockedAdd`, so negate the argument
-<a href=#4930 id=4930 data-nosnippet>4930</a>            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"-"</span>)<span class="question-mark">?</span>;
-<a href=#4931 id=4931 data-nosnippet>4931</a>        }
-<a href=#4932 id=4932 data-nosnippet>4932</a>        <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
-<a href=#4933 id=4933 data-nosnippet>4933</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(_res_handle, <span class="kw-2">ref </span>res_name)) = res_var_info.as_ref() {
-<a href=#4934 id=4934 data-nosnippet>4934</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-<a href=#4935 id=4935 data-nosnippet>4935</a>            <span class="kw">if </span>compare_expr.is_some() {
-<a href=#4936 id=4936 data-nosnippet>4936</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{res_name}.old_value"</span>)<span class="question-mark">?</span>;
-<a href=#4937 id=4937 data-nosnippet>4937</a>            } <span class="kw">else </span>{
-<a href=#4938 id=4938 data-nosnippet>4938</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{res_name}"</span>)<span class="question-mark">?</span>;
-<a href=#4939 id=4939 data-nosnippet>4939</a>            }
-<a href=#4940 id=4940 data-nosnippet>4940</a>        }
-<a href=#4941 id=4941 data-nosnippet>4941</a>        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
-<a href=#4942 id=4942 data-nosnippet>4942</a>        <span class="prelude-val">Ok</span>(())
-<a href=#4943 id=4943 data-nosnippet>4943</a>    }
-<a href=#4944 id=4944 data-nosnippet>4944</a>}
-<a href=#4945 id=4945 data-nosnippet>4945</a>
-<a href=#4946 id=4946 data-nosnippet>4946</a><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>MatrixType {
-<a href=#4947 id=4947 data-nosnippet>4947</a>    <span class="kw">pub</span>(<span class="kw">super</span>) columns: <span class="kw">crate</span>::VectorSize,
-<a href=#4948 id=4948 data-nosnippet>4948</a>    <span class="kw">pub</span>(<span class="kw">super</span>) rows: <span class="kw">crate</span>::VectorSize,
-<a href=#4949 id=4949 data-nosnippet>4949</a>    <span class="kw">pub</span>(<span class="kw">super</span>) width: <span class="kw">crate</span>::Bytes,
-<a href=#4950 id=4950 data-nosnippet>4950</a>}
-<a href=#4951 id=4951 data-nosnippet>4951</a>
-<a href=#4952 id=4952 data-nosnippet>4952</a><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_inner_matrix_data(
-<a href=#4953 id=4953 data-nosnippet>4953</a>    module: <span class="kw-2">&amp;</span>Module,
-<a href=#4954 id=4954 data-nosnippet>4954</a>    handle: Handle&lt;<span class="kw">crate</span>::Type&gt;,
-<a href=#4955 id=4955 data-nosnippet>4955</a>) -&gt; <span class="prelude-ty">Option</span>&lt;MatrixType&gt; {
-<a href=#4956 id=4956 data-nosnippet>4956</a>    <span class="kw">match </span>module.types[handle].inner {
-<a href=#4957 id=4957 data-nosnippet>4957</a>        TypeInner::Matrix {
-<a href=#4958 id=4958 data-nosnippet>4958</a>            columns,
-<a href=#4959 id=4959 data-nosnippet>4959</a>            rows,
-<a href=#4960 id=4960 data-nosnippet>4960</a>            scalar,
-<a href=#4961 id=4961 data-nosnippet>4961</a>        } =&gt; <span class="prelude-val">Some</span>(MatrixType {
-<a href=#4962 id=4962 data-nosnippet>4962</a>            columns,
-<a href=#4963 id=4963 data-nosnippet>4963</a>            rows,
-<a href=#4964 id=4964 data-nosnippet>4964</a>            width: scalar.width,
-<a href=#4965 id=4965 data-nosnippet>4965</a>        }),
-<a href=#4966 id=4966 data-nosnippet>4966</a>        TypeInner::Array { base, .. } =&gt; get_inner_matrix_data(module, base),
-<a href=#4967 id=4967 data-nosnippet>4967</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#4968 id=4968 data-nosnippet>4968</a>    }
-<a href=#4969 id=4969 data-nosnippet>4969</a>}
-<a href=#4970 id=4970 data-nosnippet>4970</a>
-<a href=#4971 id=4971 data-nosnippet>4971</a><span class="doccomment">/// If `base` is an access chain of the form `mat`, `mat[col]`, or `mat[col][row]`,
-<a href=#4972 id=4972 data-nosnippet>4972</a>/// returns a tuple of the matrix, the column (vector) index (if present), and
-<a href=#4973 id=4973 data-nosnippet>4973</a>/// the row (scalar) index (if present).
-<a href=#4974 id=4974 data-nosnippet>4974</a></span><span class="kw">fn </span>find_matrix_in_access_chain(
-<a href=#4975 id=4975 data-nosnippet>4975</a>    module: <span class="kw-2">&amp;</span>Module,
-<a href=#4976 id=4976 data-nosnippet>4976</a>    base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-<a href=#4977 id=4977 data-nosnippet>4977</a>    func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
-<a href=#4978 id=4978 data-nosnippet>4978</a>) -&gt; <span class="prelude-ty">Option</span>&lt;(Handle&lt;<span class="kw">crate</span>::Expression&gt;, <span class="prelude-ty">Option</span>&lt;Index&gt;, <span class="prelude-ty">Option</span>&lt;Index&gt;)&gt; {
-<a href=#4979 id=4979 data-nosnippet>4979</a>    <span class="kw">let </span><span class="kw-2">mut </span>current_base = base;
-<a href=#4980 id=4980 data-nosnippet>4980</a>    <span class="kw">let </span><span class="kw-2">mut </span>vector = <span class="prelude-val">None</span>;
-<a href=#4981 id=4981 data-nosnippet>4981</a>    <span class="kw">let </span><span class="kw-2">mut </span>scalar = <span class="prelude-val">None</span>;
-<a href=#4982 id=4982 data-nosnippet>4982</a>    <span class="kw">loop </span>{
-<a href=#4983 id=4983 data-nosnippet>4983</a>        <span class="kw">let </span>resolved_tr = func_ctx
-<a href=#4984 id=4984 data-nosnippet>4984</a>            .resolve_type(current_base, <span class="kw-2">&amp;</span>module.types)
-<a href=#4985 id=4985 data-nosnippet>4985</a>            .pointer_base_type();
-<a href=#4986 id=4986 data-nosnippet>4986</a>        <span class="kw">let </span>resolved = resolved_tr.as_ref()<span class="question-mark">?</span>.inner_with(<span class="kw-2">&amp;</span>module.types);
-<a href=#4987 id=4987 data-nosnippet>4987</a>
-<a href=#4988 id=4988 data-nosnippet>4988</a>        <span class="kw">match </span><span class="kw-2">*</span>resolved {
-<a href=#4989 id=4989 data-nosnippet>4989</a>            TypeInner::Matrix { .. } =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>((current_base, vector, scalar)),
-<a href=#4990 id=4990 data-nosnippet>4990</a>            TypeInner::Scalar(<span class="kw">_</span>) | TypeInner::Vector { .. } =&gt; {}
-<a href=#4991 id=4991 data-nosnippet>4991</a>            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-<a href=#4992 id=4992 data-nosnippet>4992</a>        }
-<a href=#4993 id=4993 data-nosnippet>4993</a>
-<a href=#4994 id=4994 data-nosnippet>4994</a>        <span class="kw">let </span>index;
-<a href=#4995 id=4995 data-nosnippet>4995</a>        (current_base, index) = <span class="kw">match </span>func_ctx.expressions[current_base] {
-<a href=#4996 id=4996 data-nosnippet>4996</a>            <span class="kw">crate</span>::Expression::Access { base, index } =&gt; (base, Index::Expression(index)),
-<a href=#4997 id=4997 data-nosnippet>4997</a>            <span class="kw">crate</span>::Expression::AccessIndex { base, index } =&gt; (base, Index::Static(index)),
-<a href=#4998 id=4998 data-nosnippet>4998</a>            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-<a href=#4999 id=4999 data-nosnippet>4999</a>        };
-<a href=#5000 id=5000 data-nosnippet>5000</a>
-<a href=#5001 id=5001 data-nosnippet>5001</a>        <span class="kw">match </span><span class="kw-2">*</span>resolved {
-<a href=#5002 id=5002 data-nosnippet>5002</a>            TypeInner::Scalar(<span class="kw">_</span>) =&gt; scalar = <span class="prelude-val">Some</span>(index),
-<a href=#5003 id=5003 data-nosnippet>5003</a>            TypeInner::Vector { .. } =&gt; vector = <span class="prelude-val">Some</span>(index),
-<a href=#5004 id=5004 data-nosnippet>5004</a>            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-<a href=#5005 id=5005 data-nosnippet>5005</a>        }
-<a href=#5006 id=5006 data-nosnippet>5006</a>    }
-<a href=#5007 id=5007 data-nosnippet>5007</a>}
-<a href=#5008 id=5008 data-nosnippet>5008</a>
-<a href=#5009 id=5009 data-nosnippet>5009</a><span class="doccomment">/// Returns the matrix data if the access chain starting at `base`:
-<a href=#5010 id=5010 data-nosnippet>5010</a>/// - starts with an expression with resolved type of [`TypeInner::Matrix`] if `direct = true`
-<a href=#5011 id=5011 data-nosnippet>5011</a>/// - contains one or more expressions with resolved type of [`TypeInner::Array`] of [`TypeInner::Matrix`]
-<a href=#5012 id=5012 data-nosnippet>5012</a>/// - ends at an expression with resolved type of [`TypeInner::Struct`]
-<a href=#5013 id=5013 data-nosnippet>5013</a></span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_inner_matrix_of_struct_array_member(
-<a href=#5014 id=5014 data-nosnippet>5014</a>    module: <span class="kw-2">&amp;</span>Module,
-<a href=#5015 id=5015 data-nosnippet>5015</a>    base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-<a href=#5016 id=5016 data-nosnippet>5016</a>    func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
-<a href=#5017 id=5017 data-nosnippet>5017</a>    direct: bool,
-<a href=#5018 id=5018 data-nosnippet>5018</a>) -&gt; <span class="prelude-ty">Option</span>&lt;MatrixType&gt; {
-<a href=#5019 id=5019 data-nosnippet>5019</a>    <span class="kw">let </span><span class="kw-2">mut </span>mat_data = <span class="prelude-val">None</span>;
-<a href=#5020 id=5020 data-nosnippet>5020</a>    <span class="kw">let </span><span class="kw-2">mut </span>array_base = <span class="prelude-val">None</span>;
-<a href=#5021 id=5021 data-nosnippet>5021</a>
-<a href=#5022 id=5022 data-nosnippet>5022</a>    <span class="kw">let </span><span class="kw-2">mut </span>current_base = base;
-<a href=#5023 id=5023 data-nosnippet>5023</a>    <span class="kw">loop </span>{
-<a href=#5024 id=5024 data-nosnippet>5024</a>        <span class="kw">let </span><span class="kw-2">mut </span>resolved = func_ctx.resolve_type(current_base, <span class="kw-2">&amp;</span>module.types);
-<a href=#5025 id=5025 data-nosnippet>5025</a>        <span class="kw">if let </span>TypeInner::Pointer { base, .. } = <span class="kw-2">*</span>resolved {
-<a href=#5026 id=5026 data-nosnippet>5026</a>            resolved = <span class="kw-2">&amp;</span>module.types[base].inner;
-<a href=#5027 id=5027 data-nosnippet>5027</a>        };
-<a href=#5028 id=5028 data-nosnippet>5028</a>
-<a href=#5029 id=5029 data-nosnippet>5029</a>        <span class="kw">match </span><span class="kw-2">*</span>resolved {
-<a href=#5030 id=5030 data-nosnippet>5030</a>            TypeInner::Matrix {
-<a href=#5031 id=5031 data-nosnippet>5031</a>                columns,
-<a href=#5032 id=5032 data-nosnippet>5032</a>                rows,
-<a href=#5033 id=5033 data-nosnippet>5033</a>                scalar,
-<a href=#5034 id=5034 data-nosnippet>5034</a>            } =&gt; {
-<a href=#5035 id=5035 data-nosnippet>5035</a>                mat_data = <span class="prelude-val">Some</span>(MatrixType {
-<a href=#5036 id=5036 data-nosnippet>5036</a>                    columns,
-<a href=#5037 id=5037 data-nosnippet>5037</a>                    rows,
-<a href=#5038 id=5038 data-nosnippet>5038</a>                    width: scalar.width,
-<a href=#5039 id=5039 data-nosnippet>5039</a>                })
-<a href=#5040 id=5040 data-nosnippet>5040</a>            }
-<a href=#5041 id=5041 data-nosnippet>5041</a>            TypeInner::Array { base, .. } =&gt; {
-<a href=#5042 id=5042 data-nosnippet>5042</a>                array_base = <span class="prelude-val">Some</span>(base);
-<a href=#5043 id=5043 data-nosnippet>5043</a>            }
-<a href=#5044 id=5044 data-nosnippet>5044</a>            TypeInner::Struct { .. } =&gt; {
-<a href=#5045 id=5045 data-nosnippet>5045</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(array_base) = array_base {
-<a href=#5046 id=5046 data-nosnippet>5046</a>                    <span class="kw">if </span>direct {
-<a href=#5047 id=5047 data-nosnippet>5047</a>                        <span class="kw">return </span>mat_data;
-<a href=#5048 id=5048 data-nosnippet>5048</a>                    } <span class="kw">else </span>{
-<a href=#5049 id=5049 data-nosnippet>5049</a>                        <span class="kw">return </span>get_inner_matrix_data(module, array_base);
-<a href=#5050 id=5050 data-nosnippet>5050</a>                    }
-<a href=#5051 id=5051 data-nosnippet>5051</a>                }
-<a href=#5052 id=5052 data-nosnippet>5052</a>
-<a href=#5053 id=5053 data-nosnippet>5053</a>                <span class="kw">break</span>;
-<a href=#5054 id=5054 data-nosnippet>5054</a>            }
-<a href=#5055 id=5055 data-nosnippet>5055</a>            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
-<a href=#5056 id=5056 data-nosnippet>5056</a>        }
-<a href=#5057 id=5057 data-nosnippet>5057</a>
-<a href=#5058 id=5058 data-nosnippet>5058</a>        current_base = <span class="kw">match </span>func_ctx.expressions[current_base] {
-<a href=#5059 id=5059 data-nosnippet>5059</a>            <span class="kw">crate</span>::Expression::Access { base, .. } =&gt; base,
-<a href=#5060 id=5060 data-nosnippet>5060</a>            <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; base,
-<a href=#5061 id=5061 data-nosnippet>5061</a>            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
-<a href=#5062 id=5062 data-nosnippet>5062</a>        };
-<a href=#5063 id=5063 data-nosnippet>5063</a>    }
-<a href=#5064 id=5064 data-nosnippet>5064</a>    <span class="prelude-val">None
-<a href=#5065 id=5065 data-nosnippet>5065</a></span>}
-<a href=#5066 id=5066 data-nosnippet>5066</a>
-<a href=#5067 id=5067 data-nosnippet>5067</a><span class="doccomment">/// Returns the matrix data if the access chain starting at `base`:
-<a href=#5068 id=5068 data-nosnippet>5068</a>/// - starts with an expression with resolved type of [`TypeInner::Matrix`], or
-<a href=#5069 id=5069 data-nosnippet>5069</a>/// - contains zero or more expressions with resolved type of [`TypeInner::Array`] of [`TypeInner::Matrix`] if `direct = false`
-<a href=#5070 id=5070 data-nosnippet>5070</a>/// - and ends with an [`Expression::GlobalVariable`](crate::Expression::GlobalVariable) in [`AddressSpace::Uniform`](crate::AddressSpace::Uniform)
-<a href=#5071 id=5071 data-nosnippet>5071</a></span><span class="kw">fn </span>get_inner_matrix_of_global_uniform(
-<a href=#5072 id=5072 data-nosnippet>5072</a>    module: <span class="kw-2">&amp;</span>Module,
-<a href=#5073 id=5073 data-nosnippet>5073</a>    base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-<a href=#5074 id=5074 data-nosnippet>5074</a>    func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
-<a href=#5075 id=5075 data-nosnippet>5075</a>    direct: bool,
-<a href=#5076 id=5076 data-nosnippet>5076</a>) -&gt; <span class="prelude-ty">Option</span>&lt;MatrixType&gt; {
-<a href=#5077 id=5077 data-nosnippet>5077</a>    <span class="kw">let </span><span class="kw-2">mut </span>mat_data = <span class="prelude-val">None</span>;
-<a href=#5078 id=5078 data-nosnippet>5078</a>    <span class="kw">let </span><span class="kw-2">mut </span>array_base = <span class="prelude-val">None</span>;
-<a href=#5079 id=5079 data-nosnippet>5079</a>
-<a href=#5080 id=5080 data-nosnippet>5080</a>    <span class="kw">let </span><span class="kw-2">mut </span>current_base = base;
-<a href=#5081 id=5081 data-nosnippet>5081</a>    <span class="kw">loop </span>{
-<a href=#5082 id=5082 data-nosnippet>5082</a>        <span class="kw">let </span><span class="kw-2">mut </span>resolved = func_ctx.resolve_type(current_base, <span class="kw-2">&amp;</span>module.types);
-<a href=#5083 id=5083 data-nosnippet>5083</a>        <span class="kw">if let </span>TypeInner::Pointer { base, .. } = <span class="kw-2">*</span>resolved {
-<a href=#5084 id=5084 data-nosnippet>5084</a>            resolved = <span class="kw-2">&amp;</span>module.types[base].inner;
-<a href=#5085 id=5085 data-nosnippet>5085</a>        };
-<a href=#5086 id=5086 data-nosnippet>5086</a>
-<a href=#5087 id=5087 data-nosnippet>5087</a>        <span class="kw">match </span><span class="kw-2">*</span>resolved {
-<a href=#5088 id=5088 data-nosnippet>5088</a>            TypeInner::Matrix {
-<a href=#5089 id=5089 data-nosnippet>5089</a>                columns,
-<a href=#5090 id=5090 data-nosnippet>5090</a>                rows,
-<a href=#5091 id=5091 data-nosnippet>5091</a>                scalar,
-<a href=#5092 id=5092 data-nosnippet>5092</a>            } =&gt; {
-<a href=#5093 id=5093 data-nosnippet>5093</a>                mat_data = <span class="prelude-val">Some</span>(MatrixType {
-<a href=#5094 id=5094 data-nosnippet>5094</a>                    columns,
-<a href=#5095 id=5095 data-nosnippet>5095</a>                    rows,
-<a href=#5096 id=5096 data-nosnippet>5096</a>                    width: scalar.width,
-<a href=#5097 id=5097 data-nosnippet>5097</a>                })
-<a href=#5098 id=5098 data-nosnippet>5098</a>            }
-<a href=#5099 id=5099 data-nosnippet>5099</a>            TypeInner::Array { base, .. } =&gt; {
-<a href=#5100 id=5100 data-nosnippet>5100</a>                <span class="kw">if </span>!direct {
-<a href=#5101 id=5101 data-nosnippet>5101</a>                    array_base = <span class="prelude-val">Some</span>(base);
-<a href=#5102 id=5102 data-nosnippet>5102</a>                }
-<a href=#5103 id=5103 data-nosnippet>5103</a>            }
-<a href=#5104 id=5104 data-nosnippet>5104</a>            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
-<a href=#5105 id=5105 data-nosnippet>5105</a>        }
-<a href=#5106 id=5106 data-nosnippet>5106</a>
-<a href=#5107 id=5107 data-nosnippet>5107</a>        current_base = <span class="kw">match </span>func_ctx.expressions[current_base] {
-<a href=#5108 id=5108 data-nosnippet>5108</a>            <span class="kw">crate</span>::Expression::Access { base, .. } =&gt; base,
-<a href=#5109 id=5109 data-nosnippet>5109</a>            <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; base,
-<a href=#5110 id=5110 data-nosnippet>5110</a>            <span class="kw">crate</span>::Expression::GlobalVariable(handle)
-<a href=#5111 id=5111 data-nosnippet>5111</a>                <span class="kw">if </span>module.global_variables[handle].space == <span class="kw">crate</span>::AddressSpace::Uniform =&gt;
-<a href=#5112 id=5112 data-nosnippet>5112</a>            {
-<a href=#5113 id=5113 data-nosnippet>5113</a>                <span class="kw">return </span>mat_data.or_else(|| {
-<a href=#5114 id=5114 data-nosnippet>5114</a>                    array_base.and_then(|array_base| get_inner_matrix_data(module, array_base))
-<a href=#5115 id=5115 data-nosnippet>5115</a>                })
-<a href=#5116 id=5116 data-nosnippet>5116</a>            }
-<a href=#5117 id=5117 data-nosnippet>5117</a>            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
-<a href=#5118 id=5118 data-nosnippet>5118</a>        };
-<a href=#5119 id=5119 data-nosnippet>5119</a>    }
-<a href=#5120 id=5120 data-nosnippet>5120</a>    <span class="prelude-val">None
-<a href=#5121 id=5121 data-nosnippet>5121</a></span>}
+<a href=#4843 id=4843 data-nosnippet>4843</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name}"</span>)<span class="question-mark">?</span>;
+<a href=#4844 id=4844 data-nosnippet>4844</a>        <span class="comment">// If rhs is a array type, we should write array size
+<a href=#4845 id=4845 data-nosnippet>4845</a>        </span><span class="kw">if let </span>TypeInner::Array { base, size, .. } = <span class="kw-2">*</span>resolved {
+<a href=#4846 id=4846 data-nosnippet>4846</a>            <span class="self">self</span>.write_array_size(module, base, size)<span class="question-mark">?</span>;
+<a href=#4847 id=4847 data-nosnippet>4847</a>        }
+<a href=#4848 id=4848 data-nosnippet>4848</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
+<a href=#4849 id=4849 data-nosnippet>4849</a>        <span class="self">self</span>.write_expr(module, handle, func_ctx)<span class="question-mark">?</span>;
+<a href=#4850 id=4850 data-nosnippet>4850</a>        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
+<a href=#4851 id=4851 data-nosnippet>4851</a>        <span class="self">self</span>.named_expressions.insert(expr, name);
+<a href=#4852 id=4852 data-nosnippet>4852</a>
+<a href=#4853 id=4853 data-nosnippet>4853</a>        <span class="prelude-val">Ok</span>(())
+<a href=#4854 id=4854 data-nosnippet>4854</a>    }
+<a href=#4855 id=4855 data-nosnippet>4855</a>
+<a href=#4856 id=4856 data-nosnippet>4856</a>    <span class="doccomment">/// Helper function that write default zero initialization
+<a href=#4857 id=4857 data-nosnippet>4857</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_default_init(
+<a href=#4858 id=4858 data-nosnippet>4858</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#4859 id=4859 data-nosnippet>4859</a>        module: <span class="kw-2">&amp;</span>Module,
+<a href=#4860 id=4860 data-nosnippet>4860</a>        ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
+<a href=#4861 id=4861 data-nosnippet>4861</a>    ) -&gt; BackendResult {
+<a href=#4862 id=4862 data-nosnippet>4862</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
+<a href=#4863 id=4863 data-nosnippet>4863</a>        <span class="self">self</span>.write_type(module, ty)<span class="question-mark">?</span>;
+<a href=#4864 id=4864 data-nosnippet>4864</a>        <span class="kw">if let </span>TypeInner::Array { base, size, .. } = module.types[ty].inner {
+<a href=#4865 id=4865 data-nosnippet>4865</a>            <span class="self">self</span>.write_array_size(module, base, size)<span class="question-mark">?</span>;
+<a href=#4866 id=4866 data-nosnippet>4866</a>        }
+<a href=#4867 id=4867 data-nosnippet>4867</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")0"</span>)<span class="question-mark">?</span>;
+<a href=#4868 id=4868 data-nosnippet>4868</a>        <span class="prelude-val">Ok</span>(())
+<a href=#4869 id=4869 data-nosnippet>4869</a>    }
+<a href=#4870 id=4870 data-nosnippet>4870</a>
+<a href=#4871 id=4871 data-nosnippet>4871</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_control_barrier(
+<a href=#4872 id=4872 data-nosnippet>4872</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#4873 id=4873 data-nosnippet>4873</a>        barrier: <span class="kw">crate</span>::Barrier,
+<a href=#4874 id=4874 data-nosnippet>4874</a>        level: back::Level,
+<a href=#4875 id=4875 data-nosnippet>4875</a>    ) -&gt; BackendResult {
+<a href=#4876 id=4876 data-nosnippet>4876</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::STORAGE) {
+<a href=#4877 id=4877 data-nosnippet>4877</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrierWithGroupSync();"</span>)<span class="question-mark">?</span>;
+<a href=#4878 id=4878 data-nosnippet>4878</a>        }
+<a href=#4879 id=4879 data-nosnippet>4879</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::WORK_GROUP) {
+<a href=#4880 id=4880 data-nosnippet>4880</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}GroupMemoryBarrierWithGroupSync();"</span>)<span class="question-mark">?</span>;
+<a href=#4881 id=4881 data-nosnippet>4881</a>        }
+<a href=#4882 id=4882 data-nosnippet>4882</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::SUB_GROUP) {
+<a href=#4883 id=4883 data-nosnippet>4883</a>            <span class="comment">// Does not exist in DirectX
+<a href=#4884 id=4884 data-nosnippet>4884</a>        </span>}
+<a href=#4885 id=4885 data-nosnippet>4885</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::TEXTURE) {
+<a href=#4886 id=4886 data-nosnippet>4886</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrierWithGroupSync();"</span>)<span class="question-mark">?</span>;
+<a href=#4887 id=4887 data-nosnippet>4887</a>        }
+<a href=#4888 id=4888 data-nosnippet>4888</a>        <span class="prelude-val">Ok</span>(())
+<a href=#4889 id=4889 data-nosnippet>4889</a>    }
+<a href=#4890 id=4890 data-nosnippet>4890</a>
+<a href=#4891 id=4891 data-nosnippet>4891</a>    <span class="kw">fn </span>write_memory_barrier(
+<a href=#4892 id=4892 data-nosnippet>4892</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#4893 id=4893 data-nosnippet>4893</a>        barrier: <span class="kw">crate</span>::Barrier,
+<a href=#4894 id=4894 data-nosnippet>4894</a>        level: back::Level,
+<a href=#4895 id=4895 data-nosnippet>4895</a>    ) -&gt; BackendResult {
+<a href=#4896 id=4896 data-nosnippet>4896</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::STORAGE) {
+<a href=#4897 id=4897 data-nosnippet>4897</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrier();"</span>)<span class="question-mark">?</span>;
+<a href=#4898 id=4898 data-nosnippet>4898</a>        }
+<a href=#4899 id=4899 data-nosnippet>4899</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::WORK_GROUP) {
+<a href=#4900 id=4900 data-nosnippet>4900</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}GroupMemoryBarrier();"</span>)<span class="question-mark">?</span>;
+<a href=#4901 id=4901 data-nosnippet>4901</a>        }
+<a href=#4902 id=4902 data-nosnippet>4902</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::SUB_GROUP) {
+<a href=#4903 id=4903 data-nosnippet>4903</a>            <span class="comment">// Does not exist in DirectX
+<a href=#4904 id=4904 data-nosnippet>4904</a>        </span>}
+<a href=#4905 id=4905 data-nosnippet>4905</a>        <span class="kw">if </span>barrier.contains(<span class="kw">crate</span>::Barrier::TEXTURE) {
+<a href=#4906 id=4906 data-nosnippet>4906</a>            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}DeviceMemoryBarrier();"</span>)<span class="question-mark">?</span>;
+<a href=#4907 id=4907 data-nosnippet>4907</a>        }
+<a href=#4908 id=4908 data-nosnippet>4908</a>        <span class="prelude-val">Ok</span>(())
+<a href=#4909 id=4909 data-nosnippet>4909</a>    }
+<a href=#4910 id=4910 data-nosnippet>4910</a>
+<a href=#4911 id=4911 data-nosnippet>4911</a>    <span class="doccomment">/// Helper to emit the shared tail of an HLSL atomic call (arguments, value, result)
+<a href=#4912 id=4912 data-nosnippet>4912</a>    </span><span class="kw">fn </span>emit_hlsl_atomic_tail(
+<a href=#4913 id=4913 data-nosnippet>4913</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#4914 id=4914 data-nosnippet>4914</a>        module: <span class="kw-2">&amp;</span>Module,
+<a href=#4915 id=4915 data-nosnippet>4915</a>        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#4916 id=4916 data-nosnippet>4916</a>        fun: <span class="kw-2">&amp;</span><span class="kw">crate</span>::AtomicFunction,
+<a href=#4917 id=4917 data-nosnippet>4917</a>        compare_expr: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
+<a href=#4918 id=4918 data-nosnippet>4918</a>        value: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+<a href=#4919 id=4919 data-nosnippet>4919</a>        res_var_info: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;(Handle&lt;<span class="kw">crate</span>::Expression&gt;, String)&gt;,
+<a href=#4920 id=4920 data-nosnippet>4920</a>    ) -&gt; BackendResult {
+<a href=#4921 id=4921 data-nosnippet>4921</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(cmp) = compare_expr {
+<a href=#4922 id=4922 data-nosnippet>4922</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+<a href=#4923 id=4923 data-nosnippet>4923</a>            <span class="self">self</span>.write_expr(module, cmp, func_ctx)<span class="question-mark">?</span>;
+<a href=#4924 id=4924 data-nosnippet>4924</a>        }
+<a href=#4925 id=4925 data-nosnippet>4925</a>        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+<a href=#4926 id=4926 data-nosnippet>4926</a>        <span class="kw">if let </span><span class="kw">crate</span>::AtomicFunction::Subtract = <span class="kw-2">*</span>fun {
+<a href=#4927 id=4927 data-nosnippet>4927</a>            <span class="comment">// we just wrote `InterlockedAdd`, so negate the argument
+<a href=#4928 id=4928 data-nosnippet>4928</a>            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"-"</span>)<span class="question-mark">?</span>;
+<a href=#4929 id=4929 data-nosnippet>4929</a>        }
+<a href=#4930 id=4930 data-nosnippet>4930</a>        <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
+<a href=#4931 id=4931 data-nosnippet>4931</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(_res_handle, <span class="kw-2">ref </span>res_name)) = res_var_info.as_ref() {
+<a href=#4932 id=4932 data-nosnippet>4932</a>            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+<a href=#4933 id=4933 data-nosnippet>4933</a>            <span class="kw">if </span>compare_expr.is_some() {
+<a href=#4934 id=4934 data-nosnippet>4934</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{res_name}.old_value"</span>)<span class="question-mark">?</span>;
+<a href=#4935 id=4935 data-nosnippet>4935</a>            } <span class="kw">else </span>{
+<a href=#4936 id=4936 data-nosnippet>4936</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{res_name}"</span>)<span class="question-mark">?</span>;
+<a href=#4937 id=4937 data-nosnippet>4937</a>            }
+<a href=#4938 id=4938 data-nosnippet>4938</a>        }
+<a href=#4939 id=4939 data-nosnippet>4939</a>        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
+<a href=#4940 id=4940 data-nosnippet>4940</a>        <span class="prelude-val">Ok</span>(())
+<a href=#4941 id=4941 data-nosnippet>4941</a>    }
+<a href=#4942 id=4942 data-nosnippet>4942</a>}
+<a href=#4943 id=4943 data-nosnippet>4943</a>
+<a href=#4944 id=4944 data-nosnippet>4944</a><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>MatrixType {
+<a href=#4945 id=4945 data-nosnippet>4945</a>    <span class="kw">pub</span>(<span class="kw">super</span>) columns: <span class="kw">crate</span>::VectorSize,
+<a href=#4946 id=4946 data-nosnippet>4946</a>    <span class="kw">pub</span>(<span class="kw">super</span>) rows: <span class="kw">crate</span>::VectorSize,
+<a href=#4947 id=4947 data-nosnippet>4947</a>    <span class="kw">pub</span>(<span class="kw">super</span>) width: <span class="kw">crate</span>::Bytes,
+<a href=#4948 id=4948 data-nosnippet>4948</a>}
+<a href=#4949 id=4949 data-nosnippet>4949</a>
+<a href=#4950 id=4950 data-nosnippet>4950</a><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_inner_matrix_data(
+<a href=#4951 id=4951 data-nosnippet>4951</a>    module: <span class="kw-2">&amp;</span>Module,
+<a href=#4952 id=4952 data-nosnippet>4952</a>    handle: Handle&lt;<span class="kw">crate</span>::Type&gt;,
+<a href=#4953 id=4953 data-nosnippet>4953</a>) -&gt; <span class="prelude-ty">Option</span>&lt;MatrixType&gt; {
+<a href=#4954 id=4954 data-nosnippet>4954</a>    <span class="kw">match </span>module.types[handle].inner {
+<a href=#4955 id=4955 data-nosnippet>4955</a>        TypeInner::Matrix {
+<a href=#4956 id=4956 data-nosnippet>4956</a>            columns,
+<a href=#4957 id=4957 data-nosnippet>4957</a>            rows,
+<a href=#4958 id=4958 data-nosnippet>4958</a>            scalar,
+<a href=#4959 id=4959 data-nosnippet>4959</a>        } =&gt; <span class="prelude-val">Some</span>(MatrixType {
+<a href=#4960 id=4960 data-nosnippet>4960</a>            columns,
+<a href=#4961 id=4961 data-nosnippet>4961</a>            rows,
+<a href=#4962 id=4962 data-nosnippet>4962</a>            width: scalar.width,
+<a href=#4963 id=4963 data-nosnippet>4963</a>        }),
+<a href=#4964 id=4964 data-nosnippet>4964</a>        TypeInner::Array { base, .. } =&gt; get_inner_matrix_data(module, base),
+<a href=#4965 id=4965 data-nosnippet>4965</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#4966 id=4966 data-nosnippet>4966</a>    }
+<a href=#4967 id=4967 data-nosnippet>4967</a>}
+<a href=#4968 id=4968 data-nosnippet>4968</a>
+<a href=#4969 id=4969 data-nosnippet>4969</a><span class="doccomment">/// If `base` is an access chain of the form `mat`, `mat[col]`, or `mat[col][row]`,
+<a href=#4970 id=4970 data-nosnippet>4970</a>/// returns a tuple of the matrix, the column (vector) index (if present), and
+<a href=#4971 id=4971 data-nosnippet>4971</a>/// the row (scalar) index (if present).
+<a href=#4972 id=4972 data-nosnippet>4972</a></span><span class="kw">fn </span>find_matrix_in_access_chain(
+<a href=#4973 id=4973 data-nosnippet>4973</a>    module: <span class="kw-2">&amp;</span>Module,
+<a href=#4974 id=4974 data-nosnippet>4974</a>    base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+<a href=#4975 id=4975 data-nosnippet>4975</a>    func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#4976 id=4976 data-nosnippet>4976</a>) -&gt; <span class="prelude-ty">Option</span>&lt;(Handle&lt;<span class="kw">crate</span>::Expression&gt;, <span class="prelude-ty">Option</span>&lt;Index&gt;, <span class="prelude-ty">Option</span>&lt;Index&gt;)&gt; {
+<a href=#4977 id=4977 data-nosnippet>4977</a>    <span class="kw">let </span><span class="kw-2">mut </span>current_base = base;
+<a href=#4978 id=4978 data-nosnippet>4978</a>    <span class="kw">let </span><span class="kw-2">mut </span>vector = <span class="prelude-val">None</span>;
+<a href=#4979 id=4979 data-nosnippet>4979</a>    <span class="kw">let </span><span class="kw-2">mut </span>scalar = <span class="prelude-val">None</span>;
+<a href=#4980 id=4980 data-nosnippet>4980</a>    <span class="kw">loop </span>{
+<a href=#4981 id=4981 data-nosnippet>4981</a>        <span class="kw">let </span>resolved_tr = func_ctx
+<a href=#4982 id=4982 data-nosnippet>4982</a>            .resolve_type(current_base, <span class="kw-2">&amp;</span>module.types)
+<a href=#4983 id=4983 data-nosnippet>4983</a>            .pointer_base_type();
+<a href=#4984 id=4984 data-nosnippet>4984</a>        <span class="kw">let </span>resolved = resolved_tr.as_ref()<span class="question-mark">?</span>.inner_with(<span class="kw-2">&amp;</span>module.types);
+<a href=#4985 id=4985 data-nosnippet>4985</a>
+<a href=#4986 id=4986 data-nosnippet>4986</a>        <span class="kw">match </span><span class="kw-2">*</span>resolved {
+<a href=#4987 id=4987 data-nosnippet>4987</a>            TypeInner::Matrix { .. } =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>((current_base, vector, scalar)),
+<a href=#4988 id=4988 data-nosnippet>4988</a>            TypeInner::Scalar(<span class="kw">_</span>) | TypeInner::Vector { .. } =&gt; {}
+<a href=#4989 id=4989 data-nosnippet>4989</a>            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+<a href=#4990 id=4990 data-nosnippet>4990</a>        }
+<a href=#4991 id=4991 data-nosnippet>4991</a>
+<a href=#4992 id=4992 data-nosnippet>4992</a>        <span class="kw">let </span>index;
+<a href=#4993 id=4993 data-nosnippet>4993</a>        (current_base, index) = <span class="kw">match </span>func_ctx.expressions[current_base] {
+<a href=#4994 id=4994 data-nosnippet>4994</a>            <span class="kw">crate</span>::Expression::Access { base, index } =&gt; (base, Index::Expression(index)),
+<a href=#4995 id=4995 data-nosnippet>4995</a>            <span class="kw">crate</span>::Expression::AccessIndex { base, index } =&gt; (base, Index::Static(index)),
+<a href=#4996 id=4996 data-nosnippet>4996</a>            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+<a href=#4997 id=4997 data-nosnippet>4997</a>        };
+<a href=#4998 id=4998 data-nosnippet>4998</a>
+<a href=#4999 id=4999 data-nosnippet>4999</a>        <span class="kw">match </span><span class="kw-2">*</span>resolved {
+<a href=#5000 id=5000 data-nosnippet>5000</a>            TypeInner::Scalar(<span class="kw">_</span>) =&gt; scalar = <span class="prelude-val">Some</span>(index),
+<a href=#5001 id=5001 data-nosnippet>5001</a>            TypeInner::Vector { .. } =&gt; vector = <span class="prelude-val">Some</span>(index),
+<a href=#5002 id=5002 data-nosnippet>5002</a>            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+<a href=#5003 id=5003 data-nosnippet>5003</a>        }
+<a href=#5004 id=5004 data-nosnippet>5004</a>    }
+<a href=#5005 id=5005 data-nosnippet>5005</a>}
+<a href=#5006 id=5006 data-nosnippet>5006</a>
+<a href=#5007 id=5007 data-nosnippet>5007</a><span class="doccomment">/// Returns the matrix data if the access chain starting at `base`:
+<a href=#5008 id=5008 data-nosnippet>5008</a>/// - starts with an expression with resolved type of [`TypeInner::Matrix`] if `direct = true`
+<a href=#5009 id=5009 data-nosnippet>5009</a>/// - contains one or more expressions with resolved type of [`TypeInner::Array`] of [`TypeInner::Matrix`]
+<a href=#5010 id=5010 data-nosnippet>5010</a>/// - ends at an expression with resolved type of [`TypeInner::Struct`]
+<a href=#5011 id=5011 data-nosnippet>5011</a></span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_inner_matrix_of_struct_array_member(
+<a href=#5012 id=5012 data-nosnippet>5012</a>    module: <span class="kw-2">&amp;</span>Module,
+<a href=#5013 id=5013 data-nosnippet>5013</a>    base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+<a href=#5014 id=5014 data-nosnippet>5014</a>    func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#5015 id=5015 data-nosnippet>5015</a>    direct: bool,
+<a href=#5016 id=5016 data-nosnippet>5016</a>) -&gt; <span class="prelude-ty">Option</span>&lt;MatrixType&gt; {
+<a href=#5017 id=5017 data-nosnippet>5017</a>    <span class="kw">let </span><span class="kw-2">mut </span>mat_data = <span class="prelude-val">None</span>;
+<a href=#5018 id=5018 data-nosnippet>5018</a>    <span class="kw">let </span><span class="kw-2">mut </span>array_base = <span class="prelude-val">None</span>;
+<a href=#5019 id=5019 data-nosnippet>5019</a>
+<a href=#5020 id=5020 data-nosnippet>5020</a>    <span class="kw">let </span><span class="kw-2">mut </span>current_base = base;
+<a href=#5021 id=5021 data-nosnippet>5021</a>    <span class="kw">loop </span>{
+<a href=#5022 id=5022 data-nosnippet>5022</a>        <span class="kw">let </span><span class="kw-2">mut </span>resolved = func_ctx.resolve_type(current_base, <span class="kw-2">&amp;</span>module.types);
+<a href=#5023 id=5023 data-nosnippet>5023</a>        <span class="kw">if let </span>TypeInner::Pointer { base, .. } = <span class="kw-2">*</span>resolved {
+<a href=#5024 id=5024 data-nosnippet>5024</a>            resolved = <span class="kw-2">&amp;</span>module.types[base].inner;
+<a href=#5025 id=5025 data-nosnippet>5025</a>        };
+<a href=#5026 id=5026 data-nosnippet>5026</a>
+<a href=#5027 id=5027 data-nosnippet>5027</a>        <span class="kw">match </span><span class="kw-2">*</span>resolved {
+<a href=#5028 id=5028 data-nosnippet>5028</a>            TypeInner::Matrix {
+<a href=#5029 id=5029 data-nosnippet>5029</a>                columns,
+<a href=#5030 id=5030 data-nosnippet>5030</a>                rows,
+<a href=#5031 id=5031 data-nosnippet>5031</a>                scalar,
+<a href=#5032 id=5032 data-nosnippet>5032</a>            } =&gt; {
+<a href=#5033 id=5033 data-nosnippet>5033</a>                mat_data = <span class="prelude-val">Some</span>(MatrixType {
+<a href=#5034 id=5034 data-nosnippet>5034</a>                    columns,
+<a href=#5035 id=5035 data-nosnippet>5035</a>                    rows,
+<a href=#5036 id=5036 data-nosnippet>5036</a>                    width: scalar.width,
+<a href=#5037 id=5037 data-nosnippet>5037</a>                })
+<a href=#5038 id=5038 data-nosnippet>5038</a>            }
+<a href=#5039 id=5039 data-nosnippet>5039</a>            TypeInner::Array { base, .. } =&gt; {
+<a href=#5040 id=5040 data-nosnippet>5040</a>                array_base = <span class="prelude-val">Some</span>(base);
+<a href=#5041 id=5041 data-nosnippet>5041</a>            }
+<a href=#5042 id=5042 data-nosnippet>5042</a>            TypeInner::Struct { .. } =&gt; {
+<a href=#5043 id=5043 data-nosnippet>5043</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(array_base) = array_base {
+<a href=#5044 id=5044 data-nosnippet>5044</a>                    <span class="kw">if </span>direct {
+<a href=#5045 id=5045 data-nosnippet>5045</a>                        <span class="kw">return </span>mat_data;
+<a href=#5046 id=5046 data-nosnippet>5046</a>                    } <span class="kw">else </span>{
+<a href=#5047 id=5047 data-nosnippet>5047</a>                        <span class="kw">return </span>get_inner_matrix_data(module, array_base);
+<a href=#5048 id=5048 data-nosnippet>5048</a>                    }
+<a href=#5049 id=5049 data-nosnippet>5049</a>                }
+<a href=#5050 id=5050 data-nosnippet>5050</a>
+<a href=#5051 id=5051 data-nosnippet>5051</a>                <span class="kw">break</span>;
+<a href=#5052 id=5052 data-nosnippet>5052</a>            }
+<a href=#5053 id=5053 data-nosnippet>5053</a>            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
+<a href=#5054 id=5054 data-nosnippet>5054</a>        }
+<a href=#5055 id=5055 data-nosnippet>5055</a>
+<a href=#5056 id=5056 data-nosnippet>5056</a>        current_base = <span class="kw">match </span>func_ctx.expressions[current_base] {
+<a href=#5057 id=5057 data-nosnippet>5057</a>            <span class="kw">crate</span>::Expression::Access { base, .. } =&gt; base,
+<a href=#5058 id=5058 data-nosnippet>5058</a>            <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; base,
+<a href=#5059 id=5059 data-nosnippet>5059</a>            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
+<a href=#5060 id=5060 data-nosnippet>5060</a>        };
+<a href=#5061 id=5061 data-nosnippet>5061</a>    }
+<a href=#5062 id=5062 data-nosnippet>5062</a>    <span class="prelude-val">None
+<a href=#5063 id=5063 data-nosnippet>5063</a></span>}
+<a href=#5064 id=5064 data-nosnippet>5064</a>
+<a href=#5065 id=5065 data-nosnippet>5065</a><span class="doccomment">/// Returns the matrix data if the access chain starting at `base`:
+<a href=#5066 id=5066 data-nosnippet>5066</a>/// - starts with an expression with resolved type of [`TypeInner::Matrix`], or
+<a href=#5067 id=5067 data-nosnippet>5067</a>/// - contains zero or more expressions with resolved type of [`TypeInner::Array`] of [`TypeInner::Matrix`] if `direct = false`
+<a href=#5068 id=5068 data-nosnippet>5068</a>/// - and ends with an [`Expression::GlobalVariable`](crate::Expression::GlobalVariable) in [`AddressSpace::Uniform`](crate::AddressSpace::Uniform)
+<a href=#5069 id=5069 data-nosnippet>5069</a></span><span class="kw">fn </span>get_inner_matrix_of_global_uniform(
+<a href=#5070 id=5070 data-nosnippet>5070</a>    module: <span class="kw-2">&amp;</span>Module,
+<a href=#5071 id=5071 data-nosnippet>5071</a>    base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+<a href=#5072 id=5072 data-nosnippet>5072</a>    func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#5073 id=5073 data-nosnippet>5073</a>    direct: bool,
+<a href=#5074 id=5074 data-nosnippet>5074</a>) -&gt; <span class="prelude-ty">Option</span>&lt;MatrixType&gt; {
+<a href=#5075 id=5075 data-nosnippet>5075</a>    <span class="kw">let </span><span class="kw-2">mut </span>mat_data = <span class="prelude-val">None</span>;
+<a href=#5076 id=5076 data-nosnippet>5076</a>    <span class="kw">let </span><span class="kw-2">mut </span>array_base = <span class="prelude-val">None</span>;
+<a href=#5077 id=5077 data-nosnippet>5077</a>
+<a href=#5078 id=5078 data-nosnippet>5078</a>    <span class="kw">let </span><span class="kw-2">mut </span>current_base = base;
+<a href=#5079 id=5079 data-nosnippet>5079</a>    <span class="kw">loop </span>{
+<a href=#5080 id=5080 data-nosnippet>5080</a>        <span class="kw">let </span><span class="kw-2">mut </span>resolved = func_ctx.resolve_type(current_base, <span class="kw-2">&amp;</span>module.types);
+<a href=#5081 id=5081 data-nosnippet>5081</a>        <span class="kw">if let </span>TypeInner::Pointer { base, .. } = <span class="kw-2">*</span>resolved {
+<a href=#5082 id=5082 data-nosnippet>5082</a>            resolved = <span class="kw-2">&amp;</span>module.types[base].inner;
+<a href=#5083 id=5083 data-nosnippet>5083</a>        };
+<a href=#5084 id=5084 data-nosnippet>5084</a>
+<a href=#5085 id=5085 data-nosnippet>5085</a>        <span class="kw">match </span><span class="kw-2">*</span>resolved {
+<a href=#5086 id=5086 data-nosnippet>5086</a>            TypeInner::Matrix {
+<a href=#5087 id=5087 data-nosnippet>5087</a>                columns,
+<a href=#5088 id=5088 data-nosnippet>5088</a>                rows,
+<a href=#5089 id=5089 data-nosnippet>5089</a>                scalar,
+<a href=#5090 id=5090 data-nosnippet>5090</a>            } =&gt; {
+<a href=#5091 id=5091 data-nosnippet>5091</a>                mat_data = <span class="prelude-val">Some</span>(MatrixType {
+<a href=#5092 id=5092 data-nosnippet>5092</a>                    columns,
+<a href=#5093 id=5093 data-nosnippet>5093</a>                    rows,
+<a href=#5094 id=5094 data-nosnippet>5094</a>                    width: scalar.width,
+<a href=#5095 id=5095 data-nosnippet>5095</a>                })
+<a href=#5096 id=5096 data-nosnippet>5096</a>            }
+<a href=#5097 id=5097 data-nosnippet>5097</a>            TypeInner::Array { base, .. } =&gt; {
+<a href=#5098 id=5098 data-nosnippet>5098</a>                <span class="kw">if </span>!direct {
+<a href=#5099 id=5099 data-nosnippet>5099</a>                    array_base = <span class="prelude-val">Some</span>(base);
+<a href=#5100 id=5100 data-nosnippet>5100</a>                }
+<a href=#5101 id=5101 data-nosnippet>5101</a>            }
+<a href=#5102 id=5102 data-nosnippet>5102</a>            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
+<a href=#5103 id=5103 data-nosnippet>5103</a>        }
+<a href=#5104 id=5104 data-nosnippet>5104</a>
+<a href=#5105 id=5105 data-nosnippet>5105</a>        current_base = <span class="kw">match </span>func_ctx.expressions[current_base] {
+<a href=#5106 id=5106 data-nosnippet>5106</a>            <span class="kw">crate</span>::Expression::Access { base, .. } =&gt; base,
+<a href=#5107 id=5107 data-nosnippet>5107</a>            <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; base,
+<a href=#5108 id=5108 data-nosnippet>5108</a>            <span class="kw">crate</span>::Expression::GlobalVariable(handle)
+<a href=#5109 id=5109 data-nosnippet>5109</a>                <span class="kw">if </span>module.global_variables[handle].space == <span class="kw">crate</span>::AddressSpace::Uniform =&gt;
+<a href=#5110 id=5110 data-nosnippet>5110</a>            {
+<a href=#5111 id=5111 data-nosnippet>5111</a>                <span class="kw">return </span>mat_data.or_else(|| {
+<a href=#5112 id=5112 data-nosnippet>5112</a>                    array_base.and_then(|array_base| get_inner_matrix_data(module, array_base))
+<a href=#5113 id=5113 data-nosnippet>5113</a>                })
+<a href=#5114 id=5114 data-nosnippet>5114</a>            }
+<a href=#5115 id=5115 data-nosnippet>5115</a>            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
+<a href=#5116 id=5116 data-nosnippet>5116</a>        };
+<a href=#5117 id=5117 data-nosnippet>5117</a>    }
+<a href=#5118 id=5118 data-nosnippet>5118</a>    <span class="prelude-val">None
+<a href=#5119 id=5119 data-nosnippet>5119</a></span>}
 </code></pre></div></section></main></body></html>

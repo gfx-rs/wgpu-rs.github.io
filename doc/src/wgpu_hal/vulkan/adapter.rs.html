@@ -1,10 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/adapter.rs`."><title>adapter.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_hal/vulkan/</div>adapter.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, boxed::Box, collections::BTreeMap, sync::Arc, vec::Vec};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/adapter.rs`."><title>adapter.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">wgpu_hal/vulkan/</div>adapter.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, boxed::Box, collections::BTreeMap, sync::Arc, vec::Vec};
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::{ffi::CStr, marker::PhantomData};
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>ash::{ext, google, khr, vk};
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>wgpu_sync::Mutex;
 <a href=#6 id=6 data-nosnippet>6</a>
-<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use crate</span>::{vulkan::semaphore_list::SemaphoreList, AllocationSizes};
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>crate::{vulkan::semaphore_list::SemaphoreList, AllocationSizes};
 <a href=#8 id=8 data-nosnippet>8</a>
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span><span class="kw">super</span>::semaphore_list::SemaphoreListMode;
 <a href=#10 id=10 data-nosnippet>10</a>
@@ -243,7 +243,7 @@
 <a href=#243 id=243 data-nosnippet>243</a>    <span class="kw">fn </span>supports_storage_input_output_16(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
 <a href=#244 id=244 data-nosnippet>244</a>        <span class="self">self</span>._16bit_storage
 <a href=#245 id=245 data-nosnippet>245</a>            .as_ref()
-<a href=#246 id=246 data-nosnippet>246</a>            .map(|features| features.<span class="macro">storage_input_output16 !</span>= <span class="number">0</span>)
+<a href=#246 id=246 data-nosnippet>246</a>            .map(|features| features.storage_input_output16 != <span class="number">0</span>)
 <a href=#247 id=247 data-nosnippet>247</a>            .unwrap_or(<span class="bool-val">false</span>)
 <a href=#248 id=248 data-nosnippet>248</a>    }
 <a href=#249 id=249 data-nosnippet>249</a>
@@ -308,7 +308,7 @@
 <a href=#308 id=308 data-nosnippet>308</a>                    requested_features.contains(wgt::Features::INDIRECT_FIRST_INSTANCE),
 <a href=#309 id=309 data-nosnippet>309</a>                )
 <a href=#310 id=310 data-nosnippet>310</a>                <span class="comment">//.dual_src_blend(requested_features.contains(wgt::Features::DUAL_SRC_BLENDING))
-<a href=#311 id=311 data-nosnippet>311</a>                </span>.multi_draw_indirect(phd_features.core.<span class="macro">multi_draw_indirect !</span>= <span class="number">0</span>)
+<a href=#311 id=311 data-nosnippet>311</a>                </span>.multi_draw_indirect(phd_features.core.multi_draw_indirect != <span class="number">0</span>)
 <a href=#312 id=312 data-nosnippet>312</a>                .fill_mode_non_solid(requested_features.intersects(
 <a href=#313 id=313 data-nosnippet>313</a>                    wgt::Features::POLYGON_MODE_LINE | wgt::Features::POLYGON_MODE_POINT,
 <a href=#314 id=314 data-nosnippet>314</a>                ))
@@ -715,19 +715,19 @@
 <a href=#715 id=715 data-nosnippet>715</a>            caps.supports_extension(khr::swapchain_mutable_format::NAME)
 <a href=#716 id=716 data-nosnippet>716</a>                || !caps.supports_extension(khr::swapchain::NAME),
 <a href=#717 id=717 data-nosnippet>717</a>        );
-<a href=#718 id=718 data-nosnippet>718</a>        dl_flags.set(Df::CUBE_ARRAY_TEXTURES, <span class="self">self</span>.core.<span class="macro">image_cube_array !</span>= <span class="number">0</span>);
-<a href=#719 id=719 data-nosnippet>719</a>        dl_flags.set(Df::ANISOTROPIC_FILTERING, <span class="self">self</span>.core.<span class="macro">sampler_anisotropy !</span>= <span class="number">0</span>);
+<a href=#718 id=718 data-nosnippet>718</a>        dl_flags.set(Df::CUBE_ARRAY_TEXTURES, <span class="self">self</span>.core.image_cube_array != <span class="number">0</span>);
+<a href=#719 id=719 data-nosnippet>719</a>        dl_flags.set(Df::ANISOTROPIC_FILTERING, <span class="self">self</span>.core.sampler_anisotropy != <span class="number">0</span>);
 <a href=#720 id=720 data-nosnippet>720</a>        dl_flags.set(
 <a href=#721 id=721 data-nosnippet>721</a>            Df::FRAGMENT_WRITABLE_STORAGE,
-<a href=#722 id=722 data-nosnippet>722</a>            <span class="self">self</span>.core.<span class="macro">fragment_stores_and_atomics !</span>= <span class="number">0</span>,
+<a href=#722 id=722 data-nosnippet>722</a>            <span class="self">self</span>.core.fragment_stores_and_atomics != <span class="number">0</span>,
 <a href=#723 id=723 data-nosnippet>723</a>        );
-<a href=#724 id=724 data-nosnippet>724</a>        dl_flags.set(Df::MULTISAMPLED_SHADING, <span class="self">self</span>.core.<span class="macro">sample_rate_shading !</span>= <span class="number">0</span>);
-<a href=#725 id=725 data-nosnippet>725</a>        dl_flags.set(Df::INDEPENDENT_BLEND, <span class="self">self</span>.core.<span class="macro">independent_blend !</span>= <span class="number">0</span>);
+<a href=#724 id=724 data-nosnippet>724</a>        dl_flags.set(Df::MULTISAMPLED_SHADING, <span class="self">self</span>.core.sample_rate_shading != <span class="number">0</span>);
+<a href=#725 id=725 data-nosnippet>725</a>        dl_flags.set(Df::INDEPENDENT_BLEND, <span class="self">self</span>.core.independent_blend != <span class="number">0</span>);
 <a href=#726 id=726 data-nosnippet>726</a>        dl_flags.set(
 <a href=#727 id=727 data-nosnippet>727</a>            Df::FULL_DRAW_INDEX_UINT32,
-<a href=#728 id=728 data-nosnippet>728</a>            <span class="self">self</span>.core.<span class="macro">full_draw_index_uint32 !</span>= <span class="number">0</span>,
+<a href=#728 id=728 data-nosnippet>728</a>            <span class="self">self</span>.core.full_draw_index_uint32 != <span class="number">0</span>,
 <a href=#729 id=729 data-nosnippet>729</a>        );
-<a href=#730 id=730 data-nosnippet>730</a>        dl_flags.set(Df::DEPTH_BIAS_CLAMP, <span class="self">self</span>.core.<span class="macro">depth_bias_clamp !</span>= <span class="number">0</span>);
+<a href=#730 id=730 data-nosnippet>730</a>        dl_flags.set(Df::DEPTH_BIAS_CLAMP, <span class="self">self</span>.core.depth_bias_clamp != <span class="number">0</span>);
 <a href=#731 id=731 data-nosnippet>731</a>
 <a href=#732 id=732 data-nosnippet>732</a>        features.set(
 <a href=#733 id=733 data-nosnippet>733</a>            F::TIMESTAMP_QUERY
@@ -738,57 +738,57 @@
 <a href=#738 id=738 data-nosnippet>738</a>        );
 <a href=#739 id=739 data-nosnippet>739</a>        features.set(
 <a href=#740 id=740 data-nosnippet>740</a>            F::INDIRECT_FIRST_INSTANCE,
-<a href=#741 id=741 data-nosnippet>741</a>            <span class="self">self</span>.core.<span class="macro">draw_indirect_first_instance !</span>= <span class="number">0</span>,
+<a href=#741 id=741 data-nosnippet>741</a>            <span class="self">self</span>.core.draw_indirect_first_instance != <span class="number">0</span>,
 <a href=#742 id=742 data-nosnippet>742</a>        );
 <a href=#743 id=743 data-nosnippet>743</a>        <span class="comment">//if self.core.dual_src_blend != 0
-<a href=#744 id=744 data-nosnippet>744</a>        </span>features.set(F::POLYGON_MODE_LINE, <span class="self">self</span>.core.<span class="macro">fill_mode_non_solid !</span>= <span class="number">0</span>);
-<a href=#745 id=745 data-nosnippet>745</a>        features.set(F::POLYGON_MODE_POINT, <span class="self">self</span>.core.<span class="macro">fill_mode_non_solid !</span>= <span class="number">0</span>);
+<a href=#744 id=744 data-nosnippet>744</a>        </span>features.set(F::POLYGON_MODE_LINE, <span class="self">self</span>.core.fill_mode_non_solid != <span class="number">0</span>);
+<a href=#745 id=745 data-nosnippet>745</a>        features.set(F::POLYGON_MODE_POINT, <span class="self">self</span>.core.fill_mode_non_solid != <span class="number">0</span>);
 <a href=#746 id=746 data-nosnippet>746</a>        <span class="comment">//if self.core.depth_bounds != 0 {
 <a href=#747 id=747 data-nosnippet>747</a>        //if self.core.alpha_to_one != 0 {
 <a href=#748 id=748 data-nosnippet>748</a>        //if self.core.multi_viewport != 0 {
 <a href=#749 id=749 data-nosnippet>749</a>        </span>features.set(
 <a href=#750 id=750 data-nosnippet>750</a>            F::TEXTURE_COMPRESSION_ETC2,
-<a href=#751 id=751 data-nosnippet>751</a>            <span class="self">self</span>.core.<span class="macro">texture_compression_etc2 !</span>= <span class="number">0</span>,
+<a href=#751 id=751 data-nosnippet>751</a>            <span class="self">self</span>.core.texture_compression_etc2 != <span class="number">0</span>,
 <a href=#752 id=752 data-nosnippet>752</a>        );
 <a href=#753 id=753 data-nosnippet>753</a>        features.set(
 <a href=#754 id=754 data-nosnippet>754</a>            F::TEXTURE_COMPRESSION_ASTC,
-<a href=#755 id=755 data-nosnippet>755</a>            <span class="self">self</span>.core.<span class="macro">texture_compression_astc_ldr !</span>= <span class="number">0</span>,
+<a href=#755 id=755 data-nosnippet>755</a>            <span class="self">self</span>.core.texture_compression_astc_ldr != <span class="number">0</span>,
 <a href=#756 id=756 data-nosnippet>756</a>        );
 <a href=#757 id=757 data-nosnippet>757</a>        features.set(
 <a href=#758 id=758 data-nosnippet>758</a>            F::TEXTURE_COMPRESSION_BC,
-<a href=#759 id=759 data-nosnippet>759</a>            <span class="self">self</span>.core.<span class="macro">texture_compression_bc !</span>= <span class="number">0</span>,
+<a href=#759 id=759 data-nosnippet>759</a>            <span class="self">self</span>.core.texture_compression_bc != <span class="number">0</span>,
 <a href=#760 id=760 data-nosnippet>760</a>        );
 <a href=#761 id=761 data-nosnippet>761</a>        features.set(
 <a href=#762 id=762 data-nosnippet>762</a>            F::TEXTURE_COMPRESSION_BC_SLICED_3D,
-<a href=#763 id=763 data-nosnippet>763</a>            <span class="self">self</span>.core.<span class="macro">texture_compression_bc !</span>= <span class="number">0</span>, <span class="comment">// BC guarantees Sliced 3D
+<a href=#763 id=763 data-nosnippet>763</a>            <span class="self">self</span>.core.texture_compression_bc != <span class="number">0</span>, <span class="comment">// BC guarantees Sliced 3D
 <a href=#764 id=764 data-nosnippet>764</a>        </span>);
 <a href=#765 id=765 data-nosnippet>765</a>        features.set(
 <a href=#766 id=766 data-nosnippet>766</a>            F::PIPELINE_STATISTICS_QUERY,
-<a href=#767 id=767 data-nosnippet>767</a>            <span class="self">self</span>.core.<span class="macro">pipeline_statistics_query !</span>= <span class="number">0</span>,
+<a href=#767 id=767 data-nosnippet>767</a>            <span class="self">self</span>.core.pipeline_statistics_query != <span class="number">0</span>,
 <a href=#768 id=768 data-nosnippet>768</a>        );
 <a href=#769 id=769 data-nosnippet>769</a>        features.set(
 <a href=#770 id=770 data-nosnippet>770</a>            F::VERTEX_WRITABLE_STORAGE,
-<a href=#771 id=771 data-nosnippet>771</a>            <span class="self">self</span>.core.<span class="macro">vertex_pipeline_stores_and_atomics !</span>= <span class="number">0</span>,
+<a href=#771 id=771 data-nosnippet>771</a>            <span class="self">self</span>.core.vertex_pipeline_stores_and_atomics != <span class="number">0</span>,
 <a href=#772 id=772 data-nosnippet>772</a>        );
 <a href=#773 id=773 data-nosnippet>773</a>
-<a href=#774 id=774 data-nosnippet>774</a>        features.set(F::SHADER_F64, <span class="self">self</span>.core.<span class="macro">shader_float64 !</span>= <span class="number">0</span>);
-<a href=#775 id=775 data-nosnippet>775</a>        features.set(F::SHADER_INT64, <span class="self">self</span>.core.<span class="macro">shader_int64 !</span>= <span class="number">0</span>);
+<a href=#774 id=774 data-nosnippet>774</a>        features.set(F::SHADER_F64, <span class="self">self</span>.core.shader_float64 != <span class="number">0</span>);
+<a href=#775 id=775 data-nosnippet>775</a>        features.set(F::SHADER_INT64, <span class="self">self</span>.core.shader_int64 != <span class="number">0</span>);
 <a href=#776 id=776 data-nosnippet>776</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>bit16) = <span class="self">self</span>._16bit_storage {
 <a href=#777 id=777 data-nosnippet>777</a>            features.set(
 <a href=#778 id=778 data-nosnippet>778</a>                F::SHADER_I16,
-<a href=#779 id=779 data-nosnippet>779</a>                <span class="self">self</span>.core.<span class="macro">shader_int16 !</span>= <span class="number">0
-<a href=#780 id=780 data-nosnippet>780</a>                    </span>&amp;&amp; bit16.<span class="macro">storage_buffer16_bit_access !</span>= <span class="number">0
-<a href=#781 id=781 data-nosnippet>781</a>                    </span>&amp;&amp; bit16.<span class="macro">uniform_and_storage_buffer16_bit_access !</span>= <span class="number">0</span>,
+<a href=#779 id=779 data-nosnippet>779</a>                <span class="self">self</span>.core.shader_int16 != <span class="number">0
+<a href=#780 id=780 data-nosnippet>780</a>                    </span>&amp;&amp; bit16.storage_buffer16_bit_access != <span class="number">0
+<a href=#781 id=781 data-nosnippet>781</a>                    </span>&amp;&amp; bit16.uniform_and_storage_buffer16_bit_access != <span class="number">0</span>,
 <a href=#782 id=782 data-nosnippet>782</a>            );
 <a href=#783 id=783 data-nosnippet>783</a>        }
 <a href=#784 id=784 data-nosnippet>784</a>
-<a href=#785 id=785 data-nosnippet>785</a>        features.set(F::PRIMITIVE_INDEX, <span class="self">self</span>.core.<span class="macro">geometry_shader !</span>= <span class="number">0</span>);
+<a href=#785 id=785 data-nosnippet>785</a>        features.set(F::PRIMITIVE_INDEX, <span class="self">self</span>.core.geometry_shader != <span class="number">0</span>);
 <a href=#786 id=786 data-nosnippet>786</a>
 <a href=#787 id=787 data-nosnippet>787</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>shader_atomic_int64) = <span class="self">self</span>.shader_atomic_int64 {
 <a href=#788 id=788 data-nosnippet>788</a>            features.set(
 <a href=#789 id=789 data-nosnippet>789</a>                F::SHADER_INT64_ATOMIC_ALL_OPS | F::SHADER_INT64_ATOMIC_MIN_MAX,
-<a href=#790 id=790 data-nosnippet>790</a>                shader_atomic_int64.<span class="macro">shader_buffer_int64_atomics !</span>= <span class="number">0
-<a href=#791 id=791 data-nosnippet>791</a>                    </span>&amp;&amp; shader_atomic_int64.<span class="macro">shader_shared_int64_atomics !</span>= <span class="number">0</span>,
+<a href=#790 id=790 data-nosnippet>790</a>                shader_atomic_int64.shader_buffer_int64_atomics != <span class="number">0
+<a href=#791 id=791 data-nosnippet>791</a>                    </span>&amp;&amp; shader_atomic_int64.shader_shared_int64_atomics != <span class="number">0</span>,
 <a href=#792 id=792 data-nosnippet>792</a>            );
 <a href=#793 id=793 data-nosnippet>793</a>        }
 <a href=#794 id=794 data-nosnippet>794</a>
@@ -797,23 +797,23 @@
 <a href=#797 id=797 data-nosnippet>797</a>                F::TEXTURE_INT64_ATOMIC,
 <a href=#798 id=798 data-nosnippet>798</a>                shader_image_atomic_int64
 <a href=#799 id=799 data-nosnippet>799</a>                    .shader_image_int64_atomics(<span class="bool-val">true</span>)
-<a href=#800 id=800 data-nosnippet>800</a>                    .<span class="macro">shader_image_int64_atomics
-<a href=#801 id=801 data-nosnippet>801</a>                    !</span>= <span class="number">0</span>,
+<a href=#800 id=800 data-nosnippet>800</a>                    .shader_image_int64_atomics
+<a href=#801 id=801 data-nosnippet>801</a>                    != <span class="number">0</span>,
 <a href=#802 id=802 data-nosnippet>802</a>            );
 <a href=#803 id=803 data-nosnippet>803</a>        }
 <a href=#804 id=804 data-nosnippet>804</a>
 <a href=#805 id=805 data-nosnippet>805</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>shader_atomic_float) = <span class="self">self</span>.shader_atomic_float {
 <a href=#806 id=806 data-nosnippet>806</a>            features.set(
 <a href=#807 id=807 data-nosnippet>807</a>                F::SHADER_FLOAT32_ATOMIC,
-<a href=#808 id=808 data-nosnippet>808</a>                shader_atomic_float.<span class="macro">shader_buffer_float32_atomics !</span>= <span class="number">0
-<a href=#809 id=809 data-nosnippet>809</a>                    </span>&amp;&amp; shader_atomic_float.<span class="macro">shader_buffer_float32_atomic_add !</span>= <span class="number">0</span>,
+<a href=#808 id=808 data-nosnippet>808</a>                shader_atomic_float.shader_buffer_float32_atomics != <span class="number">0
+<a href=#809 id=809 data-nosnippet>809</a>                    </span>&amp;&amp; shader_atomic_float.shader_buffer_float32_atomic_add != <span class="number">0</span>,
 <a href=#810 id=810 data-nosnippet>810</a>            );
 <a href=#811 id=811 data-nosnippet>811</a>        }
 <a href=#812 id=812 data-nosnippet>812</a>
 <a href=#813 id=813 data-nosnippet>813</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>shader_barycentrics) = <span class="self">self</span>.shader_barycentrics {
 <a href=#814 id=814 data-nosnippet>814</a>            features.set(
 <a href=#815 id=815 data-nosnippet>815</a>                F::SHADER_BARYCENTRICS | F::SHADER_PER_VERTEX,
-<a href=#816 id=816 data-nosnippet>816</a>                shader_barycentrics.<span class="macro">fragment_shader_barycentric !</span>= <span class="number">0</span>,
+<a href=#816 id=816 data-nosnippet>816</a>                shader_barycentrics.fragment_shader_barycentric != <span class="number">0</span>,
 <a href=#817 id=817 data-nosnippet>817</a>            );
 <a href=#818 id=818 data-nosnippet>818</a>        }
 <a href=#819 id=819 data-nosnippet>819</a>
@@ -843,14 +843,14 @@
 <a href=#843 id=843 data-nosnippet>843</a>            // As such, we enable all features as a whole, rather individually.
 <a href=#844 id=844 data-nosnippet>844</a>            </span><span class="kw">let </span>supports_descriptor_indexing =
 <a href=#845 id=845 data-nosnippet>845</a>                <span class="comment">// Sampled Images
-<a href=#846 id=846 data-nosnippet>846</a>                </span>descriptor_indexing.<span class="macro">shader_sampled_image_array_non_uniform_indexing !</span>= <span class="number">0
-<a href=#847 id=847 data-nosnippet>847</a>                    </span>&amp;&amp; descriptor_indexing.<span class="macro">descriptor_binding_sampled_image_update_after_bind !</span>= <span class="number">0
+<a href=#846 id=846 data-nosnippet>846</a>                </span>descriptor_indexing.shader_sampled_image_array_non_uniform_indexing != <span class="number">0
+<a href=#847 id=847 data-nosnippet>847</a>                    </span>&amp;&amp; descriptor_indexing.descriptor_binding_sampled_image_update_after_bind != <span class="number">0
 <a href=#848 id=848 data-nosnippet>848</a>                    </span><span class="comment">// Storage Images
-<a href=#849 id=849 data-nosnippet>849</a>                    </span>&amp;&amp; descriptor_indexing.<span class="macro">shader_storage_image_array_non_uniform_indexing !</span>= <span class="number">0
-<a href=#850 id=850 data-nosnippet>850</a>                    </span>&amp;&amp; descriptor_indexing.<span class="macro">descriptor_binding_storage_image_update_after_bind !</span>= <span class="number">0
+<a href=#849 id=849 data-nosnippet>849</a>                    </span>&amp;&amp; descriptor_indexing.shader_storage_image_array_non_uniform_indexing != <span class="number">0
+<a href=#850 id=850 data-nosnippet>850</a>                    </span>&amp;&amp; descriptor_indexing.descriptor_binding_storage_image_update_after_bind != <span class="number">0
 <a href=#851 id=851 data-nosnippet>851</a>                    </span><span class="comment">// Storage Buffers
-<a href=#852 id=852 data-nosnippet>852</a>                    </span>&amp;&amp; descriptor_indexing.<span class="macro">shader_storage_buffer_array_non_uniform_indexing !</span>= <span class="number">0
-<a href=#853 id=853 data-nosnippet>853</a>                    </span>&amp;&amp; descriptor_indexing.<span class="macro">descriptor_binding_storage_buffer_update_after_bind !</span>= <span class="number">0</span>;
+<a href=#852 id=852 data-nosnippet>852</a>                    </span>&amp;&amp; descriptor_indexing.shader_storage_buffer_array_non_uniform_indexing != <span class="number">0
+<a href=#853 id=853 data-nosnippet>853</a>                    </span>&amp;&amp; descriptor_indexing.descriptor_binding_storage_buffer_update_after_bind != <span class="number">0</span>;
 <a href=#854 id=854 data-nosnippet>854</a>
 <a href=#855 id=855 data-nosnippet>855</a>            <span class="kw">let </span>descriptor_indexing_features = F::BUFFER_BINDING_ARRAY
 <a href=#856 id=856 data-nosnippet>856</a>                | F::TEXTURE_BINDING_ARRAY
@@ -861,18 +861,18 @@
 <a href=#861 id=861 data-nosnippet>861</a>            features.set(descriptor_indexing_features, supports_descriptor_indexing);
 <a href=#862 id=862 data-nosnippet>862</a>
 <a href=#863 id=863 data-nosnippet>863</a>            <span class="kw">let </span>supports_partially_bound =
-<a href=#864 id=864 data-nosnippet>864</a>                descriptor_indexing.<span class="macro">descriptor_binding_partially_bound !</span>= <span class="number">0</span>;
+<a href=#864 id=864 data-nosnippet>864</a>                descriptor_indexing.descriptor_binding_partially_bound != <span class="number">0</span>;
 <a href=#865 id=865 data-nosnippet>865</a>
 <a href=#866 id=866 data-nosnippet>866</a>            features.set(F::PARTIALLY_BOUND_BINDING_ARRAY, supports_partially_bound);
 <a href=#867 id=867 data-nosnippet>867</a>        }
 <a href=#868 id=868 data-nosnippet>868</a>
-<a href=#869 id=869 data-nosnippet>869</a>        features.set(F::DEPTH_CLIP_CONTROL, <span class="self">self</span>.core.<span class="macro">depth_clamp !</span>= <span class="number">0</span>);
-<a href=#870 id=870 data-nosnippet>870</a>        features.set(F::DUAL_SOURCE_BLENDING, <span class="self">self</span>.core.<span class="macro">dual_src_blend !</span>= <span class="number">0</span>);
-<a href=#871 id=871 data-nosnippet>871</a>        features.set(F::CLIP_DISTANCES, <span class="self">self</span>.core.<span class="macro">shader_clip_distance !</span>= <span class="number">0</span>);
+<a href=#869 id=869 data-nosnippet>869</a>        features.set(F::DEPTH_CLIP_CONTROL, <span class="self">self</span>.core.depth_clamp != <span class="number">0</span>);
+<a href=#870 id=870 data-nosnippet>870</a>        features.set(F::DUAL_SOURCE_BLENDING, <span class="self">self</span>.core.dual_src_blend != <span class="number">0</span>);
+<a href=#871 id=871 data-nosnippet>871</a>        features.set(F::CLIP_DISTANCES, <span class="self">self</span>.core.shader_clip_distance != <span class="number">0</span>);
 <a href=#872 id=872 data-nosnippet>872</a>
 <a href=#873 id=873 data-nosnippet>873</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>multiview) = <span class="self">self</span>.multiview {
-<a href=#874 id=874 data-nosnippet>874</a>            features.set(F::MULTIVIEW, multiview.<span class="macro">multiview !</span>= <span class="number">0</span>);
-<a href=#875 id=875 data-nosnippet>875</a>            features.set(F::SELECTIVE_MULTIVIEW, multiview.<span class="macro">multiview !</span>= <span class="number">0</span>);
+<a href=#874 id=874 data-nosnippet>874</a>            features.set(F::MULTIVIEW, multiview.multiview != <span class="number">0</span>);
+<a href=#875 id=875 data-nosnippet>875</a>            features.set(F::SELECTIVE_MULTIVIEW, multiview.multiview != <span class="number">0</span>);
 <a href=#876 id=876 data-nosnippet>876</a>        }
 <a href=#877 id=877 data-nosnippet>877</a>
 <a href=#878 id=878 data-nosnippet>878</a>        features.set(
@@ -883,11 +883,11 @@
 <a href=#883 id=883 data-nosnippet>883</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>astc_hdr) = <span class="self">self</span>.astc_hdr {
 <a href=#884 id=884 data-nosnippet>884</a>            features.set(
 <a href=#885 id=885 data-nosnippet>885</a>                F::TEXTURE_COMPRESSION_ASTC_HDR,
-<a href=#886 id=886 data-nosnippet>886</a>                astc_hdr.<span class="macro">texture_compression_astc_hdr !</span>= <span class="number">0</span>,
+<a href=#886 id=886 data-nosnippet>886</a>                astc_hdr.texture_compression_astc_hdr != <span class="number">0</span>,
 <a href=#887 id=887 data-nosnippet>887</a>            );
 <a href=#888 id=888 data-nosnippet>888</a>        }
 <a href=#889 id=889 data-nosnippet>889</a>
-<a href=#890 id=890 data-nosnippet>890</a>        <span class="kw">if </span><span class="self">self</span>.core.<span class="macro">texture_compression_astc_ldr !</span>= <span class="number">0 </span>{
+<a href=#890 id=890 data-nosnippet>890</a>        <span class="kw">if </span><span class="self">self</span>.core.texture_compression_astc_ldr != <span class="number">0 </span>{
 <a href=#891 id=891 data-nosnippet>891</a>            features.set(
 <a href=#892 id=892 data-nosnippet>892</a>                F::TEXTURE_COMPRESSION_ASTC_SLICED_3D,
 <a href=#893 id=893 data-nosnippet>893</a>                supports_astc_3d(instance, phd),
@@ -900,9 +900,9 @@
 <a href=#900 id=900 data-nosnippet>900</a>            // types when this capability is not available
 <a href=#901 id=901 data-nosnippet>901</a>            </span>features.set(
 <a href=#902 id=902 data-nosnippet>902</a>                F::SHADER_F16,
-<a href=#903 id=903 data-nosnippet>903</a>                f16_i8.<span class="macro">shader_float16 !</span>= <span class="number">0
-<a href=#904 id=904 data-nosnippet>904</a>                    </span>&amp;&amp; bit16.<span class="macro">storage_buffer16_bit_access !</span>= <span class="number">0
-<a href=#905 id=905 data-nosnippet>905</a>                    </span>&amp;&amp; bit16.<span class="macro">uniform_and_storage_buffer16_bit_access !</span>= <span class="number">0</span>,
+<a href=#903 id=903 data-nosnippet>903</a>                f16_i8.shader_float16 != <span class="number">0
+<a href=#904 id=904 data-nosnippet>904</a>                    </span>&amp;&amp; bit16.storage_buffer16_bit_access != <span class="number">0
+<a href=#905 id=905 data-nosnippet>905</a>                    </span>&amp;&amp; bit16.uniform_and_storage_buffer16_bit_access != <span class="number">0</span>,
 <a href=#906 id=906 data-nosnippet>906</a>            );
 <a href=#907 id=907 data-nosnippet>907</a>        }
 <a href=#908 id=908 data-nosnippet>908</a>
@@ -972,7 +972,7 @@
 <a href=#972 id=972 data-nosnippet>972</a>                </span>.acceleration_structure
 <a href=#973 id=973 data-nosnippet>973</a>                .as_ref()
 <a href=#974 id=974 data-nosnippet>974</a>                .is_some_and(|features| {
-<a href=#975 id=975 data-nosnippet>975</a>                    features.<span class="macro">descriptor_binding_acceleration_structure_update_after_bind !</span>= <span class="number">0
+<a href=#975 id=975 data-nosnippet>975</a>                    features.descriptor_binding_acceleration_structure_update_after_bind != <span class="number">0
 <a href=#976 id=976 data-nosnippet>976</a>                </span>});
 <a href=#977 id=977 data-nosnippet>977</a>
 <a href=#978 id=978 data-nosnippet>978</a>        features.set(
@@ -1087,7 +1087,7 @@
 <a href=#1087 id=1087 data-nosnippet>1087</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>mesh_shader) = <span class="self">self</span>.mesh_shader {
 <a href=#1088 id=1088 data-nosnippet>1088</a>            features.set(
 <a href=#1089 id=1089 data-nosnippet>1089</a>                F::EXPERIMENTAL_MESH_SHADER_MULTIVIEW,
-<a href=#1090 id=1090 data-nosnippet>1090</a>                mesh_shader.<span class="macro">multiview_mesh_shader !</span>= <span class="number">0</span>,
+<a href=#1090 id=1090 data-nosnippet>1090</a>                mesh_shader.multiview_mesh_shader != <span class="number">0</span>,
 <a href=#1091 id=1091 data-nosnippet>1091</a>            );
 <a href=#1092 id=1092 data-nosnippet>1092</a>        }
 <a href=#1093 id=1093 data-nosnippet>1093</a>
@@ -1121,7 +1121,7 @@
 <a href=#1121 id=1121 data-nosnippet>1121</a>        features.set(
 <a href=#1122 id=1122 data-nosnippet>1122</a>            F::SHADER_DRAW_INDEX,
 <a href=#1123 id=1123 data-nosnippet>1123</a>            <span class="self">self</span>.shader_draw_parameters
-<a href=#1124 id=1124 data-nosnippet>1124</a>                .is_some_and(|a| a.<span class="macro">shader_draw_parameters !</span>= <span class="number">0</span>)
+<a href=#1124 id=1124 data-nosnippet>1124</a>                .is_some_and(|a| a.shader_draw_parameters != <span class="number">0</span>)
 <a href=#1125 id=1125 data-nosnippet>1125</a>                || caps.supports_extension(<span class="string">c"VK_KHR_shader_draw_parameters"</span>),
 <a href=#1126 id=1126 data-nosnippet>1126</a>        );
 <a href=#1127 id=1127 data-nosnippet>1127</a>
@@ -2325,7 +2325,7 @@
 <a href=#2325 id=2325 data-nosnippet>2325</a>            device: phd_capabilities.properties.device_id,
 <a href=#2326 id=2326 data-nosnippet>2326</a>            device_pci_bus_id: phd_capabilities
 <a href=#2327 id=2327 data-nosnippet>2327</a>                .pci_bus_info
-<a href=#2328 id=2328 data-nosnippet>2328</a>                .filter(|info| info.<span class="macro">pci_bus !</span>= <span class="number">0 </span>|| info.<span class="macro">pci_device !</span>= <span class="number">0</span>)
+<a href=#2328 id=2328 data-nosnippet>2328</a>                .filter(|info| info.pci_bus != <span class="number">0 </span>|| info.pci_device != <span class="number">0</span>)
 <a href=#2329 id=2329 data-nosnippet>2329</a>                .map(|info| {
 <a href=#2330 id=2330 data-nosnippet>2330</a>                    <span class="macro">format!</span>(
 <a href=#2331 id=2331 data-nosnippet>2331</a>                        <span class="string">"{:04x}:{:02x}:{:02x}.{}"</span>,
@@ -2466,7 +2466,7 @@
 <a href=#2466 id=2466 data-nosnippet>2466</a>                <span class="prelude-val">Some</span>(features) =&gt; features.timeline_semaphore == vk::TRUE,
 <a href=#2467 id=2467 data-nosnippet>2467</a>                <span class="prelude-val">None </span>=&gt; phd_features
 <a href=#2468 id=2468 data-nosnippet>2468</a>                    .timeline_semaphore
-<a href=#2469 id=2469 data-nosnippet>2469</a>                    .is_some_and(|ext| ext.<span class="macro">timeline_semaphore !</span>= <span class="number">0</span>),
+<a href=#2469 id=2469 data-nosnippet>2469</a>                    .is_some_and(|ext| ext.timeline_semaphore != <span class="number">0</span>),
 <a href=#2470 id=2470 data-nosnippet>2470</a>            },
 <a href=#2471 id=2471 data-nosnippet>2471</a>            texture_d24: supports_format(
 <a href=#2472 id=2472 data-nosnippet>2472</a>                <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw,
@@ -2489,18 +2489,18 @@
 <a href=#2489 id=2489 data-nosnippet>2489</a>                vk::ImageTiling::OPTIMAL,
 <a href=#2490 id=2490 data-nosnippet>2490</a>                depth_stencil_required_flags(),
 <a href=#2491 id=2491 data-nosnippet>2491</a>            ),
-<a href=#2492 id=2492 data-nosnippet>2492</a>            multi_draw_indirect: phd_features.core.<span class="macro">multi_draw_indirect !</span>= <span class="number">0</span>,
+<a href=#2492 id=2492 data-nosnippet>2492</a>            multi_draw_indirect: phd_features.core.multi_draw_indirect != <span class="number">0</span>,
 <a href=#2493 id=2493 data-nosnippet>2493</a>            max_draw_indirect_count: phd_capabilities.properties.limits.max_draw_indirect_count,
 <a href=#2494 id=2494 data-nosnippet>2494</a>            non_coherent_map_mask: phd_capabilities.properties.limits.non_coherent_atom_size - <span class="number">1</span>,
 <a href=#2495 id=2495 data-nosnippet>2495</a>            can_present: <span class="bool-val">true</span>,
 <a href=#2496 id=2496 data-nosnippet>2496</a>            <span class="comment">//TODO: make configurable
-<a href=#2497 id=2497 data-nosnippet>2497</a>            </span>robust_buffer_access: phd_features.core.<span class="macro">robust_buffer_access !</span>= <span class="number">0</span>,
+<a href=#2497 id=2497 data-nosnippet>2497</a>            </span>robust_buffer_access: phd_features.core.robust_buffer_access != <span class="number">0</span>,
 <a href=#2498 id=2498 data-nosnippet>2498</a>            robust_image_access: phd_features
 <a href=#2499 id=2499 data-nosnippet>2499</a>                .robustness2
-<a href=#2500 id=2500 data-nosnippet>2500</a>                .is_some_and(|f| f.<span class="macro">robust_image_access2 !</span>= <span class="number">0</span>)
+<a href=#2500 id=2500 data-nosnippet>2500</a>                .is_some_and(|f| f.robust_image_access2 != <span class="number">0</span>)
 <a href=#2501 id=2501 data-nosnippet>2501</a>                || phd_features
 <a href=#2502 id=2502 data-nosnippet>2502</a>                    .image_robustness
-<a href=#2503 id=2503 data-nosnippet>2503</a>                    .is_some_and(|ext| ext.<span class="macro">robust_image_access !</span>= <span class="number">0</span>),
+<a href=#2503 id=2503 data-nosnippet>2503</a>                    .is_some_and(|ext| ext.robust_image_access != <span class="number">0</span>),
 <a href=#2504 id=2504 data-nosnippet>2504</a>            robust_buffer_access2: has_robust_buffer_access2,
 <a href=#2505 id=2505 data-nosnippet>2505</a>            robust_image_access2: phd_features
 <a href=#2506 id=2506 data-nosnippet>2506</a>                .robustness2
@@ -2518,10 +2518,10 @@
 <a href=#2518 id=2518 data-nosnippet>2518</a>                .max_sampler_allocation_count,
 <a href=#2519 id=2519 data-nosnippet>2519</a>            shader_integer_dot_product: phd_features
 <a href=#2520 id=2520 data-nosnippet>2520</a>                .shader_integer_dot_product
-<a href=#2521 id=2521 data-nosnippet>2521</a>                .is_some_and(|ext| ext.<span class="macro">shader_integer_dot_product !</span>= <span class="number">0</span>),
+<a href=#2521 id=2521 data-nosnippet>2521</a>                .is_some_and(|ext| ext.shader_integer_dot_product != <span class="number">0</span>),
 <a href=#2522 id=2522 data-nosnippet>2522</a>            shader_int8: phd_features
 <a href=#2523 id=2523 data-nosnippet>2523</a>                .shader_float16_int8
-<a href=#2524 id=2524 data-nosnippet>2524</a>                .is_some_and(|features| features.<span class="macro">shader_int8 !</span>= <span class="number">0</span>),
+<a href=#2524 id=2524 data-nosnippet>2524</a>                .is_some_and(|features| features.shader_int8 != <span class="number">0</span>),
 <a href=#2525 id=2525 data-nosnippet>2525</a>            multiview_instance_index_limit: phd_capabilities
 <a href=#2526 id=2526 data-nosnippet>2526</a>                .multiview
 <a href=#2527 id=2527 data-nosnippet>2527</a>                .map(|a| a.max_multiview_instance_index)
@@ -2864,7 +2864,7 @@
 <a href=#2864 id=2864 data-nosnippet>2864</a>            );
 <a href=#2865 id=2865 data-nosnippet>2865</a>            flags.set(
 <a href=#2866 id=2866 data-nosnippet>2866</a>                spv::WriterFlags::LABEL_VARYINGS,
-<a href=#2867 id=2867 data-nosnippet>2867</a>                <span class="self">self</span>.phd_capabilities.properties.<span class="macro">vendor_id !</span>= <span class="kw">crate</span>::auxil::db::qualcomm::VENDOR,
+<a href=#2867 id=2867 data-nosnippet>2867</a>                <span class="self">self</span>.phd_capabilities.properties.vendor_id != <span class="kw">crate</span>::auxil::db::qualcomm::VENDOR,
 <a href=#2868 id=2868 data-nosnippet>2868</a>            );
 <a href=#2869 id=2869 data-nosnippet>2869</a>            flags.set(
 <a href=#2870 id=2870 data-nosnippet>2870</a>                spv::WriterFlags::FORCE_POINT_SIZE,
@@ -3577,7 +3577,7 @@
 <a href=#3577 id=3577 data-nosnippet>3577</a>        );
 <a href=#3578 id=3578 data-nosnippet>3578</a>
 <a href=#3579 id=3579 data-nosnippet>3579</a>        <span class="comment">// Only include subgroup-scoped operations (the only scope we support)
-<a href=#3580 id=3580 data-nosnippet>3580</a>        </span><span class="kw">if </span>prop.<span class="macro">scope !</span>= vk::ScopeKHR::SUBGROUP {
+<a href=#3580 id=3580 data-nosnippet>3580</a>        </span><span class="kw">if </span>prop.scope != vk::ScopeKHR::SUBGROUP {
 <a href=#3581 id=3581 data-nosnippet>3581</a>            <span class="macro">log::debug!</span>(<span class="string">"    Skipped: scope is not SUBGROUP"</span>);
 <a href=#3582 id=3582 data-nosnippet>3582</a>            <span class="kw">continue</span>;
 <a href=#3583 id=3583 data-nosnippet>3583</a>        }
@@ -3636,7 +3636,7 @@
 <a href=#3636 id=3636 data-nosnippet>3636</a>            k_size,
 <a href=#3637 id=3637 data-nosnippet>3637</a>            ab_type,
 <a href=#3638 id=3638 data-nosnippet>3638</a>            cr_type,
-<a href=#3639 id=3639 data-nosnippet>3639</a>            saturating_accumulation: prop.<span class="macro">saturating_accumulation !</span>= <span class="number">0</span>,
+<a href=#3639 id=3639 data-nosnippet>3639</a>            saturating_accumulation: prop.saturating_accumulation != <span class="number">0</span>,
 <a href=#3640 id=3640 data-nosnippet>3640</a>        });
 <a href=#3641 id=3641 data-nosnippet>3641</a>    }
 <a href=#3642 id=3642 data-nosnippet>3642</a>

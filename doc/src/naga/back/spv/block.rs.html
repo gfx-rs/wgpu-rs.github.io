@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/block.rs`."><title>block.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/back/spv/</div>block.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">/*!
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/block.rs`."><title>block.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">naga/back/spv/</div>block.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">/*!
 <a href=#2 id=2 data-nosnippet>2</a>Implementations for `BlockContext` methods.
 <a href=#3 id=3 data-nosnippet>3</a>*/
 <a href=#4 id=4 data-nosnippet>4</a>
@@ -7,12 +7,12 @@
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>arrayvec::ArrayVec;
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>spirv::Word;
 <a href=#9 id=9 data-nosnippet>9</a>
-<a href=#10 id=10 data-nosnippet>10</a><span class="kw">use super</span>::{
+<a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>super::{
 <a href=#11 id=11 data-nosnippet>11</a>    helpers::map_storage_class, index::BoundsCheckResult, selection::Selection, Block,
 <a href=#12 id=12 data-nosnippet>12</a>    BlockContext, Dimension, Error, IdGenerator, Instruction, LocalType, LookupType, NumericType,
 <a href=#13 id=13 data-nosnippet>13</a>    ResultMember, WrappedFunction, Writer, WriterFlags,
 <a href=#14 id=14 data-nosnippet>14</a>};
-<a href=#15 id=15 data-nosnippet>15</a><span class="kw">use crate</span>::{
+<a href=#15 id=15 data-nosnippet>15</a><span class="kw">use </span>crate::{
 <a href=#16 id=16 data-nosnippet>16</a>    arena::Handle, back::spv::helpers::is_uniform_matcx2_struct_member_access,
 <a href=#17 id=17 data-nosnippet>17</a>    proc::index::GuardedIndex, Statement,
 <a href=#18 id=18 data-nosnippet>18</a>};
@@ -1785,14 +1785,14 @@
 <a href=#1785 id=1785 data-nosnippet>1785</a>                            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
 <a href=#1786 id=1786 data-nosnippet>1786</a>                        };
 <a href=#1787 id=1787 data-nosnippet>1787</a>
-<a href=#1788 id=1788 data-nosnippet>1788</a>                        <span class="kw">if </span><span class="macro">width !</span>= <span class="number">4 </span>{
+<a href=#1788 id=1788 data-nosnippet>1788</a>                        <span class="kw">if </span>width != <span class="number">4 </span>{
 <a href=#1789 id=1789 data-nosnippet>1789</a>                            <span class="macro">unreachable!</span>(<span class="string">"This is validated out until a polyfill is implemented. https://github.com/gfx-rs/wgpu/issues/5276"</span>);
 <a href=#1790 id=1790 data-nosnippet>1790</a>                        };
 <a href=#1791 id=1791 data-nosnippet>1791</a>
 <a href=#1792 id=1792 data-nosnippet>1792</a>                        <span class="kw">let </span>msb_id = <span class="self">self</span>.gen_id();
 <a href=#1793 id=1793 data-nosnippet>1793</a>                        block.body.push(Instruction::ext_inst_gl_op(
 <a href=#1794 id=1794 data-nosnippet>1794</a>                            <span class="self">self</span>.writer.gl450_ext_inst_id,
-<a href=#1795 id=1795 data-nosnippet>1795</a>                            <span class="kw">if </span><span class="macro">width !</span>= <span class="number">4 </span>{
+<a href=#1795 id=1795 data-nosnippet>1795</a>                            <span class="kw">if </span>width != <span class="number">4 </span>{
 <a href=#1796 id=1796 data-nosnippet>1796</a>                                spirv::GlslStd450Op::FindILsb
 <a href=#1797 id=1797 data-nosnippet>1797</a>                            } <span class="kw">else </span>{
 <a href=#1798 id=1798 data-nosnippet>1798</a>                                spirv::GlslStd450Op::FindUMsb
@@ -2145,7 +2145,7 @@
 <a href=#2145 id=2145 data-nosnippet>2145</a>                id
 <a href=#2146 id=2146 data-nosnippet>2146</a>            }
 <a href=#2147 id=2147 data-nosnippet>2147</a>            <span class="kw">crate</span>::Expression::Derivative { axis, ctrl, expr } =&gt; {
-<a href=#2148 id=2148 data-nosnippet>2148</a>                <span class="kw">use crate</span>::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
+<a href=#2148 id=2148 data-nosnippet>2148</a>                <span class="kw">use </span>crate::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
 <a href=#2149 id=2149 data-nosnippet>2149</a>                <span class="kw">match </span>ctrl {
 <a href=#2150 id=2150 data-nosnippet>2150</a>                    Ctrl::Coarse | Ctrl::Fine =&gt; {
 <a href=#2151 id=2151 data-nosnippet>2151</a>                        <span class="self">self</span>.writer.require_any(
@@ -2323,7 +2323,7 @@
 <a href=#2323 id=2323 data-nosnippet>2323</a>                </span><span class="kw">return </span><span class="prelude-val">Ok</span>(expr_id);
 <a href=#2324 id=2324 data-nosnippet>2324</a>            }
 <a href=#2325 id=2325 data-nosnippet>2325</a>
-<a href=#2326 id=2326 data-nosnippet>2326</a>            <span class="kw">if </span><span class="macro">kind !</span>= Sk::Float {
+<a href=#2326 id=2326 data-nosnippet>2326</a>            <span class="kw">if </span>kind != Sk::Float {
 <a href=#2327 id=2327 data-nosnippet>2327</a>                <span class="comment">// Only float conversions are supported for matrices.
 <a href=#2328 id=2328 data-nosnippet>2328</a>                </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"Matrices must be floats"</span>));
 <a href=#2329 id=2329 data-nosnippet>2329</a>            }
@@ -2398,7 +2398,7 @@
 <a href=#2398 id=2398 data-nosnippet>2398</a>            // confused by no-op OpBitCast instructions.
 <a href=#2399 id=2399 data-nosnippet>2399</a>            </span>(src_kind, kind, convert)
 <a href=#2400 id=2400 data-nosnippet>2400</a>                <span class="kw">if </span>src_kind == kind
-<a href=#2401 id=2401 data-nosnippet>2401</a>                    &amp;&amp; convert.filter(|<span class="kw-2">&amp;</span>width| <span class="macro">width !</span>= src_scalar.width).is_none() =&gt;
+<a href=#2401 id=2401 data-nosnippet>2401</a>                    &amp;&amp; convert.filter(|<span class="kw-2">&amp;</span>width| width != src_scalar.width).is_none() =&gt;
 <a href=#2402 id=2402 data-nosnippet>2402</a>            {
 <a href=#2403 id=2403 data-nosnippet>2403</a>                Cast::Identity(expr_id)
 <a href=#2404 id=2404 data-nosnippet>2404</a>            }
@@ -2512,21 +2512,21 @@
 <a href=#2512 id=2512 data-nosnippet>2512</a>                };
 <a href=#2513 id=2513 data-nosnippet>2513</a>                Cast::Unary(op, clamp_id)
 <a href=#2514 id=2514 data-nosnippet>2514</a>            }
-<a href=#2515 id=2515 data-nosnippet>2515</a>            (Sk::Float, Sk::Float, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.<span class="macro">width !</span>= dst_width =&gt; {
+<a href=#2515 id=2515 data-nosnippet>2515</a>            (Sk::Float, Sk::Float, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
 <a href=#2516 id=2516 data-nosnippet>2516</a>                Cast::Unary(spirv::Op::FConvert, expr_id)
 <a href=#2517 id=2517 data-nosnippet>2517</a>            }
 <a href=#2518 id=2518 data-nosnippet>2518</a>            (Sk::Sint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertSToF, expr_id),
-<a href=#2519 id=2519 data-nosnippet>2519</a>            (Sk::Sint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.<span class="macro">width !</span>= dst_width =&gt; {
+<a href=#2519 id=2519 data-nosnippet>2519</a>            (Sk::Sint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
 <a href=#2520 id=2520 data-nosnippet>2520</a>                Cast::Unary(spirv::Op::SConvert, expr_id)
 <a href=#2521 id=2521 data-nosnippet>2521</a>            }
 <a href=#2522 id=2522 data-nosnippet>2522</a>            (Sk::Uint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertUToF, expr_id),
-<a href=#2523 id=2523 data-nosnippet>2523</a>            (Sk::Uint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.<span class="macro">width !</span>= dst_width =&gt; {
+<a href=#2523 id=2523 data-nosnippet>2523</a>            (Sk::Uint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
 <a href=#2524 id=2524 data-nosnippet>2524</a>                Cast::Unary(spirv::Op::UConvert, expr_id)
 <a href=#2525 id=2525 data-nosnippet>2525</a>            }
-<a href=#2526 id=2526 data-nosnippet>2526</a>            (Sk::Uint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.<span class="macro">width !</span>= dst_width =&gt; {
+<a href=#2526 id=2526 data-nosnippet>2526</a>            (Sk::Uint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
 <a href=#2527 id=2527 data-nosnippet>2527</a>                Cast::Unary(spirv::Op::SConvert, expr_id)
 <a href=#2528 id=2528 data-nosnippet>2528</a>            }
-<a href=#2529 id=2529 data-nosnippet>2529</a>            (Sk::Sint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.<span class="macro">width !</span>= dst_width =&gt; {
+<a href=#2529 id=2529 data-nosnippet>2529</a>            (Sk::Sint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
 <a href=#2530 id=2530 data-nosnippet>2530</a>                Cast::Unary(spirv::Op::UConvert, expr_id)
 <a href=#2531 id=2531 data-nosnippet>2531</a>            }
 <a href=#2532 id=2532 data-nosnippet>2532</a>            <span class="comment">// We assume it's either an identity cast, or int-uint.

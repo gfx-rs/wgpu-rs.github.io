@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/bundle.rs`."><title>bundle.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>bundle.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">/*! Render Bundles
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/bundle.rs`."><title>bundle.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0 (59807616e 2026-04-14)" data-channel="1.95.0" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">wgpu_core/command/</div>bundle.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">/*! Render Bundles
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a>A render bundle is a prerecorded sequence of commands that can be replayed on a
 <a href=#4 id=4 data-nosnippet>4</a>command encoder with a single call. A single bundle can replayed any number of
@@ -91,7 +91,7 @@
 <a href=#91 id=91 data-nosnippet>91</a>
 <a href=#92 id=92 data-nosnippet>92</a><span class="kw">use </span>wgt::error::{ErrorType, WebGpuError};
 <a href=#93 id=93 data-nosnippet>93</a>
-<a href=#94 id=94 data-nosnippet>94</a><span class="kw">use crate</span>::{
+<a href=#94 id=94 data-nosnippet>94</a><span class="kw">use </span>crate::{
 <a href=#95 id=95 data-nosnippet>95</a>    api_log,
 <a href=#96 id=96 data-nosnippet>96</a>    binding_model::{BindError, BindGroup, ImmediateUploadError, PipelineLayout},
 <a href=#97 id=97 data-nosnippet>97</a>    command::{
@@ -122,7 +122,7 @@
 <a href=#122 id=122 data-nosnippet>122</a>    Label, LabelHelpers,
 <a href=#123 id=123 data-nosnippet>123</a>};
 <a href=#124 id=124 data-nosnippet>124</a>
-<a href=#125 id=125 data-nosnippet>125</a><span class="kw">use super</span>::{pass, render_command::ArcRenderCommand, DrawCommandFamily, DrawKind};
+<a href=#125 id=125 data-nosnippet>125</a><span class="kw">use </span>super::{pass, render_command::ArcRenderCommand, DrawCommandFamily, DrawKind};
 <a href=#126 id=126 data-nosnippet>126</a>
 <a href=#127 id=127 data-nosnippet>127</a><span class="doccomment">/// Describes a [`RenderBundleEncoder`].
 <a href=#128 id=128 data-nosnippet>128</a></span><span class="attr">#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
@@ -1076,7 +1076,7 @@
 <a href=#1076 id=1076 data-nosnippet>1076</a>            state.vertex.update_limits(<span class="kw-2">&amp;</span>pipeline.vertex_steps);
 <a href=#1077 id=1077 data-nosnippet>1077</a>        }
 <a href=#1078 id=1078 data-nosnippet>1078</a>    } <span class="kw">else </span>{
-<a href=#1079 id=1079 data-nosnippet>1079</a>        <span class="kw">if </span><span class="macro">offset !</span>= <span class="number">0 </span>{
+<a href=#1079 id=1079 data-nosnippet>1079</a>        <span class="kw">if </span>offset != <span class="number">0 </span>{
 <a href=#1080 id=1080 data-nosnippet>1080</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(RenderCommandError::from(
 <a href=#1081 id=1081 data-nosnippet>1081</a>                <span class="kw">crate</span>::binding_model::BindingError::UnbindingVertexBufferOffsetNotZero {
 <a href=#1082 id=1082 data-nosnippet>1082</a>                    slot,
@@ -1086,7 +1086,7 @@
 <a href=#1086 id=1086 data-nosnippet>1086</a>            .into());
 <a href=#1087 id=1087 data-nosnippet>1087</a>        }
 <a href=#1088 id=1088 data-nosnippet>1088</a>        <span class="kw">match </span>size {
-<a href=#1089 id=1089 data-nosnippet>1089</a>            <span class="prelude-val">Some</span>(size) <span class="kw">if </span><span class="macro">size !</span>= <span class="number">0 </span>=&gt; {
+<a href=#1089 id=1089 data-nosnippet>1089</a>            <span class="prelude-val">Some</span>(size) <span class="kw">if </span>size != <span class="number">0 </span>=&gt; {
 <a href=#1090 id=1090 data-nosnippet>1090</a>                <span class="kw">return </span><span class="prelude-val">Err</span>(RenderCommandError::from(
 <a href=#1091 id=1091 data-nosnippet>1091</a>                    <span class="kw">crate</span>::binding_model::BindingError::UnbindingVertexBufferSizeNotZero {
 <a href=#1092 id=1092 data-nosnippet>1092</a>                        slot,
@@ -1288,7 +1288,7 @@
 <a href=#1288 id=1288 data-nosnippet>1288</a>    <span class="kw">let </span>instance_limit = state.vertex.limits.instance_limit;
 <a href=#1289 id=1289 data-nosnippet>1289</a>
 <a href=#1290 id=1290 data-nosnippet>1290</a>    <span class="kw">let </span>buffer_uses = <span class="kw">if </span>state.device.indirect_validation.is_some()
-<a href=#1291 id=1291 data-nosnippet>1291</a>        &amp;&amp; <span class="macro">family !</span>= DrawCommandFamily::DrawMeshTasks
+<a href=#1291 id=1291 data-nosnippet>1291</a>        &amp;&amp; family != DrawCommandFamily::DrawMeshTasks
 <a href=#1292 id=1292 data-nosnippet>1292</a>    {
 <a href=#1293 id=1293 data-nosnippet>1293</a>        wgt::BufferUses::STORAGE_READ_ONLY
 <a href=#1294 id=1294 data-nosnippet>1294</a>    } <span class="kw">else </span>{
@@ -1476,7 +1476,7 @@
 <a href=#1476 id=1476 data-nosnippet>1476</a>        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
 <a href=#1477 id=1477 data-nosnippet>1477</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ExecutionError&gt; {
 <a href=#1478 id=1478 data-nosnippet>1478</a>        <span class="kw">let </span><span class="kw-2">mut </span>offsets = <span class="self">self</span>.base.dynamic_offsets.as_slice();
-<a href=#1479 id=1479 data-nosnippet>1479</a>        <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout = <span class="prelude-val">None</span>::&lt;Arc&lt;PipelineLayout&gt;&gt;;
+<a href=#1479 id=1479 data-nosnippet>1479</a>        <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout = None::&lt;Arc&lt;PipelineLayout&gt;&gt;;
 <a href=#1480 id=1480 data-nosnippet>1480</a>        <span class="kw">if </span>!<span class="self">self</span>.discard_hal_labels {
 <a href=#1481 id=1481 data-nosnippet>1481</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>label) = <span class="self">self</span>.base.label {
 <a href=#1482 id=1482 data-nosnippet>1482</a>                <span class="kw">unsafe </span>{ raw.begin_debug_marker(label) };
@@ -1613,7 +1613,7 @@
 <a href=#1613 id=1613 data-nosnippet>1613</a>                    instance_limit,
 <a href=#1614 id=1614 data-nosnippet>1614</a>                } =&gt; {
 <a href=#1615 id=1615 data-nosnippet>1615</a>                    <span class="kw">let </span>(buffer, offset) = <span class="kw">if </span><span class="self">self</span>.device.indirect_validation.is_some()
-<a href=#1616 id=1616 data-nosnippet>1616</a>                        &amp;&amp; <span class="kw-2">*</span><span class="macro">family !</span>= DrawCommandFamily::DrawMeshTasks
+<a href=#1616 id=1616 data-nosnippet>1616</a>                        &amp;&amp; <span class="kw-2">*</span>family != DrawCommandFamily::DrawMeshTasks
 <a href=#1617 id=1617 data-nosnippet>1617</a>                    {
 <a href=#1618 id=1618 data-nosnippet>1618</a>                        <span class="kw">let </span>(dst_resource_index, offset) = indirect_draw_validation_batcher.add(
 <a href=#1619 id=1619 data-nosnippet>1619</a>                            indirect_draw_validation_resources,
@@ -1857,7 +1857,7 @@
 <a href=#1857 id=1857 data-nosnippet>1857</a>                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::MissingIndexBuffer),
 <a href=#1858 id=1858 data-nosnippet>1858</a>                };
 <a href=#1859 id=1859 data-nosnippet>1859</a>
-<a href=#1860 id=1860 data-nosnippet>1860</a>                <span class="kw">if </span>pipeline.topology.is_strip() &amp;&amp; pipeline.<span class="macro">strip_index_format !</span>= <span class="prelude-val">Some</span>(index_format)
+<a href=#1860 id=1860 data-nosnippet>1860</a>                <span class="kw">if </span>pipeline.topology.is_strip() &amp;&amp; pipeline.strip_index_format != <span class="prelude-val">Some</span>(index_format)
 <a href=#1861 id=1861 data-nosnippet>1861</a>                {
 <a href=#1862 id=1862 data-nosnippet>1862</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::UnmatchedStripIndexFormat {
 <a href=#1863 id=1863 data-nosnippet>1863</a>                        pipeline: pipeline.error_ident(),
