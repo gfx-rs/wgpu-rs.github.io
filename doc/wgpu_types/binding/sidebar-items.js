@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["BindingType","BufferBindingType","SamplerBindingType"],"struct":["BindGroupLayoutEntry","ShaderStages"]};
+window.SIDEBAR_ITEMS = {"enum":["BindingType","BufferBindingType","SamplerBindingType"],"struct":["BindGroupLayoutEntry","ShaderStages","ShaderStagesBits","ShaderStagesWGPU","ShaderStagesWebGPU"]};
