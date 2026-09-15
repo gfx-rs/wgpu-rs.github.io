@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["cooperative_matrices","mesh_shading","ray_tracing"]};
+window.SIDEBAR_ITEMS = {"mod":["cooperative_matrices","debug_printf","mesh_shading","ray_tracing"]};
