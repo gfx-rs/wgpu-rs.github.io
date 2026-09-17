@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["global","hub","id","registry","storage"]};
+window.SIDEBAR_ITEMS = {"fn":["map_buffer_access_error"],"mod":["global","hub","id","registry","storage"]};
