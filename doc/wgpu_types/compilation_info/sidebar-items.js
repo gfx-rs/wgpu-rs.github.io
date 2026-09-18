@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["CompilationMessageType"],"struct":["CompilationInfo","CompilationMessage","SourceLocation"]};
+window.SIDEBAR_ITEMS = {"enum":["CompilationMessageType"],"struct":["CompilationInfo","CompilationMessage","SourceLocation","Utf16SourceLocation"]};
