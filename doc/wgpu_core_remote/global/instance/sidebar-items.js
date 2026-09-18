@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["map_request_device_error"]};
+window.SIDEBAR_ITEMS = {"fn":["map_device_descriptor","map_request_device_error"]};
