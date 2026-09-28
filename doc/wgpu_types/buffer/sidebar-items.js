@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["BufferDescriptor","BufferTransition","BufferUsages","BufferUsagesBits","BufferUsagesWGPU","BufferUsagesWebGPU","BufferUses"]};
+window.SIDEBAR_ITEMS = {"enum":["MapMode"],"struct":["BufferDescriptor","BufferTransition","BufferUsages","BufferUsagesBits","BufferUsagesWGPU","BufferUsagesWebGPU","BufferUses"]};
