@@ -1,5 +1,5 @@
 (function() {
-    const implementors = Object.fromEntries([["wgpu_types",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.95.0/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"enum\" href=\"wgpu_types/enum.Dx12Compiler.html\" title=\"enum wgpu_types::Dx12Compiler\">Dx12Compiler</a>",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.95.0/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"struct\" href=\"wgpu_types/struct.Features.html\" title=\"struct wgpu_types::Features\">Features</a>",0]]]]);
+    const implementors = Object.fromEntries([["wgpu_types",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.96.1/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"enum\" href=\"wgpu_types/enum.Dx12Compiler.html\" title=\"enum wgpu_types::Dx12Compiler\">Dx12Compiler</a>",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.96.1/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"struct\" href=\"wgpu_types/struct.Features.html\" title=\"struct wgpu_types::Features\">Features</a>",0]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {

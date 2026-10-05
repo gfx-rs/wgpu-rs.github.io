@@ -1,5 +1,5 @@
 (function() {
-    const implementors = Object.fromEntries([["wgpu_types",[["impl&lt;'a, T&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.95.0/core/iter/traits/exact_size/trait.ExactSizeIterator.html\" title=\"trait core::iter::traits::exact_size::ExactSizeIterator\">ExactSizeIterator</a> for <a class=\"struct\" href=\"wgpu_types/struct.WriteOnlyIter.html\" title=\"struct wgpu_types::WriteOnlyIter\">WriteOnlyIter</a>&lt;'a, T&gt;",0]]]]);
+    const implementors = Object.fromEntries([["wgpu_types",[["impl&lt;'a, T&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.96.1/core/iter/traits/exact_size/trait.ExactSizeIterator.html\" title=\"trait core::iter::traits::exact_size::ExactSizeIterator\">ExactSizeIterator</a> for <a class=\"struct\" href=\"wgpu_types/struct.WriteOnlyIter.html\" title=\"struct wgpu_types::WriteOnlyIter\">WriteOnlyIter</a>&lt;'a, T&gt;",0]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
