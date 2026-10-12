@@ -89,138 +89,179 @@
 <a href=#89 id=89 data-nosnippet>89</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>new(op: Op) -&gt; <span class="self">Self </span>{
 <a href=#90 id=90 data-nosnippet>90</a>        Instruction {
 <a href=#91 id=91 data-nosnippet>91</a>            op,
-<a href=#92 id=92 data-nosnippet>92</a>            wc: <span class="number">1</span>, <span class="comment">// Always start at 1 for the first word (OP + WC),
-<a href=#93 id=93 data-nosnippet>93</a>            </span>type_id: <span class="prelude-val">None</span>,
-<a href=#94 id=94 data-nosnippet>94</a>            result_id: <span class="prelude-val">None</span>,
-<a href=#95 id=95 data-nosnippet>95</a>            operands: <span class="macro">vec!</span>[],
-<a href=#96 id=96 data-nosnippet>96</a>        }
-<a href=#97 id=97 data-nosnippet>97</a>    }
-<a href=#98 id=98 data-nosnippet>98</a>
-<a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>set_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Word) {
-<a href=#100 id=100 data-nosnippet>100</a>        <span class="macro">assert!</span>(<span class="self">self</span>.type_id.is_none(), <span class="string">"Type can only be set once"</span>);
-<a href=#101 id=101 data-nosnippet>101</a>        <span class="self">self</span>.type_id = <span class="prelude-val">Some</span>(id);
-<a href=#102 id=102 data-nosnippet>102</a>        <span class="self">self</span>.wc += <span class="number">1</span>;
-<a href=#103 id=103 data-nosnippet>103</a>    }
-<a href=#104 id=104 data-nosnippet>104</a>
-<a href=#105 id=105 data-nosnippet>105</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>set_result(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Word) {
-<a href=#106 id=106 data-nosnippet>106</a>        <span class="macro">assert!</span>(<span class="self">self</span>.result_id.is_none(), <span class="string">"Result can only be set once"</span>);
-<a href=#107 id=107 data-nosnippet>107</a>        <span class="self">self</span>.result_id = <span class="prelude-val">Some</span>(id);
-<a href=#108 id=108 data-nosnippet>108</a>        <span class="self">self</span>.wc += <span class="number">1</span>;
-<a href=#109 id=109 data-nosnippet>109</a>    }
-<a href=#110 id=110 data-nosnippet>110</a>
-<a href=#111 id=111 data-nosnippet>111</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>add_operand(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operand: Word) {
-<a href=#112 id=112 data-nosnippet>112</a>        <span class="self">self</span>.operands.push(operand);
-<a href=#113 id=113 data-nosnippet>113</a>        <span class="self">self</span>.wc += <span class="number">1</span>;
-<a href=#114 id=114 data-nosnippet>114</a>    }
-<a href=#115 id=115 data-nosnippet>115</a>
-<a href=#116 id=116 data-nosnippet>116</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>add_operands(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operands: Vec&lt;Word&gt;) {
-<a href=#117 id=117 data-nosnippet>117</a>        <span class="kw">for </span>operand <span class="kw">in </span>operands.into_iter() {
-<a href=#118 id=118 data-nosnippet>118</a>            <span class="self">self</span>.add_operand(operand)
-<a href=#119 id=119 data-nosnippet>119</a>        }
-<a href=#120 id=120 data-nosnippet>120</a>    }
-<a href=#121 id=121 data-nosnippet>121</a>
-<a href=#122 id=122 data-nosnippet>122</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>to_words(<span class="kw-2">&amp;</span><span class="self">self</span>, sink: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Extend&lt;Word&gt;) {
-<a href=#123 id=123 data-nosnippet>123</a>        sink.extend(<span class="prelude-val">Some</span>((<span class="self">self</span>.wc &lt;&lt; <span class="number">16</span>) | <span class="self">self</span>.op <span class="kw">as </span>u32));
-<a href=#124 id=124 data-nosnippet>124</a>        sink.extend(<span class="self">self</span>.type_id);
-<a href=#125 id=125 data-nosnippet>125</a>        sink.extend(<span class="self">self</span>.result_id);
-<a href=#126 id=126 data-nosnippet>126</a>        sink.extend(<span class="self">self</span>.operands.iter().cloned());
-<a href=#127 id=127 data-nosnippet>127</a>    }
-<a href=#128 id=128 data-nosnippet>128</a>}
-<a href=#129 id=129 data-nosnippet>129</a>
-<a href=#130 id=130 data-nosnippet>130</a><span class="kw">impl </span>Instruction {
-<a href=#131 id=131 data-nosnippet>131</a>    <span class="attr">#[cfg(test)]
-<a href=#132 id=132 data-nosnippet>132</a>    </span><span class="kw">fn </span>validate(<span class="kw-2">&amp;</span><span class="self">self</span>, words: <span class="kw-2">&amp;</span>[Word]) {
-<a href=#133 id=133 data-nosnippet>133</a>        <span class="kw">let </span><span class="kw-2">mut </span>inst_index = <span class="number">0</span>;
-<a href=#134 id=134 data-nosnippet>134</a>        <span class="kw">let </span>(wc, op) = ((words[inst_index] &gt;&gt; <span class="number">16</span>) <span class="kw">as </span>u16, words[inst_index] <span class="kw">as </span>u16);
-<a href=#135 id=135 data-nosnippet>135</a>        inst_index += <span class="number">1</span>;
-<a href=#136 id=136 data-nosnippet>136</a>
-<a href=#137 id=137 data-nosnippet>137</a>        <span class="macro">assert_eq!</span>(wc, words.len() <span class="kw">as </span>u16);
-<a href=#138 id=138 data-nosnippet>138</a>        <span class="macro">assert_eq!</span>(op, <span class="self">self</span>.op <span class="kw">as </span>u16);
-<a href=#139 id=139 data-nosnippet>139</a>
-<a href=#140 id=140 data-nosnippet>140</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(type_id) = <span class="self">self</span>.type_id {
-<a href=#141 id=141 data-nosnippet>141</a>            <span class="macro">assert_eq!</span>(words[inst_index], type_id);
-<a href=#142 id=142 data-nosnippet>142</a>            inst_index += <span class="number">1</span>;
-<a href=#143 id=143 data-nosnippet>143</a>        }
-<a href=#144 id=144 data-nosnippet>144</a>
-<a href=#145 id=145 data-nosnippet>145</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(result_id) = <span class="self">self</span>.result_id {
-<a href=#146 id=146 data-nosnippet>146</a>            <span class="macro">assert_eq!</span>(words[inst_index], result_id);
-<a href=#147 id=147 data-nosnippet>147</a>            inst_index += <span class="number">1</span>;
-<a href=#148 id=148 data-nosnippet>148</a>        }
-<a href=#149 id=149 data-nosnippet>149</a>
-<a href=#150 id=150 data-nosnippet>150</a>        <span class="kw">for </span>(op_index, i) <span class="kw">in </span>(inst_index..wc <span class="kw">as </span>usize).enumerate() {
-<a href=#151 id=151 data-nosnippet>151</a>            <span class="macro">assert_eq!</span>(words[i], <span class="self">self</span>.operands[op_index]);
-<a href=#152 id=152 data-nosnippet>152</a>        }
-<a href=#153 id=153 data-nosnippet>153</a>    }
-<a href=#154 id=154 data-nosnippet>154</a>}
-<a href=#155 id=155 data-nosnippet>155</a>
-<a href=#156 id=156 data-nosnippet>156</a><span class="attr">#[test]
-<a href=#157 id=157 data-nosnippet>157</a></span><span class="kw">fn </span>test_physical_layout_in_words() {
-<a href=#158 id=158 data-nosnippet>158</a>    <span class="kw">let </span>bound = <span class="number">5</span>;
-<a href=#159 id=159 data-nosnippet>159</a>
-<a href=#160 id=160 data-nosnippet>160</a>    <span class="comment">// The least and most significant bytes of `version` must both be zero
-<a href=#161 id=161 data-nosnippet>161</a>    // according to the SPIR-V spec.
-<a href=#162 id=162 data-nosnippet>162</a>    </span><span class="kw">let </span>version = <span class="number">0x0001_0200</span>;
-<a href=#163 id=163 data-nosnippet>163</a>
-<a href=#164 id=164 data-nosnippet>164</a>    <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="macro">vec!</span>[];
-<a href=#165 id=165 data-nosnippet>165</a>    <span class="kw">let </span><span class="kw-2">mut </span>layout = PhysicalLayout::new(<span class="number">1</span>, <span class="number">2</span>);
-<a href=#166 id=166 data-nosnippet>166</a>    layout.bound = bound;
+<a href=#92 id=92 data-nosnippet>92</a>            type_id: <span class="prelude-val">None</span>,
+<a href=#93 id=93 data-nosnippet>93</a>            result_id: <span class="prelude-val">None</span>,
+<a href=#94 id=94 data-nosnippet>94</a>            operands: <span class="macro">vec!</span>[],
+<a href=#95 id=95 data-nosnippet>95</a>        }
+<a href=#96 id=96 data-nosnippet>96</a>    }
+<a href=#97 id=97 data-nosnippet>97</a>
+<a href=#98 id=98 data-nosnippet>98</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>set_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Word) {
+<a href=#99 id=99 data-nosnippet>99</a>        <span class="macro">assert!</span>(<span class="self">self</span>.type_id.is_none(), <span class="string">"Type can only be set once"</span>);
+<a href=#100 id=100 data-nosnippet>100</a>        <span class="self">self</span>.type_id = <span class="prelude-val">Some</span>(id);
+<a href=#101 id=101 data-nosnippet>101</a>    }
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>set_result(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Word) {
+<a href=#104 id=104 data-nosnippet>104</a>        <span class="macro">assert!</span>(<span class="self">self</span>.result_id.is_none(), <span class="string">"Result can only be set once"</span>);
+<a href=#105 id=105 data-nosnippet>105</a>        <span class="self">self</span>.result_id = <span class="prelude-val">Some</span>(id);
+<a href=#106 id=106 data-nosnippet>106</a>    }
+<a href=#107 id=107 data-nosnippet>107</a>
+<a href=#108 id=108 data-nosnippet>108</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>add_operand(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operand: Word) {
+<a href=#109 id=109 data-nosnippet>109</a>        <span class="self">self</span>.operands.push(operand);
+<a href=#110 id=110 data-nosnippet>110</a>    }
+<a href=#111 id=111 data-nosnippet>111</a>
+<a href=#112 id=112 data-nosnippet>112</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>add_operands(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operands: Vec&lt;Word&gt;) {
+<a href=#113 id=113 data-nosnippet>113</a>        <span class="kw">for </span>operand <span class="kw">in </span>operands.into_iter() {
+<a href=#114 id=114 data-nosnippet>114</a>            <span class="self">self</span>.add_operand(operand)
+<a href=#115 id=115 data-nosnippet>115</a>        }
+<a href=#116 id=116 data-nosnippet>116</a>    }
+<a href=#117 id=117 data-nosnippet>117</a>
+<a href=#118 id=118 data-nosnippet>118</a>    <span class="kw">fn </span>word_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+<a href=#119 id=119 data-nosnippet>119</a>        <span class="kw">const </span>OPCODE_WORD_COUNT_FIELDS_SIZE: usize = <span class="number">1</span>;
+<a href=#120 id=120 data-nosnippet>120</a>
+<a href=#121 id=121 data-nosnippet>121</a>        OPCODE_WORD_COUNT_FIELDS_SIZE
+<a href=#122 id=122 data-nosnippet>122</a>            + usize::from(<span class="self">self</span>.type_id.is_some())
+<a href=#123 id=123 data-nosnippet>123</a>            + usize::from(<span class="self">self</span>.result_id.is_some())
+<a href=#124 id=124 data-nosnippet>124</a>            + <span class="self">self</span>.operands.len()
+<a href=#125 id=125 data-nosnippet>125</a>    }
+<a href=#126 id=126 data-nosnippet>126</a>
+<a href=#127 id=127 data-nosnippet>127</a>    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>to_words(<span class="kw-2">&amp;</span><span class="self">self</span>, sink: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Extend&lt;Word&gt;) {
+<a href=#128 id=128 data-nosnippet>128</a>        <span class="kw">let </span>word_count = <span class="self">self</span>.word_count();
+<a href=#129 id=129 data-nosnippet>129</a>        <span class="macro">assert!</span>(
+<a href=#130 id=130 data-nosnippet>130</a>            word_count &lt;= usize::from(u16::MAX),
+<a href=#131 id=131 data-nosnippet>131</a>            <span class="string">"{:?} instruction is {word_count} words long, but SPIR-V instructions are limited to {} words"</span>,
+<a href=#132 id=132 data-nosnippet>132</a>            <span class="self">self</span>.op,
+<a href=#133 id=133 data-nosnippet>133</a>            u16::MAX
+<a href=#134 id=134 data-nosnippet>134</a>        );
+<a href=#135 id=135 data-nosnippet>135</a>        sink.extend(<span class="prelude-val">Some</span>(((word_count <span class="kw">as </span>u32) &lt;&lt; <span class="number">16</span>) | <span class="self">self</span>.op <span class="kw">as </span>u32));
+<a href=#136 id=136 data-nosnippet>136</a>        sink.extend(<span class="self">self</span>.type_id);
+<a href=#137 id=137 data-nosnippet>137</a>        sink.extend(<span class="self">self</span>.result_id);
+<a href=#138 id=138 data-nosnippet>138</a>        sink.extend(<span class="self">self</span>.operands.iter().cloned());
+<a href=#139 id=139 data-nosnippet>139</a>    }
+<a href=#140 id=140 data-nosnippet>140</a>}
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a><span class="kw">impl </span>Instruction {
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="attr">#[cfg(test)]
+<a href=#144 id=144 data-nosnippet>144</a>    </span><span class="kw">fn </span>validate(<span class="kw-2">&amp;</span><span class="self">self</span>, words: <span class="kw-2">&amp;</span>[Word]) {
+<a href=#145 id=145 data-nosnippet>145</a>        <span class="kw">let </span><span class="kw-2">mut </span>inst_index = <span class="number">0</span>;
+<a href=#146 id=146 data-nosnippet>146</a>        <span class="kw">let </span>(wc, op) = ((words[inst_index] &gt;&gt; <span class="number">16</span>) <span class="kw">as </span>u16, words[inst_index] <span class="kw">as </span>u16);
+<a href=#147 id=147 data-nosnippet>147</a>        inst_index += <span class="number">1</span>;
+<a href=#148 id=148 data-nosnippet>148</a>
+<a href=#149 id=149 data-nosnippet>149</a>        <span class="macro">assert_eq!</span>(wc, words.len() <span class="kw">as </span>u16);
+<a href=#150 id=150 data-nosnippet>150</a>        <span class="macro">assert_eq!</span>(op, <span class="self">self</span>.op <span class="kw">as </span>u16);
+<a href=#151 id=151 data-nosnippet>151</a>
+<a href=#152 id=152 data-nosnippet>152</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(type_id) = <span class="self">self</span>.type_id {
+<a href=#153 id=153 data-nosnippet>153</a>            <span class="macro">assert_eq!</span>(words[inst_index], type_id);
+<a href=#154 id=154 data-nosnippet>154</a>            inst_index += <span class="number">1</span>;
+<a href=#155 id=155 data-nosnippet>155</a>        }
+<a href=#156 id=156 data-nosnippet>156</a>
+<a href=#157 id=157 data-nosnippet>157</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(result_id) = <span class="self">self</span>.result_id {
+<a href=#158 id=158 data-nosnippet>158</a>            <span class="macro">assert_eq!</span>(words[inst_index], result_id);
+<a href=#159 id=159 data-nosnippet>159</a>            inst_index += <span class="number">1</span>;
+<a href=#160 id=160 data-nosnippet>160</a>        }
+<a href=#161 id=161 data-nosnippet>161</a>
+<a href=#162 id=162 data-nosnippet>162</a>        <span class="kw">for </span>(op_index, i) <span class="kw">in </span>(inst_index..wc <span class="kw">as </span>usize).enumerate() {
+<a href=#163 id=163 data-nosnippet>163</a>            <span class="macro">assert_eq!</span>(words[i], <span class="self">self</span>.operands[op_index]);
+<a href=#164 id=164 data-nosnippet>164</a>        }
+<a href=#165 id=165 data-nosnippet>165</a>    }
+<a href=#166 id=166 data-nosnippet>166</a>}
 <a href=#167 id=167 data-nosnippet>167</a>
-<a href=#168 id=168 data-nosnippet>168</a>    layout.in_words(<span class="kw-2">&amp;mut </span>output);
-<a href=#169 id=169 data-nosnippet>169</a>
-<a href=#170 id=170 data-nosnippet>170</a>    <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>output, <span class="kw-2">&amp;</span>[MAGIC_NUMBER, version, GENERATOR, bound, <span class="number">0</span>,]);
-<a href=#171 id=171 data-nosnippet>171</a>}
-<a href=#172 id=172 data-nosnippet>172</a>
-<a href=#173 id=173 data-nosnippet>173</a><span class="attr">#[test]
-<a href=#174 id=174 data-nosnippet>174</a></span><span class="kw">fn </span>test_logical_layout_in_words() {
-<a href=#175 id=175 data-nosnippet>175</a>    <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="macro">vec!</span>[];
-<a href=#176 id=176 data-nosnippet>176</a>    <span class="kw">let </span><span class="kw-2">mut </span>layout = LogicalLayout::default();
-<a href=#177 id=177 data-nosnippet>177</a>    <span class="kw">let </span>layout_vectors = <span class="number">11</span>;
-<a href=#178 id=178 data-nosnippet>178</a>    <span class="kw">let </span><span class="kw-2">mut </span>instructions = Vec::with_capacity(layout_vectors);
+<a href=#168 id=168 data-nosnippet>168</a><span class="attr">#[test]
+<a href=#169 id=169 data-nosnippet>169</a></span><span class="kw">fn </span>test_physical_layout_in_words() {
+<a href=#170 id=170 data-nosnippet>170</a>    <span class="kw">let </span>bound = <span class="number">5</span>;
+<a href=#171 id=171 data-nosnippet>171</a>
+<a href=#172 id=172 data-nosnippet>172</a>    <span class="comment">// The least and most significant bytes of `version` must both be zero
+<a href=#173 id=173 data-nosnippet>173</a>    // according to the SPIR-V spec.
+<a href=#174 id=174 data-nosnippet>174</a>    </span><span class="kw">let </span>version = <span class="number">0x0001_0200</span>;
+<a href=#175 id=175 data-nosnippet>175</a>
+<a href=#176 id=176 data-nosnippet>176</a>    <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="macro">vec!</span>[];
+<a href=#177 id=177 data-nosnippet>177</a>    <span class="kw">let </span><span class="kw-2">mut </span>layout = PhysicalLayout::new(<span class="number">1</span>, <span class="number">2</span>);
+<a href=#178 id=178 data-nosnippet>178</a>    layout.bound = bound;
 <a href=#179 id=179 data-nosnippet>179</a>
-<a href=#180 id=180 data-nosnippet>180</a>    <span class="kw">let </span>vector_names = <span class="kw-2">&amp;</span>[
-<a href=#181 id=181 data-nosnippet>181</a>        <span class="string">"Capabilities"</span>,
-<a href=#182 id=182 data-nosnippet>182</a>        <span class="string">"Extensions"</span>,
-<a href=#183 id=183 data-nosnippet>183</a>        <span class="string">"External Instruction Imports"</span>,
-<a href=#184 id=184 data-nosnippet>184</a>        <span class="string">"Memory Model"</span>,
-<a href=#185 id=185 data-nosnippet>185</a>        <span class="string">"Entry Points"</span>,
-<a href=#186 id=186 data-nosnippet>186</a>        <span class="string">"Execution Modes"</span>,
-<a href=#187 id=187 data-nosnippet>187</a>        <span class="string">"Debugs"</span>,
-<a href=#188 id=188 data-nosnippet>188</a>        <span class="string">"Annotations"</span>,
-<a href=#189 id=189 data-nosnippet>189</a>        <span class="string">"Declarations"</span>,
-<a href=#190 id=190 data-nosnippet>190</a>        <span class="string">"Function Declarations"</span>,
-<a href=#191 id=191 data-nosnippet>191</a>        <span class="string">"Function Definitions"</span>,
-<a href=#192 id=192 data-nosnippet>192</a>    ];
-<a href=#193 id=193 data-nosnippet>193</a>
-<a href=#194 id=194 data-nosnippet>194</a>    <span class="kw">for </span>(i, <span class="kw">_</span>) <span class="kw">in </span>vector_names.iter().enumerate().take(layout_vectors) {
-<a href=#195 id=195 data-nosnippet>195</a>        <span class="kw">let </span><span class="kw-2">mut </span>dummy_instruction = Instruction::new(Op::Constant);
-<a href=#196 id=196 data-nosnippet>196</a>        dummy_instruction.set_type((i + <span class="number">1</span>) <span class="kw">as </span>u32);
-<a href=#197 id=197 data-nosnippet>197</a>        dummy_instruction.set_result((i + <span class="number">2</span>) <span class="kw">as </span>u32);
-<a href=#198 id=198 data-nosnippet>198</a>        dummy_instruction.add_operand((i + <span class="number">3</span>) <span class="kw">as </span>u32);
-<a href=#199 id=199 data-nosnippet>199</a>        dummy_instruction.add_operands(<span class="kw">super</span>::helpers::string_to_words(
-<a href=#200 id=200 data-nosnippet>200</a>            <span class="macro">format!</span>(<span class="string">"This is the vector: {}"</span>, vector_names[i]).as_str(),
-<a href=#201 id=201 data-nosnippet>201</a>        ));
-<a href=#202 id=202 data-nosnippet>202</a>        instructions.push(dummy_instruction);
-<a href=#203 id=203 data-nosnippet>203</a>    }
-<a href=#204 id=204 data-nosnippet>204</a>
-<a href=#205 id=205 data-nosnippet>205</a>    instructions[<span class="number">0</span>].to_words(<span class="kw-2">&amp;mut </span>layout.capabilities);
-<a href=#206 id=206 data-nosnippet>206</a>    instructions[<span class="number">1</span>].to_words(<span class="kw-2">&amp;mut </span>layout.extensions);
-<a href=#207 id=207 data-nosnippet>207</a>    instructions[<span class="number">2</span>].to_words(<span class="kw-2">&amp;mut </span>layout.ext_inst_imports);
-<a href=#208 id=208 data-nosnippet>208</a>    instructions[<span class="number">3</span>].to_words(<span class="kw-2">&amp;mut </span>layout.memory_model);
-<a href=#209 id=209 data-nosnippet>209</a>    instructions[<span class="number">4</span>].to_words(<span class="kw-2">&amp;mut </span>layout.entry_points);
-<a href=#210 id=210 data-nosnippet>210</a>    instructions[<span class="number">5</span>].to_words(<span class="kw-2">&amp;mut </span>layout.execution_modes);
-<a href=#211 id=211 data-nosnippet>211</a>    instructions[<span class="number">6</span>].to_words(<span class="kw-2">&amp;mut </span>layout.debugs);
-<a href=#212 id=212 data-nosnippet>212</a>    instructions[<span class="number">7</span>].to_words(<span class="kw-2">&amp;mut </span>layout.annotations);
-<a href=#213 id=213 data-nosnippet>213</a>    instructions[<span class="number">8</span>].to_words(<span class="kw-2">&amp;mut </span>layout.declarations);
-<a href=#214 id=214 data-nosnippet>214</a>    instructions[<span class="number">9</span>].to_words(<span class="kw-2">&amp;mut </span>layout.function_declarations);
-<a href=#215 id=215 data-nosnippet>215</a>    instructions[<span class="number">10</span>].to_words(<span class="kw-2">&amp;mut </span>layout.function_definitions);
+<a href=#180 id=180 data-nosnippet>180</a>    layout.in_words(<span class="kw-2">&amp;mut </span>output);
+<a href=#181 id=181 data-nosnippet>181</a>
+<a href=#182 id=182 data-nosnippet>182</a>    <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>output, <span class="kw-2">&amp;</span>[MAGIC_NUMBER, version, GENERATOR, bound, <span class="number">0</span>,]);
+<a href=#183 id=183 data-nosnippet>183</a>}
+<a href=#184 id=184 data-nosnippet>184</a>
+<a href=#185 id=185 data-nosnippet>185</a><span class="attr">#[test]
+<a href=#186 id=186 data-nosnippet>186</a></span><span class="kw">fn </span>test_logical_layout_in_words() {
+<a href=#187 id=187 data-nosnippet>187</a>    <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="macro">vec!</span>[];
+<a href=#188 id=188 data-nosnippet>188</a>    <span class="kw">let </span><span class="kw-2">mut </span>layout = LogicalLayout::default();
+<a href=#189 id=189 data-nosnippet>189</a>    <span class="kw">let </span>layout_vectors = <span class="number">11</span>;
+<a href=#190 id=190 data-nosnippet>190</a>    <span class="kw">let </span><span class="kw-2">mut </span>instructions = Vec::with_capacity(layout_vectors);
+<a href=#191 id=191 data-nosnippet>191</a>
+<a href=#192 id=192 data-nosnippet>192</a>    <span class="kw">let </span>vector_names = <span class="kw-2">&amp;</span>[
+<a href=#193 id=193 data-nosnippet>193</a>        <span class="string">"Capabilities"</span>,
+<a href=#194 id=194 data-nosnippet>194</a>        <span class="string">"Extensions"</span>,
+<a href=#195 id=195 data-nosnippet>195</a>        <span class="string">"External Instruction Imports"</span>,
+<a href=#196 id=196 data-nosnippet>196</a>        <span class="string">"Memory Model"</span>,
+<a href=#197 id=197 data-nosnippet>197</a>        <span class="string">"Entry Points"</span>,
+<a href=#198 id=198 data-nosnippet>198</a>        <span class="string">"Execution Modes"</span>,
+<a href=#199 id=199 data-nosnippet>199</a>        <span class="string">"Debugs"</span>,
+<a href=#200 id=200 data-nosnippet>200</a>        <span class="string">"Annotations"</span>,
+<a href=#201 id=201 data-nosnippet>201</a>        <span class="string">"Declarations"</span>,
+<a href=#202 id=202 data-nosnippet>202</a>        <span class="string">"Function Declarations"</span>,
+<a href=#203 id=203 data-nosnippet>203</a>        <span class="string">"Function Definitions"</span>,
+<a href=#204 id=204 data-nosnippet>204</a>    ];
+<a href=#205 id=205 data-nosnippet>205</a>
+<a href=#206 id=206 data-nosnippet>206</a>    <span class="kw">for </span>(i, <span class="kw">_</span>) <span class="kw">in </span>vector_names.iter().enumerate().take(layout_vectors) {
+<a href=#207 id=207 data-nosnippet>207</a>        <span class="kw">let </span><span class="kw-2">mut </span>dummy_instruction = Instruction::new(Op::Constant);
+<a href=#208 id=208 data-nosnippet>208</a>        dummy_instruction.set_type((i + <span class="number">1</span>) <span class="kw">as </span>u32);
+<a href=#209 id=209 data-nosnippet>209</a>        dummy_instruction.set_result((i + <span class="number">2</span>) <span class="kw">as </span>u32);
+<a href=#210 id=210 data-nosnippet>210</a>        dummy_instruction.add_operand((i + <span class="number">3</span>) <span class="kw">as </span>u32);
+<a href=#211 id=211 data-nosnippet>211</a>        dummy_instruction.add_operands(<span class="kw">super</span>::helpers::string_to_words(
+<a href=#212 id=212 data-nosnippet>212</a>            <span class="macro">format!</span>(<span class="string">"This is the vector: {}"</span>, vector_names[i]).as_str(),
+<a href=#213 id=213 data-nosnippet>213</a>        ));
+<a href=#214 id=214 data-nosnippet>214</a>        instructions.push(dummy_instruction);
+<a href=#215 id=215 data-nosnippet>215</a>    }
 <a href=#216 id=216 data-nosnippet>216</a>
-<a href=#217 id=217 data-nosnippet>217</a>    layout.in_words(<span class="kw-2">&amp;mut </span>output);
-<a href=#218 id=218 data-nosnippet>218</a>
-<a href=#219 id=219 data-nosnippet>219</a>    <span class="kw">let </span><span class="kw-2">mut </span>index: usize = <span class="number">0</span>;
-<a href=#220 id=220 data-nosnippet>220</a>    <span class="kw">for </span>instruction <span class="kw">in </span>instructions {
-<a href=#221 id=221 data-nosnippet>221</a>        <span class="kw">let </span>wc = instruction.wc <span class="kw">as </span>usize;
-<a href=#222 id=222 data-nosnippet>222</a>        instruction.validate(<span class="kw-2">&amp;</span>output[index..index + wc]);
-<a href=#223 id=223 data-nosnippet>223</a>        index += wc;
-<a href=#224 id=224 data-nosnippet>224</a>    }
-<a href=#225 id=225 data-nosnippet>225</a>}
+<a href=#217 id=217 data-nosnippet>217</a>    instructions[<span class="number">0</span>].to_words(<span class="kw-2">&amp;mut </span>layout.capabilities);
+<a href=#218 id=218 data-nosnippet>218</a>    instructions[<span class="number">1</span>].to_words(<span class="kw-2">&amp;mut </span>layout.extensions);
+<a href=#219 id=219 data-nosnippet>219</a>    instructions[<span class="number">2</span>].to_words(<span class="kw-2">&amp;mut </span>layout.ext_inst_imports);
+<a href=#220 id=220 data-nosnippet>220</a>    instructions[<span class="number">3</span>].to_words(<span class="kw-2">&amp;mut </span>layout.memory_model);
+<a href=#221 id=221 data-nosnippet>221</a>    instructions[<span class="number">4</span>].to_words(<span class="kw-2">&amp;mut </span>layout.entry_points);
+<a href=#222 id=222 data-nosnippet>222</a>    instructions[<span class="number">5</span>].to_words(<span class="kw-2">&amp;mut </span>layout.execution_modes);
+<a href=#223 id=223 data-nosnippet>223</a>    instructions[<span class="number">6</span>].to_words(<span class="kw-2">&amp;mut </span>layout.debugs);
+<a href=#224 id=224 data-nosnippet>224</a>    instructions[<span class="number">7</span>].to_words(<span class="kw-2">&amp;mut </span>layout.annotations);
+<a href=#225 id=225 data-nosnippet>225</a>    instructions[<span class="number">8</span>].to_words(<span class="kw-2">&amp;mut </span>layout.declarations);
+<a href=#226 id=226 data-nosnippet>226</a>    instructions[<span class="number">9</span>].to_words(<span class="kw-2">&amp;mut </span>layout.function_declarations);
+<a href=#227 id=227 data-nosnippet>227</a>    instructions[<span class="number">10</span>].to_words(<span class="kw-2">&amp;mut </span>layout.function_definitions);
+<a href=#228 id=228 data-nosnippet>228</a>
+<a href=#229 id=229 data-nosnippet>229</a>    layout.in_words(<span class="kw-2">&amp;mut </span>output);
+<a href=#230 id=230 data-nosnippet>230</a>
+<a href=#231 id=231 data-nosnippet>231</a>    <span class="kw">let </span><span class="kw-2">mut </span>index: usize = <span class="number">0</span>;
+<a href=#232 id=232 data-nosnippet>232</a>    <span class="kw">for </span>instruction <span class="kw">in </span>instructions {
+<a href=#233 id=233 data-nosnippet>233</a>        <span class="kw">let </span>wc = instruction.word_count();
+<a href=#234 id=234 data-nosnippet>234</a>        instruction.validate(<span class="kw-2">&amp;</span>output[index..index + wc]);
+<a href=#235 id=235 data-nosnippet>235</a>        index += wc;
+<a href=#236 id=236 data-nosnippet>236</a>    }
+<a href=#237 id=237 data-nosnippet>237</a>}
+<a href=#238 id=238 data-nosnippet>238</a>
+<a href=#239 id=239 data-nosnippet>239</a><span class="attr">#[cfg(test)]
+<a href=#240 id=240 data-nosnippet>240</a></span><span class="kw">fn </span>entry_point_of_word_count(word_count: usize) -&gt; Vec&lt;Word&gt; {
+<a href=#241 id=241 data-nosnippet>241</a>    <span class="kw">let </span><span class="kw-2">mut </span>instruction = Instruction::new(Op::EntryPoint);
+<a href=#242 id=242 data-nosnippet>242</a>    <span class="comment">// `Instruction::new` already accounts for the opcode/word-count word.
+<a href=#243 id=243 data-nosnippet>243</a>    </span>instruction.add_operands(<span class="macro">vec!</span>[<span class="number">1</span>; word_count - <span class="number">1</span>]);
+<a href=#244 id=244 data-nosnippet>244</a>
+<a href=#245 id=245 data-nosnippet>245</a>    <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="macro">vec!</span>[];
+<a href=#246 id=246 data-nosnippet>246</a>    instruction.to_words(<span class="kw-2">&amp;mut </span>output);
+<a href=#247 id=247 data-nosnippet>247</a>    output
+<a href=#248 id=248 data-nosnippet>248</a>}
+<a href=#249 id=249 data-nosnippet>249</a>
+<a href=#250 id=250 data-nosnippet>250</a><span class="doccomment">/// Ensure we allow `u16::MAX` words in an instruction.
+<a href=#251 id=251 data-nosnippet>251</a></span><span class="attr">#[test]
+<a href=#252 id=252 data-nosnippet>252</a></span><span class="kw">fn </span>test_longest_encodable_instruction() {
+<a href=#253 id=253 data-nosnippet>253</a>    <span class="kw">let </span>output = entry_point_of_word_count(u16::MAX <span class="kw">as </span>usize);
+<a href=#254 id=254 data-nosnippet>254</a>
+<a href=#255 id=255 data-nosnippet>255</a>    <span class="macro">assert_eq!</span>(output.len(), u16::MAX <span class="kw">as </span>usize);
+<a href=#256 id=256 data-nosnippet>256</a>    <span class="macro">assert_eq!</span>(output[<span class="number">0</span>] &gt;&gt; <span class="number">16</span>, u16::MAX <span class="kw">as </span>Word);
+<a href=#257 id=257 data-nosnippet>257</a>}
+<a href=#258 id=258 data-nosnippet>258</a>
+<a href=#259 id=259 data-nosnippet>259</a><span class="doccomment">/// Ensure we panic when we have more than `u16::MAX` words in an instruction.
+<a href=#260 id=260 data-nosnippet>260</a></span><span class="attr">#[test]
+<a href=#261 id=261 data-nosnippet>261</a>#[should_panic(
+<a href=#262 id=262 data-nosnippet>262</a>    expected = <span class="string">"EntryPoint instruction is 65536 words long, but SPIR-V instructions are limited to 65535 words"
+<a href=#263 id=263 data-nosnippet>263</a></span>)]
+<a href=#264 id=264 data-nosnippet>264</a></span><span class="kw">fn </span>test_instruction_word_count_overflow() {
+<a href=#265 id=265 data-nosnippet>265</a>    entry_point_of_word_count(u16::MAX <span class="kw">as </span>usize + <span class="number">1</span>);
+<a href=#266 id=266 data-nosnippet>266</a>}
 </code></pre></div></section></main></body></html>
