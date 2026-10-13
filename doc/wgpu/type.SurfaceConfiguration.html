@@ -13,7 +13,8 @@
     pub view_formats: <a class="struct" href="https://doc.rust-lang.org/1.96.1/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="enum" href="enum.TextureFormat.html" title="enum wgpu::TextureFormat">TextureFormat</a>&gt;,
 }</code></pre><h2 id="fields" class="fields section-header">Fields<a href="#fields" class="anchor">§</a></h2><span id="structfield.usage" class="structfield section-header"><a href="#structfield.usage" class="anchor field">§</a><code>usage: <a class="struct" href="struct.TextureUsages.html" title="struct wgpu::TextureUsages">TextureUsages</a></code></span><div class="docblock"><p>The usage of the swap chain. The only usage guaranteed to be supported is [<code>TextureUsages::RENDER_ATTACHMENT</code>].</p>
 </div><span id="structfield.format" class="structfield section-header"><a href="#structfield.format" class="anchor field">§</a><code>format: <a class="enum" href="enum.TextureFormat.html" title="enum wgpu::TextureFormat">TextureFormat</a></code></span><div class="docblock"><p>The texture format of the swap chain. The only formats that are guaranteed are
-[<code>TextureFormat::Bgra8Unorm</code>] and [<code>TextureFormat::Bgra8UnormSrgb</code>].</p>
+[<code>TextureFormat::Bgra8Unorm</code>] and [<code>TextureFormat::Bgra8UnormSrgb</code>]. Unlike
+WebGPU canvases, <code>wgpu</code> supports sRGB surface formats.</p>
 </div><span id="structfield.color_space" class="structfield section-header"><a href="#structfield.color_space" class="anchor field">§</a><code>color_space: <a class="enum" href="enum.SurfaceColorSpace.html" title="enum wgpu::SurfaceColorSpace">SurfaceColorSpace</a></code></span><div class="docblock"><p>The color space in which the presentation engine interprets the values
 written to the swap chain.</p>
 <p>The supported color spaces for each format are listed in
@@ -68,7 +69,13 @@ clamped to the supported range.</li>
 <li>Vulkan/Metal + Mailbox: If this is set to <code>2</code>, limits framerate to <code>2 * Monitor Hz</code> fps. <code>3</code> or higher is unlimited.</li>
 </ul>
 </div><span id="structfield.alpha_mode" class="structfield section-header"><a href="#structfield.alpha_mode" class="anchor field">§</a><code>alpha_mode: <a class="enum" href="enum.CompositeAlphaMode.html" title="enum wgpu::CompositeAlphaMode">CompositeAlphaMode</a></code></span><div class="docblock"><p>Specifies how the alpha channel of the textures should be handled during compositing.</p>
-</div><span id="structfield.view_formats" class="structfield section-header"><a href="#structfield.view_formats" class="anchor field">§</a><code>view_formats: <a class="struct" href="https://doc.rust-lang.org/1.96.1/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="enum" href="enum.TextureFormat.html" title="enum wgpu::TextureFormat">TextureFormat</a>&gt;</code></span><div class="docblock"><p>Specifies what view formats will be allowed when calling <code>Texture::create_view</code> on the texture returned by <code>Surface::get_current_texture</code>.</p>
-<p>View formats of the same format as the texture are always allowed.</p>
-<p>Note: currently, only the srgb-ness is allowed to change. (ex: <code>Rgba8Unorm</code> texture + <code>Rgba8UnormSrgb</code> view)</p>
+</div><span id="structfield.view_formats" class="structfield section-header"><a href="#structfield.view_formats" class="anchor field">§</a><code>view_formats: <a class="struct" href="https://doc.rust-lang.org/1.96.1/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="enum" href="enum.TextureFormat.html" title="enum wgpu::TextureFormat">TextureFormat</a>&gt;</code></span><div class="docblock"><p>Specifies what view formats will be allowed when calling <code>Texture::create_view</code> on
+the texture returned by <code>Surface::get_current_texture</code>.</p>
+<p>Views with the same format as the texture are always allowed. Views with a different
+format than the texture require [<code>crate::DownlevelFlags::SURFACE_VIEW_FORMATS</code>].
+Note that <code>wgpu</code> treats adapters as [WebGPU-compliant][<code>crate::DownlevelFlags::compliant</code>]
+even if they lack [<code>crate::DownlevelFlags::SURFACE_VIEW_FORMATS</code>].</p>
+<p>Currently, a view format may only differ from the surface in srgb-ness (ex: <code>Rgba8Unorm</code>
+texture + <code>Rgba8UnormSrgb</code> view).</p>
+<p>Unlike WebGPU canvases, <code>wgpu</code> supports sRGB surface formats.</p>
 </div><script src="../type.impl/wgpu_types/surface/struct.SurfaceConfiguration.js" data-self-path="wgpu::api::surface::SurfaceConfiguration" async></script></section></div></main></body></html>
