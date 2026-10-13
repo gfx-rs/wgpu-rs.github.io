@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ShaderStage","VertexFormat"],"mod":["glsl","hlsl","msl","spv","wgsl"],"struct":["ResourceBinding","TaskDispatchLimits"],"type":["FastHashMap","FastHashSet","FastIndexMap","FastIndexSet"]};
+window.SIDEBAR_ITEMS = {"enum":["ShaderStage","VertexFormat"],"mod":["glsl","hlsl","msl","spv","wgsl"],"struct":["ExternalTextureTransferFunction","ResourceBinding","TaskDispatchLimits"],"type":["FastHashMap","FastHashSet","FastIndexMap","FastIndexSet"]};
