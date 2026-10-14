@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["DrawError","RenderCommandError"],"struct":["Rect"]};
+window.SIDEBAR_ITEMS = {"enum":["DrawError","RenderCommandError"],"fn":["validate_mesh_draw_multiview"],"struct":["Rect"]};
