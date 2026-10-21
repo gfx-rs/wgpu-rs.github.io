@@ -179,19 +179,19 @@
 <a href=#179 id=179 data-nosnippet>179</a>        <span class="kw">return if </span>interface.entry_point_names.contains(ep) {
 <a href=#180 id=180 data-nosnippet>180</a>            <span class="prelude-val">Ok</span>(ep.to_owned())
 <a href=#181 id=181 data-nosnippet>181</a>        } <span class="kw">else </span>{
-<a href=#182 id=182 data-nosnippet>182</a>            <span class="prelude-val">Err</span>(validation::StageError::MissingEntryPoint(ep.to_owned()))
+<a href=#182 id=182 data-nosnippet>182</a>            <span class="prelude-val">Err</span>(validation::StageError::NoEntryPointWithName(ep.to_owned()))
 <a href=#183 id=183 data-nosnippet>183</a>        };
 <a href=#184 id=184 data-nosnippet>184</a>    }
 <a href=#185 id=185 data-nosnippet>185</a>
 <a href=#186 id=186 data-nosnippet>186</a>    <span class="kw">match </span>interface.entry_point_names.len() {
-<a href=#187 id=187 data-nosnippet>187</a>        <span class="number">0 </span>=&gt; <span class="prelude-val">Err</span>(validation::StageError::NoEntryPointFound),
+<a href=#187 id=187 data-nosnippet>187</a>        <span class="number">0 </span>=&gt; <span class="prelude-val">Err</span>(validation::StageError::NoEntryPoints),
 <a href=#188 id=188 data-nosnippet>188</a>        <span class="number">1 </span>=&gt; <span class="prelude-val">Ok</span>(interface
 <a href=#189 id=189 data-nosnippet>189</a>            .entry_point_names
 <a href=#190 id=190 data-nosnippet>190</a>            .iter()
 <a href=#191 id=191 data-nosnippet>191</a>            .next()
 <a href=#192 id=192 data-nosnippet>192</a>            .unwrap()
 <a href=#193 id=193 data-nosnippet>193</a>            .to_owned()),
-<a href=#194 id=194 data-nosnippet>194</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(validation::StageError::MultipleEntryPointsFound),
+<a href=#194 id=194 data-nosnippet>194</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(validation::StageError::AmbiguousEntryPoint),
 <a href=#195 id=195 data-nosnippet>195</a>    }
 <a href=#196 id=196 data-nosnippet>196</a>}
 <a href=#197 id=197 data-nosnippet>197</a>
@@ -1326,7 +1326,7 @@
 <a href=#1326 id=1326 data-nosnippet>1326</a>        <span class="kw">let </span>empty = passthrough_interface(<span class="kw-2">&amp;</span>[]);
 <a href=#1327 id=1327 data-nosnippet>1327</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
 <a href=#1328 id=1328 data-nosnippet>1328</a>            finalize_passthrough_entry_point_name(<span class="kw-2">&amp;</span>empty, <span class="prelude-val">None</span>),
-<a href=#1329 id=1329 data-nosnippet>1329</a>            <span class="prelude-val">Err</span>(validation::StageError::NoEntryPointFound)
+<a href=#1329 id=1329 data-nosnippet>1329</a>            <span class="prelude-val">Err</span>(validation::StageError::NoEntryPoints)
 <a href=#1330 id=1330 data-nosnippet>1330</a>        ));
 <a href=#1331 id=1331 data-nosnippet>1331</a>
 <a href=#1332 id=1332 data-nosnippet>1332</a>        <span class="kw">let </span>single = passthrough_interface(<span class="kw-2">&amp;</span>[<span class="string">"main"</span>]);
@@ -1338,7 +1338,7 @@
 <a href=#1338 id=1338 data-nosnippet>1338</a>        <span class="kw">let </span>multiple = passthrough_interface(<span class="kw-2">&amp;</span>[<span class="string">"vertex"</span>, <span class="string">"fragment"</span>]);
 <a href=#1339 id=1339 data-nosnippet>1339</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
 <a href=#1340 id=1340 data-nosnippet>1340</a>            finalize_passthrough_entry_point_name(<span class="kw-2">&amp;</span>multiple, <span class="prelude-val">None</span>),
-<a href=#1341 id=1341 data-nosnippet>1341</a>            <span class="prelude-val">Err</span>(validation::StageError::MultipleEntryPointsFound)
+<a href=#1341 id=1341 data-nosnippet>1341</a>            <span class="prelude-val">Err</span>(validation::StageError::AmbiguousEntryPoint)
 <a href=#1342 id=1342 data-nosnippet>1342</a>        ));
 <a href=#1343 id=1343 data-nosnippet>1343</a>    }
 <a href=#1344 id=1344 data-nosnippet>1344</a>
@@ -1351,7 +1351,7 @@
 <a href=#1351 id=1351 data-nosnippet>1351</a>        </span>);
 <a href=#1352 id=1352 data-nosnippet>1352</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
 <a href=#1353 id=1353 data-nosnippet>1353</a>            finalize_passthrough_entry_point_name(<span class="kw-2">&amp;</span>interface, <span class="prelude-val">Some</span>(<span class="string">"missing"</span>)),
-<a href=#1354 id=1354 data-nosnippet>1354</a>            <span class="prelude-val">Err</span>(validation::StageError::MissingEntryPoint(name)) <span class="kw">if </span>name == <span class="string">"missing"
+<a href=#1354 id=1354 data-nosnippet>1354</a>            <span class="prelude-val">Err</span>(validation::StageError::NoEntryPointWithName(name)) <span class="kw">if </span>name == <span class="string">"missing"
 <a href=#1355 id=1355 data-nosnippet>1355</a>        </span>));
 <a href=#1356 id=1356 data-nosnippet>1356</a>    }
 <a href=#1357 id=1357 data-nosnippet>1357</a>}
