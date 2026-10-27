@@ -277,142 +277,144 @@
 <a href=#277 id=277 data-nosnippet>277</a>    }
 <a href=#278 id=278 data-nosnippet>278</a>
 <a href=#279 id=279 data-nosnippet>279</a>    <span class="doccomment">/// Submits a series of finished command buffers for execution.
-<a href=#280 id=280 data-nosnippet>280</a>    </span><span class="kw">pub fn </span>submit&lt;I: IntoIterator&lt;Item = CommandBuffer&gt;&gt;(
-<a href=#281 id=281 data-nosnippet>281</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#282 id=282 data-nosnippet>282</a>        command_buffers: I,
-<a href=#283 id=283 data-nosnippet>283</a>    ) -&gt; SubmissionIndex {
-<a href=#284 id=284 data-nosnippet>284</a>        <span class="comment">// As submit drains the iterator (even on error), collect deferred actions
-<a href=#285 id=285 data-nosnippet>285</a>        // from each CommandBuffer along the way.
-<a href=#286 id=286 data-nosnippet>286</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>actions = DeferredCommandBufferActions::default();
-<a href=#287 id=287 data-nosnippet>287</a>
-<a href=#288 id=288 data-nosnippet>288</a>        <span class="kw">let </span><span class="kw-2">mut </span>command_buffers = command_buffers.into_iter().map(|comb| {
-<a href=#289 id=289 data-nosnippet>289</a>            actions.append(<span class="kw-2">&amp;mut </span>comb.actions.lock());
-<a href=#290 id=290 data-nosnippet>290</a>            comb.buffer
-<a href=#291 id=291 data-nosnippet>291</a>        });
-<a href=#292 id=292 data-nosnippet>292</a>        <span class="kw">let </span>index = <span class="self">self</span>.inner.submit(<span class="kw-2">&amp;mut </span>command_buffers);
-<a href=#293 id=293 data-nosnippet>293</a>
-<a href=#294 id=294 data-nosnippet>294</a>        <span class="comment">// Execute all deferred actions after submit.
-<a href=#295 id=295 data-nosnippet>295</a>        </span>actions.execute(<span class="kw-2">&amp;</span><span class="self">self</span>.inner);
-<a href=#296 id=296 data-nosnippet>296</a>
-<a href=#297 id=297 data-nosnippet>297</a>        SubmissionIndex { index }
-<a href=#298 id=298 data-nosnippet>298</a>    }
-<a href=#299 id=299 data-nosnippet>299</a>
-<a href=#300 id=300 data-nosnippet>300</a>    <span class="doccomment">/// Gets the amount of nanoseconds each tick of a timestamp query represents.
-<a href=#301 id=301 data-nosnippet>301</a>    ///
-<a href=#302 id=302 data-nosnippet>302</a>    /// Returns zero if timestamp queries are unsupported.
+<a href=#280 id=280 data-nosnippet>280</a>    ///
+<a href=#281 id=281 data-nosnippet>281</a>    /// Returns `Some` if the submission started and can be waited on via a `poll`, or `None` otherwise. On the WebGPU backend, it always returns `None` (even for successful submissions), because the WebGPU backend does not support waiting for a particular submission.
+<a href=#282 id=282 data-nosnippet>282</a>    </span><span class="kw">pub fn </span>submit&lt;I: IntoIterator&lt;Item = CommandBuffer&gt;&gt;(
+<a href=#283 id=283 data-nosnippet>283</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#284 id=284 data-nosnippet>284</a>        command_buffers: I,
+<a href=#285 id=285 data-nosnippet>285</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;SubmissionIndex&gt; {
+<a href=#286 id=286 data-nosnippet>286</a>        <span class="comment">// As submit drains the iterator (even on error), collect deferred actions
+<a href=#287 id=287 data-nosnippet>287</a>        // from each CommandBuffer along the way.
+<a href=#288 id=288 data-nosnippet>288</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>actions = DeferredCommandBufferActions::default();
+<a href=#289 id=289 data-nosnippet>289</a>
+<a href=#290 id=290 data-nosnippet>290</a>        <span class="kw">let </span><span class="kw-2">mut </span>command_buffers = command_buffers.into_iter().map(|comb| {
+<a href=#291 id=291 data-nosnippet>291</a>            actions.append(<span class="kw-2">&amp;mut </span>comb.actions.lock());
+<a href=#292 id=292 data-nosnippet>292</a>            comb.buffer
+<a href=#293 id=293 data-nosnippet>293</a>        });
+<a href=#294 id=294 data-nosnippet>294</a>        <span class="kw">let </span>index = <span class="self">self</span>.inner.submit(<span class="kw-2">&amp;mut </span>command_buffers);
+<a href=#295 id=295 data-nosnippet>295</a>
+<a href=#296 id=296 data-nosnippet>296</a>        <span class="comment">// Execute all deferred actions after submit.
+<a href=#297 id=297 data-nosnippet>297</a>        </span>actions.execute(<span class="kw-2">&amp;</span><span class="self">self</span>.inner);
+<a href=#298 id=298 data-nosnippet>298</a>
+<a href=#299 id=299 data-nosnippet>299</a>        index.map(|index| SubmissionIndex { index })
+<a href=#300 id=300 data-nosnippet>300</a>    }
+<a href=#301 id=301 data-nosnippet>301</a>
+<a href=#302 id=302 data-nosnippet>302</a>    <span class="doccomment">/// Gets the amount of nanoseconds each tick of a timestamp query represents.
 <a href=#303 id=303 data-nosnippet>303</a>    ///
-<a href=#304 id=304 data-nosnippet>304</a>    /// Timestamp values are represented in nanosecond values on WebGPU, see &lt;https://gpuweb.github.io/gpuweb/#timestamp&gt;
-<a href=#305 id=305 data-nosnippet>305</a>    /// Therefore, this is always 1.0 on the web, but on wgpu-core a manual conversion is required.
-<a href=#306 id=306 data-nosnippet>306</a>    </span><span class="kw">pub fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
-<a href=#307 id=307 data-nosnippet>307</a>        <span class="self">self</span>.inner.get_timestamp_period()
-<a href=#308 id=308 data-nosnippet>308</a>    }
-<a href=#309 id=309 data-nosnippet>309</a>
-<a href=#310 id=310 data-nosnippet>310</a>    <span class="doccomment">/// Registers a callback that is invoked when the previous [`Queue::submit`] finishes executing
-<a href=#311 id=311 data-nosnippet>311</a>    /// on the GPU. When this callback runs, all mapped-buffer callbacks registered for the same
-<a href=#312 id=312 data-nosnippet>312</a>    /// submission are guaranteed to have been called.
-<a href=#313 id=313 data-nosnippet>313</a>    ///
-<a href=#314 id=314 data-nosnippet>314</a>    /// For the callback to run, either [`queue.submit(..)`][q::s], [`instance.poll_all(..)`][i::p_a],
-<a href=#315 id=315 data-nosnippet>315</a>    /// or [`device.poll(..)`][d::p] must be called elsewhere in the runtime, possibly integrated into
-<a href=#316 id=316 data-nosnippet>316</a>    /// an event loop or run on a separate thread.
-<a href=#317 id=317 data-nosnippet>317</a>    ///
-<a href=#318 id=318 data-nosnippet>318</a>    /// The callback runs on the thread that first calls one of the above functions after the GPU work
-<a href=#319 id=319 data-nosnippet>319</a>    /// completes. There are no restrictions on the code you can run in the callback; however, on native
-<a href=#320 id=320 data-nosnippet>320</a>    /// the polling call will not return until the callback finishes, so keep callbacks short (set flags,
-<a href=#321 id=321 data-nosnippet>321</a>    /// send messages, etc.).
-<a href=#322 id=322 data-nosnippet>322</a>    ///
-<a href=#323 id=323 data-nosnippet>323</a>    /// [q::s]: Queue::submit
-<a href=#324 id=324 data-nosnippet>324</a>    /// [i::p_a]: Instance::poll_all
-<a href=#325 id=325 data-nosnippet>325</a>    /// [d::p]: Device::poll
-<a href=#326 id=326 data-nosnippet>326</a>    </span><span class="kw">pub fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: <span class="kw">impl </span>FnOnce() + Send + <span class="lifetime">'static</span>) {
-<a href=#327 id=327 data-nosnippet>327</a>        <span class="self">self</span>.inner.on_submitted_work_done(Box::new(callback));
-<a href=#328 id=328 data-nosnippet>328</a>    }
-<a href=#329 id=329 data-nosnippet>329</a>
-<a href=#330 id=330 data-nosnippet>330</a>    <span class="doccomment">/// Get the [`wgpu_hal`] device from this `Queue`.
-<a href=#331 id=331 data-nosnippet>331</a>    ///
-<a href=#332 id=332 data-nosnippet>332</a>    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
-<a href=#333 id=333 data-nosnippet>333</a>    /// and pass that struct to the to the `A` type parameter.
-<a href=#334 id=334 data-nosnippet>334</a>    ///
-<a href=#335 id=335 data-nosnippet>335</a>    /// Returns a guard that dereferences to the type of the hal backend
-<a href=#336 id=336 data-nosnippet>336</a>    /// which implements [`A::Queue`].
-<a href=#337 id=337 data-nosnippet>337</a>    ///
-<a href=#338 id=338 data-nosnippet>338</a>    /// # Types
+<a href=#304 id=304 data-nosnippet>304</a>    /// Returns zero if timestamp queries are unsupported.
+<a href=#305 id=305 data-nosnippet>305</a>    ///
+<a href=#306 id=306 data-nosnippet>306</a>    /// Timestamp values are represented in nanosecond values on WebGPU, see &lt;https://gpuweb.github.io/gpuweb/#timestamp&gt;
+<a href=#307 id=307 data-nosnippet>307</a>    /// Therefore, this is always 1.0 on the web, but on wgpu-core a manual conversion is required.
+<a href=#308 id=308 data-nosnippet>308</a>    </span><span class="kw">pub fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
+<a href=#309 id=309 data-nosnippet>309</a>        <span class="self">self</span>.inner.get_timestamp_period()
+<a href=#310 id=310 data-nosnippet>310</a>    }
+<a href=#311 id=311 data-nosnippet>311</a>
+<a href=#312 id=312 data-nosnippet>312</a>    <span class="doccomment">/// Registers a callback that is invoked when the previous [`Queue::submit`] finishes executing
+<a href=#313 id=313 data-nosnippet>313</a>    /// on the GPU. When this callback runs, all mapped-buffer callbacks registered for the same
+<a href=#314 id=314 data-nosnippet>314</a>    /// submission are guaranteed to have been called.
+<a href=#315 id=315 data-nosnippet>315</a>    ///
+<a href=#316 id=316 data-nosnippet>316</a>    /// For the callback to run, either [`queue.submit(..)`][q::s], [`instance.poll_all(..)`][i::p_a],
+<a href=#317 id=317 data-nosnippet>317</a>    /// or [`device.poll(..)`][d::p] must be called elsewhere in the runtime, possibly integrated into
+<a href=#318 id=318 data-nosnippet>318</a>    /// an event loop or run on a separate thread.
+<a href=#319 id=319 data-nosnippet>319</a>    ///
+<a href=#320 id=320 data-nosnippet>320</a>    /// The callback runs on the thread that first calls one of the above functions after the GPU work
+<a href=#321 id=321 data-nosnippet>321</a>    /// completes. There are no restrictions on the code you can run in the callback; however, on native
+<a href=#322 id=322 data-nosnippet>322</a>    /// the polling call will not return until the callback finishes, so keep callbacks short (set flags,
+<a href=#323 id=323 data-nosnippet>323</a>    /// send messages, etc.).
+<a href=#324 id=324 data-nosnippet>324</a>    ///
+<a href=#325 id=325 data-nosnippet>325</a>    /// [q::s]: Queue::submit
+<a href=#326 id=326 data-nosnippet>326</a>    /// [i::p_a]: Instance::poll_all
+<a href=#327 id=327 data-nosnippet>327</a>    /// [d::p]: Device::poll
+<a href=#328 id=328 data-nosnippet>328</a>    </span><span class="kw">pub fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: <span class="kw">impl </span>FnOnce() + Send + <span class="lifetime">'static</span>) {
+<a href=#329 id=329 data-nosnippet>329</a>        <span class="self">self</span>.inner.on_submitted_work_done(Box::new(callback));
+<a href=#330 id=330 data-nosnippet>330</a>    }
+<a href=#331 id=331 data-nosnippet>331</a>
+<a href=#332 id=332 data-nosnippet>332</a>    <span class="doccomment">/// Get the [`wgpu_hal`] device from this `Queue`.
+<a href=#333 id=333 data-nosnippet>333</a>    ///
+<a href=#334 id=334 data-nosnippet>334</a>    /// Find the Api struct corresponding to the active backend in [`wgpu_hal::api`],
+<a href=#335 id=335 data-nosnippet>335</a>    /// and pass that struct to the to the `A` type parameter.
+<a href=#336 id=336 data-nosnippet>336</a>    ///
+<a href=#337 id=337 data-nosnippet>337</a>    /// Returns a guard that dereferences to the type of the hal backend
+<a href=#338 id=338 data-nosnippet>338</a>    /// which implements [`A::Queue`].
 <a href=#339 id=339 data-nosnippet>339</a>    ///
-<a href=#340 id=340 data-nosnippet>340</a>    /// The returned type depends on the backend:
+<a href=#340 id=340 data-nosnippet>340</a>    /// # Types
 <a href=#341 id=341 data-nosnippet>341</a>    ///
-<a href=#342 id=342 data-nosnippet>342</a>    </span><span class="attr">#[doc = <span class="macro">crate::macros::hal_type_vulkan!</span>(<span class="string">"Queue"</span>)]
-<a href=#343 id=343 data-nosnippet>343</a>    #[doc = <span class="macro">crate::macros::hal_type_metal!</span>(<span class="string">"Queue"</span>)]
-<a href=#344 id=344 data-nosnippet>344</a>    #[doc = <span class="macro">crate::macros::hal_type_dx12!</span>(<span class="string">"Queue"</span>)]
-<a href=#345 id=345 data-nosnippet>345</a>    #[doc = <span class="macro">crate::macros::hal_type_gles!</span>(<span class="string">"Queue"</span>)]
-<a href=#346 id=346 data-nosnippet>346</a>    </span><span class="doccomment">///
-<a href=#347 id=347 data-nosnippet>347</a>    /// # Errors
-<a href=#348 id=348 data-nosnippet>348</a>    ///
-<a href=#349 id=349 data-nosnippet>349</a>    /// This method will return None if:
-<a href=#350 id=350 data-nosnippet>350</a>    /// - The queue is not from the backend specified by `A`.
-<a href=#351 id=351 data-nosnippet>351</a>    /// - The queue is from the `webgpu` or `custom` backend.
-<a href=#352 id=352 data-nosnippet>352</a>    ///
-<a href=#353 id=353 data-nosnippet>353</a>    /// On the `webgpu` backend, use `as_webgpu` instead.
+<a href=#342 id=342 data-nosnippet>342</a>    /// The returned type depends on the backend:
+<a href=#343 id=343 data-nosnippet>343</a>    ///
+<a href=#344 id=344 data-nosnippet>344</a>    </span><span class="attr">#[doc = <span class="macro">crate::macros::hal_type_vulkan!</span>(<span class="string">"Queue"</span>)]
+<a href=#345 id=345 data-nosnippet>345</a>    #[doc = <span class="macro">crate::macros::hal_type_metal!</span>(<span class="string">"Queue"</span>)]
+<a href=#346 id=346 data-nosnippet>346</a>    #[doc = <span class="macro">crate::macros::hal_type_dx12!</span>(<span class="string">"Queue"</span>)]
+<a href=#347 id=347 data-nosnippet>347</a>    #[doc = <span class="macro">crate::macros::hal_type_gles!</span>(<span class="string">"Queue"</span>)]
+<a href=#348 id=348 data-nosnippet>348</a>    </span><span class="doccomment">///
+<a href=#349 id=349 data-nosnippet>349</a>    /// # Errors
+<a href=#350 id=350 data-nosnippet>350</a>    ///
+<a href=#351 id=351 data-nosnippet>351</a>    /// This method will return None if:
+<a href=#352 id=352 data-nosnippet>352</a>    /// - The queue is not from the backend specified by `A`.
+<a href=#353 id=353 data-nosnippet>353</a>    /// - The queue is from the `webgpu` or `custom` backend.
 <a href=#354 id=354 data-nosnippet>354</a>    ///
-<a href=#355 id=355 data-nosnippet>355</a>    /// # Safety
+<a href=#355 id=355 data-nosnippet>355</a>    /// On the `webgpu` backend, use `as_webgpu` instead.
 <a href=#356 id=356 data-nosnippet>356</a>    ///
-<a href=#357 id=357 data-nosnippet>357</a>    /// - The returned resource must not be destroyed unless the guard
-<a href=#358 id=358 data-nosnippet>358</a>    ///   is the last reference to it and it is not in use by the GPU.
-<a href=#359 id=359 data-nosnippet>359</a>    ///   The guard and handle may be dropped at any time however.
-<a href=#360 id=360 data-nosnippet>360</a>    /// - All the safety requirements of wgpu-hal must be upheld.
-<a href=#361 id=361 data-nosnippet>361</a>    ///
-<a href=#362 id=362 data-nosnippet>362</a>    /// [`A::Queue`]: hal::Api::Queue
-<a href=#363 id=363 data-nosnippet>363</a>    </span><span class="attr">#[cfg(wgpu_core)]
-<a href=#364 id=364 data-nosnippet>364</a>    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: hal::Api&gt;(
-<a href=#365 id=365 data-nosnippet>365</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#366 id=366 data-nosnippet>366</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>core::ops::Deref&lt;Target = A::Queue&gt; + WasmNotSendSync&gt; {
-<a href=#367 id=367 data-nosnippet>367</a>        <span class="kw">let </span>queue = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
-<a href=#368 id=368 data-nosnippet>368</a>        <span class="kw">unsafe </span>{ queue.as_hal::&lt;A&gt;() }
-<a href=#369 id=369 data-nosnippet>369</a>    }
-<a href=#370 id=370 data-nosnippet>370</a>
-<a href=#371 id=371 data-nosnippet>371</a>    <span class="doccomment">/// Schedule a surface texture to be presented on the owning surface.
-<a href=#372 id=372 data-nosnippet>372</a>    ///
-<a href=#373 id=373 data-nosnippet>373</a>    /// Should be called after any work on the texture is submitted via [`Queue::submit`].
-<a href=#374 id=374 data-nosnippet>374</a>    /// If no work was submitted, the texture will be cleared automatically before presenting.
-<a href=#375 id=375 data-nosnippet>375</a>    ///
-<a href=#376 id=376 data-nosnippet>376</a>    /// # Platform dependent behavior
+<a href=#357 id=357 data-nosnippet>357</a>    /// # Safety
+<a href=#358 id=358 data-nosnippet>358</a>    ///
+<a href=#359 id=359 data-nosnippet>359</a>    /// - The returned resource must not be destroyed unless the guard
+<a href=#360 id=360 data-nosnippet>360</a>    ///   is the last reference to it and it is not in use by the GPU.
+<a href=#361 id=361 data-nosnippet>361</a>    ///   The guard and handle may be dropped at any time however.
+<a href=#362 id=362 data-nosnippet>362</a>    /// - All the safety requirements of wgpu-hal must be upheld.
+<a href=#363 id=363 data-nosnippet>363</a>    ///
+<a href=#364 id=364 data-nosnippet>364</a>    /// [`A::Queue`]: hal::Api::Queue
+<a href=#365 id=365 data-nosnippet>365</a>    </span><span class="attr">#[cfg(wgpu_core)]
+<a href=#366 id=366 data-nosnippet>366</a>    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: hal::Api&gt;(
+<a href=#367 id=367 data-nosnippet>367</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#368 id=368 data-nosnippet>368</a>    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>core::ops::Deref&lt;Target = A::Queue&gt; + WasmNotSendSync&gt; {
+<a href=#369 id=369 data-nosnippet>369</a>        <span class="kw">let </span>queue = <span class="self">self</span>.inner.as_core_opt()<span class="question-mark">?</span>;
+<a href=#370 id=370 data-nosnippet>370</a>        <span class="kw">unsafe </span>{ queue.as_hal::&lt;A&gt;() }
+<a href=#371 id=371 data-nosnippet>371</a>    }
+<a href=#372 id=372 data-nosnippet>372</a>
+<a href=#373 id=373 data-nosnippet>373</a>    <span class="doccomment">/// Schedule a surface texture to be presented on the owning surface.
+<a href=#374 id=374 data-nosnippet>374</a>    ///
+<a href=#375 id=375 data-nosnippet>375</a>    /// Should be called after any work on the texture is submitted via [`Queue::submit`].
+<a href=#376 id=376 data-nosnippet>376</a>    /// If no work was submitted, the texture will be cleared automatically before presenting.
 <a href=#377 id=377 data-nosnippet>377</a>    ///
-<a href=#378 id=378 data-nosnippet>378</a>    /// On Wayland, `present` will attach a `wl_buffer` to the underlying `wl_surface` and commit the new surface
-<a href=#379 id=379 data-nosnippet>379</a>    /// state. If it is desired to do things such as request a frame callback, scale the surface using the viewporter
-<a href=#380 id=380 data-nosnippet>380</a>    /// or synchronize other double buffered state, then these operations should be done before the call to `present`.
-<a href=#381 id=381 data-nosnippet>381</a>    </span><span class="kw">pub fn </span>present(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>surface_texture: SurfaceTexture) {
-<a href=#382 id=382 data-nosnippet>382</a>        surface_texture.presented = <span class="bool-val">true</span>;
-<a href=#383 id=383 data-nosnippet>383</a>        <span class="self">self</span>.inner.present(<span class="kw-2">&amp;</span>surface_texture.detail);
-<a href=#384 id=384 data-nosnippet>384</a>    }
-<a href=#385 id=385 data-nosnippet>385</a>
-<a href=#386 id=386 data-nosnippet>386</a>    <span class="doccomment">/// Compact a BLAS, it must have had [`Blas::prepare_compaction_async`] called on it and had the
-<a href=#387 id=387 data-nosnippet>387</a>    /// callback provided called.
-<a href=#388 id=388 data-nosnippet>388</a>    ///
-<a href=#389 id=389 data-nosnippet>389</a>    /// The returned BLAS is more restricted than a normal BLAS because it may not be rebuilt or
-<a href=#390 id=390 data-nosnippet>390</a>    /// compacted.
-<a href=#391 id=391 data-nosnippet>391</a>    </span><span class="kw">pub fn </span>compact_blas(<span class="kw-2">&amp;</span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Blas) -&gt; Blas {
-<a href=#392 id=392 data-nosnippet>392</a>        <span class="kw">let </span>(handle, dispatch) = <span class="self">self</span>.inner.compact_blas(<span class="kw-2">&amp;</span>blas.inner);
-<a href=#393 id=393 data-nosnippet>393</a>        Blas {
-<a href=#394 id=394 data-nosnippet>394</a>            handle,
-<a href=#395 id=395 data-nosnippet>395</a>            inner: dispatch,
-<a href=#396 id=396 data-nosnippet>396</a>        }
-<a href=#397 id=397 data-nosnippet>397</a>    }
-<a href=#398 id=398 data-nosnippet>398</a>}
-<a href=#399 id=399 data-nosnippet>399</a>
-<a href=#400 id=400 data-nosnippet>400</a><span class="attr">#[cfg(wgpu_core)]
-<a href=#401 id=401 data-nosnippet>401</a></span><span class="kw">impl </span>Queue {
-<a href=#402 id=402 data-nosnippet>402</a>    <span class="doccomment">/// Create a new queue of wgpu from a wgpu-core queue.
-<a href=#403 id=403 data-nosnippet>403</a>    ///
-<a href=#404 id=404 data-nosnippet>404</a>    /// # Arguments
+<a href=#378 id=378 data-nosnippet>378</a>    /// # Platform dependent behavior
+<a href=#379 id=379 data-nosnippet>379</a>    ///
+<a href=#380 id=380 data-nosnippet>380</a>    /// On Wayland, `present` will attach a `wl_buffer` to the underlying `wl_surface` and commit the new surface
+<a href=#381 id=381 data-nosnippet>381</a>    /// state. If it is desired to do things such as request a frame callback, scale the surface using the viewporter
+<a href=#382 id=382 data-nosnippet>382</a>    /// or synchronize other double buffered state, then these operations should be done before the call to `present`.
+<a href=#383 id=383 data-nosnippet>383</a>    </span><span class="kw">pub fn </span>present(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>surface_texture: SurfaceTexture) {
+<a href=#384 id=384 data-nosnippet>384</a>        surface_texture.presented = <span class="bool-val">true</span>;
+<a href=#385 id=385 data-nosnippet>385</a>        <span class="self">self</span>.inner.present(<span class="kw-2">&amp;</span>surface_texture.detail);
+<a href=#386 id=386 data-nosnippet>386</a>    }
+<a href=#387 id=387 data-nosnippet>387</a>
+<a href=#388 id=388 data-nosnippet>388</a>    <span class="doccomment">/// Compact a BLAS, it must have had [`Blas::prepare_compaction_async`] called on it and had the
+<a href=#389 id=389 data-nosnippet>389</a>    /// callback provided called.
+<a href=#390 id=390 data-nosnippet>390</a>    ///
+<a href=#391 id=391 data-nosnippet>391</a>    /// The returned BLAS is more restricted than a normal BLAS because it may not be rebuilt or
+<a href=#392 id=392 data-nosnippet>392</a>    /// compacted.
+<a href=#393 id=393 data-nosnippet>393</a>    </span><span class="kw">pub fn </span>compact_blas(<span class="kw-2">&amp;</span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Blas) -&gt; Blas {
+<a href=#394 id=394 data-nosnippet>394</a>        <span class="kw">let </span>(handle, dispatch) = <span class="self">self</span>.inner.compact_blas(<span class="kw-2">&amp;</span>blas.inner);
+<a href=#395 id=395 data-nosnippet>395</a>        Blas {
+<a href=#396 id=396 data-nosnippet>396</a>            handle,
+<a href=#397 id=397 data-nosnippet>397</a>            inner: dispatch,
+<a href=#398 id=398 data-nosnippet>398</a>        }
+<a href=#399 id=399 data-nosnippet>399</a>    }
+<a href=#400 id=400 data-nosnippet>400</a>}
+<a href=#401 id=401 data-nosnippet>401</a>
+<a href=#402 id=402 data-nosnippet>402</a><span class="attr">#[cfg(wgpu_core)]
+<a href=#403 id=403 data-nosnippet>403</a></span><span class="kw">impl </span>Queue {
+<a href=#404 id=404 data-nosnippet>404</a>    <span class="doccomment">/// Create a new queue of wgpu from a wgpu-core queue.
 <a href=#405 id=405 data-nosnippet>405</a>    ///
-<a href=#406 id=406 data-nosnippet>406</a>    /// - `core_queue` - wgpu-core queue.
-<a href=#407 id=407 data-nosnippet>407</a>    </span><span class="kw">pub fn </span>from_core(core_queue: alloc::sync::Arc&lt;wgc::device::queue::Queue&gt;) -&gt; <span class="self">Self </span>{
-<a href=#408 id=408 data-nosnippet>408</a>        <span class="self">Self </span>{
-<a href=#409 id=409 data-nosnippet>409</a>            inner: <span class="kw">crate</span>::backend::wgpu_core::CoreQueue::from_core(core_queue).into(),
-<a href=#410 id=410 data-nosnippet>410</a>        }
-<a href=#411 id=411 data-nosnippet>411</a>    }
-<a href=#412 id=412 data-nosnippet>412</a>
-<a href=#413 id=413 data-nosnippet>413</a>    <span class="doccomment">/// Returns the underlying wgpu-core queue if this `Queue` is on the wgpu-core backend, otherwise `None`.
-<a href=#414 id=414 data-nosnippet>414</a>    </span><span class="kw">pub fn </span>as_core(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;alloc::sync::Arc&lt;wgc::device::queue::Queue&gt;&gt; {
-<a href=#415 id=415 data-nosnippet>415</a>        <span class="self">self</span>.inner.as_core_opt().map(|cq| cq.as_core())
-<a href=#416 id=416 data-nosnippet>416</a>    }
-<a href=#417 id=417 data-nosnippet>417</a>}
+<a href=#406 id=406 data-nosnippet>406</a>    /// # Arguments
+<a href=#407 id=407 data-nosnippet>407</a>    ///
+<a href=#408 id=408 data-nosnippet>408</a>    /// - `core_queue` - wgpu-core queue.
+<a href=#409 id=409 data-nosnippet>409</a>    </span><span class="kw">pub fn </span>from_core(core_queue: alloc::sync::Arc&lt;wgc::device::queue::Queue&gt;) -&gt; <span class="self">Self </span>{
+<a href=#410 id=410 data-nosnippet>410</a>        <span class="self">Self </span>{
+<a href=#411 id=411 data-nosnippet>411</a>            inner: <span class="kw">crate</span>::backend::wgpu_core::CoreQueue::from_core(core_queue).into(),
+<a href=#412 id=412 data-nosnippet>412</a>        }
+<a href=#413 id=413 data-nosnippet>413</a>    }
+<a href=#414 id=414 data-nosnippet>414</a>
+<a href=#415 id=415 data-nosnippet>415</a>    <span class="doccomment">/// Returns the underlying wgpu-core queue if this `Queue` is on the wgpu-core backend, otherwise `None`.
+<a href=#416 id=416 data-nosnippet>416</a>    </span><span class="kw">pub fn </span>as_core(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;alloc::sync::Arc&lt;wgc::device::queue::Queue&gt;&gt; {
+<a href=#417 id=417 data-nosnippet>417</a>        <span class="self">self</span>.inner.as_core_opt().map(|cq| cq.as_core())
+<a href=#418 id=418 data-nosnippet>418</a>    }
+<a href=#419 id=419 data-nosnippet>419</a>}
 </code></pre></div></section></main></body></html>
