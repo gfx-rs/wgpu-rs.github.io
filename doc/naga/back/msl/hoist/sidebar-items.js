@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["definitions","expressions_used","fits_in_temporary","is_statement_result"]};
