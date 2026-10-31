@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["COMPONENTS","WORDS_PER_REGISTER"],"fn":["immediate_word"]};
