@@ -730,141 +730,118 @@
 <a href=#730 id=730 data-nosnippet>730</a>
 <a href=#731 id=731 data-nosnippet>731</a>                rule.conclusion.into_resolution(<span class="self">self</span>.special_types)<span class="question-mark">?
 <a href=#732 id=732 data-nosnippet>732</a>            </span>}
-<a href=#733 id=733 data-nosnippet>733</a>            <span class="kw">crate</span>::Expression::As {
-<a href=#734 id=734 data-nosnippet>734</a>                expr,
-<a href=#735 id=735 data-nosnippet>735</a>                kind,
-<a href=#736 id=736 data-nosnippet>736</a>                convert,
-<a href=#737 id=737 data-nosnippet>737</a>            } =&gt; <span class="kw">match </span><span class="kw-2">*</span>past(expr)<span class="question-mark">?</span>.inner_with(types) {
-<a href=#738 id=738 data-nosnippet>738</a>                Ti::Scalar(<span class="kw">crate</span>::Scalar { width, .. }) =&gt; {
-<a href=#739 id=739 data-nosnippet>739</a>                    TypeResolution::Value(Ti::Scalar(<span class="kw">crate</span>::Scalar {
-<a href=#740 id=740 data-nosnippet>740</a>                        kind,
-<a href=#741 id=741 data-nosnippet>741</a>                        width: convert.unwrap_or(width),
-<a href=#742 id=742 data-nosnippet>742</a>                    }))
-<a href=#743 id=743 data-nosnippet>743</a>                }
-<a href=#744 id=744 data-nosnippet>744</a>                Ti::Vector {
-<a href=#745 id=745 data-nosnippet>745</a>                    size,
-<a href=#746 id=746 data-nosnippet>746</a>                    scalar: <span class="kw">crate</span>::Scalar { kind: <span class="kw">_</span>, width },
-<a href=#747 id=747 data-nosnippet>747</a>                } =&gt; TypeResolution::Value(Ti::Vector {
-<a href=#748 id=748 data-nosnippet>748</a>                    size,
-<a href=#749 id=749 data-nosnippet>749</a>                    scalar: <span class="kw">crate</span>::Scalar {
-<a href=#750 id=750 data-nosnippet>750</a>                        kind,
-<a href=#751 id=751 data-nosnippet>751</a>                        width: convert.unwrap_or(width),
-<a href=#752 id=752 data-nosnippet>752</a>                    },
-<a href=#753 id=753 data-nosnippet>753</a>                }),
-<a href=#754 id=754 data-nosnippet>754</a>                Ti::Matrix {
-<a href=#755 id=755 data-nosnippet>755</a>                    columns,
-<a href=#756 id=756 data-nosnippet>756</a>                    rows,
-<a href=#757 id=757 data-nosnippet>757</a>                    <span class="kw-2">mut </span>scalar,
-<a href=#758 id=758 data-nosnippet>758</a>                } =&gt; {
-<a href=#759 id=759 data-nosnippet>759</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(width) = convert {
-<a href=#760 id=760 data-nosnippet>760</a>                        scalar.width = width;
-<a href=#761 id=761 data-nosnippet>761</a>                    }
-<a href=#762 id=762 data-nosnippet>762</a>                    TypeResolution::Value(Ti::Matrix {
-<a href=#763 id=763 data-nosnippet>763</a>                        columns,
-<a href=#764 id=764 data-nosnippet>764</a>                        rows,
-<a href=#765 id=765 data-nosnippet>765</a>                        scalar,
-<a href=#766 id=766 data-nosnippet>766</a>                    })
-<a href=#767 id=767 data-nosnippet>767</a>                }
-<a href=#768 id=768 data-nosnippet>768</a>                <span class="kw-2">ref </span>other =&gt; {
-<a href=#769 id=769 data-nosnippet>769</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(ResolveError::IncompatibleOperands(<span class="macro">format!</span>(
-<a href=#770 id=770 data-nosnippet>770</a>                        <span class="string">"{other:?} as {kind:?}"
-<a href=#771 id=771 data-nosnippet>771</a>                    </span>)))
-<a href=#772 id=772 data-nosnippet>772</a>                }
-<a href=#773 id=773 data-nosnippet>773</a>            },
-<a href=#774 id=774 data-nosnippet>774</a>            <span class="kw">crate</span>::Expression::CallResult(function) =&gt; {
-<a href=#775 id=775 data-nosnippet>775</a>                <span class="kw">let </span>result = <span class="self">self</span>.functions[function]
-<a href=#776 id=776 data-nosnippet>776</a>                    .result
-<a href=#777 id=777 data-nosnippet>777</a>                    .as_ref()
-<a href=#778 id=778 data-nosnippet>778</a>                    .ok_or(ResolveError::FunctionReturnsVoid)<span class="question-mark">?</span>;
-<a href=#779 id=779 data-nosnippet>779</a>                TypeResolution::Handle(result.ty)
-<a href=#780 id=780 data-nosnippet>780</a>            }
-<a href=#781 id=781 data-nosnippet>781</a>            <span class="kw">crate</span>::Expression::ArrayLength(<span class="kw">_</span>) =&gt; {
-<a href=#782 id=782 data-nosnippet>782</a>                TypeResolution::Value(Ti::Scalar(<span class="kw">crate</span>::Scalar::U32))
-<a href=#783 id=783 data-nosnippet>783</a>            }
-<a href=#784 id=784 data-nosnippet>784</a>            <span class="kw">crate</span>::Expression::RayQueryProceedResult =&gt; {
-<a href=#785 id=785 data-nosnippet>785</a>                TypeResolution::Value(Ti::Scalar(<span class="kw">crate</span>::Scalar::BOOL))
-<a href=#786 id=786 data-nosnippet>786</a>            }
-<a href=#787 id=787 data-nosnippet>787</a>            <span class="kw">crate</span>::Expression::RayQueryGetIntersection { .. } =&gt; {
-<a href=#788 id=788 data-nosnippet>788</a>                <span class="kw">let </span>result = <span class="self">self
-<a href=#789 id=789 data-nosnippet>789</a>                    </span>.special_types
-<a href=#790 id=790 data-nosnippet>790</a>                    .ray_intersection
-<a href=#791 id=791 data-nosnippet>791</a>                    .ok_or(ResolveError::MissingSpecialType)<span class="question-mark">?</span>;
-<a href=#792 id=792 data-nosnippet>792</a>                TypeResolution::Handle(result)
-<a href=#793 id=793 data-nosnippet>793</a>            }
-<a href=#794 id=794 data-nosnippet>794</a>            <span class="kw">crate</span>::Expression::RayQueryVertexPositions { .. } =&gt; {
-<a href=#795 id=795 data-nosnippet>795</a>                <span class="kw">let </span>result = <span class="self">self
-<a href=#796 id=796 data-nosnippet>796</a>                    </span>.special_types
-<a href=#797 id=797 data-nosnippet>797</a>                    .ray_vertex_return
-<a href=#798 id=798 data-nosnippet>798</a>                    .ok_or(ResolveError::MissingSpecialType)<span class="question-mark">?</span>;
-<a href=#799 id=799 data-nosnippet>799</a>                TypeResolution::Handle(result)
-<a href=#800 id=800 data-nosnippet>800</a>            }
-<a href=#801 id=801 data-nosnippet>801</a>            <span class="kw">crate</span>::Expression::SubgroupBallotResult =&gt; TypeResolution::Value(Ti::Vector {
-<a href=#802 id=802 data-nosnippet>802</a>                scalar: <span class="kw">crate</span>::Scalar::U32,
-<a href=#803 id=803 data-nosnippet>803</a>                size: <span class="kw">crate</span>::VectorSize::Quad,
-<a href=#804 id=804 data-nosnippet>804</a>            }),
-<a href=#805 id=805 data-nosnippet>805</a>            <span class="kw">crate</span>::Expression::CooperativeLoad {
-<a href=#806 id=806 data-nosnippet>806</a>                columns,
-<a href=#807 id=807 data-nosnippet>807</a>                rows,
-<a href=#808 id=808 data-nosnippet>808</a>                role,
-<a href=#809 id=809 data-nosnippet>809</a>                <span class="kw-2">ref </span>data,
-<a href=#810 id=810 data-nosnippet>810</a>            } =&gt; {
-<a href=#811 id=811 data-nosnippet>811</a>                <span class="kw">let </span>scalar = past(data.pointer)<span class="question-mark">?
-<a href=#812 id=812 data-nosnippet>812</a>                    </span>.inner_with(types)
-<a href=#813 id=813 data-nosnippet>813</a>                    .pointer_base_type()
-<a href=#814 id=814 data-nosnippet>814</a>                    .and_then(|tr| tr.inner_with(types).scalar())
-<a href=#815 id=815 data-nosnippet>815</a>                    .ok_or(ResolveError::InvalidPointer(data.pointer))<span class="question-mark">?</span>;
-<a href=#816 id=816 data-nosnippet>816</a>                TypeResolution::Value(Ti::CooperativeMatrix {
-<a href=#817 id=817 data-nosnippet>817</a>                    columns,
-<a href=#818 id=818 data-nosnippet>818</a>                    rows,
-<a href=#819 id=819 data-nosnippet>819</a>                    scalar,
-<a href=#820 id=820 data-nosnippet>820</a>                    role,
-<a href=#821 id=821 data-nosnippet>821</a>                })
-<a href=#822 id=822 data-nosnippet>822</a>            }
-<a href=#823 id=823 data-nosnippet>823</a>            <span class="kw">crate</span>::Expression::CooperativeMultiplyAdd { a: <span class="kw">_</span>, b: <span class="kw">_</span>, c } =&gt; past(c)<span class="question-mark">?</span>.clone(),
-<a href=#824 id=824 data-nosnippet>824</a>        })
-<a href=#825 id=825 data-nosnippet>825</a>    }
-<a href=#826 id=826 data-nosnippet>826</a>}
-<a href=#827 id=827 data-nosnippet>827</a>
-<a href=#828 id=828 data-nosnippet>828</a><span class="doccomment">/// Compare two types.
-<a href=#829 id=829 data-nosnippet>829</a>///
-<a href=#830 id=830 data-nosnippet>830</a>/// This is the most general way of comparing two types, as it can distinguish
-<a href=#831 id=831 data-nosnippet>831</a>/// two structs with different names but the same members. For other ways, see
-<a href=#832 id=832 data-nosnippet>832</a>/// [`TypeInner::non_struct_equivalent`] and [`TypeInner::eq`].
-<a href=#833 id=833 data-nosnippet>833</a>///
-<a href=#834 id=834 data-nosnippet>834</a>/// In Naga code, this is usually called via the like-named methods on [`Module`],
-<a href=#835 id=835 data-nosnippet>835</a>/// [`GlobalCtx`], and `BlockContext`.
-<a href=#836 id=836 data-nosnippet>836</a>///
-<a href=#837 id=837 data-nosnippet>837</a>/// [`TypeInner::non_struct_equivalent`]: crate::ir::TypeInner::non_struct_equivalent
-<a href=#838 id=838 data-nosnippet>838</a>/// [`TypeInner::eq`]: crate::ir::TypeInner
-<a href=#839 id=839 data-nosnippet>839</a>/// [`Module`]: crate::ir::Module
-<a href=#840 id=840 data-nosnippet>840</a>/// [`GlobalCtx`]: crate::proc::GlobalCtx
-<a href=#841 id=841 data-nosnippet>841</a></span><span class="kw">pub fn </span>compare_types(
-<a href=#842 id=842 data-nosnippet>842</a>    lhs: <span class="kw-2">&amp;</span>TypeResolution,
-<a href=#843 id=843 data-nosnippet>843</a>    rhs: <span class="kw-2">&amp;</span>TypeResolution,
-<a href=#844 id=844 data-nosnippet>844</a>    types: <span class="kw-2">&amp;</span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
-<a href=#845 id=845 data-nosnippet>845</a>) -&gt; bool {
-<a href=#846 id=846 data-nosnippet>846</a>    <span class="kw">match </span>lhs {
-<a href=#847 id=847 data-nosnippet>847</a>        <span class="kw-2">&amp;</span>TypeResolution::Handle(lhs_handle)
-<a href=#848 id=848 data-nosnippet>848</a>            <span class="kw">if </span><span class="macro">matches!</span>(
-<a href=#849 id=849 data-nosnippet>849</a>                types[lhs_handle],
-<a href=#850 id=850 data-nosnippet>850</a>                ir::Type {
-<a href=#851 id=851 data-nosnippet>851</a>                    inner: ir::TypeInner::Struct { .. },
-<a href=#852 id=852 data-nosnippet>852</a>                    ..
-<a href=#853 id=853 data-nosnippet>853</a>                }
-<a href=#854 id=854 data-nosnippet>854</a>            ) =&gt;
-<a href=#855 id=855 data-nosnippet>855</a>        {
-<a href=#856 id=856 data-nosnippet>856</a>            <span class="comment">// Structs can only be in the arena, not in a TypeResolution::Value
-<a href=#857 id=857 data-nosnippet>857</a>            </span>rhs.handle()
-<a href=#858 id=858 data-nosnippet>858</a>                .is_some_and(|rhs_handle| lhs_handle == rhs_handle)
-<a href=#859 id=859 data-nosnippet>859</a>        }
-<a href=#860 id=860 data-nosnippet>860</a>        <span class="kw">_ </span>=&gt; lhs
-<a href=#861 id=861 data-nosnippet>861</a>            .inner_with(types)
-<a href=#862 id=862 data-nosnippet>862</a>            .non_struct_equivalent(rhs.inner_with(types), types),
-<a href=#863 id=863 data-nosnippet>863</a>    }
-<a href=#864 id=864 data-nosnippet>864</a>}
-<a href=#865 id=865 data-nosnippet>865</a>
-<a href=#866 id=866 data-nosnippet>866</a><span class="attr">#[test]
-<a href=#867 id=867 data-nosnippet>867</a></span><span class="kw">fn </span>test_error_size() {
-<a href=#868 id=868 data-nosnippet>868</a>    <span class="macro">assert_eq!</span>(size_of::&lt;ResolveError&gt;(), <span class="number">32</span>);
-<a href=#869 id=869 data-nosnippet>869</a>}
+<a href=#733 id=733 data-nosnippet>733</a>            <span class="kw">crate</span>::Expression::As { expr, target } =&gt; <span class="kw">match </span><span class="kw-2">*</span>past(expr)<span class="question-mark">?</span>.inner_with(types) {
+<a href=#734 id=734 data-nosnippet>734</a>                Ti::Scalar(<span class="kw">_</span>) =&gt; TypeResolution::Value(Ti::Scalar(target)),
+<a href=#735 id=735 data-nosnippet>735</a>                Ti::Vector { size, .. } =&gt; TypeResolution::Value(Ti::Vector {
+<a href=#736 id=736 data-nosnippet>736</a>                    size,
+<a href=#737 id=737 data-nosnippet>737</a>                    scalar: target,
+<a href=#738 id=738 data-nosnippet>738</a>                }),
+<a href=#739 id=739 data-nosnippet>739</a>                Ti::Matrix { columns, rows, .. } =&gt; TypeResolution::Value(Ti::Matrix {
+<a href=#740 id=740 data-nosnippet>740</a>                    columns,
+<a href=#741 id=741 data-nosnippet>741</a>                    rows,
+<a href=#742 id=742 data-nosnippet>742</a>                    scalar: target,
+<a href=#743 id=743 data-nosnippet>743</a>                }),
+<a href=#744 id=744 data-nosnippet>744</a>                <span class="kw-2">ref </span>other =&gt; {
+<a href=#745 id=745 data-nosnippet>745</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(ResolveError::IncompatibleOperands(<span class="macro">format!</span>(
+<a href=#746 id=746 data-nosnippet>746</a>                        <span class="string">"{other:?} as {target:?}"
+<a href=#747 id=747 data-nosnippet>747</a>                    </span>)))
+<a href=#748 id=748 data-nosnippet>748</a>                }
+<a href=#749 id=749 data-nosnippet>749</a>            },
+<a href=#750 id=750 data-nosnippet>750</a>            <span class="kw">crate</span>::Expression::Bitcast { ty, .. } =&gt; TypeResolution::Handle(ty),
+<a href=#751 id=751 data-nosnippet>751</a>            <span class="kw">crate</span>::Expression::CallResult(function) =&gt; {
+<a href=#752 id=752 data-nosnippet>752</a>                <span class="kw">let </span>result = <span class="self">self</span>.functions[function]
+<a href=#753 id=753 data-nosnippet>753</a>                    .result
+<a href=#754 id=754 data-nosnippet>754</a>                    .as_ref()
+<a href=#755 id=755 data-nosnippet>755</a>                    .ok_or(ResolveError::FunctionReturnsVoid)<span class="question-mark">?</span>;
+<a href=#756 id=756 data-nosnippet>756</a>                TypeResolution::Handle(result.ty)
+<a href=#757 id=757 data-nosnippet>757</a>            }
+<a href=#758 id=758 data-nosnippet>758</a>            <span class="kw">crate</span>::Expression::ArrayLength(<span class="kw">_</span>) =&gt; {
+<a href=#759 id=759 data-nosnippet>759</a>                TypeResolution::Value(Ti::Scalar(<span class="kw">crate</span>::Scalar::U32))
+<a href=#760 id=760 data-nosnippet>760</a>            }
+<a href=#761 id=761 data-nosnippet>761</a>            <span class="kw">crate</span>::Expression::RayQueryProceedResult =&gt; {
+<a href=#762 id=762 data-nosnippet>762</a>                TypeResolution::Value(Ti::Scalar(<span class="kw">crate</span>::Scalar::BOOL))
+<a href=#763 id=763 data-nosnippet>763</a>            }
+<a href=#764 id=764 data-nosnippet>764</a>            <span class="kw">crate</span>::Expression::RayQueryGetIntersection { .. } =&gt; {
+<a href=#765 id=765 data-nosnippet>765</a>                <span class="kw">let </span>result = <span class="self">self
+<a href=#766 id=766 data-nosnippet>766</a>                    </span>.special_types
+<a href=#767 id=767 data-nosnippet>767</a>                    .ray_intersection
+<a href=#768 id=768 data-nosnippet>768</a>                    .ok_or(ResolveError::MissingSpecialType)<span class="question-mark">?</span>;
+<a href=#769 id=769 data-nosnippet>769</a>                TypeResolution::Handle(result)
+<a href=#770 id=770 data-nosnippet>770</a>            }
+<a href=#771 id=771 data-nosnippet>771</a>            <span class="kw">crate</span>::Expression::RayQueryVertexPositions { .. } =&gt; {
+<a href=#772 id=772 data-nosnippet>772</a>                <span class="kw">let </span>result = <span class="self">self
+<a href=#773 id=773 data-nosnippet>773</a>                    </span>.special_types
+<a href=#774 id=774 data-nosnippet>774</a>                    .ray_vertex_return
+<a href=#775 id=775 data-nosnippet>775</a>                    .ok_or(ResolveError::MissingSpecialType)<span class="question-mark">?</span>;
+<a href=#776 id=776 data-nosnippet>776</a>                TypeResolution::Handle(result)
+<a href=#777 id=777 data-nosnippet>777</a>            }
+<a href=#778 id=778 data-nosnippet>778</a>            <span class="kw">crate</span>::Expression::SubgroupBallotResult =&gt; TypeResolution::Value(Ti::Vector {
+<a href=#779 id=779 data-nosnippet>779</a>                scalar: <span class="kw">crate</span>::Scalar::U32,
+<a href=#780 id=780 data-nosnippet>780</a>                size: <span class="kw">crate</span>::VectorSize::Quad,
+<a href=#781 id=781 data-nosnippet>781</a>            }),
+<a href=#782 id=782 data-nosnippet>782</a>            <span class="kw">crate</span>::Expression::CooperativeLoad {
+<a href=#783 id=783 data-nosnippet>783</a>                columns,
+<a href=#784 id=784 data-nosnippet>784</a>                rows,
+<a href=#785 id=785 data-nosnippet>785</a>                role,
+<a href=#786 id=786 data-nosnippet>786</a>                <span class="kw-2">ref </span>data,
+<a href=#787 id=787 data-nosnippet>787</a>            } =&gt; {
+<a href=#788 id=788 data-nosnippet>788</a>                <span class="kw">let </span>scalar = past(data.pointer)<span class="question-mark">?
+<a href=#789 id=789 data-nosnippet>789</a>                    </span>.inner_with(types)
+<a href=#790 id=790 data-nosnippet>790</a>                    .pointer_base_type()
+<a href=#791 id=791 data-nosnippet>791</a>                    .and_then(|tr| tr.inner_with(types).scalar())
+<a href=#792 id=792 data-nosnippet>792</a>                    .ok_or(ResolveError::InvalidPointer(data.pointer))<span class="question-mark">?</span>;
+<a href=#793 id=793 data-nosnippet>793</a>                TypeResolution::Value(Ti::CooperativeMatrix {
+<a href=#794 id=794 data-nosnippet>794</a>                    columns,
+<a href=#795 id=795 data-nosnippet>795</a>                    rows,
+<a href=#796 id=796 data-nosnippet>796</a>                    scalar,
+<a href=#797 id=797 data-nosnippet>797</a>                    role,
+<a href=#798 id=798 data-nosnippet>798</a>                })
+<a href=#799 id=799 data-nosnippet>799</a>            }
+<a href=#800 id=800 data-nosnippet>800</a>            <span class="kw">crate</span>::Expression::CooperativeMultiplyAdd { a: <span class="kw">_</span>, b: <span class="kw">_</span>, c } =&gt; past(c)<span class="question-mark">?</span>.clone(),
+<a href=#801 id=801 data-nosnippet>801</a>        })
+<a href=#802 id=802 data-nosnippet>802</a>    }
+<a href=#803 id=803 data-nosnippet>803</a>}
+<a href=#804 id=804 data-nosnippet>804</a>
+<a href=#805 id=805 data-nosnippet>805</a><span class="doccomment">/// Compare two types.
+<a href=#806 id=806 data-nosnippet>806</a>///
+<a href=#807 id=807 data-nosnippet>807</a>/// This is the most general way of comparing two types, as it can distinguish
+<a href=#808 id=808 data-nosnippet>808</a>/// two structs with different names but the same members. For other ways, see
+<a href=#809 id=809 data-nosnippet>809</a>/// [`TypeInner::non_struct_equivalent`] and [`TypeInner::eq`].
+<a href=#810 id=810 data-nosnippet>810</a>///
+<a href=#811 id=811 data-nosnippet>811</a>/// In Naga code, this is usually called via the like-named methods on [`Module`],
+<a href=#812 id=812 data-nosnippet>812</a>/// [`GlobalCtx`], and `BlockContext`.
+<a href=#813 id=813 data-nosnippet>813</a>///
+<a href=#814 id=814 data-nosnippet>814</a>/// [`TypeInner::non_struct_equivalent`]: crate::ir::TypeInner::non_struct_equivalent
+<a href=#815 id=815 data-nosnippet>815</a>/// [`TypeInner::eq`]: crate::ir::TypeInner
+<a href=#816 id=816 data-nosnippet>816</a>/// [`Module`]: crate::ir::Module
+<a href=#817 id=817 data-nosnippet>817</a>/// [`GlobalCtx`]: crate::proc::GlobalCtx
+<a href=#818 id=818 data-nosnippet>818</a></span><span class="kw">pub fn </span>compare_types(
+<a href=#819 id=819 data-nosnippet>819</a>    lhs: <span class="kw-2">&amp;</span>TypeResolution,
+<a href=#820 id=820 data-nosnippet>820</a>    rhs: <span class="kw-2">&amp;</span>TypeResolution,
+<a href=#821 id=821 data-nosnippet>821</a>    types: <span class="kw-2">&amp;</span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
+<a href=#822 id=822 data-nosnippet>822</a>) -&gt; bool {
+<a href=#823 id=823 data-nosnippet>823</a>    <span class="kw">match </span>lhs {
+<a href=#824 id=824 data-nosnippet>824</a>        <span class="kw-2">&amp;</span>TypeResolution::Handle(lhs_handle)
+<a href=#825 id=825 data-nosnippet>825</a>            <span class="kw">if </span><span class="macro">matches!</span>(
+<a href=#826 id=826 data-nosnippet>826</a>                types[lhs_handle],
+<a href=#827 id=827 data-nosnippet>827</a>                ir::Type {
+<a href=#828 id=828 data-nosnippet>828</a>                    inner: ir::TypeInner::Struct { .. },
+<a href=#829 id=829 data-nosnippet>829</a>                    ..
+<a href=#830 id=830 data-nosnippet>830</a>                }
+<a href=#831 id=831 data-nosnippet>831</a>            ) =&gt;
+<a href=#832 id=832 data-nosnippet>832</a>        {
+<a href=#833 id=833 data-nosnippet>833</a>            <span class="comment">// Structs can only be in the arena, not in a TypeResolution::Value
+<a href=#834 id=834 data-nosnippet>834</a>            </span>rhs.handle()
+<a href=#835 id=835 data-nosnippet>835</a>                .is_some_and(|rhs_handle| lhs_handle == rhs_handle)
+<a href=#836 id=836 data-nosnippet>836</a>        }
+<a href=#837 id=837 data-nosnippet>837</a>        <span class="kw">_ </span>=&gt; lhs
+<a href=#838 id=838 data-nosnippet>838</a>            .inner_with(types)
+<a href=#839 id=839 data-nosnippet>839</a>            .non_struct_equivalent(rhs.inner_with(types), types),
+<a href=#840 id=840 data-nosnippet>840</a>    }
+<a href=#841 id=841 data-nosnippet>841</a>}
+<a href=#842 id=842 data-nosnippet>842</a>
+<a href=#843 id=843 data-nosnippet>843</a><span class="attr">#[test]
+<a href=#844 id=844 data-nosnippet>844</a></span><span class="kw">fn </span>test_error_size() {
+<a href=#845 id=845 data-nosnippet>845</a>    <span class="macro">assert_eq!</span>(size_of::&lt;ResolveError&gt;(), <span class="number">32</span>);
+<a href=#846 id=846 data-nosnippet>846</a>}
 </code></pre></div></section></main></body></html>

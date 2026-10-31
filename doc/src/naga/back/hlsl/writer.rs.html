@@ -4478,97 +4478,97 @@
 <a href=#4478 id=4478 data-nosnippet>4478</a>                <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
 <a href=#4479 id=4479 data-nosnippet>4479</a>                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
 <a href=#4480 id=4480 data-nosnippet>4480</a>            }
-<a href=#4481 id=4481 data-nosnippet>4481</a>            Expression::As {
-<a href=#4482 id=4482 data-nosnippet>4482</a>                expr,
-<a href=#4483 id=4483 data-nosnippet>4483</a>                kind,
-<a href=#4484 id=4484 data-nosnippet>4484</a>                convert,
-<a href=#4485 id=4485 data-nosnippet>4485</a>            } =&gt; {
-<a href=#4486 id=4486 data-nosnippet>4486</a>                <span class="kw">let </span>inner = func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types);
-<a href=#4487 id=4487 data-nosnippet>4487</a>                <span class="kw">if </span>inner.scalar_kind() == <span class="prelude-val">Some</span>(ScalarKind::Float)
-<a href=#4488 id=4488 data-nosnippet>4488</a>                    &amp;&amp; (kind == ScalarKind::Sint || kind == ScalarKind::Uint)
-<a href=#4489 id=4489 data-nosnippet>4489</a>                    &amp;&amp; convert.is_some()
-<a href=#4490 id=4490 data-nosnippet>4490</a>                    &amp;&amp; <span class="macro">matches!</span>(convert, <span class="prelude-val">Some</span>(<span class="number">4</span>) | <span class="prelude-val">Some</span>(<span class="number">8</span>))
-<a href=#4491 id=4491 data-nosnippet>4491</a>                {
-<a href=#4492 id=4492 data-nosnippet>4492</a>                    <span class="comment">// Use helper functions for float to int casts in order to
-<a href=#4493 id=4493 data-nosnippet>4493</a>                    // avoid undefined behaviour when value is out of range for
-<a href=#4494 id=4494 data-nosnippet>4494</a>                    // the target type.
-<a href=#4495 id=4495 data-nosnippet>4495</a>                    </span><span class="kw">let </span>fun_name = <span class="kw">match </span>(kind, convert) {
-<a href=#4496 id=4496 data-nosnippet>4496</a>                        (ScalarKind::Sint, <span class="prelude-val">Some</span>(<span class="number">4</span>)) =&gt; F2I32_FUNCTION,
-<a href=#4497 id=4497 data-nosnippet>4497</a>                        (ScalarKind::Uint, <span class="prelude-val">Some</span>(<span class="number">4</span>)) =&gt; F2U32_FUNCTION,
-<a href=#4498 id=4498 data-nosnippet>4498</a>                        (ScalarKind::Sint, <span class="prelude-val">Some</span>(<span class="number">8</span>)) =&gt; F2I64_FUNCTION,
-<a href=#4499 id=4499 data-nosnippet>4499</a>                        (ScalarKind::Uint, <span class="prelude-val">Some</span>(<span class="number">8</span>)) =&gt; F2U64_FUNCTION,
-<a href=#4500 id=4500 data-nosnippet>4500</a>                        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-<a href=#4501 id=4501 data-nosnippet>4501</a>                    };
-<a href=#4502 id=4502 data-nosnippet>4502</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{fun_name}("</span>)<span class="question-mark">?</span>;
-<a href=#4503 id=4503 data-nosnippet>4503</a>                    <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
-<a href=#4504 id=4504 data-nosnippet>4504</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
-<a href=#4505 id=4505 data-nosnippet>4505</a>                } <span class="kw">else </span>{
-<a href=#4506 id=4506 data-nosnippet>4506</a>                    <span class="kw">let </span>close_paren = <span class="kw">match </span>convert {
-<a href=#4507 id=4507 data-nosnippet>4507</a>                        <span class="prelude-val">Some</span>(dst_width) =&gt; {
-<a href=#4508 id=4508 data-nosnippet>4508</a>                            <span class="kw">let </span>scalar = Scalar {
-<a href=#4509 id=4509 data-nosnippet>4509</a>                                kind,
-<a href=#4510 id=4510 data-nosnippet>4510</a>                                width: dst_width,
-<a href=#4511 id=4511 data-nosnippet>4511</a>                            };
-<a href=#4512 id=4512 data-nosnippet>4512</a>                            <span class="kw">match </span><span class="kw-2">*</span>inner {
-<a href=#4513 id=4513 data-nosnippet>4513</a>                                TypeInner::Vector { size, .. } =&gt; {
-<a href=#4514 id=4514 data-nosnippet>4514</a>                                    <span class="macro">write!</span>(
-<a href=#4515 id=4515 data-nosnippet>4515</a>                                        <span class="self">self</span>.out,
-<a href=#4516 id=4516 data-nosnippet>4516</a>                                        <span class="string">"{}{}("</span>,
-<a href=#4517 id=4517 data-nosnippet>4517</a>                                        scalar.to_hlsl_str()<span class="question-mark">?</span>,
-<a href=#4518 id=4518 data-nosnippet>4518</a>                                        common::vector_size_str(size)
-<a href=#4519 id=4519 data-nosnippet>4519</a>                                    )<span class="question-mark">?</span>;
-<a href=#4520 id=4520 data-nosnippet>4520</a>                                }
-<a href=#4521 id=4521 data-nosnippet>4521</a>                                TypeInner::Scalar(<span class="kw">_</span>) =&gt; {
-<a href=#4522 id=4522 data-nosnippet>4522</a>                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, scalar.to_hlsl_str()<span class="question-mark">?</span>,)<span class="question-mark">?</span>;
-<a href=#4523 id=4523 data-nosnippet>4523</a>                                }
-<a href=#4524 id=4524 data-nosnippet>4524</a>                                TypeInner::Matrix { columns, rows, .. } =&gt; {
-<a href=#4525 id=4525 data-nosnippet>4525</a>                                    <span class="macro">write!</span>(
-<a href=#4526 id=4526 data-nosnippet>4526</a>                                        <span class="self">self</span>.out,
-<a href=#4527 id=4527 data-nosnippet>4527</a>                                        <span class="string">"{}{}x{}("</span>,
-<a href=#4528 id=4528 data-nosnippet>4528</a>                                        scalar.to_hlsl_str()<span class="question-mark">?</span>,
-<a href=#4529 id=4529 data-nosnippet>4529</a>                                        common::vector_size_str(columns),
-<a href=#4530 id=4530 data-nosnippet>4530</a>                                        common::vector_size_str(rows)
-<a href=#4531 id=4531 data-nosnippet>4531</a>                                    )<span class="question-mark">?</span>;
-<a href=#4532 id=4532 data-nosnippet>4532</a>                                }
-<a href=#4533 id=4533 data-nosnippet>4533</a>                                <span class="kw">_ </span>=&gt; {
-<a href=#4534 id=4534 data-nosnippet>4534</a>                                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(
-<a href=#4535 id=4535 data-nosnippet>4535</a>                                        <span class="string">"write_expr expression::as {inner:?}"
-<a href=#4536 id=4536 data-nosnippet>4536</a>                                    </span>)));
-<a href=#4537 id=4537 data-nosnippet>4537</a>                                }
-<a href=#4538 id=4538 data-nosnippet>4538</a>                            };
-<a href=#4539 id=4539 data-nosnippet>4539</a>                            <span class="bool-val">true
-<a href=#4540 id=4540 data-nosnippet>4540</a>                        </span>}
-<a href=#4541 id=4541 data-nosnippet>4541</a>                        <span class="prelude-val">None </span>=&gt; {
-<a href=#4542 id=4542 data-nosnippet>4542</a>                            <span class="kw">if </span>inner.scalar_width() == <span class="prelude-val">Some</span>(<span class="number">8</span>) {
-<a href=#4543 id=4543 data-nosnippet>4543</a>                                <span class="bool-val">false
-<a href=#4544 id=4544 data-nosnippet>4544</a>                            </span>} <span class="kw">else if </span>inner.scalar_width() == <span class="prelude-val">Some</span>(<span class="number">2</span>) {
-<a href=#4545 id=4545 data-nosnippet>4545</a>                                <span class="comment">// HLSL's asint()/asuint() only work on 32-bit types.
-<a href=#4546 id=4546 data-nosnippet>4546</a>                                // For 16-bit bitcasts, use type constructor instead.
-<a href=#4547 id=4547 data-nosnippet>4547</a>                                </span><span class="kw">let </span>dst_scalar = Scalar { kind, width: <span class="number">2 </span>};
-<a href=#4548 id=4548 data-nosnippet>4548</a>                                <span class="kw">match </span><span class="kw-2">*</span>inner {
-<a href=#4549 id=4549 data-nosnippet>4549</a>                                    TypeInner::Vector { size, .. } =&gt; {
-<a href=#4550 id=4550 data-nosnippet>4550</a>                                        <span class="macro">write!</span>(
-<a href=#4551 id=4551 data-nosnippet>4551</a>                                            <span class="self">self</span>.out,
-<a href=#4552 id=4552 data-nosnippet>4552</a>                                            <span class="string">"{}{}("</span>,
-<a href=#4553 id=4553 data-nosnippet>4553</a>                                            dst_scalar.to_hlsl_str()<span class="question-mark">?</span>,
-<a href=#4554 id=4554 data-nosnippet>4554</a>                                            common::vector_size_str(size)
-<a href=#4555 id=4555 data-nosnippet>4555</a>                                        )<span class="question-mark">?</span>;
-<a href=#4556 id=4556 data-nosnippet>4556</a>                                    }
-<a href=#4557 id=4557 data-nosnippet>4557</a>                                    <span class="kw">_ </span>=&gt; {
-<a href=#4558 id=4558 data-nosnippet>4558</a>                                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, dst_scalar.to_hlsl_str()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-<a href=#4559 id=4559 data-nosnippet>4559</a>                                    }
-<a href=#4560 id=4560 data-nosnippet>4560</a>                                };
-<a href=#4561 id=4561 data-nosnippet>4561</a>                                <span class="bool-val">true
-<a href=#4562 id=4562 data-nosnippet>4562</a>                            </span>} <span class="kw">else </span>{
-<a href=#4563 id=4563 data-nosnippet>4563</a>                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, kind.to_hlsl_cast(),)<span class="question-mark">?</span>;
-<a href=#4564 id=4564 data-nosnippet>4564</a>                                <span class="bool-val">true
-<a href=#4565 id=4565 data-nosnippet>4565</a>                            </span>}
-<a href=#4566 id=4566 data-nosnippet>4566</a>                        }
-<a href=#4567 id=4567 data-nosnippet>4567</a>                    };
-<a href=#4568 id=4568 data-nosnippet>4568</a>                    <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
-<a href=#4569 id=4569 data-nosnippet>4569</a>                    <span class="kw">if </span>close_paren {
-<a href=#4570 id=4570 data-nosnippet>4570</a>                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
-<a href=#4571 id=4571 data-nosnippet>4571</a>                    }
+<a href=#4481 id=4481 data-nosnippet>4481</a>            Expression::As { expr, target } =&gt; {
+<a href=#4482 id=4482 data-nosnippet>4482</a>                <span class="kw">let </span>inner = func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types);
+<a href=#4483 id=4483 data-nosnippet>4483</a>                <span class="kw">if </span>inner.scalar_kind() == <span class="prelude-val">Some</span>(ScalarKind::Float)
+<a href=#4484 id=4484 data-nosnippet>4484</a>                    &amp;&amp; (target.kind == ScalarKind::Sint || target.kind == ScalarKind::Uint)
+<a href=#4485 id=4485 data-nosnippet>4485</a>                    &amp;&amp; <span class="macro">matches!</span>(target.width, <span class="number">4 </span>| <span class="number">8</span>)
+<a href=#4486 id=4486 data-nosnippet>4486</a>                {
+<a href=#4487 id=4487 data-nosnippet>4487</a>                    <span class="comment">// Use helper functions for float to int casts in order to
+<a href=#4488 id=4488 data-nosnippet>4488</a>                    // avoid undefined behaviour when value is out of range for
+<a href=#4489 id=4489 data-nosnippet>4489</a>                    // the target type.
+<a href=#4490 id=4490 data-nosnippet>4490</a>                    </span><span class="kw">let </span>fun_name = <span class="kw">match </span>(target.kind, target.width) {
+<a href=#4491 id=4491 data-nosnippet>4491</a>                        (ScalarKind::Sint, <span class="number">4</span>) =&gt; F2I32_FUNCTION,
+<a href=#4492 id=4492 data-nosnippet>4492</a>                        (ScalarKind::Uint, <span class="number">4</span>) =&gt; F2U32_FUNCTION,
+<a href=#4493 id=4493 data-nosnippet>4493</a>                        (ScalarKind::Sint, <span class="number">8</span>) =&gt; F2I64_FUNCTION,
+<a href=#4494 id=4494 data-nosnippet>4494</a>                        (ScalarKind::Uint, <span class="number">8</span>) =&gt; F2U64_FUNCTION,
+<a href=#4495 id=4495 data-nosnippet>4495</a>                        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+<a href=#4496 id=4496 data-nosnippet>4496</a>                    };
+<a href=#4497 id=4497 data-nosnippet>4497</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{fun_name}("</span>)<span class="question-mark">?</span>;
+<a href=#4498 id=4498 data-nosnippet>4498</a>                    <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
+<a href=#4499 id=4499 data-nosnippet>4499</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+<a href=#4500 id=4500 data-nosnippet>4500</a>                } <span class="kw">else </span>{
+<a href=#4501 id=4501 data-nosnippet>4501</a>                    <span class="kw">match </span><span class="kw-2">*</span>inner {
+<a href=#4502 id=4502 data-nosnippet>4502</a>                        TypeInner::Vector { size, .. } =&gt; {
+<a href=#4503 id=4503 data-nosnippet>4503</a>                            <span class="macro">write!</span>(
+<a href=#4504 id=4504 data-nosnippet>4504</a>                                <span class="self">self</span>.out,
+<a href=#4505 id=4505 data-nosnippet>4505</a>                                <span class="string">"{}{}("</span>,
+<a href=#4506 id=4506 data-nosnippet>4506</a>                                target.to_hlsl_str()<span class="question-mark">?</span>,
+<a href=#4507 id=4507 data-nosnippet>4507</a>                                common::vector_size_str(size)
+<a href=#4508 id=4508 data-nosnippet>4508</a>                            )<span class="question-mark">?</span>;
+<a href=#4509 id=4509 data-nosnippet>4509</a>                        }
+<a href=#4510 id=4510 data-nosnippet>4510</a>                        TypeInner::Scalar(<span class="kw">_</span>) =&gt; {
+<a href=#4511 id=4511 data-nosnippet>4511</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, target.to_hlsl_str()<span class="question-mark">?</span>,)<span class="question-mark">?</span>;
+<a href=#4512 id=4512 data-nosnippet>4512</a>                        }
+<a href=#4513 id=4513 data-nosnippet>4513</a>                        TypeInner::Matrix { columns, rows, .. } =&gt; {
+<a href=#4514 id=4514 data-nosnippet>4514</a>                            <span class="macro">write!</span>(
+<a href=#4515 id=4515 data-nosnippet>4515</a>                                <span class="self">self</span>.out,
+<a href=#4516 id=4516 data-nosnippet>4516</a>                                <span class="string">"{}{}x{}("</span>,
+<a href=#4517 id=4517 data-nosnippet>4517</a>                                target.to_hlsl_str()<span class="question-mark">?</span>,
+<a href=#4518 id=4518 data-nosnippet>4518</a>                                common::vector_size_str(columns),
+<a href=#4519 id=4519 data-nosnippet>4519</a>                                common::vector_size_str(rows)
+<a href=#4520 id=4520 data-nosnippet>4520</a>                            )<span class="question-mark">?</span>;
+<a href=#4521 id=4521 data-nosnippet>4521</a>                        }
+<a href=#4522 id=4522 data-nosnippet>4522</a>                        <span class="kw">_ </span>=&gt; {
+<a href=#4523 id=4523 data-nosnippet>4523</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(
+<a href=#4524 id=4524 data-nosnippet>4524</a>                                <span class="string">"write_expr expression::as {inner:?}"
+<a href=#4525 id=4525 data-nosnippet>4525</a>                            </span>)));
+<a href=#4526 id=4526 data-nosnippet>4526</a>                        }
+<a href=#4527 id=4527 data-nosnippet>4527</a>                    };
+<a href=#4528 id=4528 data-nosnippet>4528</a>                    <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
+<a href=#4529 id=4529 data-nosnippet>4529</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+<a href=#4530 id=4530 data-nosnippet>4530</a>                }
+<a href=#4531 id=4531 data-nosnippet>4531</a>            }
+<a href=#4532 id=4532 data-nosnippet>4532</a>            Expression::Bitcast { expr, ty } =&gt; {
+<a href=#4533 id=4533 data-nosnippet>4533</a>                <span class="kw">let </span>src_ty = func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types);
+<a href=#4534 id=4534 data-nosnippet>4534</a>                <span class="kw">let </span>dst_ty = <span class="kw-2">&amp;</span>module.types[ty].inner;
+<a href=#4535 id=4535 data-nosnippet>4535</a>                <span class="kw">let </span>unsupported =
+<a href=#4536 id=4536 data-nosnippet>4536</a>                    || Error::Unimplemented(<span class="macro">format!</span>(<span class="string">"bitcast from {src_ty:?} to {dst_ty:?}"</span>));
+<a href=#4537 id=4537 data-nosnippet>4537</a>                <span class="kw">let </span>(<span class="prelude-val">Some</span>((src_size, src)), <span class="prelude-val">Some</span>((dst_size, dst))) = (
+<a href=#4538 id=4538 data-nosnippet>4538</a>                    src_ty.vector_size_and_scalar(),
+<a href=#4539 id=4539 data-nosnippet>4539</a>                    dst_ty.vector_size_and_scalar(),
+<a href=#4540 id=4540 data-nosnippet>4540</a>                ) <span class="kw">else </span>{
+<a href=#4541 id=4541 data-nosnippet>4541</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(unsupported());
+<a href=#4542 id=4542 data-nosnippet>4542</a>                };
+<a href=#4543 id=4543 data-nosnippet>4543</a>
+<a href=#4544 id=4544 data-nosnippet>4544</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(wrapped) = help::WrappedBitcast::new(src_ty, dst_ty) {
+<a href=#4545 id=4545 data-nosnippet>4545</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, wrapped.function_name()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+<a href=#4546 id=4546 data-nosnippet>4546</a>                    <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
+<a href=#4547 id=4547 data-nosnippet>4547</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+<a href=#4548 id=4548 data-nosnippet>4548</a>                } <span class="kw">else if </span>src == dst {
+<a href=#4549 id=4549 data-nosnippet>4549</a>                    <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
+<a href=#4550 id=4550 data-nosnippet>4550</a>                } <span class="kw">else </span>{
+<a href=#4551 id=4551 data-nosnippet>4551</a>                    <span class="macro">debug_assert_eq!</span>(src_size, dst_size);
+<a href=#4552 id=4552 data-nosnippet>4552</a>                    <span class="kw">let </span>is_int =
+<a href=#4553 id=4553 data-nosnippet>4553</a>                        |scalar: Scalar| <span class="macro">matches!</span>(scalar.kind, ScalarKind::Sint | ScalarKind::Uint);
+<a href=#4554 id=4554 data-nosnippet>4554</a>                    <span class="comment">// HLSL's `asint()`, `asuint()` and `asfloat()` only work on
+<a href=#4555 id=4555 data-nosnippet>4555</a>                    // 32-bit types, and 16-bit types have `asint16()` and so
+<a href=#4556 id=4556 data-nosnippet>4556</a>                    // on. For other widths of integers, use a constructor
+<a href=#4557 id=4557 data-nosnippet>4557</a>                    // instead.
+<a href=#4558 id=4558 data-nosnippet>4558</a>                    </span><span class="kw">match </span>(src.width, is_int(src) &amp;&amp; is_int(dst)) {
+<a href=#4559 id=4559 data-nosnippet>4559</a>                        (<span class="number">2 </span>| <span class="number">8</span>, <span class="bool-val">true</span>) =&gt; {
+<a href=#4560 id=4560 data-nosnippet>4560</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, dst.to_hlsl_str()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+<a href=#4561 id=4561 data-nosnippet>4561</a>                            <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = dst_size {
+<a href=#4562 id=4562 data-nosnippet>4562</a>                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, common::vector_size_str(size))<span class="question-mark">?</span>;
+<a href=#4563 id=4563 data-nosnippet>4563</a>                            }
+<a href=#4564 id=4564 data-nosnippet>4564</a>                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
+<a href=#4565 id=4565 data-nosnippet>4565</a>                        }
+<a href=#4566 id=4566 data-nosnippet>4566</a>                        (<span class="number">2</span>, <span class="bool-val">false</span>) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, dst.kind.to_hlsl_cast_16bit())<span class="question-mark">?</span>,
+<a href=#4567 id=4567 data-nosnippet>4567</a>                        (<span class="number">4</span>, <span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, dst.kind.to_hlsl_cast())<span class="question-mark">?</span>,
+<a href=#4568 id=4568 data-nosnippet>4568</a>                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(unsupported()),
+<a href=#4569 id=4569 data-nosnippet>4569</a>                    };
+<a href=#4570 id=4570 data-nosnippet>4570</a>                    <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
+<a href=#4571 id=4571 data-nosnippet>4571</a>                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
 <a href=#4572 id=4572 data-nosnippet>4572</a>                }
 <a href=#4573 id=4573 data-nosnippet>4573</a>            }
 <a href=#4574 id=4574 data-nosnippet>4574</a>            Expression::Math {
