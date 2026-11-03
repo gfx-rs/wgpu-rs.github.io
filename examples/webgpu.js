@@ -1379,6 +1379,9 @@ function __wbg_get_imports() {
         __wbg_set_depth_read_only_847620074e85ad33: function(arg0, arg1) {
             arg0.depthReadOnly = arg1 !== 0;
         },
+        __wbg_set_depth_slice_58ef17a8e45553cc: function(arg0, arg1) {
+            arg0.depthSlice = arg1 >>> 0;
+        },
         __wbg_set_depth_stencil_attachment_5298ae1194cbb059: function(arg0, arg1) {
             arg0.depthStencilAttachment = arg1;
         },
