@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["RayTracingIntersectionDescriptor"],"struct":["RayTracingPipeline","RayTracingPipelineDescriptor","RayTracingStage"]};

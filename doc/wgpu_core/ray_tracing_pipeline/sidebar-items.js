@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["RayTracingIntersectionDescriptor","RayTracingIntersectionType","RayTracingPipelineError"],"struct":["RayTracingPipeline","RayTracingPipelineDescriptor","RayTracingPipelineState","ShaderBindingData"]};
