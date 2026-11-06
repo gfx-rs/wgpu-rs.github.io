@@ -2,122 +2,122 @@
 <a href=#2 id=2 data-nosnippet>2</a>    util::align_to, Buffer, BufferAddress, BufferDescriptor, BufferSize, BufferSlice, BufferUsages,
 <a href=#3 id=3 data-nosnippet>3</a>    BufferViewMut, CommandEncoder, Device, MapMode,
 <a href=#4 id=4 data-nosnippet>4</a>};
-<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>alloc::vec::Vec;
-<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>core::fmt;
-<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>std::sync::mpsc;
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>wgt::Features;
-<a href=#9 id=9 data-nosnippet>9</a>
-<a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span><span class="kw">crate</span>::COPY_BUFFER_ALIGNMENT;
-<a href=#11 id=11 data-nosnippet>11</a>
-<a href=#12 id=12 data-nosnippet>12</a><span class="doccomment">/// Efficiently performs many buffer writes by sharing and reusing temporary buffers.
-<a href=#13 id=13 data-nosnippet>13</a>///
-<a href=#14 id=14 data-nosnippet>14</a>/// Internally it uses a ring-buffer of staging buffers that are sub-allocated.
-<a href=#15 id=15 data-nosnippet>15</a>/// Its advantage over [`Queue::write_buffer_with()`] is that the individual allocations
-<a href=#16 id=16 data-nosnippet>16</a>/// are cheaper; `StagingBelt` is most useful when you are writing very many small pieces
-<a href=#17 id=17 data-nosnippet>17</a>/// of data. It can be understood as a sort of arena allocator.
-<a href=#18 id=18 data-nosnippet>18</a>///
-<a href=#19 id=19 data-nosnippet>19</a>/// Using a staging belt is slightly complicated, and generally goes as follows:
-<a href=#20 id=20 data-nosnippet>20</a>/// 1. Use [`StagingBelt::write_buffer()`] or [`StagingBelt::allocate()`] to allocate
-<a href=#21 id=21 data-nosnippet>21</a>///    buffer slices, then write your data to them.
-<a href=#22 id=22 data-nosnippet>22</a>/// 2. Call [`StagingBelt::finish()`].
-<a href=#23 id=23 data-nosnippet>23</a>/// 3. Submit all command encoders that were used in step 1.
-<a href=#24 id=24 data-nosnippet>24</a>/// 4. Call [`StagingBelt::recall()`].
-<a href=#25 id=25 data-nosnippet>25</a>///
-<a href=#26 id=26 data-nosnippet>26</a>/// Alternatively, steps 2 and 4 can be combined into a single call to
-<a href=#27 id=27 data-nosnippet>27</a>/// [`StagingBelt::finish_and_recall_on_submit()`], which schedules the re-map
-<a href=#28 id=28 data-nosnippet>28</a>/// automatically when the encoder is submitted, so no explicit `recall()` is needed.
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>alloc::sync::Arc;
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>alloc::vec::Vec;
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>concurrent_queue::ConcurrentQueue;
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>core::fmt;
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>wgt::Features;
+<a href=#10 id=10 data-nosnippet>10</a>
+<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span><span class="kw">crate</span>::COPY_BUFFER_ALIGNMENT;
+<a href=#12 id=12 data-nosnippet>12</a>
+<a href=#13 id=13 data-nosnippet>13</a><span class="attr">#[cfg(send_sync)]
+<a href=#14 id=14 data-nosnippet>14</a></span><span class="macro">static_assertions::assert_impl_all!</span>(StagingBelt: Send, Sync);
+<a href=#15 id=15 data-nosnippet>15</a>
+<a href=#16 id=16 data-nosnippet>16</a><span class="doccomment">/// Efficiently performs many buffer writes by sharing and reusing temporary buffers.
+<a href=#17 id=17 data-nosnippet>17</a>///
+<a href=#18 id=18 data-nosnippet>18</a>/// Internally it uses a ring-buffer of staging buffers that are sub-allocated.
+<a href=#19 id=19 data-nosnippet>19</a>/// Its advantage over [`Queue::write_buffer_with()`] is that the individual allocations
+<a href=#20 id=20 data-nosnippet>20</a>/// are cheaper; `StagingBelt` is most useful when you are writing very many small pieces
+<a href=#21 id=21 data-nosnippet>21</a>/// of data. It can be understood as a sort of arena allocator.
+<a href=#22 id=22 data-nosnippet>22</a>///
+<a href=#23 id=23 data-nosnippet>23</a>/// Using a staging belt is slightly complicated, and generally goes as follows:
+<a href=#24 id=24 data-nosnippet>24</a>/// 1. Use [`StagingBelt::write_buffer()`] or [`StagingBelt::allocate()`] to allocate
+<a href=#25 id=25 data-nosnippet>25</a>///    buffer slices, then write your data to them.
+<a href=#26 id=26 data-nosnippet>26</a>/// 2. Call [`StagingBelt::finish()`].
+<a href=#27 id=27 data-nosnippet>27</a>/// 3. Submit all command encoders that were used in step 1.
+<a href=#28 id=28 data-nosnippet>28</a>/// 4. Call [`StagingBelt::recall()`].
 <a href=#29 id=29 data-nosnippet>29</a>///
-<a href=#30 id=30 data-nosnippet>30</a>/// [`Queue::write_buffer_with()`]: crate::Queue::write_buffer_with
-<a href=#31 id=31 data-nosnippet>31</a></span><span class="kw">pub struct </span>StagingBelt {
-<a href=#32 id=32 data-nosnippet>32</a>    device: Device,
-<a href=#33 id=33 data-nosnippet>33</a>    chunk_size: BufferAddress,
-<a href=#34 id=34 data-nosnippet>34</a>    <span class="doccomment">/// User-specified [`BufferUsages`] used to create the chunk buffers are created.
-<a href=#35 id=35 data-nosnippet>35</a>    ///
-<a href=#36 id=36 data-nosnippet>36</a>    /// [`new`](Self::new) guarantees that this always contains
-<a href=#37 id=37 data-nosnippet>37</a>    /// [`MAP_WRITE`](BufferUsages::MAP_WRITE).
-<a href=#38 id=38 data-nosnippet>38</a>    </span>buffer_usages: BufferUsages,
-<a href=#39 id=39 data-nosnippet>39</a>    <span class="doccomment">/// Chunks into which we are accumulating data to be transferred.
-<a href=#40 id=40 data-nosnippet>40</a>    </span>active_chunks: Vec&lt;Chunk&gt;,
-<a href=#41 id=41 data-nosnippet>41</a>    <span class="doccomment">/// Chunks that have scheduled transfers already; they are unmapped and some
-<a href=#42 id=42 data-nosnippet>42</a>    /// command encoder has one or more commands with them as source.
-<a href=#43 id=43 data-nosnippet>43</a>    </span>closed_chunks: Vec&lt;Chunk&gt;,
-<a href=#44 id=44 data-nosnippet>44</a>    <span class="doccomment">/// Chunks that are back from the GPU and ready to be mapped for write and put
-<a href=#45 id=45 data-nosnippet>45</a>    /// into `active_chunks`.
-<a href=#46 id=46 data-nosnippet>46</a>    </span>free_chunks: Vec&lt;Chunk&gt;,
-<a href=#47 id=47 data-nosnippet>47</a>    <span class="doccomment">/// When closed chunks are mapped again, the map callback sends them here.
-<a href=#48 id=48 data-nosnippet>48</a>    </span>sender: Exclusive&lt;mpsc::Sender&lt;Chunk&gt;&gt;,
-<a href=#49 id=49 data-nosnippet>49</a>    <span class="doccomment">/// Free chunks are received here to be put on `self.free_chunks`.
-<a href=#50 id=50 data-nosnippet>50</a>    </span>receiver: Exclusive&lt;mpsc::Receiver&lt;Chunk&gt;&gt;,
-<a href=#51 id=51 data-nosnippet>51</a>    <span class="doccomment">/// Whether the belt has grown since last recall.
-<a href=#52 id=52 data-nosnippet>52</a>    </span>grew_since_recall: bool,
-<a href=#53 id=53 data-nosnippet>53</a>}
-<a href=#54 id=54 data-nosnippet>54</a>
-<a href=#55 id=55 data-nosnippet>55</a><span class="kw">impl </span>StagingBelt {
-<a href=#56 id=56 data-nosnippet>56</a>    <span class="doccomment">/// Create a new staging belt.
-<a href=#57 id=57 data-nosnippet>57</a>    ///
-<a href=#58 id=58 data-nosnippet>58</a>    /// The `chunk_size` is the unit of internal buffer allocation; writes will be
-<a href=#59 id=59 data-nosnippet>59</a>    /// sub-allocated within each chunk. Therefore, for optimal use of memory, the
-<a href=#60 id=60 data-nosnippet>60</a>    /// chunk size should be:
-<a href=#61 id=61 data-nosnippet>61</a>    ///
-<a href=#62 id=62 data-nosnippet>62</a>    /// * larger than the largest single [`StagingBelt::write_buffer()`] operation;
-<a href=#63 id=63 data-nosnippet>63</a>    /// * 1-4 times less than the total amount of data uploaded per submission
-<a href=#64 id=64 data-nosnippet>64</a>    ///   (per [`StagingBelt::finish()`]); and
-<a href=#65 id=65 data-nosnippet>65</a>    /// * bigger is better, within these bounds.
-<a href=#66 id=66 data-nosnippet>66</a>    ///
-<a href=#67 id=67 data-nosnippet>67</a>    /// The buffers returned by this [`StagingBelt`] will be have the buffer usages
-<a href=#68 id=68 data-nosnippet>68</a>    /// [`COPY_SRC | MAP_WRITE`](crate::BufferUsages)
-<a href=#69 id=69 data-nosnippet>69</a>    </span><span class="kw">pub fn </span>new(device: Device, chunk_size: BufferAddress) -&gt; <span class="self">Self </span>{
-<a href=#70 id=70 data-nosnippet>70</a>        <span class="self">Self</span>::new_with_buffer_usages(device, chunk_size, BufferUsages::COPY_SRC)
-<a href=#71 id=71 data-nosnippet>71</a>    }
-<a href=#72 id=72 data-nosnippet>72</a>
-<a href=#73 id=73 data-nosnippet>73</a>    <span class="doccomment">/// Create a new staging belt.
-<a href=#74 id=74 data-nosnippet>74</a>    ///
-<a href=#75 id=75 data-nosnippet>75</a>    /// The `chunk_size` is the unit of internal buffer allocation; writes will be
-<a href=#76 id=76 data-nosnippet>76</a>    /// sub-allocated within each chunk. Therefore, for optimal use of memory, the
-<a href=#77 id=77 data-nosnippet>77</a>    /// chunk size should be:
-<a href=#78 id=78 data-nosnippet>78</a>    ///
-<a href=#79 id=79 data-nosnippet>79</a>    /// * larger than the largest single [`StagingBelt::write_buffer()`] operation;
-<a href=#80 id=80 data-nosnippet>80</a>    /// * 1-4 times less than the total amount of data uploaded per submission
-<a href=#81 id=81 data-nosnippet>81</a>    ///   (per [`StagingBelt::finish()`]); and
-<a href=#82 id=82 data-nosnippet>82</a>    /// * bigger is better, within these bounds.
-<a href=#83 id=83 data-nosnippet>83</a>    ///
-<a href=#84 id=84 data-nosnippet>84</a>    /// `buffer_usages` specifies the [`BufferUsages`] the staging buffers
-<a href=#85 id=85 data-nosnippet>85</a>    /// will be created with. [`MAP_WRITE`](BufferUsages::MAP_WRITE) will be added
-<a href=#86 id=86 data-nosnippet>86</a>    /// automatically. The method will panic if the combination of usages is not
-<a href=#87 id=87 data-nosnippet>87</a>    /// supported. Because [`MAP_WRITE`](BufferUsages::MAP_WRITE) is implied, the allowed usages
-<a href=#88 id=88 data-nosnippet>88</a>    /// depends on if [`Features::MAPPABLE_PRIMARY_BUFFERS`] is enabled.
-<a href=#89 id=89 data-nosnippet>89</a>    /// - If enabled: any usage is valid.
-<a href=#90 id=90 data-nosnippet>90</a>    /// - If disabled: only [`COPY_SRC`](BufferUsages::COPY_SRC) can be used.
-<a href=#91 id=91 data-nosnippet>91</a>    </span><span class="attr">#[track_caller]
-<a href=#92 id=92 data-nosnippet>92</a>    </span><span class="kw">pub fn </span>new_with_buffer_usages(
-<a href=#93 id=93 data-nosnippet>93</a>        device: Device,
-<a href=#94 id=94 data-nosnippet>94</a>        chunk_size: BufferAddress,
-<a href=#95 id=95 data-nosnippet>95</a>        <span class="kw-2">mut </span>buffer_usages: BufferUsages,
-<a href=#96 id=96 data-nosnippet>96</a>    ) -&gt; <span class="self">Self </span>{
-<a href=#97 id=97 data-nosnippet>97</a>        <span class="kw">let </span>(sender, receiver) = mpsc::channel();
-<a href=#98 id=98 data-nosnippet>98</a>
-<a href=#99 id=99 data-nosnippet>99</a>        <span class="comment">// make sure anything other than MAP_WRITE | COPY_SRC is only allowed with MAPPABLE_PRIMARY_BUFFERS.
-<a href=#100 id=100 data-nosnippet>100</a>        </span><span class="kw">let </span>extra_usages =
-<a href=#101 id=101 data-nosnippet>101</a>            buffer_usages.difference(BufferUsages::MAP_WRITE | BufferUsages::COPY_SRC);
-<a href=#102 id=102 data-nosnippet>102</a>        <span class="kw">if </span>!extra_usages.is_empty()
-<a href=#103 id=103 data-nosnippet>103</a>            &amp;&amp; !device
-<a href=#104 id=104 data-nosnippet>104</a>                .features()
-<a href=#105 id=105 data-nosnippet>105</a>                .contains(Features::MAPPABLE_PRIMARY_BUFFERS)
-<a href=#106 id=106 data-nosnippet>106</a>        {
-<a href=#107 id=107 data-nosnippet>107</a>            <span class="macro">panic!</span>(<span class="string">"Only BufferUsages::COPY_SRC may be used when Features::MAPPABLE_PRIMARY_BUFFERS is not enabled. Specified buffer usages: {buffer_usages:?}"</span>);
-<a href=#108 id=108 data-nosnippet>108</a>        }
-<a href=#109 id=109 data-nosnippet>109</a>        <span class="comment">// always set MAP_WRITE
-<a href=#110 id=110 data-nosnippet>110</a>        </span>buffer_usages.insert(BufferUsages::MAP_WRITE);
-<a href=#111 id=111 data-nosnippet>111</a>
-<a href=#112 id=112 data-nosnippet>112</a>        StagingBelt {
-<a href=#113 id=113 data-nosnippet>113</a>            device,
-<a href=#114 id=114 data-nosnippet>114</a>            chunk_size,
-<a href=#115 id=115 data-nosnippet>115</a>            buffer_usages,
-<a href=#116 id=116 data-nosnippet>116</a>            active_chunks: Vec::new(),
-<a href=#117 id=117 data-nosnippet>117</a>            closed_chunks: Vec::new(),
-<a href=#118 id=118 data-nosnippet>118</a>            free_chunks: Vec::new(),
-<a href=#119 id=119 data-nosnippet>119</a>            sender: Exclusive::new(sender),
-<a href=#120 id=120 data-nosnippet>120</a>            receiver: Exclusive::new(receiver),
+<a href=#30 id=30 data-nosnippet>30</a>/// Alternatively, steps 2 and 4 can be combined into a single call to
+<a href=#31 id=31 data-nosnippet>31</a>/// [`StagingBelt::finish_and_recall_on_submit()`], which schedules the re-map
+<a href=#32 id=32 data-nosnippet>32</a>/// automatically when the encoder is submitted, so no explicit `recall()` is needed.
+<a href=#33 id=33 data-nosnippet>33</a>///
+<a href=#34 id=34 data-nosnippet>34</a>/// [`Queue::write_buffer_with()`]: crate::Queue::write_buffer_with
+<a href=#35 id=35 data-nosnippet>35</a></span><span class="kw">pub struct </span>StagingBelt {
+<a href=#36 id=36 data-nosnippet>36</a>    device: Device,
+<a href=#37 id=37 data-nosnippet>37</a>    chunk_size: BufferAddress,
+<a href=#38 id=38 data-nosnippet>38</a>    <span class="doccomment">/// User-specified [`BufferUsages`] used to create the chunk buffers are created.
+<a href=#39 id=39 data-nosnippet>39</a>    ///
+<a href=#40 id=40 data-nosnippet>40</a>    /// [`new`](Self::new) guarantees that this always contains
+<a href=#41 id=41 data-nosnippet>41</a>    /// [`MAP_WRITE`](BufferUsages::MAP_WRITE).
+<a href=#42 id=42 data-nosnippet>42</a>    </span>buffer_usages: BufferUsages,
+<a href=#43 id=43 data-nosnippet>43</a>    <span class="doccomment">/// Chunks into which we are accumulating data to be transferred.
+<a href=#44 id=44 data-nosnippet>44</a>    </span>active_chunks: Vec&lt;Chunk&gt;,
+<a href=#45 id=45 data-nosnippet>45</a>    <span class="doccomment">/// Chunks that have scheduled transfers already; they are unmapped and some
+<a href=#46 id=46 data-nosnippet>46</a>    /// command encoder has one or more commands with them as source.
+<a href=#47 id=47 data-nosnippet>47</a>    </span>closed_chunks: Vec&lt;Chunk&gt;,
+<a href=#48 id=48 data-nosnippet>48</a>    <span class="doccomment">/// Chunks that are back from the GPU and ready to be mapped for write and put
+<a href=#49 id=49 data-nosnippet>49</a>    /// into `active_chunks`.
+<a href=#50 id=50 data-nosnippet>50</a>    </span>free_chunks: Vec&lt;Chunk&gt;,
+<a href=#51 id=51 data-nosnippet>51</a>    <span class="doccomment">/// When closed chunks are mapped again, the map callback sends them here.
+<a href=#52 id=52 data-nosnippet>52</a>    /// Free chunks are retrieved from this to be put on `self.free_chunks`.
+<a href=#53 id=53 data-nosnippet>53</a>    </span>queue: Arc&lt;ConcurrentQueue&lt;Chunk&gt;&gt;,
+<a href=#54 id=54 data-nosnippet>54</a>    <span class="doccomment">/// Whether the belt has grown since last recall.
+<a href=#55 id=55 data-nosnippet>55</a>    </span>grew_since_recall: bool,
+<a href=#56 id=56 data-nosnippet>56</a>}
+<a href=#57 id=57 data-nosnippet>57</a>
+<a href=#58 id=58 data-nosnippet>58</a><span class="kw">impl </span>StagingBelt {
+<a href=#59 id=59 data-nosnippet>59</a>    <span class="doccomment">/// Create a new staging belt.
+<a href=#60 id=60 data-nosnippet>60</a>    ///
+<a href=#61 id=61 data-nosnippet>61</a>    /// The `chunk_size` is the unit of internal buffer allocation; writes will be
+<a href=#62 id=62 data-nosnippet>62</a>    /// sub-allocated within each chunk. Therefore, for optimal use of memory, the
+<a href=#63 id=63 data-nosnippet>63</a>    /// chunk size should be:
+<a href=#64 id=64 data-nosnippet>64</a>    ///
+<a href=#65 id=65 data-nosnippet>65</a>    /// * larger than the largest single [`StagingBelt::write_buffer()`] operation;
+<a href=#66 id=66 data-nosnippet>66</a>    /// * 1-4 times less than the total amount of data uploaded per submission
+<a href=#67 id=67 data-nosnippet>67</a>    ///   (per [`StagingBelt::finish()`]); and
+<a href=#68 id=68 data-nosnippet>68</a>    /// * bigger is better, within these bounds.
+<a href=#69 id=69 data-nosnippet>69</a>    ///
+<a href=#70 id=70 data-nosnippet>70</a>    /// The buffers returned by this [`StagingBelt`] will be have the buffer usages
+<a href=#71 id=71 data-nosnippet>71</a>    /// [`COPY_SRC | MAP_WRITE`](crate::BufferUsages)
+<a href=#72 id=72 data-nosnippet>72</a>    </span><span class="kw">pub fn </span>new(device: Device, chunk_size: BufferAddress) -&gt; <span class="self">Self </span>{
+<a href=#73 id=73 data-nosnippet>73</a>        <span class="self">Self</span>::new_with_buffer_usages(device, chunk_size, BufferUsages::COPY_SRC)
+<a href=#74 id=74 data-nosnippet>74</a>    }
+<a href=#75 id=75 data-nosnippet>75</a>
+<a href=#76 id=76 data-nosnippet>76</a>    <span class="doccomment">/// Create a new staging belt.
+<a href=#77 id=77 data-nosnippet>77</a>    ///
+<a href=#78 id=78 data-nosnippet>78</a>    /// The `chunk_size` is the unit of internal buffer allocation; writes will be
+<a href=#79 id=79 data-nosnippet>79</a>    /// sub-allocated within each chunk. Therefore, for optimal use of memory, the
+<a href=#80 id=80 data-nosnippet>80</a>    /// chunk size should be:
+<a href=#81 id=81 data-nosnippet>81</a>    ///
+<a href=#82 id=82 data-nosnippet>82</a>    /// * larger than the largest single [`StagingBelt::write_buffer()`] operation;
+<a href=#83 id=83 data-nosnippet>83</a>    /// * 1-4 times less than the total amount of data uploaded per submission
+<a href=#84 id=84 data-nosnippet>84</a>    ///   (per [`StagingBelt::finish()`]); and
+<a href=#85 id=85 data-nosnippet>85</a>    /// * bigger is better, within these bounds.
+<a href=#86 id=86 data-nosnippet>86</a>    ///
+<a href=#87 id=87 data-nosnippet>87</a>    /// `buffer_usages` specifies the [`BufferUsages`] the staging buffers
+<a href=#88 id=88 data-nosnippet>88</a>    /// will be created with. [`MAP_WRITE`](BufferUsages::MAP_WRITE) will be added
+<a href=#89 id=89 data-nosnippet>89</a>    /// automatically. The method will panic if the combination of usages is not
+<a href=#90 id=90 data-nosnippet>90</a>    /// supported. Because [`MAP_WRITE`](BufferUsages::MAP_WRITE) is implied, the allowed usages
+<a href=#91 id=91 data-nosnippet>91</a>    /// depends on if [`Features::MAPPABLE_PRIMARY_BUFFERS`] is enabled.
+<a href=#92 id=92 data-nosnippet>92</a>    /// - If enabled: any usage is valid.
+<a href=#93 id=93 data-nosnippet>93</a>    /// - If disabled: only [`COPY_SRC`](BufferUsages::COPY_SRC) can be used.
+<a href=#94 id=94 data-nosnippet>94</a>    </span><span class="attr">#[track_caller]
+<a href=#95 id=95 data-nosnippet>95</a>    </span><span class="kw">pub fn </span>new_with_buffer_usages(
+<a href=#96 id=96 data-nosnippet>96</a>        device: Device,
+<a href=#97 id=97 data-nosnippet>97</a>        chunk_size: BufferAddress,
+<a href=#98 id=98 data-nosnippet>98</a>        <span class="kw-2">mut </span>buffer_usages: BufferUsages,
+<a href=#99 id=99 data-nosnippet>99</a>    ) -&gt; <span class="self">Self </span>{
+<a href=#100 id=100 data-nosnippet>100</a>        <span class="comment">// make sure anything other than MAP_WRITE | COPY_SRC is only allowed with MAPPABLE_PRIMARY_BUFFERS.
+<a href=#101 id=101 data-nosnippet>101</a>        </span><span class="kw">let </span>extra_usages =
+<a href=#102 id=102 data-nosnippet>102</a>            buffer_usages.difference(BufferUsages::MAP_WRITE | BufferUsages::COPY_SRC);
+<a href=#103 id=103 data-nosnippet>103</a>        <span class="kw">if </span>!extra_usages.is_empty()
+<a href=#104 id=104 data-nosnippet>104</a>            &amp;&amp; !device
+<a href=#105 id=105 data-nosnippet>105</a>                .features()
+<a href=#106 id=106 data-nosnippet>106</a>                .contains(Features::MAPPABLE_PRIMARY_BUFFERS)
+<a href=#107 id=107 data-nosnippet>107</a>        {
+<a href=#108 id=108 data-nosnippet>108</a>            <span class="macro">panic!</span>(<span class="string">"Only BufferUsages::COPY_SRC may be used when Features::MAPPABLE_PRIMARY_BUFFERS is not enabled. Specified buffer usages: {buffer_usages:?}"</span>);
+<a href=#109 id=109 data-nosnippet>109</a>        }
+<a href=#110 id=110 data-nosnippet>110</a>        <span class="comment">// always set MAP_WRITE
+<a href=#111 id=111 data-nosnippet>111</a>        </span>buffer_usages.insert(BufferUsages::MAP_WRITE);
+<a href=#112 id=112 data-nosnippet>112</a>
+<a href=#113 id=113 data-nosnippet>113</a>        StagingBelt {
+<a href=#114 id=114 data-nosnippet>114</a>            device,
+<a href=#115 id=115 data-nosnippet>115</a>            chunk_size,
+<a href=#116 id=116 data-nosnippet>116</a>            buffer_usages,
+<a href=#117 id=117 data-nosnippet>117</a>            active_chunks: Vec::new(),
+<a href=#118 id=118 data-nosnippet>118</a>            closed_chunks: Vec::new(),
+<a href=#119 id=119 data-nosnippet>119</a>            free_chunks: Vec::new(),
+<a href=#120 id=120 data-nosnippet>120</a>            queue: Arc::new(ConcurrentQueue::unbounded()),
 <a href=#121 id=121 data-nosnippet>121</a>            grew_since_recall: <span class="bool-val">false</span>,
 <a href=#122 id=122 data-nosnippet>122</a>        }
 <a href=#123 id=123 data-nosnippet>123</a>    }
@@ -267,13 +267,13 @@
 <a href=#267 id=267 data-nosnippet>267</a>        <span class="self">self</span>.receive_chunks();
 <a href=#268 id=268 data-nosnippet>268</a>
 <a href=#269 id=269 data-nosnippet>269</a>        <span class="kw">for </span>chunk <span class="kw">in </span><span class="self">self</span>.closed_chunks.drain(..) {
-<a href=#270 id=270 data-nosnippet>270</a>            <span class="kw">let </span>sender = <span class="self">self</span>.sender.get_mut().clone();
+<a href=#270 id=270 data-nosnippet>270</a>            <span class="kw">let </span>queue = <span class="self">self</span>.queue.clone();
 <a href=#271 id=271 data-nosnippet>271</a>            chunk
 <a href=#272 id=272 data-nosnippet>272</a>                .buffer
 <a href=#273 id=273 data-nosnippet>273</a>                .clone()
 <a href=#274 id=274 data-nosnippet>274</a>                .slice(..)
 <a href=#275 id=275 data-nosnippet>275</a>                .map_async(MapMode::Write, <span class="kw">move </span>|<span class="kw">_</span>| {
-<a href=#276 id=276 data-nosnippet>276</a>                    <span class="kw">let _ </span>= sender.send(chunk);
+<a href=#276 id=276 data-nosnippet>276</a>                    <span class="kw">let _ </span>= queue.push(chunk);
 <a href=#277 id=277 data-nosnippet>277</a>                });
 <a href=#278 id=278 data-nosnippet>278</a>        }
 <a href=#279 id=279 data-nosnippet>279</a>    }
@@ -303,18 +303,18 @@
 <a href=#303 id=303 data-nosnippet>303</a>        <span class="self">self</span>.receive_chunks();
 <a href=#304 id=304 data-nosnippet>304</a>
 <a href=#305 id=305 data-nosnippet>305</a>        <span class="kw">for </span>chunk <span class="kw">in </span><span class="self">self</span>.closed_chunks.drain(..) {
-<a href=#306 id=306 data-nosnippet>306</a>            <span class="kw">let </span>sender = <span class="self">self</span>.sender.get_mut().clone();
+<a href=#306 id=306 data-nosnippet>306</a>            <span class="kw">let </span>queue = <span class="self">self</span>.queue.clone();
 <a href=#307 id=307 data-nosnippet>307</a>            <span class="kw">let </span>buffer = chunk.buffer.clone();
 <a href=#308 id=308 data-nosnippet>308</a>            encoder.map_buffer_on_submit(<span class="kw-2">&amp;</span>buffer, MapMode::Write, .., <span class="kw">move </span>|<span class="kw">_</span>| {
-<a href=#309 id=309 data-nosnippet>309</a>                <span class="kw">let _ </span>= sender.send(chunk);
+<a href=#309 id=309 data-nosnippet>309</a>                <span class="kw">let _ </span>= queue.push(chunk);
 <a href=#310 id=310 data-nosnippet>310</a>            });
 <a href=#311 id=311 data-nosnippet>311</a>        }
 <a href=#312 id=312 data-nosnippet>312</a>    }
 <a href=#313 id=313 data-nosnippet>313</a>
 <a href=#314 id=314 data-nosnippet>314</a>    <span class="doccomment">/// Move all chunks that the GPU is done with (and are now mapped again)
-<a href=#315 id=315 data-nosnippet>315</a>    /// from `self.receiver` to `self.free_chunks`.
+<a href=#315 id=315 data-nosnippet>315</a>    /// from `self.queue` to `self.free_chunks`.
 <a href=#316 id=316 data-nosnippet>316</a>    </span><span class="kw">fn </span>receive_chunks(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#317 id=317 data-nosnippet>317</a>        <span class="kw">while let </span><span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>chunk) = <span class="self">self</span>.receiver.get_mut().try_recv() {
+<a href=#317 id=317 data-nosnippet>317</a>        <span class="kw">while let </span><span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>chunk) = <span class="self">self</span>.queue.pop() {
 <a href=#318 id=318 data-nosnippet>318</a>            chunk.offset = <span class="number">0</span>;
 <a href=#319 id=319 data-nosnippet>319</a>            <span class="self">self</span>.free_chunks.push(chunk);
 <a href=#320 id=320 data-nosnippet>320</a>        }
@@ -346,63 +346,41 @@
 <a href=#346 id=346 data-nosnippet>346</a>            active_chunks,
 <a href=#347 id=347 data-nosnippet>347</a>            closed_chunks,
 <a href=#348 id=348 data-nosnippet>348</a>            free_chunks,
-<a href=#349 id=349 data-nosnippet>349</a>            sender: <span class="kw">_</span>,
-<a href=#350 id=350 data-nosnippet>350</a>            receiver: <span class="kw">_</span>,
-<a href=#351 id=351 data-nosnippet>351</a>            grew_since_recall: <span class="kw">_</span>,
-<a href=#352 id=352 data-nosnippet>352</a>        } = <span class="self">self</span>;
-<a href=#353 id=353 data-nosnippet>353</a>        f.debug_struct(<span class="string">"StagingBelt"</span>)
-<a href=#354 id=354 data-nosnippet>354</a>            .field(<span class="string">"device"</span>, device)
-<a href=#355 id=355 data-nosnippet>355</a>            .field(<span class="string">"chunk_size"</span>, chunk_size)
-<a href=#356 id=356 data-nosnippet>356</a>            .field(<span class="string">"buffer_usages"</span>, buffer_usages)
-<a href=#357 id=357 data-nosnippet>357</a>            .field(<span class="string">"active_chunks"</span>, <span class="kw-2">&amp;</span>active_chunks.len())
-<a href=#358 id=358 data-nosnippet>358</a>            .field(<span class="string">"closed_chunks"</span>, <span class="kw-2">&amp;</span>closed_chunks.len())
-<a href=#359 id=359 data-nosnippet>359</a>            .field(<span class="string">"free_chunks"</span>, <span class="kw-2">&amp;</span>free_chunks.len())
-<a href=#360 id=360 data-nosnippet>360</a>            .finish_non_exhaustive()
-<a href=#361 id=361 data-nosnippet>361</a>    }
-<a href=#362 id=362 data-nosnippet>362</a>}
-<a href=#363 id=363 data-nosnippet>363</a>
-<a href=#364 id=364 data-nosnippet>364</a><span class="kw">struct </span>Chunk {
-<a href=#365 id=365 data-nosnippet>365</a>    buffer: Buffer,
-<a href=#366 id=366 data-nosnippet>366</a>    offset: BufferAddress,
-<a href=#367 id=367 data-nosnippet>367</a>    used_since_recall: bool,
-<a href=#368 id=368 data-nosnippet>368</a>}
-<a href=#369 id=369 data-nosnippet>369</a>
-<a href=#370 id=370 data-nosnippet>370</a><span class="kw">impl </span>Chunk {
-<a href=#371 id=371 data-nosnippet>371</a>    <span class="kw">fn </span>can_allocate(<span class="kw-2">&amp;</span><span class="self">self</span>, size: BufferSize, alignment: BufferAddress) -&gt; bool {
-<a href=#372 id=372 data-nosnippet>372</a>        <span class="kw">let </span>alloc_start = align_to(<span class="self">self</span>.offset, alignment);
-<a href=#373 id=373 data-nosnippet>373</a>        <span class="kw">let </span>alloc_end = alloc_start + size.get();
-<a href=#374 id=374 data-nosnippet>374</a>
-<a href=#375 id=375 data-nosnippet>375</a>        alloc_end &lt;= <span class="self">self</span>.buffer.size()
-<a href=#376 id=376 data-nosnippet>376</a>    }
-<a href=#377 id=377 data-nosnippet>377</a>
-<a href=#378 id=378 data-nosnippet>378</a>    <span class="kw">fn </span>allocate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: BufferSize, alignment: BufferAddress) -&gt; BufferAddress {
-<a href=#379 id=379 data-nosnippet>379</a>        <span class="kw">let </span>alloc_start = align_to(<span class="self">self</span>.offset, alignment);
-<a href=#380 id=380 data-nosnippet>380</a>        <span class="kw">let </span>alloc_end = alloc_start + size.get();
-<a href=#381 id=381 data-nosnippet>381</a>
-<a href=#382 id=382 data-nosnippet>382</a>        <span class="macro">assert!</span>(alloc_end &lt;= <span class="self">self</span>.buffer.size());
-<a href=#383 id=383 data-nosnippet>383</a>        <span class="self">self</span>.offset = alloc_end;
-<a href=#384 id=384 data-nosnippet>384</a>        alloc_start
-<a href=#385 id=385 data-nosnippet>385</a>    }
-<a href=#386 id=386 data-nosnippet>386</a>}
-<a href=#387 id=387 data-nosnippet>387</a>
-<a href=#388 id=388 data-nosnippet>388</a><span class="kw">use </span>exclusive::Exclusive;
-<a href=#389 id=389 data-nosnippet>389</a><span class="kw">mod </span>exclusive {
-<a href=#390 id=390 data-nosnippet>390</a>    <span class="doccomment">/// `Sync` wrapper that works by providing only exclusive access.
-<a href=#391 id=391 data-nosnippet>391</a>    ///
-<a href=#392 id=392 data-nosnippet>392</a>    /// See &lt;https://doc.rust-lang.org/nightly/std/sync/struct.Exclusive.html&gt;
-<a href=#393 id=393 data-nosnippet>393</a>    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Exclusive&lt;T&gt;(T);
-<a href=#394 id=394 data-nosnippet>394</a>
-<a href=#395 id=395 data-nosnippet>395</a>    <span class="doccomment">/// Safety: `&amp;Exclusive` has no operations.
-<a href=#396 id=396 data-nosnippet>396</a>    </span><span class="kw">unsafe impl</span>&lt;T&gt; Sync <span class="kw">for </span>Exclusive&lt;T&gt; {}
-<a href=#397 id=397 data-nosnippet>397</a>
-<a href=#398 id=398 data-nosnippet>398</a>    <span class="kw">impl</span>&lt;T&gt; Exclusive&lt;T&gt; {
-<a href=#399 id=399 data-nosnippet>399</a>        <span class="kw">pub fn </span>new(value: T) -&gt; <span class="self">Self </span>{
-<a href=#400 id=400 data-nosnippet>400</a>            <span class="self">Self</span>(value)
-<a href=#401 id=401 data-nosnippet>401</a>        }
-<a href=#402 id=402 data-nosnippet>402</a>
-<a href=#403 id=403 data-nosnippet>403</a>        <span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>T {
-<a href=#404 id=404 data-nosnippet>404</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0
-<a href=#405 id=405 data-nosnippet>405</a>        </span>}
-<a href=#406 id=406 data-nosnippet>406</a>    }
-<a href=#407 id=407 data-nosnippet>407</a>}
+<a href=#349 id=349 data-nosnippet>349</a>            queue: <span class="kw">_</span>,
+<a href=#350 id=350 data-nosnippet>350</a>            grew_since_recall: <span class="kw">_</span>,
+<a href=#351 id=351 data-nosnippet>351</a>        } = <span class="self">self</span>;
+<a href=#352 id=352 data-nosnippet>352</a>        f.debug_struct(<span class="string">"StagingBelt"</span>)
+<a href=#353 id=353 data-nosnippet>353</a>            .field(<span class="string">"device"</span>, device)
+<a href=#354 id=354 data-nosnippet>354</a>            .field(<span class="string">"chunk_size"</span>, chunk_size)
+<a href=#355 id=355 data-nosnippet>355</a>            .field(<span class="string">"buffer_usages"</span>, buffer_usages)
+<a href=#356 id=356 data-nosnippet>356</a>            .field(<span class="string">"active_chunks"</span>, <span class="kw-2">&amp;</span>active_chunks.len())
+<a href=#357 id=357 data-nosnippet>357</a>            .field(<span class="string">"closed_chunks"</span>, <span class="kw-2">&amp;</span>closed_chunks.len())
+<a href=#358 id=358 data-nosnippet>358</a>            .field(<span class="string">"free_chunks"</span>, <span class="kw-2">&amp;</span>free_chunks.len())
+<a href=#359 id=359 data-nosnippet>359</a>            .finish_non_exhaustive()
+<a href=#360 id=360 data-nosnippet>360</a>    }
+<a href=#361 id=361 data-nosnippet>361</a>}
+<a href=#362 id=362 data-nosnippet>362</a>
+<a href=#363 id=363 data-nosnippet>363</a><span class="kw">struct </span>Chunk {
+<a href=#364 id=364 data-nosnippet>364</a>    buffer: Buffer,
+<a href=#365 id=365 data-nosnippet>365</a>    offset: BufferAddress,
+<a href=#366 id=366 data-nosnippet>366</a>    used_since_recall: bool,
+<a href=#367 id=367 data-nosnippet>367</a>}
+<a href=#368 id=368 data-nosnippet>368</a>
+<a href=#369 id=369 data-nosnippet>369</a><span class="kw">impl </span>Chunk {
+<a href=#370 id=370 data-nosnippet>370</a>    <span class="kw">fn </span>can_allocate(<span class="kw-2">&amp;</span><span class="self">self</span>, size: BufferSize, alignment: BufferAddress) -&gt; bool {
+<a href=#371 id=371 data-nosnippet>371</a>        <span class="kw">let </span>alloc_start = align_to(<span class="self">self</span>.offset, alignment);
+<a href=#372 id=372 data-nosnippet>372</a>        <span class="kw">let </span>alloc_end = alloc_start + size.get();
+<a href=#373 id=373 data-nosnippet>373</a>
+<a href=#374 id=374 data-nosnippet>374</a>        alloc_end &lt;= <span class="self">self</span>.buffer.size()
+<a href=#375 id=375 data-nosnippet>375</a>    }
+<a href=#376 id=376 data-nosnippet>376</a>
+<a href=#377 id=377 data-nosnippet>377</a>    <span class="kw">fn </span>allocate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: BufferSize, alignment: BufferAddress) -&gt; BufferAddress {
+<a href=#378 id=378 data-nosnippet>378</a>        <span class="kw">let </span>alloc_start = align_to(<span class="self">self</span>.offset, alignment);
+<a href=#379 id=379 data-nosnippet>379</a>        <span class="kw">let </span>alloc_end = alloc_start + size.get();
+<a href=#380 id=380 data-nosnippet>380</a>
+<a href=#381 id=381 data-nosnippet>381</a>        <span class="macro">assert!</span>(alloc_end &lt;= <span class="self">self</span>.buffer.size());
+<a href=#382 id=382 data-nosnippet>382</a>        <span class="self">self</span>.offset = alloc_end;
+<a href=#383 id=383 data-nosnippet>383</a>        alloc_start
+<a href=#384 id=384 data-nosnippet>384</a>    }
+<a href=#385 id=385 data-nosnippet>385</a>}
 </code></pre></div></section></main></body></html>
