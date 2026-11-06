@@ -96,7 +96,7 @@
 <a href=#96 id=96 data-nosnippet>96</a>        <span class="kw">if </span><span class="self">self</span>.flags.contains(WriterFlags::PRINT_ON_TRACE_RAYS_FAIL) {
 <a href=#97 id=97 data-nosnippet>97</a>            <span class="self">self</span>.write_debug_printf(
 <a href=#98 id=98 data-nosnippet>98</a>                <span class="kw-2">&amp;mut </span>invalid_block,
-<a href=#99 id=99 data-nosnippet>99</a>                <span class="string">"Naga ignored invalid arguments to traceRay with flags: %u t_min: %f t_max: %f origin: %v4f dir: %v4f"</span>,
+<a href=#99 id=99 data-nosnippet>99</a>                <span class="string">"Naga ignored invalid arguments to traceRay with flags: %u t_min: %f t_max: %f origin: %v3f dir: %v3f"</span>,
 <a href=#100 id=100 data-nosnippet>100</a>                <span class="kw-2">&amp;</span>[
 <a href=#101 id=101 data-nosnippet>101</a>                    ray_flags_id,
 <a href=#102 id=102 data-nosnippet>102</a>                    tmin_id,
@@ -125,7 +125,7 @@
 <a href=#125 id=125 data-nosnippet>125</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#126 id=126 data-nosnippet>126</a>        function: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RayPipelineFunction,
 <a href=#127 id=127 data-nosnippet>127</a>        block: <span class="kw-2">&amp;mut </span>Block,
-<a href=#128 id=128 data-nosnippet>128</a>    ) {
+<a href=#128 id=128 data-nosnippet>128</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">super</span>::<span class="kw">super</span>::Error&gt; {
 <a href=#129 id=129 data-nosnippet>129</a>        <span class="kw">match </span><span class="kw-2">*</span>function {
 <a href=#130 id=130 data-nosnippet>130</a>            <span class="kw">crate</span>::RayPipelineFunction::TraceRay {
 <a href=#131 id=131 data-nosnippet>131</a>                acceleration_structure,
@@ -152,7 +152,17 @@
 <a href=#152 id=152 data-nosnippet>152</a>                    <span class="kw-2">&amp;</span>[acc_struct_id, desc_id],
 <a href=#153 id=153 data-nosnippet>153</a>                ));
 <a href=#154 id=154 data-nosnippet>154</a>            }
-<a href=#155 id=155 data-nosnippet>155</a>        }
-<a href=#156 id=156 data-nosnippet>156</a>    }
-<a href=#157 id=157 data-nosnippet>157</a>}
+<a href=#155 id=155 data-nosnippet>155</a>            <span class="kw">crate</span>::RayPipelineFunction::ReorderThread { hint, bits } =&gt; {
+<a href=#156 id=156 data-nosnippet>156</a>                <span class="self">self</span>.writer.require_hit_objects()<span class="question-mark">?</span>;
+<a href=#157 id=157 data-nosnippet>157</a>                <span class="kw">let </span>hint_id = <span class="self">self</span>.cached[hint];
+<a href=#158 id=158 data-nosnippet>158</a>                <span class="kw">let </span>bits_id = <span class="self">self</span>.cached[bits];
+<a href=#159 id=159 data-nosnippet>159</a>                block
+<a href=#160 id=160 data-nosnippet>160</a>                    .body
+<a href=#161 id=161 data-nosnippet>161</a>                    .push(Instruction::reorder_thread_with_hint(hint_id, bits_id));
+<a href=#162 id=162 data-nosnippet>162</a>            }
+<a href=#163 id=163 data-nosnippet>163</a>        }
+<a href=#164 id=164 data-nosnippet>164</a>
+<a href=#165 id=165 data-nosnippet>165</a>        <span class="prelude-val">Ok</span>(())
+<a href=#166 id=166 data-nosnippet>166</a>    }
+<a href=#167 id=167 data-nosnippet>167</a>}
 </code></pre></div></section></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["HIT_KIND_FRONT_FACING_TRIANGLE"]};
