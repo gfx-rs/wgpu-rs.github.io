@@ -323,153 +323,151 @@
 <a href=#323 id=323 data-nosnippet>323</a>
 <a href=#324 id=324 data-nosnippet>324</a>        <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..side_count {
 <a href=#325 id=325 data-nosnippet>325</a>            <span class="kw">for </span>y <span class="kw">in </span><span class="number">0</span>..side_count {
-<a href=#326 id=326 data-nosnippet>326</a>                tlas[(x + y * side_count) <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(wgpu::TlasInstance::new(
-<a href=#327 id=327 data-nosnippet>327</a>                    <span class="kw-2">&amp;</span>blas,
-<a href=#328 id=328 data-nosnippet>328</a>                    affine_to_rows(<span class="kw-2">&amp;</span>Affine3A::from_rotation_translation(
-<a href=#329 id=329 data-nosnippet>329</a>                        Quat::from_rotation_y(<span class="number">45.9_f32</span>.to_radians()),
-<a href=#330 id=330 data-nosnippet>330</a>                        Vec3 {
-<a href=#331 id=331 data-nosnippet>331</a>                            x: x <span class="kw">as </span>f32 * dist,
-<a href=#332 id=332 data-nosnippet>332</a>                            y: y <span class="kw">as </span>f32 * dist,
-<a href=#333 id=333 data-nosnippet>333</a>                            z: -<span class="number">30.0</span>,
-<a href=#334 id=334 data-nosnippet>334</a>                        },
-<a href=#335 id=335 data-nosnippet>335</a>                    )),
-<a href=#336 id=336 data-nosnippet>336</a>                    <span class="number">0</span>,
-<a href=#337 id=337 data-nosnippet>337</a>                    <span class="number">0xff</span>,
-<a href=#338 id=338 data-nosnippet>338</a>                    <span class="number">0</span>,
-<a href=#339 id=339 data-nosnippet>339</a>                ));
-<a href=#340 id=340 data-nosnippet>340</a>            }
-<a href=#341 id=341 data-nosnippet>341</a>        }
-<a href=#342 id=342 data-nosnippet>342</a>
-<a href=#343 id=343 data-nosnippet>343</a>        <span class="kw">let </span><span class="kw-2">mut </span>encoder =
-<a href=#344 id=344 data-nosnippet>344</a>            device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
-<a href=#345 id=345 data-nosnippet>345</a>
-<a href=#346 id=346 data-nosnippet>346</a>        encoder.build_acceleration_structures(
-<a href=#347 id=347 data-nosnippet>347</a>            iter::once(<span class="kw-2">&amp;</span>wgpu::BlasBuildEntry {
-<a href=#348 id=348 data-nosnippet>348</a>                blas: <span class="kw-2">&amp;</span>blas,
-<a href=#349 id=349 data-nosnippet>349</a>                geometry: wgpu::BlasGeometries::TriangleGeometries(<span class="macro">vec!</span>[
-<a href=#350 id=350 data-nosnippet>350</a>                    wgpu::BlasTriangleGeometry {
-<a href=#351 id=351 data-nosnippet>351</a>                        size: <span class="kw-2">&amp;</span>blas_geo_size_desc,
-<a href=#352 id=352 data-nosnippet>352</a>                        vertex_buffer: <span class="kw-2">&amp;</span>vertex_buf,
-<a href=#353 id=353 data-nosnippet>353</a>                        first_vertex: <span class="number">0</span>,
-<a href=#354 id=354 data-nosnippet>354</a>                        vertex_stride: mem::size_of::&lt;Vertex&gt;() <span class="kw">as </span>u64,
-<a href=#355 id=355 data-nosnippet>355</a>                        index_buffer: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>index_buf),
-<a href=#356 id=356 data-nosnippet>356</a>                        first_index: <span class="prelude-val">Some</span>(<span class="number">0</span>),
-<a href=#357 id=357 data-nosnippet>357</a>                        transform_buffer: <span class="prelude-val">None</span>,
-<a href=#358 id=358 data-nosnippet>358</a>                        transform_buffer_offset: <span class="prelude-val">None</span>,
-<a href=#359 id=359 data-nosnippet>359</a>                    },
-<a href=#360 id=360 data-nosnippet>360</a>                ]),
-<a href=#361 id=361 data-nosnippet>361</a>            }),
-<a href=#362 id=362 data-nosnippet>362</a>            iter::once(<span class="kw-2">&amp;</span>tlas),
-<a href=#363 id=363 data-nosnippet>363</a>        );
+<a href=#326 id=326 data-nosnippet>326</a>                tlas[(x + y * side_count) <span class="kw">as </span>usize] =
+<a href=#327 id=327 data-nosnippet>327</a>                    <span class="prelude-val">Some</span>(wgpu::TlasInstance::from_blas_transformed(
+<a href=#328 id=328 data-nosnippet>328</a>                        <span class="kw-2">&amp;</span>blas,
+<a href=#329 id=329 data-nosnippet>329</a>                        affine_to_rows(<span class="kw-2">&amp;</span>Affine3A::from_rotation_translation(
+<a href=#330 id=330 data-nosnippet>330</a>                            Quat::from_rotation_y(<span class="number">45.9_f32</span>.to_radians()),
+<a href=#331 id=331 data-nosnippet>331</a>                            Vec3 {
+<a href=#332 id=332 data-nosnippet>332</a>                                x: x <span class="kw">as </span>f32 * dist,
+<a href=#333 id=333 data-nosnippet>333</a>                                y: y <span class="kw">as </span>f32 * dist,
+<a href=#334 id=334 data-nosnippet>334</a>                                z: -<span class="number">30.0</span>,
+<a href=#335 id=335 data-nosnippet>335</a>                            },
+<a href=#336 id=336 data-nosnippet>336</a>                        )),
+<a href=#337 id=337 data-nosnippet>337</a>                    ));
+<a href=#338 id=338 data-nosnippet>338</a>            }
+<a href=#339 id=339 data-nosnippet>339</a>        }
+<a href=#340 id=340 data-nosnippet>340</a>
+<a href=#341 id=341 data-nosnippet>341</a>        <span class="kw">let </span><span class="kw-2">mut </span>encoder =
+<a href=#342 id=342 data-nosnippet>342</a>            device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
+<a href=#343 id=343 data-nosnippet>343</a>
+<a href=#344 id=344 data-nosnippet>344</a>        encoder.build_acceleration_structures(
+<a href=#345 id=345 data-nosnippet>345</a>            iter::once(<span class="kw-2">&amp;</span>wgpu::BlasBuildEntry {
+<a href=#346 id=346 data-nosnippet>346</a>                blas: <span class="kw-2">&amp;</span>blas,
+<a href=#347 id=347 data-nosnippet>347</a>                geometry: wgpu::BlasGeometries::TriangleGeometries(<span class="macro">vec!</span>[
+<a href=#348 id=348 data-nosnippet>348</a>                    wgpu::BlasTriangleGeometry {
+<a href=#349 id=349 data-nosnippet>349</a>                        size: <span class="kw-2">&amp;</span>blas_geo_size_desc,
+<a href=#350 id=350 data-nosnippet>350</a>                        vertex_buffer: <span class="kw-2">&amp;</span>vertex_buf,
+<a href=#351 id=351 data-nosnippet>351</a>                        first_vertex: <span class="number">0</span>,
+<a href=#352 id=352 data-nosnippet>352</a>                        vertex_stride: mem::size_of::&lt;Vertex&gt;() <span class="kw">as </span>u64,
+<a href=#353 id=353 data-nosnippet>353</a>                        index_buffer: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>index_buf),
+<a href=#354 id=354 data-nosnippet>354</a>                        first_index: <span class="prelude-val">Some</span>(<span class="number">0</span>),
+<a href=#355 id=355 data-nosnippet>355</a>                        transform_buffer: <span class="prelude-val">None</span>,
+<a href=#356 id=356 data-nosnippet>356</a>                        transform_buffer_offset: <span class="prelude-val">None</span>,
+<a href=#357 id=357 data-nosnippet>357</a>                    },
+<a href=#358 id=358 data-nosnippet>358</a>                ]),
+<a href=#359 id=359 data-nosnippet>359</a>            }),
+<a href=#360 id=360 data-nosnippet>360</a>            iter::once(<span class="kw-2">&amp;</span>tlas),
+<a href=#361 id=361 data-nosnippet>361</a>        );
+<a href=#362 id=362 data-nosnippet>362</a>
+<a href=#363 id=363 data-nosnippet>363</a>        queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
 <a href=#364 id=364 data-nosnippet>364</a>
-<a href=#365 id=365 data-nosnippet>365</a>        queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
-<a href=#366 id=366 data-nosnippet>366</a>
-<a href=#367 id=367 data-nosnippet>367</a>        Example {
-<a href=#368 id=368 data-nosnippet>368</a>            rt_target,
-<a href=#369 id=369 data-nosnippet>369</a>            tlas,
-<a href=#370 id=370 data-nosnippet>370</a>            compute_pipeline,
-<a href=#371 id=371 data-nosnippet>371</a>            compute_bind_group,
-<a href=#372 id=372 data-nosnippet>372</a>            blit_pipeline,
-<a href=#373 id=373 data-nosnippet>373</a>            blit_bind_group,
-<a href=#374 id=374 data-nosnippet>374</a>            animation_timer: utils::AnimationTimer::default(),
-<a href=#375 id=375 data-nosnippet>375</a>        }
-<a href=#376 id=376 data-nosnippet>376</a>    }
-<a href=#377 id=377 data-nosnippet>377</a>
-<a href=#378 id=378 data-nosnippet>378</a>    <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _event: winit::event::WindowEvent) {
-<a href=#379 id=379 data-nosnippet>379</a>        <span class="comment">//empty
-<a href=#380 id=380 data-nosnippet>380</a>    </span>}
-<a href=#381 id=381 data-nosnippet>381</a>
-<a href=#382 id=382 data-nosnippet>382</a>    <span class="kw">fn </span>resize(
-<a href=#383 id=383 data-nosnippet>383</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#384 id=384 data-nosnippet>384</a>        _config: <span class="kw-2">&amp;</span>wgpu::SurfaceConfiguration,
-<a href=#385 id=385 data-nosnippet>385</a>        _device: <span class="kw-2">&amp;</span>wgpu::Device,
-<a href=#386 id=386 data-nosnippet>386</a>        _queue: <span class="kw-2">&amp;</span>wgpu::Queue,
-<a href=#387 id=387 data-nosnippet>387</a>    ) {
-<a href=#388 id=388 data-nosnippet>388</a>    }
-<a href=#389 id=389 data-nosnippet>389</a>
-<a href=#390 id=390 data-nosnippet>390</a>    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, view: <span class="kw-2">&amp;</span>wgpu::TextureView, device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
-<a href=#391 id=391 data-nosnippet>391</a>        <span class="kw">let </span>anim_time = <span class="self">self</span>.animation_timer.time();
-<a href=#392 id=392 data-nosnippet>392</a>
-<a href=#393 id=393 data-nosnippet>393</a>        <span class="self">self</span>.tlas[<span class="number">0</span>].as_mut().unwrap().transform =
-<a href=#394 id=394 data-nosnippet>394</a>            affine_to_rows(<span class="kw-2">&amp;</span>Affine3A::from_rotation_translation(
-<a href=#395 id=395 data-nosnippet>395</a>                Quat::from_euler(
-<a href=#396 id=396 data-nosnippet>396</a>                    glam::EulerRot::XYZ,
-<a href=#397 id=397 data-nosnippet>397</a>                    anim_time * <span class="number">0.342</span>,
-<a href=#398 id=398 data-nosnippet>398</a>                    anim_time * <span class="number">0.254</span>,
-<a href=#399 id=399 data-nosnippet>399</a>                    anim_time * <span class="number">0.832</span>,
-<a href=#400 id=400 data-nosnippet>400</a>                ),
-<a href=#401 id=401 data-nosnippet>401</a>                Vec3 {
-<a href=#402 id=402 data-nosnippet>402</a>                    x: <span class="number">0.0</span>,
-<a href=#403 id=403 data-nosnippet>403</a>                    y: <span class="number">0.0</span>,
-<a href=#404 id=404 data-nosnippet>404</a>                    z: -<span class="number">6.0</span>,
-<a href=#405 id=405 data-nosnippet>405</a>                },
-<a href=#406 id=406 data-nosnippet>406</a>            ));
-<a href=#407 id=407 data-nosnippet>407</a>
-<a href=#408 id=408 data-nosnippet>408</a>        <span class="kw">let </span><span class="kw-2">mut </span>encoder =
-<a href=#409 id=409 data-nosnippet>409</a>            device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
+<a href=#365 id=365 data-nosnippet>365</a>        Example {
+<a href=#366 id=366 data-nosnippet>366</a>            rt_target,
+<a href=#367 id=367 data-nosnippet>367</a>            tlas,
+<a href=#368 id=368 data-nosnippet>368</a>            compute_pipeline,
+<a href=#369 id=369 data-nosnippet>369</a>            compute_bind_group,
+<a href=#370 id=370 data-nosnippet>370</a>            blit_pipeline,
+<a href=#371 id=371 data-nosnippet>371</a>            blit_bind_group,
+<a href=#372 id=372 data-nosnippet>372</a>            animation_timer: utils::AnimationTimer::default(),
+<a href=#373 id=373 data-nosnippet>373</a>        }
+<a href=#374 id=374 data-nosnippet>374</a>    }
+<a href=#375 id=375 data-nosnippet>375</a>
+<a href=#376 id=376 data-nosnippet>376</a>    <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _event: winit::event::WindowEvent) {
+<a href=#377 id=377 data-nosnippet>377</a>        <span class="comment">//empty
+<a href=#378 id=378 data-nosnippet>378</a>    </span>}
+<a href=#379 id=379 data-nosnippet>379</a>
+<a href=#380 id=380 data-nosnippet>380</a>    <span class="kw">fn </span>resize(
+<a href=#381 id=381 data-nosnippet>381</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#382 id=382 data-nosnippet>382</a>        _config: <span class="kw-2">&amp;</span>wgpu::SurfaceConfiguration,
+<a href=#383 id=383 data-nosnippet>383</a>        _device: <span class="kw-2">&amp;</span>wgpu::Device,
+<a href=#384 id=384 data-nosnippet>384</a>        _queue: <span class="kw-2">&amp;</span>wgpu::Queue,
+<a href=#385 id=385 data-nosnippet>385</a>    ) {
+<a href=#386 id=386 data-nosnippet>386</a>    }
+<a href=#387 id=387 data-nosnippet>387</a>
+<a href=#388 id=388 data-nosnippet>388</a>    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, view: <span class="kw-2">&amp;</span>wgpu::TextureView, device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
+<a href=#389 id=389 data-nosnippet>389</a>        <span class="kw">let </span>anim_time = <span class="self">self</span>.animation_timer.time();
+<a href=#390 id=390 data-nosnippet>390</a>
+<a href=#391 id=391 data-nosnippet>391</a>        <span class="self">self</span>.tlas[<span class="number">0</span>].as_mut().unwrap().transform =
+<a href=#392 id=392 data-nosnippet>392</a>            affine_to_rows(<span class="kw-2">&amp;</span>Affine3A::from_rotation_translation(
+<a href=#393 id=393 data-nosnippet>393</a>                Quat::from_euler(
+<a href=#394 id=394 data-nosnippet>394</a>                    glam::EulerRot::XYZ,
+<a href=#395 id=395 data-nosnippet>395</a>                    anim_time * <span class="number">0.342</span>,
+<a href=#396 id=396 data-nosnippet>396</a>                    anim_time * <span class="number">0.254</span>,
+<a href=#397 id=397 data-nosnippet>397</a>                    anim_time * <span class="number">0.832</span>,
+<a href=#398 id=398 data-nosnippet>398</a>                ),
+<a href=#399 id=399 data-nosnippet>399</a>                Vec3 {
+<a href=#400 id=400 data-nosnippet>400</a>                    x: <span class="number">0.0</span>,
+<a href=#401 id=401 data-nosnippet>401</a>                    y: <span class="number">0.0</span>,
+<a href=#402 id=402 data-nosnippet>402</a>                    z: -<span class="number">6.0</span>,
+<a href=#403 id=403 data-nosnippet>403</a>                },
+<a href=#404 id=404 data-nosnippet>404</a>            ));
+<a href=#405 id=405 data-nosnippet>405</a>
+<a href=#406 id=406 data-nosnippet>406</a>        <span class="kw">let </span><span class="kw-2">mut </span>encoder =
+<a href=#407 id=407 data-nosnippet>407</a>            device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
+<a href=#408 id=408 data-nosnippet>408</a>
+<a href=#409 id=409 data-nosnippet>409</a>        encoder.build_acceleration_structures(iter::empty(), iter::once(<span class="kw-2">&amp;</span><span class="self">self</span>.tlas));
 <a href=#410 id=410 data-nosnippet>410</a>
-<a href=#411 id=411 data-nosnippet>411</a>        encoder.build_acceleration_structures(iter::empty(), iter::once(<span class="kw-2">&amp;</span><span class="self">self</span>.tlas));
-<a href=#412 id=412 data-nosnippet>412</a>
-<a href=#413 id=413 data-nosnippet>413</a>        {
-<a href=#414 id=414 data-nosnippet>414</a>            <span class="kw">let </span><span class="kw-2">mut </span>cpass = encoder.begin_compute_pass(<span class="kw-2">&amp;</span>wgpu::ComputePassDescriptor {
-<a href=#415 id=415 data-nosnippet>415</a>                label: <span class="prelude-val">None</span>,
-<a href=#416 id=416 data-nosnippet>416</a>                timestamp_writes: <span class="prelude-val">None</span>,
-<a href=#417 id=417 data-nosnippet>417</a>            });
-<a href=#418 id=418 data-nosnippet>418</a>            cpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.compute_pipeline);
-<a href=#419 id=419 data-nosnippet>419</a>            cpass.set_bind_group(<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.compute_bind_group), <span class="kw-2">&amp;</span>[]);
-<a href=#420 id=420 data-nosnippet>420</a>            cpass.dispatch_workgroups(<span class="self">self</span>.rt_target.width() / <span class="number">8</span>, <span class="self">self</span>.rt_target.height() / <span class="number">8</span>, <span class="number">1</span>);
-<a href=#421 id=421 data-nosnippet>421</a>        }
-<a href=#422 id=422 data-nosnippet>422</a>
-<a href=#423 id=423 data-nosnippet>423</a>        {
-<a href=#424 id=424 data-nosnippet>424</a>            <span class="kw">let </span><span class="kw-2">mut </span>rpass = encoder.begin_render_pass(<span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
-<a href=#425 id=425 data-nosnippet>425</a>                label: <span class="prelude-val">None</span>,
-<a href=#426 id=426 data-nosnippet>426</a>                color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(wgpu::RenderPassColorAttachment {
-<a href=#427 id=427 data-nosnippet>427</a>                    view,
-<a href=#428 id=428 data-nosnippet>428</a>                    depth_slice: <span class="prelude-val">None</span>,
-<a href=#429 id=429 data-nosnippet>429</a>                    resolve_target: <span class="prelude-val">None</span>,
-<a href=#430 id=430 data-nosnippet>430</a>                    ops: wgpu::Operations {
-<a href=#431 id=431 data-nosnippet>431</a>                        load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
-<a href=#432 id=432 data-nosnippet>432</a>                        store: StoreOp::Store,
-<a href=#433 id=433 data-nosnippet>433</a>                    },
-<a href=#434 id=434 data-nosnippet>434</a>                })],
-<a href=#435 id=435 data-nosnippet>435</a>                depth_stencil_attachment: <span class="prelude-val">None</span>,
-<a href=#436 id=436 data-nosnippet>436</a>                timestamp_writes: <span class="prelude-val">None</span>,
-<a href=#437 id=437 data-nosnippet>437</a>                occlusion_query_set: <span class="prelude-val">None</span>,
-<a href=#438 id=438 data-nosnippet>438</a>                multiview_mask: <span class="prelude-val">None</span>,
-<a href=#439 id=439 data-nosnippet>439</a>            });
-<a href=#440 id=440 data-nosnippet>440</a>
-<a href=#441 id=441 data-nosnippet>441</a>            rpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.blit_pipeline);
-<a href=#442 id=442 data-nosnippet>442</a>            rpass.set_bind_group(<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.blit_bind_group), <span class="kw-2">&amp;</span>[]);
-<a href=#443 id=443 data-nosnippet>443</a>            rpass.draw(<span class="number">0</span>..<span class="number">3</span>, <span class="number">0</span>..<span class="number">1</span>);
-<a href=#444 id=444 data-nosnippet>444</a>        }
-<a href=#445 id=445 data-nosnippet>445</a>
-<a href=#446 id=446 data-nosnippet>446</a>        queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
-<a href=#447 id=447 data-nosnippet>447</a>    }
-<a href=#448 id=448 data-nosnippet>448</a>}
-<a href=#449 id=449 data-nosnippet>449</a>
-<a href=#450 id=450 data-nosnippet>450</a><span class="kw">pub fn </span>main() {
-<a href=#451 id=451 data-nosnippet>451</a>    <span class="kw">crate</span>::framework::run::&lt;Example&gt;(<span class="string">"ray-cube"</span>);
-<a href=#452 id=452 data-nosnippet>452</a>}
-<a href=#453 id=453 data-nosnippet>453</a>
-<a href=#454 id=454 data-nosnippet>454</a><span class="attr">#[cfg(test)]
-<a href=#455 id=455 data-nosnippet>455</a>#[wgpu_test::apply(wgpu_test::gpu_test!)]
-<a href=#456 id=456 data-nosnippet>456</a></span><span class="kw">pub static </span>TEST: <span class="kw">crate</span>::framework::ExampleTestParams = <span class="kw">crate</span>::framework::ExampleTestParams {
-<a href=#457 id=457 data-nosnippet>457</a>    name: <span class="string">"ray_cube_normals"</span>,
-<a href=#458 id=458 data-nosnippet>458</a>    image_path: <span class="string">"/examples/features/src/ray_cube_normals/screenshot.png"</span>,
-<a href=#459 id=459 data-nosnippet>459</a>    width: <span class="number">1024</span>,
-<a href=#460 id=460 data-nosnippet>460</a>    height: <span class="number">768</span>,
-<a href=#461 id=461 data-nosnippet>461</a>    optional_features: wgpu::Features::default(),
-<a href=#462 id=462 data-nosnippet>462</a>    base_test_parameters: wgpu_test::TestParameters::default().expect_fail(
-<a href=#463 id=463 data-nosnippet>463</a>        <span class="comment">// RADV does this fine.
-<a href=#464 id=464 data-nosnippet>464</a>        </span>wgpu_test::FailureCase {
-<a href=#465 id=465 data-nosnippet>465</a>            backends: <span class="prelude-val">Some</span>(wgpu::Backends::VULKAN),
-<a href=#466 id=466 data-nosnippet>466</a>            adapter: <span class="prelude-val">Some</span>(<span class="string">"AMD"</span>),
-<a href=#467 id=467 data-nosnippet>467</a>            driver: <span class="prelude-val">Some</span>(<span class="string">"AMD proprietary driver"</span>),
-<a href=#468 id=468 data-nosnippet>468</a>            ..wgpu_test::FailureCase::default()
-<a href=#469 id=469 data-nosnippet>469</a>        }
-<a href=#470 id=470 data-nosnippet>470</a>        .panic(<span class="string">"Image data mismatch"</span>),
-<a href=#471 id=471 data-nosnippet>471</a>    ),
-<a href=#472 id=472 data-nosnippet>472</a>    comparisons: <span class="kw-2">&amp;</span>[wgpu_test::ComparisonType::Mean(<span class="number">0.02</span>)],
-<a href=#473 id=473 data-nosnippet>473</a>    _phantom: std::marker::PhantomData::&lt;Example&gt;,
-<a href=#474 id=474 data-nosnippet>474</a>};
+<a href=#411 id=411 data-nosnippet>411</a>        {
+<a href=#412 id=412 data-nosnippet>412</a>            <span class="kw">let </span><span class="kw-2">mut </span>cpass = encoder.begin_compute_pass(<span class="kw-2">&amp;</span>wgpu::ComputePassDescriptor {
+<a href=#413 id=413 data-nosnippet>413</a>                label: <span class="prelude-val">None</span>,
+<a href=#414 id=414 data-nosnippet>414</a>                timestamp_writes: <span class="prelude-val">None</span>,
+<a href=#415 id=415 data-nosnippet>415</a>            });
+<a href=#416 id=416 data-nosnippet>416</a>            cpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.compute_pipeline);
+<a href=#417 id=417 data-nosnippet>417</a>            cpass.set_bind_group(<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.compute_bind_group), <span class="kw-2">&amp;</span>[]);
+<a href=#418 id=418 data-nosnippet>418</a>            cpass.dispatch_workgroups(<span class="self">self</span>.rt_target.width() / <span class="number">8</span>, <span class="self">self</span>.rt_target.height() / <span class="number">8</span>, <span class="number">1</span>);
+<a href=#419 id=419 data-nosnippet>419</a>        }
+<a href=#420 id=420 data-nosnippet>420</a>
+<a href=#421 id=421 data-nosnippet>421</a>        {
+<a href=#422 id=422 data-nosnippet>422</a>            <span class="kw">let </span><span class="kw-2">mut </span>rpass = encoder.begin_render_pass(<span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
+<a href=#423 id=423 data-nosnippet>423</a>                label: <span class="prelude-val">None</span>,
+<a href=#424 id=424 data-nosnippet>424</a>                color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(wgpu::RenderPassColorAttachment {
+<a href=#425 id=425 data-nosnippet>425</a>                    view,
+<a href=#426 id=426 data-nosnippet>426</a>                    depth_slice: <span class="prelude-val">None</span>,
+<a href=#427 id=427 data-nosnippet>427</a>                    resolve_target: <span class="prelude-val">None</span>,
+<a href=#428 id=428 data-nosnippet>428</a>                    ops: wgpu::Operations {
+<a href=#429 id=429 data-nosnippet>429</a>                        load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
+<a href=#430 id=430 data-nosnippet>430</a>                        store: StoreOp::Store,
+<a href=#431 id=431 data-nosnippet>431</a>                    },
+<a href=#432 id=432 data-nosnippet>432</a>                })],
+<a href=#433 id=433 data-nosnippet>433</a>                depth_stencil_attachment: <span class="prelude-val">None</span>,
+<a href=#434 id=434 data-nosnippet>434</a>                timestamp_writes: <span class="prelude-val">None</span>,
+<a href=#435 id=435 data-nosnippet>435</a>                occlusion_query_set: <span class="prelude-val">None</span>,
+<a href=#436 id=436 data-nosnippet>436</a>                multiview_mask: <span class="prelude-val">None</span>,
+<a href=#437 id=437 data-nosnippet>437</a>            });
+<a href=#438 id=438 data-nosnippet>438</a>
+<a href=#439 id=439 data-nosnippet>439</a>            rpass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.blit_pipeline);
+<a href=#440 id=440 data-nosnippet>440</a>            rpass.set_bind_group(<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.blit_bind_group), <span class="kw-2">&amp;</span>[]);
+<a href=#441 id=441 data-nosnippet>441</a>            rpass.draw(<span class="number">0</span>..<span class="number">3</span>, <span class="number">0</span>..<span class="number">1</span>);
+<a href=#442 id=442 data-nosnippet>442</a>        }
+<a href=#443 id=443 data-nosnippet>443</a>
+<a href=#444 id=444 data-nosnippet>444</a>        queue.submit(<span class="prelude-val">Some</span>(encoder.finish()));
+<a href=#445 id=445 data-nosnippet>445</a>    }
+<a href=#446 id=446 data-nosnippet>446</a>}
+<a href=#447 id=447 data-nosnippet>447</a>
+<a href=#448 id=448 data-nosnippet>448</a><span class="kw">pub fn </span>main() {
+<a href=#449 id=449 data-nosnippet>449</a>    <span class="kw">crate</span>::framework::run::&lt;Example&gt;(<span class="string">"ray-cube"</span>);
+<a href=#450 id=450 data-nosnippet>450</a>}
+<a href=#451 id=451 data-nosnippet>451</a>
+<a href=#452 id=452 data-nosnippet>452</a><span class="attr">#[cfg(test)]
+<a href=#453 id=453 data-nosnippet>453</a>#[wgpu_test::apply(wgpu_test::gpu_test!)]
+<a href=#454 id=454 data-nosnippet>454</a></span><span class="kw">pub static </span>TEST: <span class="kw">crate</span>::framework::ExampleTestParams = <span class="kw">crate</span>::framework::ExampleTestParams {
+<a href=#455 id=455 data-nosnippet>455</a>    name: <span class="string">"ray_cube_normals"</span>,
+<a href=#456 id=456 data-nosnippet>456</a>    image_path: <span class="string">"/examples/features/src/ray_cube_normals/screenshot.png"</span>,
+<a href=#457 id=457 data-nosnippet>457</a>    width: <span class="number">1024</span>,
+<a href=#458 id=458 data-nosnippet>458</a>    height: <span class="number">768</span>,
+<a href=#459 id=459 data-nosnippet>459</a>    optional_features: wgpu::Features::default(),
+<a href=#460 id=460 data-nosnippet>460</a>    base_test_parameters: wgpu_test::TestParameters::default().expect_fail(
+<a href=#461 id=461 data-nosnippet>461</a>        <span class="comment">// RADV does this fine.
+<a href=#462 id=462 data-nosnippet>462</a>        </span>wgpu_test::FailureCase {
+<a href=#463 id=463 data-nosnippet>463</a>            backends: <span class="prelude-val">Some</span>(wgpu::Backends::VULKAN),
+<a href=#464 id=464 data-nosnippet>464</a>            adapter: <span class="prelude-val">Some</span>(<span class="string">"AMD"</span>),
+<a href=#465 id=465 data-nosnippet>465</a>            driver: <span class="prelude-val">Some</span>(<span class="string">"AMD proprietary driver"</span>),
+<a href=#466 id=466 data-nosnippet>466</a>            ..wgpu_test::FailureCase::default()
+<a href=#467 id=467 data-nosnippet>467</a>        }
+<a href=#468 id=468 data-nosnippet>468</a>        .panic(<span class="string">"Image data mismatch"</span>),
+<a href=#469 id=469 data-nosnippet>469</a>    ),
+<a href=#470 id=470 data-nosnippet>470</a>    comparisons: <span class="kw-2">&amp;</span>[wgpu_test::ComparisonType::Mean(<span class="number">0.02</span>)],
+<a href=#471 id=471 data-nosnippet>471</a>    _phantom: std::marker::PhantomData::&lt;Example&gt;,
+<a href=#472 id=472 data-nosnippet>472</a>};
 </code></pre></div></section></main></body></html>
