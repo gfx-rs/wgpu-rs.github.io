@@ -1224,7 +1224,7 @@
 <a href=#1224 id=1224 data-nosnippet>1224</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::TextureView, <span class="kw">crate</span>::DeviceError&gt; {
 <a href=#1225 id=1225 data-nosnippet>1225</a>        <span class="self">self</span>.counters.texture_views.add(<span class="number">1</span>);
 <a href=#1226 id=1226 data-nosnippet>1226</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::TextureView {
-<a href=#1227 id=1227 data-nosnippet>1227</a>            <span class="comment">//TODO: use `conv::map_view_dimension(desc.dimension)`?
+<a href=#1227 id=1227 data-nosnippet>1227</a>            <span class="comment">//TODO: use `super::Texture::target_for_view_dimension(desc.dimension)`?
 <a href=#1228 id=1228 data-nosnippet>1228</a>            </span>inner: texture.inner.clone(),
 <a href=#1229 id=1229 data-nosnippet>1229</a>            aspects: <span class="kw">crate</span>::FormatAspects::new(texture.format, desc.range.aspect),
 <a href=#1230 id=1230 data-nosnippet>1230</a>            mip_levels: desc.range.mip_range(texture.mip_level_count),
@@ -1509,398 +1509,403 @@
 <a href=#1509 id=1509 data-nosnippet>1509</a>                    }
 <a href=#1510 id=1510 data-nosnippet>1510</a>                    <span class="kw">let </span>(raw, target) = view.inner.as_native();
 <a href=#1511 id=1511 data-nosnippet>1511</a>
-<a href=#1512 id=1512 data-nosnippet>1512</a>                    <span class="kw">super</span>::Texture::log_failing_target_heuristics(view_dimension, target);
-<a href=#1513 id=1513 data-nosnippet>1513</a>
-<a href=#1514 id=1514 data-nosnippet>1514</a>                    <span class="kw">super</span>::RawBinding::Texture {
-<a href=#1515 id=1515 data-nosnippet>1515</a>                        raw,
-<a href=#1516 id=1516 data-nosnippet>1516</a>                        target,
-<a href=#1517 id=1517 data-nosnippet>1517</a>                        aspects: view.aspects,
-<a href=#1518 id=1518 data-nosnippet>1518</a>                        mip_levels: view.mip_levels.clone(),
-<a href=#1519 id=1519 data-nosnippet>1519</a>                    }
-<a href=#1520 id=1520 data-nosnippet>1520</a>                }
-<a href=#1521 id=1521 data-nosnippet>1521</a>                wgt::BindingType::StorageTexture {
-<a href=#1522 id=1522 data-nosnippet>1522</a>                    access,
-<a href=#1523 id=1523 data-nosnippet>1523</a>                    format,
-<a href=#1524 id=1524 data-nosnippet>1524</a>                    view_dimension,
-<a href=#1525 id=1525 data-nosnippet>1525</a>                } =&gt; {
-<a href=#1526 id=1526 data-nosnippet>1526</a>                    <span class="kw">let </span>view = desc.textures[entry.resource_index <span class="kw">as </span>usize].view;
-<a href=#1527 id=1527 data-nosnippet>1527</a>                    <span class="kw">let </span>format_desc = <span class="self">self</span>.shared.describe_texture_format(format);
-<a href=#1528 id=1528 data-nosnippet>1528</a>                    <span class="kw">let </span>(raw, _target) = view.inner.as_native();
-<a href=#1529 id=1529 data-nosnippet>1529</a>                    <span class="kw">super</span>::RawBinding::Image(<span class="kw">super</span>::ImageBinding {
-<a href=#1530 id=1530 data-nosnippet>1530</a>                        raw,
-<a href=#1531 id=1531 data-nosnippet>1531</a>                        mip_level: view.mip_levels.start,
-<a href=#1532 id=1532 data-nosnippet>1532</a>                        array_layer: <span class="kw">match </span>view_dimension {
-<a href=#1533 id=1533 data-nosnippet>1533</a>                            wgt::TextureViewDimension::D2Array
-<a href=#1534 id=1534 data-nosnippet>1534</a>                            | wgt::TextureViewDimension::CubeArray =&gt; <span class="prelude-val">None</span>,
-<a href=#1535 id=1535 data-nosnippet>1535</a>                            <span class="kw">_ </span>=&gt; <span class="prelude-val">Some</span>(view.array_layers.start),
-<a href=#1536 id=1536 data-nosnippet>1536</a>                        },
-<a href=#1537 id=1537 data-nosnippet>1537</a>                        access: conv::map_storage_access(access),
-<a href=#1538 id=1538 data-nosnippet>1538</a>                        format: format_desc.internal,
-<a href=#1539 id=1539 data-nosnippet>1539</a>                    })
-<a href=#1540 id=1540 data-nosnippet>1540</a>                }
-<a href=#1541 id=1541 data-nosnippet>1541</a>                wgt::BindingType::AccelerationStructure { .. } =&gt; <span class="macro">unimplemented!</span>(),
-<a href=#1542 id=1542 data-nosnippet>1542</a>                wgt::BindingType::ExternalTexture =&gt; <span class="macro">unimplemented!</span>(),
-<a href=#1543 id=1543 data-nosnippet>1543</a>            };
-<a href=#1544 id=1544 data-nosnippet>1544</a>            contents.push(binding);
-<a href=#1545 id=1545 data-nosnippet>1545</a>        }
-<a href=#1546 id=1546 data-nosnippet>1546</a>
-<a href=#1547 id=1547 data-nosnippet>1547</a>        <span class="self">self</span>.counters.bind_groups.add(<span class="number">1</span>);
-<a href=#1548 id=1548 data-nosnippet>1548</a>
-<a href=#1549 id=1549 data-nosnippet>1549</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::BindGroup {
-<a href=#1550 id=1550 data-nosnippet>1550</a>            contents: contents.into_boxed_slice(),
-<a href=#1551 id=1551 data-nosnippet>1551</a>        })
-<a href=#1552 id=1552 data-nosnippet>1552</a>    }
+<a href=#1512 id=1512 data-nosnippet>1512</a>                    <span class="comment">// GLES adapters should always have a valid binding view dimension specified,
+<a href=#1513 id=1513 data-nosnippet>1513</a>                    // validated at the core layer.
+<a href=#1514 id=1514 data-nosnippet>1514</a>                    </span><span class="macro">debug_assert_eq!</span>(
+<a href=#1515 id=1515 data-nosnippet>1515</a>                        target,
+<a href=#1516 id=1516 data-nosnippet>1516</a>                        <span class="kw">super</span>::Texture::target_for_view_dimension(view_dimension)
+<a href=#1517 id=1517 data-nosnippet>1517</a>                    );
+<a href=#1518 id=1518 data-nosnippet>1518</a>
+<a href=#1519 id=1519 data-nosnippet>1519</a>                    <span class="kw">super</span>::RawBinding::Texture {
+<a href=#1520 id=1520 data-nosnippet>1520</a>                        raw,
+<a href=#1521 id=1521 data-nosnippet>1521</a>                        target,
+<a href=#1522 id=1522 data-nosnippet>1522</a>                        aspects: view.aspects,
+<a href=#1523 id=1523 data-nosnippet>1523</a>                        mip_levels: view.mip_levels.clone(),
+<a href=#1524 id=1524 data-nosnippet>1524</a>                    }
+<a href=#1525 id=1525 data-nosnippet>1525</a>                }
+<a href=#1526 id=1526 data-nosnippet>1526</a>                wgt::BindingType::StorageTexture {
+<a href=#1527 id=1527 data-nosnippet>1527</a>                    access,
+<a href=#1528 id=1528 data-nosnippet>1528</a>                    format,
+<a href=#1529 id=1529 data-nosnippet>1529</a>                    view_dimension,
+<a href=#1530 id=1530 data-nosnippet>1530</a>                } =&gt; {
+<a href=#1531 id=1531 data-nosnippet>1531</a>                    <span class="kw">let </span>view = desc.textures[entry.resource_index <span class="kw">as </span>usize].view;
+<a href=#1532 id=1532 data-nosnippet>1532</a>                    <span class="kw">let </span>format_desc = <span class="self">self</span>.shared.describe_texture_format(format);
+<a href=#1533 id=1533 data-nosnippet>1533</a>                    <span class="kw">let </span>(raw, _target) = view.inner.as_native();
+<a href=#1534 id=1534 data-nosnippet>1534</a>                    <span class="kw">super</span>::RawBinding::Image(<span class="kw">super</span>::ImageBinding {
+<a href=#1535 id=1535 data-nosnippet>1535</a>                        raw,
+<a href=#1536 id=1536 data-nosnippet>1536</a>                        mip_level: view.mip_levels.start,
+<a href=#1537 id=1537 data-nosnippet>1537</a>                        array_layer: <span class="kw">match </span>view_dimension {
+<a href=#1538 id=1538 data-nosnippet>1538</a>                            wgt::TextureViewDimension::D2Array
+<a href=#1539 id=1539 data-nosnippet>1539</a>                            | wgt::TextureViewDimension::CubeArray =&gt; <span class="prelude-val">None</span>,
+<a href=#1540 id=1540 data-nosnippet>1540</a>                            <span class="kw">_ </span>=&gt; <span class="prelude-val">Some</span>(view.array_layers.start),
+<a href=#1541 id=1541 data-nosnippet>1541</a>                        },
+<a href=#1542 id=1542 data-nosnippet>1542</a>                        access: conv::map_storage_access(access),
+<a href=#1543 id=1543 data-nosnippet>1543</a>                        format: format_desc.internal,
+<a href=#1544 id=1544 data-nosnippet>1544</a>                    })
+<a href=#1545 id=1545 data-nosnippet>1545</a>                }
+<a href=#1546 id=1546 data-nosnippet>1546</a>                wgt::BindingType::AccelerationStructure { .. } =&gt; <span class="macro">unimplemented!</span>(),
+<a href=#1547 id=1547 data-nosnippet>1547</a>                wgt::BindingType::ExternalTexture =&gt; <span class="macro">unimplemented!</span>(),
+<a href=#1548 id=1548 data-nosnippet>1548</a>            };
+<a href=#1549 id=1549 data-nosnippet>1549</a>            contents.push(binding);
+<a href=#1550 id=1550 data-nosnippet>1550</a>        }
+<a href=#1551 id=1551 data-nosnippet>1551</a>
+<a href=#1552 id=1552 data-nosnippet>1552</a>        <span class="self">self</span>.counters.bind_groups.add(<span class="number">1</span>);
 <a href=#1553 id=1553 data-nosnippet>1553</a>
-<a href=#1554 id=1554 data-nosnippet>1554</a>    <span class="kw">unsafe fn </span>destroy_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, _group: <span class="kw">super</span>::BindGroup) {
-<a href=#1555 id=1555 data-nosnippet>1555</a>        <span class="self">self</span>.counters.bind_groups.sub(<span class="number">1</span>);
-<a href=#1556 id=1556 data-nosnippet>1556</a>    }
-<a href=#1557 id=1557 data-nosnippet>1557</a>
-<a href=#1558 id=1558 data-nosnippet>1558</a>    <span class="kw">unsafe fn </span>create_shader_module(
-<a href=#1559 id=1559 data-nosnippet>1559</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1560 id=1560 data-nosnippet>1560</a>        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ShaderModuleDescriptor,
-<a href=#1561 id=1561 data-nosnippet>1561</a>        shader: <span class="kw">crate</span>::ShaderInput,
-<a href=#1562 id=1562 data-nosnippet>1562</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ShaderModule, <span class="kw">crate</span>::ShaderError&gt; {
-<a href=#1563 id=1563 data-nosnippet>1563</a>        <span class="self">self</span>.counters.shader_modules.add(<span class="number">1</span>);
-<a href=#1564 id=1564 data-nosnippet>1564</a>
-<a href=#1565 id=1565 data-nosnippet>1565</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ShaderModule {
-<a href=#1566 id=1566 data-nosnippet>1566</a>            source: <span class="kw">match </span>shader {
-<a href=#1567 id=1567 data-nosnippet>1567</a>                <span class="kw">crate</span>::ShaderInput::Naga(naga) =&gt; <span class="kw">super</span>::ShaderModuleSource::Naga(naga),
-<a href=#1568 id=1568 data-nosnippet>1568</a>                <span class="comment">// The backend doesn't yet expose this feature so it should be fine
-<a href=#1569 id=1569 data-nosnippet>1569</a>                </span><span class="kw">crate</span>::ShaderInput::Glsl { shader, .. } =&gt; <span class="kw">super</span>::ShaderModuleSource::Passthrough {
-<a href=#1570 id=1570 data-nosnippet>1570</a>                    source: shader.to_owned(),
-<a href=#1571 id=1571 data-nosnippet>1571</a>                },
-<a href=#1572 id=1572 data-nosnippet>1572</a>                <span class="kw">crate</span>::ShaderInput::SpirV(<span class="kw">_</span>)
-<a href=#1573 id=1573 data-nosnippet>1573</a>                | <span class="kw">crate</span>::ShaderInput::MetalLib { .. }
-<a href=#1574 id=1574 data-nosnippet>1574</a>                | <span class="kw">crate</span>::ShaderInput::Msl { .. }
-<a href=#1575 id=1575 data-nosnippet>1575</a>                | <span class="kw">crate</span>::ShaderInput::Dxil { .. }
-<a href=#1576 id=1576 data-nosnippet>1576</a>                | <span class="kw">crate</span>::ShaderInput::Hlsl { .. } =&gt; {
-<a href=#1577 id=1577 data-nosnippet>1577</a>                    <span class="macro">unreachable!</span>()
-<a href=#1578 id=1578 data-nosnippet>1578</a>                }
-<a href=#1579 id=1579 data-nosnippet>1579</a>            },
-<a href=#1580 id=1580 data-nosnippet>1580</a>            label: desc.label.map(|str| str.to_string()),
-<a href=#1581 id=1581 data-nosnippet>1581</a>            id: <span class="self">self</span>.shared.next_shader_id.fetch_add(<span class="number">1</span>, Ordering::Relaxed),
-<a href=#1582 id=1582 data-nosnippet>1582</a>        })
-<a href=#1583 id=1583 data-nosnippet>1583</a>    }
-<a href=#1584 id=1584 data-nosnippet>1584</a>
-<a href=#1585 id=1585 data-nosnippet>1585</a>    <span class="kw">unsafe fn </span>destroy_shader_module(<span class="kw-2">&amp;</span><span class="self">self</span>, _module: <span class="kw">super</span>::ShaderModule) {
-<a href=#1586 id=1586 data-nosnippet>1586</a>        <span class="self">self</span>.counters.shader_modules.sub(<span class="number">1</span>);
-<a href=#1587 id=1587 data-nosnippet>1587</a>    }
-<a href=#1588 id=1588 data-nosnippet>1588</a>
-<a href=#1589 id=1589 data-nosnippet>1589</a>    <span class="kw">unsafe fn </span>create_render_pipeline(
-<a href=#1590 id=1590 data-nosnippet>1590</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1591 id=1591 data-nosnippet>1591</a>        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPipelineDescriptor&lt;
-<a href=#1592 id=1592 data-nosnippet>1592</a>            <span class="kw">super</span>::PipelineLayout,
-<a href=#1593 id=1593 data-nosnippet>1593</a>            <span class="kw">super</span>::ShaderModule,
-<a href=#1594 id=1594 data-nosnippet>1594</a>            <span class="kw">super</span>::PipelineCache,
-<a href=#1595 id=1595 data-nosnippet>1595</a>        &gt;,
-<a href=#1596 id=1596 data-nosnippet>1596</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::RenderPipeline, <span class="kw">crate</span>::PipelineError&gt; {
-<a href=#1597 id=1597 data-nosnippet>1597</a>        <span class="kw">let </span>(vertex_stage, vertex_buffers) = <span class="kw">match </span><span class="kw-2">&amp;</span>desc.vertex_processor {
-<a href=#1598 id=1598 data-nosnippet>1598</a>            <span class="kw">crate</span>::VertexProcessor::Standard {
-<a href=#1599 id=1599 data-nosnippet>1599</a>                vertex_buffers,
-<a href=#1600 id=1600 data-nosnippet>1600</a>                <span class="kw-2">ref </span>vertex_stage,
-<a href=#1601 id=1601 data-nosnippet>1601</a>            } =&gt; (vertex_stage, vertex_buffers),
-<a href=#1602 id=1602 data-nosnippet>1602</a>            <span class="kw">crate</span>::VertexProcessor::Mesh { .. } =&gt; <span class="macro">unreachable!</span>(),
-<a href=#1603 id=1603 data-nosnippet>1603</a>        };
-<a href=#1604 id=1604 data-nosnippet>1604</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-<a href=#1605 id=1605 data-nosnippet>1605</a>        <span class="kw">let </span><span class="kw-2">mut </span>shaders = ArrayVec::new();
-<a href=#1606 id=1606 data-nosnippet>1606</a>        shaders.push((naga::ShaderStage::Vertex, vertex_stage));
-<a href=#1607 id=1607 data-nosnippet>1607</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>fs) = desc.fragment_stage {
-<a href=#1608 id=1608 data-nosnippet>1608</a>            shaders.push((naga::ShaderStage::Fragment, fs));
-<a href=#1609 id=1609 data-nosnippet>1609</a>        }
-<a href=#1610 id=1610 data-nosnippet>1610</a>        <span class="kw">let </span>inner = <span class="kw">unsafe </span>{
-<a href=#1611 id=1611 data-nosnippet>1611</a>            <span class="self">self</span>.create_pipeline(gl, shaders, desc.layout, desc.label, desc.multiview_mask)
-<a href=#1612 id=1612 data-nosnippet>1612</a>        }<span class="question-mark">?</span>;
-<a href=#1613 id=1613 data-nosnippet>1613</a>
-<a href=#1614 id=1614 data-nosnippet>1614</a>        <span class="kw">let </span>(vertex_buffers, vertex_attributes) = {
-<a href=#1615 id=1615 data-nosnippet>1615</a>            <span class="kw">let </span><span class="kw-2">mut </span>buffers = Vec::new();
-<a href=#1616 id=1616 data-nosnippet>1616</a>            <span class="kw">let </span><span class="kw-2">mut </span>attributes = Vec::new();
-<a href=#1617 id=1617 data-nosnippet>1617</a>            <span class="kw">for </span>(index, vb_layout) <span class="kw">in </span>vertex_buffers.iter().enumerate() {
-<a href=#1618 id=1618 data-nosnippet>1618</a>                <span class="kw">let </span>vb_desc = <span class="kw">if let </span><span class="prelude-val">Some</span>(vb_layout) = vb_layout {
-<a href=#1619 id=1619 data-nosnippet>1619</a>                    <span class="kw">for </span>vat <span class="kw">in </span>vb_layout.attributes.iter() {
-<a href=#1620 id=1620 data-nosnippet>1620</a>                        <span class="kw">let </span>format_desc = conv::describe_vertex_format(vat.format);
-<a href=#1621 id=1621 data-nosnippet>1621</a>                        attributes.push(<span class="kw">super</span>::AttributeDesc {
-<a href=#1622 id=1622 data-nosnippet>1622</a>                            location: vat.shader_location,
-<a href=#1623 id=1623 data-nosnippet>1623</a>                            offset: vat.offset <span class="kw">as </span>u32,
-<a href=#1624 id=1624 data-nosnippet>1624</a>                            buffer_index: index <span class="kw">as </span>u32,
-<a href=#1625 id=1625 data-nosnippet>1625</a>                            format_desc,
-<a href=#1626 id=1626 data-nosnippet>1626</a>                        });
-<a href=#1627 id=1627 data-nosnippet>1627</a>                    }
-<a href=#1628 id=1628 data-nosnippet>1628</a>                    <span class="prelude-val">Some</span>(<span class="kw">super</span>::VertexBufferDesc {
-<a href=#1629 id=1629 data-nosnippet>1629</a>                        step: vb_layout.step_mode,
-<a href=#1630 id=1630 data-nosnippet>1630</a>                        stride: vb_layout.array_stride <span class="kw">as </span>u32,
-<a href=#1631 id=1631 data-nosnippet>1631</a>                    })
-<a href=#1632 id=1632 data-nosnippet>1632</a>                } <span class="kw">else </span>{
-<a href=#1633 id=1633 data-nosnippet>1633</a>                    <span class="prelude-val">None
-<a href=#1634 id=1634 data-nosnippet>1634</a>                </span>};
-<a href=#1635 id=1635 data-nosnippet>1635</a>                buffers.push(vb_desc);
-<a href=#1636 id=1636 data-nosnippet>1636</a>            }
-<a href=#1637 id=1637 data-nosnippet>1637</a>            (buffers.into_boxed_slice(), attributes.into_boxed_slice())
-<a href=#1638 id=1638 data-nosnippet>1638</a>        };
-<a href=#1639 id=1639 data-nosnippet>1639</a>
-<a href=#1640 id=1640 data-nosnippet>1640</a>        <span class="kw">let </span>color_targets = {
-<a href=#1641 id=1641 data-nosnippet>1641</a>            <span class="kw">let </span><span class="kw-2">mut </span>targets = Vec::new();
-<a href=#1642 id=1642 data-nosnippet>1642</a>            <span class="kw">for </span>ct <span class="kw">in </span>desc.color_targets.iter().filter_map(|at| at.as_ref()) {
-<a href=#1643 id=1643 data-nosnippet>1643</a>                targets.push(<span class="kw">super</span>::ColorTargetDesc {
-<a href=#1644 id=1644 data-nosnippet>1644</a>                    mask: ct.write_mask,
-<a href=#1645 id=1645 data-nosnippet>1645</a>                    blend: ct.blend.as_ref().map(conv::map_blend),
-<a href=#1646 id=1646 data-nosnippet>1646</a>                });
-<a href=#1647 id=1647 data-nosnippet>1647</a>            }
-<a href=#1648 id=1648 data-nosnippet>1648</a>            <span class="comment">//Note: if any of the states are different, and `INDEPENDENT_BLEND` flag
-<a href=#1649 id=1649 data-nosnippet>1649</a>            // is not exposed, then this pipeline will not bind correctly.
-<a href=#1650 id=1650 data-nosnippet>1650</a>            </span>targets.into_boxed_slice()
-<a href=#1651 id=1651 data-nosnippet>1651</a>        };
-<a href=#1652 id=1652 data-nosnippet>1652</a>
-<a href=#1653 id=1653 data-nosnippet>1653</a>        <span class="self">self</span>.counters.render_pipelines.add(<span class="number">1</span>);
-<a href=#1654 id=1654 data-nosnippet>1654</a>
-<a href=#1655 id=1655 data-nosnippet>1655</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::RenderPipeline {
-<a href=#1656 id=1656 data-nosnippet>1656</a>            inner,
-<a href=#1657 id=1657 data-nosnippet>1657</a>            primitive: desc.primitive,
-<a href=#1658 id=1658 data-nosnippet>1658</a>            vertex_buffers,
-<a href=#1659 id=1659 data-nosnippet>1659</a>            vertex_attributes,
-<a href=#1660 id=1660 data-nosnippet>1660</a>            color_targets,
-<a href=#1661 id=1661 data-nosnippet>1661</a>            depth: desc.depth_stencil.as_ref().map(|ds| <span class="kw">super</span>::DepthState {
-<a href=#1662 id=1662 data-nosnippet>1662</a>                function: conv::map_compare_func(ds.depth_compare.unwrap_or_default()),
-<a href=#1663 id=1663 data-nosnippet>1663</a>                mask: ds.depth_write_enabled.unwrap_or_default(),
-<a href=#1664 id=1664 data-nosnippet>1664</a>            }),
-<a href=#1665 id=1665 data-nosnippet>1665</a>            depth_bias: desc
-<a href=#1666 id=1666 data-nosnippet>1666</a>                .depth_stencil
-<a href=#1667 id=1667 data-nosnippet>1667</a>                .as_ref()
-<a href=#1668 id=1668 data-nosnippet>1668</a>                .map(|ds| ds.bias)
-<a href=#1669 id=1669 data-nosnippet>1669</a>                .unwrap_or_default(),
-<a href=#1670 id=1670 data-nosnippet>1670</a>            stencil: desc
+<a href=#1554 id=1554 data-nosnippet>1554</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::BindGroup {
+<a href=#1555 id=1555 data-nosnippet>1555</a>            contents: contents.into_boxed_slice(),
+<a href=#1556 id=1556 data-nosnippet>1556</a>        })
+<a href=#1557 id=1557 data-nosnippet>1557</a>    }
+<a href=#1558 id=1558 data-nosnippet>1558</a>
+<a href=#1559 id=1559 data-nosnippet>1559</a>    <span class="kw">unsafe fn </span>destroy_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, _group: <span class="kw">super</span>::BindGroup) {
+<a href=#1560 id=1560 data-nosnippet>1560</a>        <span class="self">self</span>.counters.bind_groups.sub(<span class="number">1</span>);
+<a href=#1561 id=1561 data-nosnippet>1561</a>    }
+<a href=#1562 id=1562 data-nosnippet>1562</a>
+<a href=#1563 id=1563 data-nosnippet>1563</a>    <span class="kw">unsafe fn </span>create_shader_module(
+<a href=#1564 id=1564 data-nosnippet>1564</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1565 id=1565 data-nosnippet>1565</a>        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ShaderModuleDescriptor,
+<a href=#1566 id=1566 data-nosnippet>1566</a>        shader: <span class="kw">crate</span>::ShaderInput,
+<a href=#1567 id=1567 data-nosnippet>1567</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ShaderModule, <span class="kw">crate</span>::ShaderError&gt; {
+<a href=#1568 id=1568 data-nosnippet>1568</a>        <span class="self">self</span>.counters.shader_modules.add(<span class="number">1</span>);
+<a href=#1569 id=1569 data-nosnippet>1569</a>
+<a href=#1570 id=1570 data-nosnippet>1570</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ShaderModule {
+<a href=#1571 id=1571 data-nosnippet>1571</a>            source: <span class="kw">match </span>shader {
+<a href=#1572 id=1572 data-nosnippet>1572</a>                <span class="kw">crate</span>::ShaderInput::Naga(naga) =&gt; <span class="kw">super</span>::ShaderModuleSource::Naga(naga),
+<a href=#1573 id=1573 data-nosnippet>1573</a>                <span class="comment">// The backend doesn't yet expose this feature so it should be fine
+<a href=#1574 id=1574 data-nosnippet>1574</a>                </span><span class="kw">crate</span>::ShaderInput::Glsl { shader, .. } =&gt; <span class="kw">super</span>::ShaderModuleSource::Passthrough {
+<a href=#1575 id=1575 data-nosnippet>1575</a>                    source: shader.to_owned(),
+<a href=#1576 id=1576 data-nosnippet>1576</a>                },
+<a href=#1577 id=1577 data-nosnippet>1577</a>                <span class="kw">crate</span>::ShaderInput::SpirV(<span class="kw">_</span>)
+<a href=#1578 id=1578 data-nosnippet>1578</a>                | <span class="kw">crate</span>::ShaderInput::MetalLib { .. }
+<a href=#1579 id=1579 data-nosnippet>1579</a>                | <span class="kw">crate</span>::ShaderInput::Msl { .. }
+<a href=#1580 id=1580 data-nosnippet>1580</a>                | <span class="kw">crate</span>::ShaderInput::Dxil { .. }
+<a href=#1581 id=1581 data-nosnippet>1581</a>                | <span class="kw">crate</span>::ShaderInput::Hlsl { .. } =&gt; {
+<a href=#1582 id=1582 data-nosnippet>1582</a>                    <span class="macro">unreachable!</span>()
+<a href=#1583 id=1583 data-nosnippet>1583</a>                }
+<a href=#1584 id=1584 data-nosnippet>1584</a>            },
+<a href=#1585 id=1585 data-nosnippet>1585</a>            label: desc.label.map(|str| str.to_string()),
+<a href=#1586 id=1586 data-nosnippet>1586</a>            id: <span class="self">self</span>.shared.next_shader_id.fetch_add(<span class="number">1</span>, Ordering::Relaxed),
+<a href=#1587 id=1587 data-nosnippet>1587</a>        })
+<a href=#1588 id=1588 data-nosnippet>1588</a>    }
+<a href=#1589 id=1589 data-nosnippet>1589</a>
+<a href=#1590 id=1590 data-nosnippet>1590</a>    <span class="kw">unsafe fn </span>destroy_shader_module(<span class="kw-2">&amp;</span><span class="self">self</span>, _module: <span class="kw">super</span>::ShaderModule) {
+<a href=#1591 id=1591 data-nosnippet>1591</a>        <span class="self">self</span>.counters.shader_modules.sub(<span class="number">1</span>);
+<a href=#1592 id=1592 data-nosnippet>1592</a>    }
+<a href=#1593 id=1593 data-nosnippet>1593</a>
+<a href=#1594 id=1594 data-nosnippet>1594</a>    <span class="kw">unsafe fn </span>create_render_pipeline(
+<a href=#1595 id=1595 data-nosnippet>1595</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1596 id=1596 data-nosnippet>1596</a>        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPipelineDescriptor&lt;
+<a href=#1597 id=1597 data-nosnippet>1597</a>            <span class="kw">super</span>::PipelineLayout,
+<a href=#1598 id=1598 data-nosnippet>1598</a>            <span class="kw">super</span>::ShaderModule,
+<a href=#1599 id=1599 data-nosnippet>1599</a>            <span class="kw">super</span>::PipelineCache,
+<a href=#1600 id=1600 data-nosnippet>1600</a>        &gt;,
+<a href=#1601 id=1601 data-nosnippet>1601</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::RenderPipeline, <span class="kw">crate</span>::PipelineError&gt; {
+<a href=#1602 id=1602 data-nosnippet>1602</a>        <span class="kw">let </span>(vertex_stage, vertex_buffers) = <span class="kw">match </span><span class="kw-2">&amp;</span>desc.vertex_processor {
+<a href=#1603 id=1603 data-nosnippet>1603</a>            <span class="kw">crate</span>::VertexProcessor::Standard {
+<a href=#1604 id=1604 data-nosnippet>1604</a>                vertex_buffers,
+<a href=#1605 id=1605 data-nosnippet>1605</a>                <span class="kw-2">ref </span>vertex_stage,
+<a href=#1606 id=1606 data-nosnippet>1606</a>            } =&gt; (vertex_stage, vertex_buffers),
+<a href=#1607 id=1607 data-nosnippet>1607</a>            <span class="kw">crate</span>::VertexProcessor::Mesh { .. } =&gt; <span class="macro">unreachable!</span>(),
+<a href=#1608 id=1608 data-nosnippet>1608</a>        };
+<a href=#1609 id=1609 data-nosnippet>1609</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+<a href=#1610 id=1610 data-nosnippet>1610</a>        <span class="kw">let </span><span class="kw-2">mut </span>shaders = ArrayVec::new();
+<a href=#1611 id=1611 data-nosnippet>1611</a>        shaders.push((naga::ShaderStage::Vertex, vertex_stage));
+<a href=#1612 id=1612 data-nosnippet>1612</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>fs) = desc.fragment_stage {
+<a href=#1613 id=1613 data-nosnippet>1613</a>            shaders.push((naga::ShaderStage::Fragment, fs));
+<a href=#1614 id=1614 data-nosnippet>1614</a>        }
+<a href=#1615 id=1615 data-nosnippet>1615</a>        <span class="kw">let </span>inner = <span class="kw">unsafe </span>{
+<a href=#1616 id=1616 data-nosnippet>1616</a>            <span class="self">self</span>.create_pipeline(gl, shaders, desc.layout, desc.label, desc.multiview_mask)
+<a href=#1617 id=1617 data-nosnippet>1617</a>        }<span class="question-mark">?</span>;
+<a href=#1618 id=1618 data-nosnippet>1618</a>
+<a href=#1619 id=1619 data-nosnippet>1619</a>        <span class="kw">let </span>(vertex_buffers, vertex_attributes) = {
+<a href=#1620 id=1620 data-nosnippet>1620</a>            <span class="kw">let </span><span class="kw-2">mut </span>buffers = Vec::new();
+<a href=#1621 id=1621 data-nosnippet>1621</a>            <span class="kw">let </span><span class="kw-2">mut </span>attributes = Vec::new();
+<a href=#1622 id=1622 data-nosnippet>1622</a>            <span class="kw">for </span>(index, vb_layout) <span class="kw">in </span>vertex_buffers.iter().enumerate() {
+<a href=#1623 id=1623 data-nosnippet>1623</a>                <span class="kw">let </span>vb_desc = <span class="kw">if let </span><span class="prelude-val">Some</span>(vb_layout) = vb_layout {
+<a href=#1624 id=1624 data-nosnippet>1624</a>                    <span class="kw">for </span>vat <span class="kw">in </span>vb_layout.attributes.iter() {
+<a href=#1625 id=1625 data-nosnippet>1625</a>                        <span class="kw">let </span>format_desc = conv::describe_vertex_format(vat.format);
+<a href=#1626 id=1626 data-nosnippet>1626</a>                        attributes.push(<span class="kw">super</span>::AttributeDesc {
+<a href=#1627 id=1627 data-nosnippet>1627</a>                            location: vat.shader_location,
+<a href=#1628 id=1628 data-nosnippet>1628</a>                            offset: vat.offset <span class="kw">as </span>u32,
+<a href=#1629 id=1629 data-nosnippet>1629</a>                            buffer_index: index <span class="kw">as </span>u32,
+<a href=#1630 id=1630 data-nosnippet>1630</a>                            format_desc,
+<a href=#1631 id=1631 data-nosnippet>1631</a>                        });
+<a href=#1632 id=1632 data-nosnippet>1632</a>                    }
+<a href=#1633 id=1633 data-nosnippet>1633</a>                    <span class="prelude-val">Some</span>(<span class="kw">super</span>::VertexBufferDesc {
+<a href=#1634 id=1634 data-nosnippet>1634</a>                        step: vb_layout.step_mode,
+<a href=#1635 id=1635 data-nosnippet>1635</a>                        stride: vb_layout.array_stride <span class="kw">as </span>u32,
+<a href=#1636 id=1636 data-nosnippet>1636</a>                    })
+<a href=#1637 id=1637 data-nosnippet>1637</a>                } <span class="kw">else </span>{
+<a href=#1638 id=1638 data-nosnippet>1638</a>                    <span class="prelude-val">None
+<a href=#1639 id=1639 data-nosnippet>1639</a>                </span>};
+<a href=#1640 id=1640 data-nosnippet>1640</a>                buffers.push(vb_desc);
+<a href=#1641 id=1641 data-nosnippet>1641</a>            }
+<a href=#1642 id=1642 data-nosnippet>1642</a>            (buffers.into_boxed_slice(), attributes.into_boxed_slice())
+<a href=#1643 id=1643 data-nosnippet>1643</a>        };
+<a href=#1644 id=1644 data-nosnippet>1644</a>
+<a href=#1645 id=1645 data-nosnippet>1645</a>        <span class="kw">let </span>color_targets = {
+<a href=#1646 id=1646 data-nosnippet>1646</a>            <span class="kw">let </span><span class="kw-2">mut </span>targets = Vec::new();
+<a href=#1647 id=1647 data-nosnippet>1647</a>            <span class="kw">for </span>ct <span class="kw">in </span>desc.color_targets.iter().filter_map(|at| at.as_ref()) {
+<a href=#1648 id=1648 data-nosnippet>1648</a>                targets.push(<span class="kw">super</span>::ColorTargetDesc {
+<a href=#1649 id=1649 data-nosnippet>1649</a>                    mask: ct.write_mask,
+<a href=#1650 id=1650 data-nosnippet>1650</a>                    blend: ct.blend.as_ref().map(conv::map_blend),
+<a href=#1651 id=1651 data-nosnippet>1651</a>                });
+<a href=#1652 id=1652 data-nosnippet>1652</a>            }
+<a href=#1653 id=1653 data-nosnippet>1653</a>            <span class="comment">//Note: if any of the states are different, and `INDEPENDENT_BLEND` flag
+<a href=#1654 id=1654 data-nosnippet>1654</a>            // is not exposed, then this pipeline will not bind correctly.
+<a href=#1655 id=1655 data-nosnippet>1655</a>            </span>targets.into_boxed_slice()
+<a href=#1656 id=1656 data-nosnippet>1656</a>        };
+<a href=#1657 id=1657 data-nosnippet>1657</a>
+<a href=#1658 id=1658 data-nosnippet>1658</a>        <span class="self">self</span>.counters.render_pipelines.add(<span class="number">1</span>);
+<a href=#1659 id=1659 data-nosnippet>1659</a>
+<a href=#1660 id=1660 data-nosnippet>1660</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::RenderPipeline {
+<a href=#1661 id=1661 data-nosnippet>1661</a>            inner,
+<a href=#1662 id=1662 data-nosnippet>1662</a>            primitive: desc.primitive,
+<a href=#1663 id=1663 data-nosnippet>1663</a>            vertex_buffers,
+<a href=#1664 id=1664 data-nosnippet>1664</a>            vertex_attributes,
+<a href=#1665 id=1665 data-nosnippet>1665</a>            color_targets,
+<a href=#1666 id=1666 data-nosnippet>1666</a>            depth: desc.depth_stencil.as_ref().map(|ds| <span class="kw">super</span>::DepthState {
+<a href=#1667 id=1667 data-nosnippet>1667</a>                function: conv::map_compare_func(ds.depth_compare.unwrap_or_default()),
+<a href=#1668 id=1668 data-nosnippet>1668</a>                mask: ds.depth_write_enabled.unwrap_or_default(),
+<a href=#1669 id=1669 data-nosnippet>1669</a>            }),
+<a href=#1670 id=1670 data-nosnippet>1670</a>            depth_bias: desc
 <a href=#1671 id=1671 data-nosnippet>1671</a>                .depth_stencil
 <a href=#1672 id=1672 data-nosnippet>1672</a>                .as_ref()
-<a href=#1673 id=1673 data-nosnippet>1673</a>                .map(|ds| conv::map_stencil(<span class="kw-2">&amp;</span>ds.stencil)),
-<a href=#1674 id=1674 data-nosnippet>1674</a>            alpha_to_coverage_enabled: desc.multisample.alpha_to_coverage_enabled,
-<a href=#1675 id=1675 data-nosnippet>1675</a>        })
-<a href=#1676 id=1676 data-nosnippet>1676</a>    }
-<a href=#1677 id=1677 data-nosnippet>1677</a>
-<a href=#1678 id=1678 data-nosnippet>1678</a>    <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::RenderPipeline) {
-<a href=#1679 id=1679 data-nosnippet>1679</a>        <span class="comment">// If the pipeline only has 2 strong references remaining, they're `pipeline` and `program_cache`
-<a href=#1680 id=1680 data-nosnippet>1680</a>        // This is safe to assume as long as:
-<a href=#1681 id=1681 data-nosnippet>1681</a>        // - `RenderPipeline` can't be cloned
-<a href=#1682 id=1682 data-nosnippet>1682</a>        // - The only place that we can get a new reference is during `program_cache.lock()`
-<a href=#1683 id=1683 data-nosnippet>1683</a>        </span><span class="kw">if </span>Arc::strong_count(<span class="kw-2">&amp;</span>pipeline.inner) == <span class="number">2 </span>{
-<a href=#1684 id=1684 data-nosnippet>1684</a>            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-<a href=#1685 id=1685 data-nosnippet>1685</a>            <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
-<a href=#1686 id=1686 data-nosnippet>1686</a>            program_cache.retain(|<span class="kw">_</span>, v| <span class="kw">match </span><span class="kw-2">*</span>v {
-<a href=#1687 id=1687 data-nosnippet>1687</a>                <span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>p) =&gt; p.program != pipeline.inner.program,
-<a href=#1688 id=1688 data-nosnippet>1688</a>                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
-<a href=#1689 id=1689 data-nosnippet>1689</a>            });
-<a href=#1690 id=1690 data-nosnippet>1690</a>            <span class="kw">unsafe </span>{ gl.delete_program(pipeline.inner.program) };
-<a href=#1691 id=1691 data-nosnippet>1691</a>        }
-<a href=#1692 id=1692 data-nosnippet>1692</a>
-<a href=#1693 id=1693 data-nosnippet>1693</a>        <span class="self">self</span>.counters.render_pipelines.sub(<span class="number">1</span>);
-<a href=#1694 id=1694 data-nosnippet>1694</a>    }
-<a href=#1695 id=1695 data-nosnippet>1695</a>
-<a href=#1696 id=1696 data-nosnippet>1696</a>    <span class="kw">unsafe fn </span>create_compute_pipeline(
-<a href=#1697 id=1697 data-nosnippet>1697</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1698 id=1698 data-nosnippet>1698</a>        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePipelineDescriptor&lt;
-<a href=#1699 id=1699 data-nosnippet>1699</a>            <span class="kw">super</span>::PipelineLayout,
-<a href=#1700 id=1700 data-nosnippet>1700</a>            <span class="kw">super</span>::ShaderModule,
-<a href=#1701 id=1701 data-nosnippet>1701</a>            <span class="kw">super</span>::PipelineCache,
-<a href=#1702 id=1702 data-nosnippet>1702</a>        &gt;,
-<a href=#1703 id=1703 data-nosnippet>1703</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ComputePipeline, <span class="kw">crate</span>::PipelineError&gt; {
-<a href=#1704 id=1704 data-nosnippet>1704</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-<a href=#1705 id=1705 data-nosnippet>1705</a>        <span class="kw">let </span><span class="kw-2">mut </span>shaders = ArrayVec::new();
-<a href=#1706 id=1706 data-nosnippet>1706</a>        shaders.push((naga::ShaderStage::Compute, <span class="kw-2">&amp;</span>desc.stage));
-<a href=#1707 id=1707 data-nosnippet>1707</a>        <span class="kw">let </span>inner = <span class="kw">unsafe </span>{ <span class="self">self</span>.create_pipeline(gl, shaders, desc.layout, desc.label, <span class="prelude-val">None</span>) }<span class="question-mark">?</span>;
-<a href=#1708 id=1708 data-nosnippet>1708</a>
-<a href=#1709 id=1709 data-nosnippet>1709</a>        <span class="self">self</span>.counters.compute_pipelines.add(<span class="number">1</span>);
-<a href=#1710 id=1710 data-nosnippet>1710</a>
-<a href=#1711 id=1711 data-nosnippet>1711</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ComputePipeline { inner })
-<a href=#1712 id=1712 data-nosnippet>1712</a>    }
+<a href=#1673 id=1673 data-nosnippet>1673</a>                .map(|ds| ds.bias)
+<a href=#1674 id=1674 data-nosnippet>1674</a>                .unwrap_or_default(),
+<a href=#1675 id=1675 data-nosnippet>1675</a>            stencil: desc
+<a href=#1676 id=1676 data-nosnippet>1676</a>                .depth_stencil
+<a href=#1677 id=1677 data-nosnippet>1677</a>                .as_ref()
+<a href=#1678 id=1678 data-nosnippet>1678</a>                .map(|ds| conv::map_stencil(<span class="kw-2">&amp;</span>ds.stencil)),
+<a href=#1679 id=1679 data-nosnippet>1679</a>            alpha_to_coverage_enabled: desc.multisample.alpha_to_coverage_enabled,
+<a href=#1680 id=1680 data-nosnippet>1680</a>        })
+<a href=#1681 id=1681 data-nosnippet>1681</a>    }
+<a href=#1682 id=1682 data-nosnippet>1682</a>
+<a href=#1683 id=1683 data-nosnippet>1683</a>    <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::RenderPipeline) {
+<a href=#1684 id=1684 data-nosnippet>1684</a>        <span class="comment">// If the pipeline only has 2 strong references remaining, they're `pipeline` and `program_cache`
+<a href=#1685 id=1685 data-nosnippet>1685</a>        // This is safe to assume as long as:
+<a href=#1686 id=1686 data-nosnippet>1686</a>        // - `RenderPipeline` can't be cloned
+<a href=#1687 id=1687 data-nosnippet>1687</a>        // - The only place that we can get a new reference is during `program_cache.lock()`
+<a href=#1688 id=1688 data-nosnippet>1688</a>        </span><span class="kw">if </span>Arc::strong_count(<span class="kw-2">&amp;</span>pipeline.inner) == <span class="number">2 </span>{
+<a href=#1689 id=1689 data-nosnippet>1689</a>            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+<a href=#1690 id=1690 data-nosnippet>1690</a>            <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
+<a href=#1691 id=1691 data-nosnippet>1691</a>            program_cache.retain(|<span class="kw">_</span>, v| <span class="kw">match </span><span class="kw-2">*</span>v {
+<a href=#1692 id=1692 data-nosnippet>1692</a>                <span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>p) =&gt; p.program != pipeline.inner.program,
+<a href=#1693 id=1693 data-nosnippet>1693</a>                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
+<a href=#1694 id=1694 data-nosnippet>1694</a>            });
+<a href=#1695 id=1695 data-nosnippet>1695</a>            <span class="kw">unsafe </span>{ gl.delete_program(pipeline.inner.program) };
+<a href=#1696 id=1696 data-nosnippet>1696</a>        }
+<a href=#1697 id=1697 data-nosnippet>1697</a>
+<a href=#1698 id=1698 data-nosnippet>1698</a>        <span class="self">self</span>.counters.render_pipelines.sub(<span class="number">1</span>);
+<a href=#1699 id=1699 data-nosnippet>1699</a>    }
+<a href=#1700 id=1700 data-nosnippet>1700</a>
+<a href=#1701 id=1701 data-nosnippet>1701</a>    <span class="kw">unsafe fn </span>create_compute_pipeline(
+<a href=#1702 id=1702 data-nosnippet>1702</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1703 id=1703 data-nosnippet>1703</a>        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePipelineDescriptor&lt;
+<a href=#1704 id=1704 data-nosnippet>1704</a>            <span class="kw">super</span>::PipelineLayout,
+<a href=#1705 id=1705 data-nosnippet>1705</a>            <span class="kw">super</span>::ShaderModule,
+<a href=#1706 id=1706 data-nosnippet>1706</a>            <span class="kw">super</span>::PipelineCache,
+<a href=#1707 id=1707 data-nosnippet>1707</a>        &gt;,
+<a href=#1708 id=1708 data-nosnippet>1708</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ComputePipeline, <span class="kw">crate</span>::PipelineError&gt; {
+<a href=#1709 id=1709 data-nosnippet>1709</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+<a href=#1710 id=1710 data-nosnippet>1710</a>        <span class="kw">let </span><span class="kw-2">mut </span>shaders = ArrayVec::new();
+<a href=#1711 id=1711 data-nosnippet>1711</a>        shaders.push((naga::ShaderStage::Compute, <span class="kw-2">&amp;</span>desc.stage));
+<a href=#1712 id=1712 data-nosnippet>1712</a>        <span class="kw">let </span>inner = <span class="kw">unsafe </span>{ <span class="self">self</span>.create_pipeline(gl, shaders, desc.layout, desc.label, <span class="prelude-val">None</span>) }<span class="question-mark">?</span>;
 <a href=#1713 id=1713 data-nosnippet>1713</a>
-<a href=#1714 id=1714 data-nosnippet>1714</a>    <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::ComputePipeline) {
-<a href=#1715 id=1715 data-nosnippet>1715</a>        <span class="comment">// If the pipeline only has 2 strong references remaining, they're `pipeline` and `program_cache``
-<a href=#1716 id=1716 data-nosnippet>1716</a>        // This is safe to assume as long as:
-<a href=#1717 id=1717 data-nosnippet>1717</a>        // - `ComputePipeline` can't be cloned
-<a href=#1718 id=1718 data-nosnippet>1718</a>        // - The only place that we can get a new reference is during `program_cache.lock()`
-<a href=#1719 id=1719 data-nosnippet>1719</a>        </span><span class="kw">if </span>Arc::strong_count(<span class="kw-2">&amp;</span>pipeline.inner) == <span class="number">2 </span>{
-<a href=#1720 id=1720 data-nosnippet>1720</a>            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-<a href=#1721 id=1721 data-nosnippet>1721</a>            <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
-<a href=#1722 id=1722 data-nosnippet>1722</a>            program_cache.retain(|<span class="kw">_</span>, v| <span class="kw">match </span><span class="kw-2">*</span>v {
-<a href=#1723 id=1723 data-nosnippet>1723</a>                <span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>p) =&gt; p.program != pipeline.inner.program,
-<a href=#1724 id=1724 data-nosnippet>1724</a>                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
-<a href=#1725 id=1725 data-nosnippet>1725</a>            });
-<a href=#1726 id=1726 data-nosnippet>1726</a>            <span class="kw">unsafe </span>{ gl.delete_program(pipeline.inner.program) };
-<a href=#1727 id=1727 data-nosnippet>1727</a>        }
-<a href=#1728 id=1728 data-nosnippet>1728</a>
-<a href=#1729 id=1729 data-nosnippet>1729</a>        <span class="self">self</span>.counters.compute_pipelines.sub(<span class="number">1</span>);
-<a href=#1730 id=1730 data-nosnippet>1730</a>    }
-<a href=#1731 id=1731 data-nosnippet>1731</a>
-<a href=#1732 id=1732 data-nosnippet>1732</a>    <span class="kw">unsafe fn </span>create_ray_tracing_pipeline(
-<a href=#1733 id=1733 data-nosnippet>1733</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1734 id=1734 data-nosnippet>1734</a>        _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RayTracingPipelineDescriptor&lt;
-<a href=#1735 id=1735 data-nosnippet>1735</a>            <span class="kw">super</span>::PipelineLayout,
-<a href=#1736 id=1736 data-nosnippet>1736</a>            <span class="kw">super</span>::ShaderModule,
-<a href=#1737 id=1737 data-nosnippet>1737</a>            <span class="kw">super</span>::PipelineCache,
-<a href=#1738 id=1738 data-nosnippet>1738</a>        &gt;,
-<a href=#1739 id=1739 data-nosnippet>1739</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::RayTracingPipeline, <span class="kw">crate</span>::PipelineError&gt; {
-<a href=#1740 id=1740 data-nosnippet>1740</a>        <span class="macro">unimplemented!</span>(<span class="string">"Ray tracing is unsupported on GL"</span>)
-<a href=#1741 id=1741 data-nosnippet>1741</a>    }
-<a href=#1742 id=1742 data-nosnippet>1742</a>
-<a href=#1743 id=1743 data-nosnippet>1743</a>    <span class="kw">unsafe fn </span>destroy_ray_tracing_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, _pipeline: <span class="kw">super</span>::RayTracingPipeline) {
-<a href=#1744 id=1744 data-nosnippet>1744</a>        <span class="macro">unimplemented!</span>(<span class="string">"Ray tracing is unsupported on GL"</span>)
-<a href=#1745 id=1745 data-nosnippet>1745</a>    }
-<a href=#1746 id=1746 data-nosnippet>1746</a>
-<a href=#1747 id=1747 data-nosnippet>1747</a>    <span class="kw">unsafe fn </span>get_raytracing_pipeline_group_data(
-<a href=#1748 id=1748 data-nosnippet>1748</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1749 id=1749 data-nosnippet>1749</a>        _pipeline: <span class="kw-2">&amp;</span><span class="kw">super</span>::RayTracingPipeline,
-<a href=#1750 id=1750 data-nosnippet>1750</a>        _groups: core::ops::Range&lt;u32&gt;,
-<a href=#1751 id=1751 data-nosnippet>1751</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, <span class="kw">crate</span>::DeviceError&gt; {
-<a href=#1752 id=1752 data-nosnippet>1752</a>        <span class="macro">unimplemented!</span>(<span class="string">"Ray tracing is unsupported on GL"</span>)
-<a href=#1753 id=1753 data-nosnippet>1753</a>    }
-<a href=#1754 id=1754 data-nosnippet>1754</a>
-<a href=#1755 id=1755 data-nosnippet>1755</a>    <span class="kw">unsafe fn </span>create_pipeline_cache(
-<a href=#1756 id=1756 data-nosnippet>1756</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1757 id=1757 data-nosnippet>1757</a>        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::PipelineCacheDescriptor&lt;<span class="lifetime">'_</span>&gt;,
-<a href=#1758 id=1758 data-nosnippet>1758</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::PipelineCache, <span class="kw">crate</span>::PipelineCacheError&gt; {
-<a href=#1759 id=1759 data-nosnippet>1759</a>        <span class="comment">// Even though the cache doesn't do anything, we still return something here
-<a href=#1760 id=1760 data-nosnippet>1760</a>        // as the least bad option
-<a href=#1761 id=1761 data-nosnippet>1761</a>        </span><span class="prelude-val">Ok</span>(<span class="kw">super</span>::PipelineCache)
-<a href=#1762 id=1762 data-nosnippet>1762</a>    }
-<a href=#1763 id=1763 data-nosnippet>1763</a>    <span class="kw">unsafe fn </span>destroy_pipeline_cache(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw">super</span>::PipelineCache) {}
-<a href=#1764 id=1764 data-nosnippet>1764</a>
-<a href=#1765 id=1765 data-nosnippet>1765</a>    <span class="attr">#[cfg_attr(target_family = <span class="string">"wasm"</span>, allow(unused))]
-<a href=#1766 id=1766 data-nosnippet>1766</a>    </span><span class="kw">unsafe fn </span>create_query_set(
-<a href=#1767 id=1767 data-nosnippet>1767</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1768 id=1768 data-nosnippet>1768</a>        desc: <span class="kw-2">&amp;</span>wgt::QuerySetDescriptor&lt;<span class="kw">crate</span>::Label&gt;,
-<a href=#1769 id=1769 data-nosnippet>1769</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::QuerySet, <span class="kw">crate</span>::DeviceError&gt; {
-<a href=#1770 id=1770 data-nosnippet>1770</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-<a href=#1771 id=1771 data-nosnippet>1771</a>
-<a href=#1772 id=1772 data-nosnippet>1772</a>        <span class="kw">let </span><span class="kw-2">mut </span>queries = Vec::with_capacity(desc.count <span class="kw">as </span>usize);
-<a href=#1773 id=1773 data-nosnippet>1773</a>        <span class="kw">for _ in </span><span class="number">0</span>..desc.count {
-<a href=#1774 id=1774 data-nosnippet>1774</a>            <span class="kw">let </span>query =
-<a href=#1775 id=1775 data-nosnippet>1775</a>                <span class="kw">unsafe </span>{ gl.create_query() }.map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::DeviceError::OutOfMemory)<span class="question-mark">?</span>;
+<a href=#1714 id=1714 data-nosnippet>1714</a>        <span class="self">self</span>.counters.compute_pipelines.add(<span class="number">1</span>);
+<a href=#1715 id=1715 data-nosnippet>1715</a>
+<a href=#1716 id=1716 data-nosnippet>1716</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ComputePipeline { inner })
+<a href=#1717 id=1717 data-nosnippet>1717</a>    }
+<a href=#1718 id=1718 data-nosnippet>1718</a>
+<a href=#1719 id=1719 data-nosnippet>1719</a>    <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::ComputePipeline) {
+<a href=#1720 id=1720 data-nosnippet>1720</a>        <span class="comment">// If the pipeline only has 2 strong references remaining, they're `pipeline` and `program_cache``
+<a href=#1721 id=1721 data-nosnippet>1721</a>        // This is safe to assume as long as:
+<a href=#1722 id=1722 data-nosnippet>1722</a>        // - `ComputePipeline` can't be cloned
+<a href=#1723 id=1723 data-nosnippet>1723</a>        // - The only place that we can get a new reference is during `program_cache.lock()`
+<a href=#1724 id=1724 data-nosnippet>1724</a>        </span><span class="kw">if </span>Arc::strong_count(<span class="kw-2">&amp;</span>pipeline.inner) == <span class="number">2 </span>{
+<a href=#1725 id=1725 data-nosnippet>1725</a>            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+<a href=#1726 id=1726 data-nosnippet>1726</a>            <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
+<a href=#1727 id=1727 data-nosnippet>1727</a>            program_cache.retain(|<span class="kw">_</span>, v| <span class="kw">match </span><span class="kw-2">*</span>v {
+<a href=#1728 id=1728 data-nosnippet>1728</a>                <span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>p) =&gt; p.program != pipeline.inner.program,
+<a href=#1729 id=1729 data-nosnippet>1729</a>                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
+<a href=#1730 id=1730 data-nosnippet>1730</a>            });
+<a href=#1731 id=1731 data-nosnippet>1731</a>            <span class="kw">unsafe </span>{ gl.delete_program(pipeline.inner.program) };
+<a href=#1732 id=1732 data-nosnippet>1732</a>        }
+<a href=#1733 id=1733 data-nosnippet>1733</a>
+<a href=#1734 id=1734 data-nosnippet>1734</a>        <span class="self">self</span>.counters.compute_pipelines.sub(<span class="number">1</span>);
+<a href=#1735 id=1735 data-nosnippet>1735</a>    }
+<a href=#1736 id=1736 data-nosnippet>1736</a>
+<a href=#1737 id=1737 data-nosnippet>1737</a>    <span class="kw">unsafe fn </span>create_ray_tracing_pipeline(
+<a href=#1738 id=1738 data-nosnippet>1738</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1739 id=1739 data-nosnippet>1739</a>        _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RayTracingPipelineDescriptor&lt;
+<a href=#1740 id=1740 data-nosnippet>1740</a>            <span class="kw">super</span>::PipelineLayout,
+<a href=#1741 id=1741 data-nosnippet>1741</a>            <span class="kw">super</span>::ShaderModule,
+<a href=#1742 id=1742 data-nosnippet>1742</a>            <span class="kw">super</span>::PipelineCache,
+<a href=#1743 id=1743 data-nosnippet>1743</a>        &gt;,
+<a href=#1744 id=1744 data-nosnippet>1744</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::RayTracingPipeline, <span class="kw">crate</span>::PipelineError&gt; {
+<a href=#1745 id=1745 data-nosnippet>1745</a>        <span class="macro">unimplemented!</span>(<span class="string">"Ray tracing is unsupported on GL"</span>)
+<a href=#1746 id=1746 data-nosnippet>1746</a>    }
+<a href=#1747 id=1747 data-nosnippet>1747</a>
+<a href=#1748 id=1748 data-nosnippet>1748</a>    <span class="kw">unsafe fn </span>destroy_ray_tracing_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, _pipeline: <span class="kw">super</span>::RayTracingPipeline) {
+<a href=#1749 id=1749 data-nosnippet>1749</a>        <span class="macro">unimplemented!</span>(<span class="string">"Ray tracing is unsupported on GL"</span>)
+<a href=#1750 id=1750 data-nosnippet>1750</a>    }
+<a href=#1751 id=1751 data-nosnippet>1751</a>
+<a href=#1752 id=1752 data-nosnippet>1752</a>    <span class="kw">unsafe fn </span>get_raytracing_pipeline_group_data(
+<a href=#1753 id=1753 data-nosnippet>1753</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1754 id=1754 data-nosnippet>1754</a>        _pipeline: <span class="kw-2">&amp;</span><span class="kw">super</span>::RayTracingPipeline,
+<a href=#1755 id=1755 data-nosnippet>1755</a>        _groups: core::ops::Range&lt;u32&gt;,
+<a href=#1756 id=1756 data-nosnippet>1756</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, <span class="kw">crate</span>::DeviceError&gt; {
+<a href=#1757 id=1757 data-nosnippet>1757</a>        <span class="macro">unimplemented!</span>(<span class="string">"Ray tracing is unsupported on GL"</span>)
+<a href=#1758 id=1758 data-nosnippet>1758</a>    }
+<a href=#1759 id=1759 data-nosnippet>1759</a>
+<a href=#1760 id=1760 data-nosnippet>1760</a>    <span class="kw">unsafe fn </span>create_pipeline_cache(
+<a href=#1761 id=1761 data-nosnippet>1761</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1762 id=1762 data-nosnippet>1762</a>        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::PipelineCacheDescriptor&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#1763 id=1763 data-nosnippet>1763</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::PipelineCache, <span class="kw">crate</span>::PipelineCacheError&gt; {
+<a href=#1764 id=1764 data-nosnippet>1764</a>        <span class="comment">// Even though the cache doesn't do anything, we still return something here
+<a href=#1765 id=1765 data-nosnippet>1765</a>        // as the least bad option
+<a href=#1766 id=1766 data-nosnippet>1766</a>        </span><span class="prelude-val">Ok</span>(<span class="kw">super</span>::PipelineCache)
+<a href=#1767 id=1767 data-nosnippet>1767</a>    }
+<a href=#1768 id=1768 data-nosnippet>1768</a>    <span class="kw">unsafe fn </span>destroy_pipeline_cache(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw">super</span>::PipelineCache) {}
+<a href=#1769 id=1769 data-nosnippet>1769</a>
+<a href=#1770 id=1770 data-nosnippet>1770</a>    <span class="attr">#[cfg_attr(target_family = <span class="string">"wasm"</span>, allow(unused))]
+<a href=#1771 id=1771 data-nosnippet>1771</a>    </span><span class="kw">unsafe fn </span>create_query_set(
+<a href=#1772 id=1772 data-nosnippet>1772</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1773 id=1773 data-nosnippet>1773</a>        desc: <span class="kw-2">&amp;</span>wgt::QuerySetDescriptor&lt;<span class="kw">crate</span>::Label&gt;,
+<a href=#1774 id=1774 data-nosnippet>1774</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::QuerySet, <span class="kw">crate</span>::DeviceError&gt; {
+<a href=#1775 id=1775 data-nosnippet>1775</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
 <a href=#1776 id=1776 data-nosnippet>1776</a>
-<a href=#1777 id=1777 data-nosnippet>1777</a>            <span class="comment">// We aren't really able to, in general, label queries.
-<a href=#1778 id=1778 data-nosnippet>1778</a>            //
-<a href=#1779 id=1779 data-nosnippet>1779</a>            // We could take a timestamp here to "initialize" the query,
-<a href=#1780 id=1780 data-nosnippet>1780</a>            // but that's a bit of a hack, and we don't want to insert
-<a href=#1781 id=1781 data-nosnippet>1781</a>            // random timestamps into the command stream of we don't have to.
-<a href=#1782 id=1782 data-nosnippet>1782</a>
-<a href=#1783 id=1783 data-nosnippet>1783</a>            </span>queries.push(query);
-<a href=#1784 id=1784 data-nosnippet>1784</a>        }
-<a href=#1785 id=1785 data-nosnippet>1785</a>
-<a href=#1786 id=1786 data-nosnippet>1786</a>        <span class="self">self</span>.counters.query_sets.add(<span class="number">1</span>);
+<a href=#1777 id=1777 data-nosnippet>1777</a>        <span class="kw">let </span><span class="kw-2">mut </span>queries = Vec::with_capacity(desc.count <span class="kw">as </span>usize);
+<a href=#1778 id=1778 data-nosnippet>1778</a>        <span class="kw">for _ in </span><span class="number">0</span>..desc.count {
+<a href=#1779 id=1779 data-nosnippet>1779</a>            <span class="kw">let </span>query =
+<a href=#1780 id=1780 data-nosnippet>1780</a>                <span class="kw">unsafe </span>{ gl.create_query() }.map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::DeviceError::OutOfMemory)<span class="question-mark">?</span>;
+<a href=#1781 id=1781 data-nosnippet>1781</a>
+<a href=#1782 id=1782 data-nosnippet>1782</a>            <span class="comment">// We aren't really able to, in general, label queries.
+<a href=#1783 id=1783 data-nosnippet>1783</a>            //
+<a href=#1784 id=1784 data-nosnippet>1784</a>            // We could take a timestamp here to "initialize" the query,
+<a href=#1785 id=1785 data-nosnippet>1785</a>            // but that's a bit of a hack, and we don't want to insert
+<a href=#1786 id=1786 data-nosnippet>1786</a>            // random timestamps into the command stream of we don't have to.
 <a href=#1787 id=1787 data-nosnippet>1787</a>
-<a href=#1788 id=1788 data-nosnippet>1788</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::QuerySet {
-<a href=#1789 id=1789 data-nosnippet>1789</a>            queries: queries.into_boxed_slice(),
-<a href=#1790 id=1790 data-nosnippet>1790</a>            target: <span class="kw">match </span>desc.ty {
-<a href=#1791 id=1791 data-nosnippet>1791</a>                wgt::QueryType::Occlusion =&gt; glow::ANY_SAMPLES_PASSED_CONSERVATIVE,
-<a href=#1792 id=1792 data-nosnippet>1792</a>                wgt::QueryType::Timestamp =&gt; glow::TIMESTAMP,
-<a href=#1793 id=1793 data-nosnippet>1793</a>                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-<a href=#1794 id=1794 data-nosnippet>1794</a>            },
-<a href=#1795 id=1795 data-nosnippet>1795</a>        })
-<a href=#1796 id=1796 data-nosnippet>1796</a>    }
-<a href=#1797 id=1797 data-nosnippet>1797</a>
-<a href=#1798 id=1798 data-nosnippet>1798</a>    <span class="kw">unsafe fn </span>destroy_query_set(<span class="kw-2">&amp;</span><span class="self">self</span>, set: <span class="kw">super</span>::QuerySet) {
-<a href=#1799 id=1799 data-nosnippet>1799</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-<a href=#1800 id=1800 data-nosnippet>1800</a>        <span class="kw">for </span><span class="kw-2">&amp;</span>query <span class="kw">in </span>set.queries.iter() {
-<a href=#1801 id=1801 data-nosnippet>1801</a>            <span class="kw">unsafe </span>{ gl.delete_query(query) };
-<a href=#1802 id=1802 data-nosnippet>1802</a>        }
-<a href=#1803 id=1803 data-nosnippet>1803</a>        <span class="self">self</span>.counters.query_sets.sub(<span class="number">1</span>);
-<a href=#1804 id=1804 data-nosnippet>1804</a>    }
-<a href=#1805 id=1805 data-nosnippet>1805</a>
-<a href=#1806 id=1806 data-nosnippet>1806</a>    <span class="kw">unsafe fn </span>create_fence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Fence, <span class="kw">crate</span>::DeviceError&gt; {
-<a href=#1807 id=1807 data-nosnippet>1807</a>        <span class="self">self</span>.counters.fences.add(<span class="number">1</span>);
-<a href=#1808 id=1808 data-nosnippet>1808</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Fence::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.options))
+<a href=#1788 id=1788 data-nosnippet>1788</a>            </span>queries.push(query);
+<a href=#1789 id=1789 data-nosnippet>1789</a>        }
+<a href=#1790 id=1790 data-nosnippet>1790</a>
+<a href=#1791 id=1791 data-nosnippet>1791</a>        <span class="self">self</span>.counters.query_sets.add(<span class="number">1</span>);
+<a href=#1792 id=1792 data-nosnippet>1792</a>
+<a href=#1793 id=1793 data-nosnippet>1793</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::QuerySet {
+<a href=#1794 id=1794 data-nosnippet>1794</a>            queries: queries.into_boxed_slice(),
+<a href=#1795 id=1795 data-nosnippet>1795</a>            target: <span class="kw">match </span>desc.ty {
+<a href=#1796 id=1796 data-nosnippet>1796</a>                wgt::QueryType::Occlusion =&gt; glow::ANY_SAMPLES_PASSED_CONSERVATIVE,
+<a href=#1797 id=1797 data-nosnippet>1797</a>                wgt::QueryType::Timestamp =&gt; glow::TIMESTAMP,
+<a href=#1798 id=1798 data-nosnippet>1798</a>                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+<a href=#1799 id=1799 data-nosnippet>1799</a>            },
+<a href=#1800 id=1800 data-nosnippet>1800</a>        })
+<a href=#1801 id=1801 data-nosnippet>1801</a>    }
+<a href=#1802 id=1802 data-nosnippet>1802</a>
+<a href=#1803 id=1803 data-nosnippet>1803</a>    <span class="kw">unsafe fn </span>destroy_query_set(<span class="kw-2">&amp;</span><span class="self">self</span>, set: <span class="kw">super</span>::QuerySet) {
+<a href=#1804 id=1804 data-nosnippet>1804</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+<a href=#1805 id=1805 data-nosnippet>1805</a>        <span class="kw">for </span><span class="kw-2">&amp;</span>query <span class="kw">in </span>set.queries.iter() {
+<a href=#1806 id=1806 data-nosnippet>1806</a>            <span class="kw">unsafe </span>{ gl.delete_query(query) };
+<a href=#1807 id=1807 data-nosnippet>1807</a>        }
+<a href=#1808 id=1808 data-nosnippet>1808</a>        <span class="self">self</span>.counters.query_sets.sub(<span class="number">1</span>);
 <a href=#1809 id=1809 data-nosnippet>1809</a>    }
 <a href=#1810 id=1810 data-nosnippet>1810</a>
-<a href=#1811 id=1811 data-nosnippet>1811</a>    <span class="kw">unsafe fn </span>destroy_fence(<span class="kw-2">&amp;</span><span class="self">self</span>, fence: <span class="kw">super</span>::Fence) {
-<a href=#1812 id=1812 data-nosnippet>1812</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-<a href=#1813 id=1813 data-nosnippet>1813</a>        fence.destroy(gl);
-<a href=#1814 id=1814 data-nosnippet>1814</a>        <span class="self">self</span>.counters.fences.sub(<span class="number">1</span>);
-<a href=#1815 id=1815 data-nosnippet>1815</a>    }
-<a href=#1816 id=1816 data-nosnippet>1816</a>
-<a href=#1817 id=1817 data-nosnippet>1817</a>    <span class="kw">unsafe fn </span>get_fence_value(
-<a href=#1818 id=1818 data-nosnippet>1818</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1819 id=1819 data-nosnippet>1819</a>        fence: <span class="kw-2">&amp;</span><span class="kw">super</span>::Fence,
-<a href=#1820 id=1820 data-nosnippet>1820</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::FenceValue, <span class="kw">crate</span>::DeviceError&gt; {
-<a href=#1821 id=1821 data-nosnippet>1821</a>        <span class="attr">#[cfg_attr(target_family = <span class="string">"wasm"</span>, allow(clippy::needless_borrow))]
-<a href=#1822 id=1822 data-nosnippet>1822</a>        </span><span class="prelude-val">Ok</span>(fence.get_latest(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock()))
-<a href=#1823 id=1823 data-nosnippet>1823</a>    }
-<a href=#1824 id=1824 data-nosnippet>1824</a>    <span class="kw">unsafe fn </span>wait(
-<a href=#1825 id=1825 data-nosnippet>1825</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1826 id=1826 data-nosnippet>1826</a>        fence: <span class="kw-2">&amp;</span><span class="kw">super</span>::Fence,
-<a href=#1827 id=1827 data-nosnippet>1827</a>        wait_value: <span class="kw">crate</span>::FenceValue,
-<a href=#1828 id=1828 data-nosnippet>1828</a>        timeout: <span class="prelude-ty">Option</span>&lt;core::time::Duration&gt;,
-<a href=#1829 id=1829 data-nosnippet>1829</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, <span class="kw">crate</span>::DeviceError&gt; {
-<a href=#1830 id=1830 data-nosnippet>1830</a>        <span class="kw">if </span>fence.satisfied(wait_value) {
-<a href=#1831 id=1831 data-nosnippet>1831</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
-<a href=#1832 id=1832 data-nosnippet>1832</a>        }
-<a href=#1833 id=1833 data-nosnippet>1833</a>
-<a href=#1834 id=1834 data-nosnippet>1834</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-<a href=#1835 id=1835 data-nosnippet>1835</a>        <span class="comment">// MAX_CLIENT_WAIT_TIMEOUT_WEBGL is:
-<a href=#1836 id=1836 data-nosnippet>1836</a>        // - 1s in Gecko https://searchfox.org/mozilla-central/rev/754074e05178e017ef6c3d8e30428ffa8f1b794d/dom/canvas/WebGLTypes.h#1386
-<a href=#1837 id=1837 data-nosnippet>1837</a>        // - 0 in WebKit https://github.com/WebKit/WebKit/blob/4ef90d4672ca50267c0971b85db403d9684508ea/Source/WebCore/html/canvas/WebGL2RenderingContext.cpp#L110
-<a href=#1838 id=1838 data-nosnippet>1838</a>        // - 0 in Chromium https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/modules/webgl/webgl2_rendering_context_base.cc;l=112;drc=a3cb0ac4c71ec04abfeaed199e5d63230eca2551
-<a href=#1839 id=1839 data-nosnippet>1839</a>        </span><span class="kw">let </span>timeout_ns = <span class="kw">if </span><span class="macro">cfg!</span>(any(webgl, Emscripten)) {
-<a href=#1840 id=1840 data-nosnippet>1840</a>            <span class="number">0
-<a href=#1841 id=1841 data-nosnippet>1841</a>        </span>} <span class="kw">else </span>{
-<a href=#1842 id=1842 data-nosnippet>1842</a>            timeout
-<a href=#1843 id=1843 data-nosnippet>1843</a>                .map(|t| t.as_nanos().min(u32::MAX <span class="kw">as </span>u128) <span class="kw">as </span>u32)
-<a href=#1844 id=1844 data-nosnippet>1844</a>                .unwrap_or(u32::MAX)
-<a href=#1845 id=1845 data-nosnippet>1845</a>        };
-<a href=#1846 id=1846 data-nosnippet>1846</a>        fence.wait(gl, wait_value, timeout_ns)
-<a href=#1847 id=1847 data-nosnippet>1847</a>    }
-<a href=#1848 id=1848 data-nosnippet>1848</a>
-<a href=#1849 id=1849 data-nosnippet>1849</a>    <span class="kw">unsafe fn </span>start_graphics_debugger_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-<a href=#1850 id=1850 data-nosnippet>1850</a>        <span class="attr">#[cfg(all(native, feature = <span class="string">"renderdoc"</span>))]
-<a href=#1851 id=1851 data-nosnippet>1851</a>        </span><span class="kw">return unsafe </span>{
-<a href=#1852 id=1852 data-nosnippet>1852</a>            <span class="self">self</span>.render_doc
-<a href=#1853 id=1853 data-nosnippet>1853</a>                .start_frame_capture(<span class="self">self</span>.shared.context.raw_context(), ptr::null_mut())
-<a href=#1854 id=1854 data-nosnippet>1854</a>        };
-<a href=#1855 id=1855 data-nosnippet>1855</a>        <span class="attr">#[allow(unreachable_code)]
-<a href=#1856 id=1856 data-nosnippet>1856</a>        </span><span class="bool-val">false
-<a href=#1857 id=1857 data-nosnippet>1857</a>    </span>}
-<a href=#1858 id=1858 data-nosnippet>1858</a>    <span class="kw">unsafe fn </span>stop_graphics_debugger_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-<a href=#1859 id=1859 data-nosnippet>1859</a>        <span class="attr">#[cfg(all(native, feature = <span class="string">"renderdoc"</span>))]
-<a href=#1860 id=1860 data-nosnippet>1860</a>        </span><span class="kw">unsafe </span>{
-<a href=#1861 id=1861 data-nosnippet>1861</a>            <span class="self">self</span>.render_doc
-<a href=#1862 id=1862 data-nosnippet>1862</a>                .end_frame_capture(ptr::null_mut(), ptr::null_mut())
-<a href=#1863 id=1863 data-nosnippet>1863</a>        }
-<a href=#1864 id=1864 data-nosnippet>1864</a>    }
-<a href=#1865 id=1865 data-nosnippet>1865</a>    <span class="kw">unsafe fn </span>create_acceleration_structure(
-<a href=#1866 id=1866 data-nosnippet>1866</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1867 id=1867 data-nosnippet>1867</a>        _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::AccelerationStructureDescriptor,
-<a href=#1868 id=1868 data-nosnippet>1868</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::AccelerationStructure, <span class="kw">crate</span>::DeviceError&gt; {
-<a href=#1869 id=1869 data-nosnippet>1869</a>        <span class="macro">unimplemented!</span>()
-<a href=#1870 id=1870 data-nosnippet>1870</a>    }
-<a href=#1871 id=1871 data-nosnippet>1871</a>    <span class="kw">unsafe fn </span>get_acceleration_structure_build_sizes&lt;<span class="lifetime">'a</span>&gt;(
-<a href=#1872 id=1872 data-nosnippet>1872</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1873 id=1873 data-nosnippet>1873</a>        _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::GetAccelerationStructureBuildSizesDescriptor&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Buffer&gt;,
-<a href=#1874 id=1874 data-nosnippet>1874</a>    ) -&gt; <span class="kw">crate</span>::AccelerationStructureBuildSizes {
-<a href=#1875 id=1875 data-nosnippet>1875</a>        <span class="macro">unimplemented!</span>()
-<a href=#1876 id=1876 data-nosnippet>1876</a>    }
-<a href=#1877 id=1877 data-nosnippet>1877</a>    <span class="kw">unsafe fn </span>get_acceleration_structure_device_address(
-<a href=#1878 id=1878 data-nosnippet>1878</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1879 id=1879 data-nosnippet>1879</a>        _acceleration_structure: <span class="kw-2">&amp;</span><span class="kw">super</span>::AccelerationStructure,
-<a href=#1880 id=1880 data-nosnippet>1880</a>    ) -&gt; wgt::BufferAddress {
-<a href=#1881 id=1881 data-nosnippet>1881</a>        <span class="macro">unimplemented!</span>()
-<a href=#1882 id=1882 data-nosnippet>1882</a>    }
-<a href=#1883 id=1883 data-nosnippet>1883</a>    <span class="kw">unsafe fn </span>destroy_acceleration_structure(
-<a href=#1884 id=1884 data-nosnippet>1884</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#1885 id=1885 data-nosnippet>1885</a>        _acceleration_structure: <span class="kw">super</span>::AccelerationStructure,
-<a href=#1886 id=1886 data-nosnippet>1886</a>    ) {
+<a href=#1811 id=1811 data-nosnippet>1811</a>    <span class="kw">unsafe fn </span>create_fence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Fence, <span class="kw">crate</span>::DeviceError&gt; {
+<a href=#1812 id=1812 data-nosnippet>1812</a>        <span class="self">self</span>.counters.fences.add(<span class="number">1</span>);
+<a href=#1813 id=1813 data-nosnippet>1813</a>        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Fence::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.options))
+<a href=#1814 id=1814 data-nosnippet>1814</a>    }
+<a href=#1815 id=1815 data-nosnippet>1815</a>
+<a href=#1816 id=1816 data-nosnippet>1816</a>    <span class="kw">unsafe fn </span>destroy_fence(<span class="kw-2">&amp;</span><span class="self">self</span>, fence: <span class="kw">super</span>::Fence) {
+<a href=#1817 id=1817 data-nosnippet>1817</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+<a href=#1818 id=1818 data-nosnippet>1818</a>        fence.destroy(gl);
+<a href=#1819 id=1819 data-nosnippet>1819</a>        <span class="self">self</span>.counters.fences.sub(<span class="number">1</span>);
+<a href=#1820 id=1820 data-nosnippet>1820</a>    }
+<a href=#1821 id=1821 data-nosnippet>1821</a>
+<a href=#1822 id=1822 data-nosnippet>1822</a>    <span class="kw">unsafe fn </span>get_fence_value(
+<a href=#1823 id=1823 data-nosnippet>1823</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1824 id=1824 data-nosnippet>1824</a>        fence: <span class="kw-2">&amp;</span><span class="kw">super</span>::Fence,
+<a href=#1825 id=1825 data-nosnippet>1825</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::FenceValue, <span class="kw">crate</span>::DeviceError&gt; {
+<a href=#1826 id=1826 data-nosnippet>1826</a>        <span class="attr">#[cfg_attr(target_family = <span class="string">"wasm"</span>, allow(clippy::needless_borrow))]
+<a href=#1827 id=1827 data-nosnippet>1827</a>        </span><span class="prelude-val">Ok</span>(fence.get_latest(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock()))
+<a href=#1828 id=1828 data-nosnippet>1828</a>    }
+<a href=#1829 id=1829 data-nosnippet>1829</a>    <span class="kw">unsafe fn </span>wait(
+<a href=#1830 id=1830 data-nosnippet>1830</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1831 id=1831 data-nosnippet>1831</a>        fence: <span class="kw-2">&amp;</span><span class="kw">super</span>::Fence,
+<a href=#1832 id=1832 data-nosnippet>1832</a>        wait_value: <span class="kw">crate</span>::FenceValue,
+<a href=#1833 id=1833 data-nosnippet>1833</a>        timeout: <span class="prelude-ty">Option</span>&lt;core::time::Duration&gt;,
+<a href=#1834 id=1834 data-nosnippet>1834</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, <span class="kw">crate</span>::DeviceError&gt; {
+<a href=#1835 id=1835 data-nosnippet>1835</a>        <span class="kw">if </span>fence.satisfied(wait_value) {
+<a href=#1836 id=1836 data-nosnippet>1836</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
+<a href=#1837 id=1837 data-nosnippet>1837</a>        }
+<a href=#1838 id=1838 data-nosnippet>1838</a>
+<a href=#1839 id=1839 data-nosnippet>1839</a>        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+<a href=#1840 id=1840 data-nosnippet>1840</a>        <span class="comment">// MAX_CLIENT_WAIT_TIMEOUT_WEBGL is:
+<a href=#1841 id=1841 data-nosnippet>1841</a>        // - 1s in Gecko https://searchfox.org/mozilla-central/rev/754074e05178e017ef6c3d8e30428ffa8f1b794d/dom/canvas/WebGLTypes.h#1386
+<a href=#1842 id=1842 data-nosnippet>1842</a>        // - 0 in WebKit https://github.com/WebKit/WebKit/blob/4ef90d4672ca50267c0971b85db403d9684508ea/Source/WebCore/html/canvas/WebGL2RenderingContext.cpp#L110
+<a href=#1843 id=1843 data-nosnippet>1843</a>        // - 0 in Chromium https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/modules/webgl/webgl2_rendering_context_base.cc;l=112;drc=a3cb0ac4c71ec04abfeaed199e5d63230eca2551
+<a href=#1844 id=1844 data-nosnippet>1844</a>        </span><span class="kw">let </span>timeout_ns = <span class="kw">if </span><span class="macro">cfg!</span>(any(webgl, Emscripten)) {
+<a href=#1845 id=1845 data-nosnippet>1845</a>            <span class="number">0
+<a href=#1846 id=1846 data-nosnippet>1846</a>        </span>} <span class="kw">else </span>{
+<a href=#1847 id=1847 data-nosnippet>1847</a>            timeout
+<a href=#1848 id=1848 data-nosnippet>1848</a>                .map(|t| t.as_nanos().min(u32::MAX <span class="kw">as </span>u128) <span class="kw">as </span>u32)
+<a href=#1849 id=1849 data-nosnippet>1849</a>                .unwrap_or(u32::MAX)
+<a href=#1850 id=1850 data-nosnippet>1850</a>        };
+<a href=#1851 id=1851 data-nosnippet>1851</a>        fence.wait(gl, wait_value, timeout_ns)
+<a href=#1852 id=1852 data-nosnippet>1852</a>    }
+<a href=#1853 id=1853 data-nosnippet>1853</a>
+<a href=#1854 id=1854 data-nosnippet>1854</a>    <span class="kw">unsafe fn </span>start_graphics_debugger_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+<a href=#1855 id=1855 data-nosnippet>1855</a>        <span class="attr">#[cfg(all(native, feature = <span class="string">"renderdoc"</span>))]
+<a href=#1856 id=1856 data-nosnippet>1856</a>        </span><span class="kw">return unsafe </span>{
+<a href=#1857 id=1857 data-nosnippet>1857</a>            <span class="self">self</span>.render_doc
+<a href=#1858 id=1858 data-nosnippet>1858</a>                .start_frame_capture(<span class="self">self</span>.shared.context.raw_context(), ptr::null_mut())
+<a href=#1859 id=1859 data-nosnippet>1859</a>        };
+<a href=#1860 id=1860 data-nosnippet>1860</a>        <span class="attr">#[allow(unreachable_code)]
+<a href=#1861 id=1861 data-nosnippet>1861</a>        </span><span class="bool-val">false
+<a href=#1862 id=1862 data-nosnippet>1862</a>    </span>}
+<a href=#1863 id=1863 data-nosnippet>1863</a>    <span class="kw">unsafe fn </span>stop_graphics_debugger_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+<a href=#1864 id=1864 data-nosnippet>1864</a>        <span class="attr">#[cfg(all(native, feature = <span class="string">"renderdoc"</span>))]
+<a href=#1865 id=1865 data-nosnippet>1865</a>        </span><span class="kw">unsafe </span>{
+<a href=#1866 id=1866 data-nosnippet>1866</a>            <span class="self">self</span>.render_doc
+<a href=#1867 id=1867 data-nosnippet>1867</a>                .end_frame_capture(ptr::null_mut(), ptr::null_mut())
+<a href=#1868 id=1868 data-nosnippet>1868</a>        }
+<a href=#1869 id=1869 data-nosnippet>1869</a>    }
+<a href=#1870 id=1870 data-nosnippet>1870</a>    <span class="kw">unsafe fn </span>create_acceleration_structure(
+<a href=#1871 id=1871 data-nosnippet>1871</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1872 id=1872 data-nosnippet>1872</a>        _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::AccelerationStructureDescriptor,
+<a href=#1873 id=1873 data-nosnippet>1873</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::AccelerationStructure, <span class="kw">crate</span>::DeviceError&gt; {
+<a href=#1874 id=1874 data-nosnippet>1874</a>        <span class="macro">unimplemented!</span>()
+<a href=#1875 id=1875 data-nosnippet>1875</a>    }
+<a href=#1876 id=1876 data-nosnippet>1876</a>    <span class="kw">unsafe fn </span>get_acceleration_structure_build_sizes&lt;<span class="lifetime">'a</span>&gt;(
+<a href=#1877 id=1877 data-nosnippet>1877</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1878 id=1878 data-nosnippet>1878</a>        _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::GetAccelerationStructureBuildSizesDescriptor&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Buffer&gt;,
+<a href=#1879 id=1879 data-nosnippet>1879</a>    ) -&gt; <span class="kw">crate</span>::AccelerationStructureBuildSizes {
+<a href=#1880 id=1880 data-nosnippet>1880</a>        <span class="macro">unimplemented!</span>()
+<a href=#1881 id=1881 data-nosnippet>1881</a>    }
+<a href=#1882 id=1882 data-nosnippet>1882</a>    <span class="kw">unsafe fn </span>get_acceleration_structure_device_address(
+<a href=#1883 id=1883 data-nosnippet>1883</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1884 id=1884 data-nosnippet>1884</a>        _acceleration_structure: <span class="kw-2">&amp;</span><span class="kw">super</span>::AccelerationStructure,
+<a href=#1885 id=1885 data-nosnippet>1885</a>    ) -&gt; wgt::BufferAddress {
+<a href=#1886 id=1886 data-nosnippet>1886</a>        <span class="macro">unimplemented!</span>()
 <a href=#1887 id=1887 data-nosnippet>1887</a>    }
-<a href=#1888 id=1888 data-nosnippet>1888</a>
-<a href=#1889 id=1889 data-nosnippet>1889</a>    <span class="kw">fn </span>tlas_instance_to_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>, _instance: TlasInstance, _to_extend: <span class="kw-2">&amp;mut </span>Vec&lt;u8&gt;) {
-<a href=#1890 id=1890 data-nosnippet>1890</a>        <span class="macro">unimplemented!</span>()
-<a href=#1891 id=1891 data-nosnippet>1891</a>    }
-<a href=#1892 id=1892 data-nosnippet>1892</a>
-<a href=#1893 id=1893 data-nosnippet>1893</a>    <span class="kw">fn </span>get_internal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
-<a href=#1894 id=1894 data-nosnippet>1894</a>        <span class="self">self</span>.counters.as_ref().clone()
-<a href=#1895 id=1895 data-nosnippet>1895</a>    }
-<a href=#1896 id=1896 data-nosnippet>1896</a>
-<a href=#1897 id=1897 data-nosnippet>1897</a>    <span class="kw">fn </span>check_if_oom(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
-<a href=#1898 id=1898 data-nosnippet>1898</a>        <span class="prelude-val">Ok</span>(())
-<a href=#1899 id=1899 data-nosnippet>1899</a>    }
-<a href=#1900 id=1900 data-nosnippet>1900</a>}
+<a href=#1888 id=1888 data-nosnippet>1888</a>    <span class="kw">unsafe fn </span>destroy_acceleration_structure(
+<a href=#1889 id=1889 data-nosnippet>1889</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#1890 id=1890 data-nosnippet>1890</a>        _acceleration_structure: <span class="kw">super</span>::AccelerationStructure,
+<a href=#1891 id=1891 data-nosnippet>1891</a>    ) {
+<a href=#1892 id=1892 data-nosnippet>1892</a>    }
+<a href=#1893 id=1893 data-nosnippet>1893</a>
+<a href=#1894 id=1894 data-nosnippet>1894</a>    <span class="kw">fn </span>tlas_instance_to_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>, _instance: TlasInstance, _to_extend: <span class="kw-2">&amp;mut </span>Vec&lt;u8&gt;) {
+<a href=#1895 id=1895 data-nosnippet>1895</a>        <span class="macro">unimplemented!</span>()
+<a href=#1896 id=1896 data-nosnippet>1896</a>    }
+<a href=#1897 id=1897 data-nosnippet>1897</a>
+<a href=#1898 id=1898 data-nosnippet>1898</a>    <span class="kw">fn </span>get_internal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
+<a href=#1899 id=1899 data-nosnippet>1899</a>        <span class="self">self</span>.counters.as_ref().clone()
+<a href=#1900 id=1900 data-nosnippet>1900</a>    }
 <a href=#1901 id=1901 data-nosnippet>1901</a>
-<a href=#1902 id=1902 data-nosnippet>1902</a><span class="attr">#[cfg(send_sync)]
-<a href=#1903 id=1903 data-nosnippet>1903</a></span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span><span class="kw">super</span>::Device {}
-<a href=#1904 id=1904 data-nosnippet>1904</a><span class="attr">#[cfg(send_sync)]
-<a href=#1905 id=1905 data-nosnippet>1905</a></span><span class="kw">unsafe impl </span>Send <span class="kw">for </span><span class="kw">super</span>::Device {}
+<a href=#1902 id=1902 data-nosnippet>1902</a>    <span class="kw">fn </span>check_if_oom(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
+<a href=#1903 id=1903 data-nosnippet>1903</a>        <span class="prelude-val">Ok</span>(())
+<a href=#1904 id=1904 data-nosnippet>1904</a>    }
+<a href=#1905 id=1905 data-nosnippet>1905</a>}
+<a href=#1906 id=1906 data-nosnippet>1906</a>
+<a href=#1907 id=1907 data-nosnippet>1907</a><span class="attr">#[cfg(send_sync)]
+<a href=#1908 id=1908 data-nosnippet>1908</a></span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span><span class="kw">super</span>::Device {}
+<a href=#1909 id=1909 data-nosnippet>1909</a><span class="attr">#[cfg(send_sync)]
+<a href=#1910 id=1910 data-nosnippet>1910</a></span><span class="kw">unsafe impl </span>Send <span class="kw">for </span><span class="kw">super</span>::Device {}
 </code></pre></div></section></main></body></html>
