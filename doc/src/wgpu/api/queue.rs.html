@@ -380,41 +380,56 @@
 <a href=#380 id=380 data-nosnippet>380</a>    /// On Wayland, `present` will attach a `wl_buffer` to the underlying `wl_surface` and commit the new surface
 <a href=#381 id=381 data-nosnippet>381</a>    /// state. If it is desired to do things such as request a frame callback, scale the surface using the viewporter
 <a href=#382 id=382 data-nosnippet>382</a>    /// or synchronize other double buffered state, then these operations should be done before the call to `present`.
-<a href=#383 id=383 data-nosnippet>383</a>    </span><span class="kw">pub fn </span>present(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>surface_texture: SurfaceTexture) {
-<a href=#384 id=384 data-nosnippet>384</a>        surface_texture.presented = <span class="bool-val">true</span>;
-<a href=#385 id=385 data-nosnippet>385</a>        <span class="self">self</span>.inner.present(<span class="kw-2">&amp;</span>surface_texture.detail);
-<a href=#386 id=386 data-nosnippet>386</a>    }
-<a href=#387 id=387 data-nosnippet>387</a>
-<a href=#388 id=388 data-nosnippet>388</a>    <span class="doccomment">/// Compact a BLAS, it must have had [`Blas::prepare_compaction_async`] called on it and had the
-<a href=#389 id=389 data-nosnippet>389</a>    /// callback provided called.
+<a href=#383 id=383 data-nosnippet>383</a>    </span><span class="kw">pub fn </span>present(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_texture: SurfaceTexture) {
+<a href=#384 id=384 data-nosnippet>384</a>        <span class="self">self</span>.present_with_damage(surface_texture, <span class="kw-2">&amp;</span>[]);
+<a href=#385 id=385 data-nosnippet>385</a>    }
+<a href=#386 id=386 data-nosnippet>386</a>
+<a href=#387 id=387 data-nosnippet>387</a>    <span class="doccomment">/// Like [`present`](Self::present), but with a hint of which regions changed since the last
+<a href=#388 id=388 data-nosnippet>388</a>    /// present, in pixels. Rects are clipped to the surface, and backends without incremental
+<a href=#389 id=389 data-nosnippet>389</a>    /// presentation ignore them.
 <a href=#390 id=390 data-nosnippet>390</a>    ///
-<a href=#391 id=391 data-nosnippet>391</a>    /// The returned BLAS is more restricted than a normal BLAS because it may not be rebuilt or
-<a href=#392 id=392 data-nosnippet>392</a>    /// compacted.
-<a href=#393 id=393 data-nosnippet>393</a>    </span><span class="kw">pub fn </span>compact_blas(<span class="kw-2">&amp;</span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Blas) -&gt; Blas {
-<a href=#394 id=394 data-nosnippet>394</a>        <span class="kw">let </span>(handle, dispatch) = <span class="self">self</span>.inner.compact_blas(<span class="kw-2">&amp;</span>blas.inner);
-<a href=#395 id=395 data-nosnippet>395</a>        Blas {
-<a href=#396 id=396 data-nosnippet>396</a>            handle,
-<a href=#397 id=397 data-nosnippet>397</a>            inner: dispatch,
-<a href=#398 id=398 data-nosnippet>398</a>        }
-<a href=#399 id=399 data-nosnippet>399</a>    }
-<a href=#400 id=400 data-nosnippet>400</a>}
-<a href=#401 id=401 data-nosnippet>401</a>
-<a href=#402 id=402 data-nosnippet>402</a><span class="attr">#[cfg(wgpu_core)]
-<a href=#403 id=403 data-nosnippet>403</a></span><span class="kw">impl </span>Queue {
-<a href=#404 id=404 data-nosnippet>404</a>    <span class="doccomment">/// Create a new queue of wgpu from a wgpu-core queue.
+<a href=#391 id=391 data-nosnippet>391</a>    /// The texture must still contain the whole frame, since the compositor may use any part
+<a href=#392 id=392 data-nosnippet>392</a>    /// of it.
+<a href=#393 id=393 data-nosnippet>393</a>    </span><span class="kw">pub fn </span>present_with_damage(
+<a href=#394 id=394 data-nosnippet>394</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#395 id=395 data-nosnippet>395</a>        <span class="kw-2">mut </span>surface_texture: SurfaceTexture,
+<a href=#396 id=396 data-nosnippet>396</a>        damage_rects: <span class="kw-2">&amp;</span>[wgt::Rect&lt;u32&gt;],
+<a href=#397 id=397 data-nosnippet>397</a>    ) {
+<a href=#398 id=398 data-nosnippet>398</a>        surface_texture.presented = <span class="bool-val">true</span>;
+<a href=#399 id=399 data-nosnippet>399</a>        <span class="self">self</span>.inner
+<a href=#400 id=400 data-nosnippet>400</a>            .present_with_damage(<span class="kw-2">&amp;</span>surface_texture.detail, damage_rects);
+<a href=#401 id=401 data-nosnippet>401</a>    }
+<a href=#402 id=402 data-nosnippet>402</a>
+<a href=#403 id=403 data-nosnippet>403</a>    <span class="doccomment">/// Compact a BLAS, it must have had [`Blas::prepare_compaction_async`] called on it and had the
+<a href=#404 id=404 data-nosnippet>404</a>    /// callback provided called.
 <a href=#405 id=405 data-nosnippet>405</a>    ///
-<a href=#406 id=406 data-nosnippet>406</a>    /// # Arguments
-<a href=#407 id=407 data-nosnippet>407</a>    ///
-<a href=#408 id=408 data-nosnippet>408</a>    /// - `core_queue` - wgpu-core queue.
-<a href=#409 id=409 data-nosnippet>409</a>    </span><span class="kw">pub fn </span>from_core(core_queue: alloc::sync::Arc&lt;wgc::device::queue::Queue&gt;) -&gt; <span class="self">Self </span>{
-<a href=#410 id=410 data-nosnippet>410</a>        <span class="self">Self </span>{
-<a href=#411 id=411 data-nosnippet>411</a>            inner: <span class="kw">crate</span>::backend::wgpu_core::CoreQueue::from_core(core_queue).into(),
-<a href=#412 id=412 data-nosnippet>412</a>        }
-<a href=#413 id=413 data-nosnippet>413</a>    }
-<a href=#414 id=414 data-nosnippet>414</a>
-<a href=#415 id=415 data-nosnippet>415</a>    <span class="doccomment">/// Returns the underlying wgpu-core queue if this `Queue` is on the wgpu-core backend, otherwise `None`.
-<a href=#416 id=416 data-nosnippet>416</a>    </span><span class="kw">pub fn </span>as_core(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;alloc::sync::Arc&lt;wgc::device::queue::Queue&gt;&gt; {
-<a href=#417 id=417 data-nosnippet>417</a>        <span class="self">self</span>.inner.as_core_opt().map(|cq| cq.as_core())
-<a href=#418 id=418 data-nosnippet>418</a>    }
-<a href=#419 id=419 data-nosnippet>419</a>}
+<a href=#406 id=406 data-nosnippet>406</a>    /// The returned BLAS is more restricted than a normal BLAS because it may not be rebuilt or
+<a href=#407 id=407 data-nosnippet>407</a>    /// compacted.
+<a href=#408 id=408 data-nosnippet>408</a>    </span><span class="kw">pub fn </span>compact_blas(<span class="kw-2">&amp;</span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Blas) -&gt; Blas {
+<a href=#409 id=409 data-nosnippet>409</a>        <span class="kw">let </span>(handle, dispatch) = <span class="self">self</span>.inner.compact_blas(<span class="kw-2">&amp;</span>blas.inner);
+<a href=#410 id=410 data-nosnippet>410</a>        Blas {
+<a href=#411 id=411 data-nosnippet>411</a>            handle,
+<a href=#412 id=412 data-nosnippet>412</a>            inner: dispatch,
+<a href=#413 id=413 data-nosnippet>413</a>        }
+<a href=#414 id=414 data-nosnippet>414</a>    }
+<a href=#415 id=415 data-nosnippet>415</a>}
+<a href=#416 id=416 data-nosnippet>416</a>
+<a href=#417 id=417 data-nosnippet>417</a><span class="attr">#[cfg(wgpu_core)]
+<a href=#418 id=418 data-nosnippet>418</a></span><span class="kw">impl </span>Queue {
+<a href=#419 id=419 data-nosnippet>419</a>    <span class="doccomment">/// Create a new queue of wgpu from a wgpu-core queue.
+<a href=#420 id=420 data-nosnippet>420</a>    ///
+<a href=#421 id=421 data-nosnippet>421</a>    /// # Arguments
+<a href=#422 id=422 data-nosnippet>422</a>    ///
+<a href=#423 id=423 data-nosnippet>423</a>    /// - `core_queue` - wgpu-core queue.
+<a href=#424 id=424 data-nosnippet>424</a>    </span><span class="kw">pub fn </span>from_core(core_queue: alloc::sync::Arc&lt;wgc::device::queue::Queue&gt;) -&gt; <span class="self">Self </span>{
+<a href=#425 id=425 data-nosnippet>425</a>        <span class="self">Self </span>{
+<a href=#426 id=426 data-nosnippet>426</a>            inner: <span class="kw">crate</span>::backend::wgpu_core::CoreQueue::from_core(core_queue).into(),
+<a href=#427 id=427 data-nosnippet>427</a>        }
+<a href=#428 id=428 data-nosnippet>428</a>    }
+<a href=#429 id=429 data-nosnippet>429</a>
+<a href=#430 id=430 data-nosnippet>430</a>    <span class="doccomment">/// Returns the underlying wgpu-core queue if this `Queue` is on the wgpu-core backend, otherwise `None`.
+<a href=#431 id=431 data-nosnippet>431</a>    </span><span class="kw">pub fn </span>as_core(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;alloc::sync::Arc&lt;wgc::device::queue::Queue&gt;&gt; {
+<a href=#432 id=432 data-nosnippet>432</a>        <span class="self">self</span>.inner.as_core_opt().map(|cq| cq.as_core())
+<a href=#433 id=433 data-nosnippet>433</a>    }
+<a href=#434 id=434 data-nosnippet>434</a>}
 </code></pre></div></section></main></body></html>
