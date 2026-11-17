@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["CompilationContext"],"type":["NameBindingMap","ShaderStage"]};
+window.SIDEBAR_ITEMS = {"enum":["ImportTextureError"],"struct":["CompilationContext"],"type":["NameBindingMap","ShaderStage"]};
