@@ -78,8 +78,8 @@
 <a href=#78 id=78 data-nosnippet>78</a>   next [`Surface::display_hdr_info`] poll; re-query [`Surface::get_capabilities`]
 <a href=#79 id=79 data-nosnippet>79</a>   and re-run the steps above.
 <a href=#80 id=80 data-nosnippet>80</a>
-<a href=#81 id=81 data-nosnippet>81</a>The standalone [HDR surface example] implements every step, including the
-<a href=#82 id=82 data-nosnippet>82</a>encoding transfer function for each color space.
+<a href=#81 id=81 data-nosnippet>81</a>The standalone [HDR surface example] implements these steps for the named
+<a href=#82 id=82 data-nosnippet>82</a>color spaces, including their encoding transfer functions.
 <a href=#83 id=83 data-nosnippet>83</a>
 <a href=#84 id=84 data-nosnippet>84</a>### What to output from your fragment shader
 <a href=#85 id=85 data-nosnippet>85</a>
@@ -96,55 +96,57 @@
 <a href=#96 id=96 data-nosnippet>96</a>| `ExtendedDisplayP3` | `Rgba16Float` | extended sRGB-encoded, P3 primaries | no; apply the extended sRGB OETF (after gamut-mapping to P3) |
 <a href=#97 id=97 data-nosnippet>97</a>| `Bt2100Pq` (HDR10) | `Rgb10a2Unorm` | PQ-encoded, BT.2020 primaries | no; apply the PQ OETF (after gamut-mapping to BT.2020) |
 <a href=#98 id=98 data-nosnippet>98</a>| `Bt2100Hlg` | `Rgb10a2Unorm` | HLG-encoded, BT.2020 primaries | no; apply the HLG OETF (after gamut-mapping to BT.2020) |
-<a href=#99 id=99 data-nosnippet>99</a>
-<a href=#100 id=100 data-nosnippet>100</a>In short, wgpu applies the transfer function for you only when you render to
-<a href=#101 id=101 data-nosnippet>101</a>an `*Srgb` format. In every other case the values your shader writes to the
-<a href=#102 id=102 data-nosnippet>102</a>surface texture must already carry both the transfer function and any gamut
-<a href=#103 id=103 data-nosnippet>103</a>conversion. The [HDR surface example] implements every encoder in WGSL.
-<a href=#104 id=104 data-nosnippet>104</a>
-<a href=#105 id=105 data-nosnippet>105</a>### Glossary
+<a href=#99 id=99 data-nosnippet>99</a>| `PassThrough` | any supported format | Application-defined; account for the texture view's encoding | only with an `*Srgb` texture view |
+<a href=#100 id=100 data-nosnippet>100</a>
+<a href=#101 id=101 data-nosnippet>101</a>In short, wgpu applies the transfer function for you only when you render to
+<a href=#102 id=102 data-nosnippet>102</a>an `*Srgb` format. In every other case the values your shader writes to the
+<a href=#103 id=103 data-nosnippet>103</a>surface texture must already carry both the transfer function and any gamut
+<a href=#104 id=104 data-nosnippet>104</a>conversion. The [HDR surface example] implements encoders for the named
+<a href=#105 id=105 data-nosnippet>105</a>color spaces in WGSL.
 <a href=#106 id=106 data-nosnippet>106</a>
-<a href=#107 id=107 data-nosnippet>107</a>* **Chromaticity** --- a color's hue and saturation independent of its
-<a href=#108 id=108 data-nosnippet>108</a>  brightness, given as an `(x, y)` coordinate on the CIE 1931 diagram.
-<a href=#109 id=109 data-nosnippet>109</a>* **Primaries / gamut** --- the chromaticities of the red, green, and blue a
-<a href=#110 id=110 data-nosnippet>110</a>  color space addresses, and so the range of colors it can express. [BT.709]
-<a href=#111 id=111 data-nosnippet>111</a>  is the sRGB gamut, [Display P3] is wider, and [BT.2020] is wider still.
-<a href=#112 id=112 data-nosnippet>112</a>* **White point** --- the chromaticity of `R = G = B` (what "white" looks
-<a href=#113 id=113 data-nosnippet>113</a>  like). Every color space here uses [D65], standard daylight.
-<a href=#114 id=114 data-nosnippet>114</a>* **Transfer function (OETF / EOTF)** --- how stored values map to light. The
-<a href=#115 id=115 data-nosnippet>115</a>  *OETF* is the encoding transfer function your application applies; the
-<a href=#116 id=116 data-nosnippet>116</a>  *EOTF* is the inverse decoding transfer function the display applies.
-<a href=#117 id=117 data-nosnippet>117</a>* **SDR / HDR** --- standard dynamic range clips at `1.0` (reference white);
-<a href=#118 id=118 data-nosnippet>118</a>  high dynamic range lets values above `1.0` drive brighter-than-white
-<a href=#119 id=119 data-nosnippet>119</a>  output.
-<a href=#120 id=120 data-nosnippet>120</a>* **Nits and reference white** --- a *nit* (cd/m²) is a unit of brightness;
-<a href=#121 id=121 data-nosnippet>121</a>  *reference white* (also called *paper white*, especially on Windows) is the
-<a href=#122 id=122 data-nosnippet>122</a>  brightness of SDR plain white, set below the panel's peak so highlights have
-<a href=#123 id=123 data-nosnippet>123</a>  room above it.
-<a href=#124 id=124 data-nosnippet>124</a>* **Headroom (EDR)** --- how much brighter than current SDR white the display
-<a href=#125 id=125 data-nosnippet>125</a>  can go right now, as a multiplier (`1.0` means none). Dynamic; see
-<a href=#126 id=126 data-nosnippet>126</a>  [`DisplayHdrInfo::tone_map_headroom`].
-<a href=#127 id=127 data-nosnippet>127</a>* **PQ / HLG** --- the two HDR transfer functions: [PQ] (SMPTE ST 2084,
-<a href=#128 id=128 data-nosnippet>128</a>  HDR10) encodes absolute luminance, [HLG] (BT.2100) encodes relative
-<a href=#129 id=129 data-nosnippet>129</a>  luminance.
-<a href=#130 id=130 data-nosnippet>130</a>* **scRGB / extended-range sRGB** --- sRGB extended past 0.0..=1.0 for
-<a href=#131 id=131 data-nosnippet>131</a>  HDR: [scRGB] is *linear*
-<a href=#132 id=132 data-nosnippet>132</a>  ([`ExtendedSrgbLinear`](SurfaceColorSpace::ExtendedSrgbLinear)), while
-<a href=#133 id=133 data-nosnippet>133</a>  [`ExtendedSrgb`](SurfaceColorSpace::ExtendedSrgb) is the same range but
-<a href=#134 id=134 data-nosnippet>134</a>  sRGB-*encoded* (gamma), the web's HDR path.
-<a href=#135 id=135 data-nosnippet>135</a>
-<a href=#136 id=136 data-nosnippet>136</a>[HDR surface example]: https://github.com/gfx-rs/wgpu/tree/v29/examples/standalone/03_hdr_surface
-<a href=#137 id=137 data-nosnippet>137</a>[BT.709]: https://www.itu.int/rec/R-REC-BT.709
-<a href=#138 id=138 data-nosnippet>138</a>[BT.2020]: https://www.itu.int/rec/R-REC-BT.2020
-<a href=#139 id=139 data-nosnippet>139</a>[Display P3]: https://en.wikipedia.org/wiki/DCI-P3#Display_P3
-<a href=#140 id=140 data-nosnippet>140</a>[D65]: https://en.wikipedia.org/wiki/Standard_illuminant#D65_values
-<a href=#141 id=141 data-nosnippet>141</a>[PQ]: https://en.wikipedia.org/wiki/Perceptual_quantizer
-<a href=#142 id=142 data-nosnippet>142</a>[HLG]: https://www.itu.int/rec/R-REC-BT.2100
-<a href=#143 id=143 data-nosnippet>143</a>[scRGB]: https://en.wikipedia.org/wiki/ScRGB
-<a href=#144 id=144 data-nosnippet>144</a>*/
-<a href=#145 id=145 data-nosnippet>145</a>
-<a href=#146 id=146 data-nosnippet>146</a></span><span class="kw">use </span>crate::{
-<a href=#147 id=147 data-nosnippet>147</a>    DisplayHdrInfo, Surface, SurfaceCapabilities, SurfaceColorSpace, SurfaceColorSpaces,
-<a href=#148 id=148 data-nosnippet>148</a>    SurfaceConfiguration,
-<a href=#149 id=149 data-nosnippet>149</a>};
+<a href=#107 id=107 data-nosnippet>107</a>### Glossary
+<a href=#108 id=108 data-nosnippet>108</a>
+<a href=#109 id=109 data-nosnippet>109</a>* **Chromaticity** --- a color's hue and saturation independent of its
+<a href=#110 id=110 data-nosnippet>110</a>  brightness, given as an `(x, y)` coordinate on the CIE 1931 diagram.
+<a href=#111 id=111 data-nosnippet>111</a>* **Primaries / gamut** --- the chromaticities of the red, green, and blue a
+<a href=#112 id=112 data-nosnippet>112</a>  color space addresses, and so the range of colors it can express. [BT.709]
+<a href=#113 id=113 data-nosnippet>113</a>  is the sRGB gamut, [Display P3] is wider, and [BT.2020] is wider still.
+<a href=#114 id=114 data-nosnippet>114</a>* **White point** --- the chromaticity of `R = G = B` (what "white" looks
+<a href=#115 id=115 data-nosnippet>115</a>  like). The named color spaces here uses [D65], standard daylight.
+<a href=#116 id=116 data-nosnippet>116</a>* **Transfer function (OETF / EOTF)** --- how stored values map to light. The
+<a href=#117 id=117 data-nosnippet>117</a>  *OETF* is the encoding transfer function your application applies; the
+<a href=#118 id=118 data-nosnippet>118</a>  *EOTF* is the inverse decoding transfer function the display applies.
+<a href=#119 id=119 data-nosnippet>119</a>* **SDR / HDR** --- standard dynamic range clips at `1.0` (reference white);
+<a href=#120 id=120 data-nosnippet>120</a>  high dynamic range lets values above `1.0` drive brighter-than-white
+<a href=#121 id=121 data-nosnippet>121</a>  output.
+<a href=#122 id=122 data-nosnippet>122</a>* **Nits and reference white** --- a *nit* (cd/m²) is a unit of brightness;
+<a href=#123 id=123 data-nosnippet>123</a>  *reference white* (also called *paper white*, especially on Windows) is the
+<a href=#124 id=124 data-nosnippet>124</a>  brightness of SDR plain white, set below the panel's peak so highlights have
+<a href=#125 id=125 data-nosnippet>125</a>  room above it.
+<a href=#126 id=126 data-nosnippet>126</a>* **Headroom (EDR)** --- how much brighter than current SDR white the display
+<a href=#127 id=127 data-nosnippet>127</a>  can go right now, as a multiplier (`1.0` means none). Dynamic; see
+<a href=#128 id=128 data-nosnippet>128</a>  [`DisplayHdrInfo::tone_map_headroom`].
+<a href=#129 id=129 data-nosnippet>129</a>* **PQ / HLG** --- the two HDR transfer functions: [PQ] (SMPTE ST 2084,
+<a href=#130 id=130 data-nosnippet>130</a>  HDR10) encodes absolute luminance, [HLG] (BT.2100) encodes relative
+<a href=#131 id=131 data-nosnippet>131</a>  luminance.
+<a href=#132 id=132 data-nosnippet>132</a>* **scRGB / extended-range sRGB** --- sRGB extended past 0.0..=1.0 for
+<a href=#133 id=133 data-nosnippet>133</a>  HDR: [scRGB] is *linear*
+<a href=#134 id=134 data-nosnippet>134</a>  ([`ExtendedSrgbLinear`](SurfaceColorSpace::ExtendedSrgbLinear)), while
+<a href=#135 id=135 data-nosnippet>135</a>  [`ExtendedSrgb`](SurfaceColorSpace::ExtendedSrgb) is the same range but
+<a href=#136 id=136 data-nosnippet>136</a>  sRGB-*encoded* (gamma), the web's HDR path.
+<a href=#137 id=137 data-nosnippet>137</a>
+<a href=#138 id=138 data-nosnippet>138</a>[HDR surface example]: https://github.com/gfx-rs/wgpu/tree/v29/examples/standalone/03_hdr_surface
+<a href=#139 id=139 data-nosnippet>139</a>[BT.709]: https://www.itu.int/rec/R-REC-BT.709
+<a href=#140 id=140 data-nosnippet>140</a>[BT.2020]: https://www.itu.int/rec/R-REC-BT.2020
+<a href=#141 id=141 data-nosnippet>141</a>[Display P3]: https://en.wikipedia.org/wiki/DCI-P3#Display_P3
+<a href=#142 id=142 data-nosnippet>142</a>[D65]: https://en.wikipedia.org/wiki/Standard_illuminant#D65_values
+<a href=#143 id=143 data-nosnippet>143</a>[PQ]: https://en.wikipedia.org/wiki/Perceptual_quantizer
+<a href=#144 id=144 data-nosnippet>144</a>[HLG]: https://www.itu.int/rec/R-REC-BT.2100
+<a href=#145 id=145 data-nosnippet>145</a>[scRGB]: https://en.wikipedia.org/wiki/ScRGB
+<a href=#146 id=146 data-nosnippet>146</a>*/
+<a href=#147 id=147 data-nosnippet>147</a>
+<a href=#148 id=148 data-nosnippet>148</a></span><span class="kw">use </span>crate::{
+<a href=#149 id=149 data-nosnippet>149</a>    DisplayHdrInfo, Surface, SurfaceCapabilities, SurfaceColorSpace, SurfaceColorSpaces,
+<a href=#150 id=150 data-nosnippet>150</a>    SurfaceConfiguration,
+<a href=#151 id=151 data-nosnippet>151</a>};
 </code></pre></div></section></main></body></html>
