@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["CooperativeScalarType","DeviceType","FeatureLevel","PowerPreference","RequestAdapterError"],"struct":["AdapterInfo","AdapterLimitBucketInfo","CooperativeMatrixProperties","RequestAdapterOptions"]};
+window.SIDEBAR_ITEMS = {"enum":["CooperativeScalarType","DeviceType","FeatureLevel","PowerPreference","RayTracingInvocationReorderMode","RequestAdapterError"],"struct":["AdapterInfo","AdapterLimitBucketInfo","CooperativeMatrixProperties","RequestAdapterOptions"]};

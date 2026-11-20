@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["FEATURES_STRUCTURE_TYPE","MODE_REORDER","NAME","PROPERTIES_STRUCTURE_TYPE"],"struct":["FeaturesEXT","PropertiesEXT"]};
