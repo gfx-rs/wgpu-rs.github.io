@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["align_to"],"macro":["impl_align_to"],"trait":["AlignTo"]};
+window.SIDEBAR_ITEMS = {"fn":["align_to"],"macro":[["impl_align_to",1]],"trait":["AlignTo"]};

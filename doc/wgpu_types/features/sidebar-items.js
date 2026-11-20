@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["features","features_web","web_attr_allows"],"mod":["webgpu_impl"],"struct":["FeatureBits","Features","FeaturesWGPU","FeaturesWebGPU"]};
+window.SIDEBAR_ITEMS = {"macro":[["features",1],["features_web",1],["web_attr_allows",1]],"mod":["webgpu_impl"],"struct":["FeatureBits","Features","FeaturesWGPU","FeaturesWebGPU"]};

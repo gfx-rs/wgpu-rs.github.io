@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ScalarSetBits"],"macro":["define_scalar_set","scalar_set"],"static":["SCALARS_FOR_BITS"],"struct":["ScalarSet"]};
+window.SIDEBAR_ITEMS = {"enum":["ScalarSetBits"],"macro":[["define_scalar_set",1],["scalar_set",1]],"static":["SCALARS_FOR_BITS"],"struct":["ScalarSet"]};

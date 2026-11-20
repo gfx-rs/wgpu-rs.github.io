@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["ConstDefault"],"trait":["ConstDefaultHelper"]};
+window.SIDEBAR_ITEMS = {"macro":[["ConstDefault",1]],"trait":["ConstDefaultHelper"]};

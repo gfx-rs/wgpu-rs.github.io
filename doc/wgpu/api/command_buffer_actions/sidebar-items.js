@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["impl_deferred_command_buffer_actions"],"struct":["DeferredBufferMapping","DeferredCommandBufferActions"],"type":["SharedDeferredCommandBufferActions"]};
+window.SIDEBAR_ITEMS = {"macro":[["impl_deferred_command_buffer_actions",1]],"struct":["DeferredBufferMapping","DeferredCommandBufferActions"],"type":["SharedDeferredCommandBufferActions"]};

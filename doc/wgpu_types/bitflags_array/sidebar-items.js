@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["bit_array_impl","bitflags_array","bitflags_array_impl","bitflags_array_impl_assign","bitflags_independent_two_arg"]};
+window.SIDEBAR_ITEMS = {"macro":[["bit_array_impl",1],["bitflags_array",1],["bitflags_array_impl",1],["bitflags_array_impl_assign",1],["bitflags_independent_two_arg",1]]};

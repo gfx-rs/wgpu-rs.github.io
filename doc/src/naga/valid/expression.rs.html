@@ -1,6 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/valid/expression.rs`."><title>expression.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">naga/valid/</div>expression.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>super::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/valid/expression.rs`."><title>expression.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.97.1 (8bab26f4f 2026-07-14)" data-channel="1.97.1" data-search-js="search-fd9372ac.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-fcd733ba.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">naga/valid/</div>expression.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
-<a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>crate::{
+<a href=#3 id=3 data-nosnippet>3</a><span class="kw">use crate</span>::{
 <a href=#4 id=4 data-nosnippet>4</a>    arena::Handle,
 <a href=#5 id=5 data-nosnippet>5</a>    proc::OverloadSet <span class="kw">as _</span>,
 <a href=#6 id=6 data-nosnippet>6</a>    proc::{IndexableLengthError, ResolveError},
@@ -183,7 +183,7 @@
 <a href=#183 id=183 data-nosnippet>183</a>    <span class="attr">#[error(transparent)]
 <a href=#184 id=184 data-nosnippet>184</a>    </span>Literal(<span class="attr">#[from] </span>LiteralError),
 <a href=#185 id=185 data-nosnippet>185</a>    <span class="attr">#[error(transparent)]
-<a href=#186 id=186 data-nosnippet>186</a>    </span>Width(<span class="attr">#[from] </span>super::r#type::WidthError),
+<a href=#186 id=186 data-nosnippet>186</a>    </span>Width(<span class="attr">#[from] </span><span class="kw">super</span>::r#type::WidthError),
 <a href=#187 id=187 data-nosnippet>187</a>}
 <a href=#188 id=188 data-nosnippet>188</a>
 <a href=#189 id=189 data-nosnippet>189</a><span class="attr">#[derive(Clone, Debug, thiserror::Error)]
@@ -194,7 +194,7 @@
 <a href=#194 id=194 data-nosnippet>194</a>    <span class="attr">#[error(<span class="string">"Float literal is infinite"</span>)]
 <a href=#195 id=195 data-nosnippet>195</a>    </span>Infinity,
 <a href=#196 id=196 data-nosnippet>196</a>    <span class="attr">#[error(transparent)]
-<a href=#197 id=197 data-nosnippet>197</a>    </span>Width(<span class="attr">#[from] </span>super::r#type::WidthError),
+<a href=#197 id=197 data-nosnippet>197</a>    </span>Width(<span class="attr">#[from] </span><span class="kw">super</span>::r#type::WidthError),
 <a href=#198 id=198 data-nosnippet>198</a>}
 <a href=#199 id=199 data-nosnippet>199</a>
 <a href=#200 id=200 data-nosnippet>200</a><span class="kw">struct </span>ExpressionTypeResolver&lt;<span class="lifetime">'a</span>&gt; {
@@ -393,7 +393,7 @@
 <a href=#393 id=393 data-nosnippet>393</a>        mod_info: <span class="kw-2">&amp;</span>ModuleInfo,
 <a href=#394 id=394 data-nosnippet>394</a>        expr_kind: <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::ExpressionKindTracker,
 <a href=#395 id=395 data-nosnippet>395</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;ShaderStages, ExpressionError&gt; {
-<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">use </span>crate::{Expression <span class="kw">as </span>E, Scalar <span class="kw">as </span>Sc, ScalarKind <span class="kw">as </span>Sk, TypeInner <span class="kw">as </span>Ti};
+<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">use crate</span>::{Expression <span class="kw">as </span>E, Scalar <span class="kw">as </span>Sc, ScalarKind <span class="kw">as </span>Sk, TypeInner <span class="kw">as </span>Ti};
 <a href=#397 id=397 data-nosnippet>397</a>
 <a href=#398 id=398 data-nosnippet>398</a>        <span class="kw">let </span>resolver = ExpressionTypeResolver {
 <a href=#399 id=399 data-nosnippet>399</a>            root,
@@ -1570,7 +1570,7 @@
 <a href=#1570 id=1570 data-nosnippet>1570</a>        <span class="kw">crate</span>::valid::ValidationError::Function {
 <a href=#1571 id=1571 data-nosnippet>1571</a>            source: <span class="kw">super</span>::FunctionError::Expression {
 <a href=#1572 id=1572 data-nosnippet>1572</a>                source: ExpressionError::Literal(LiteralError::Width(
-<a href=#1573 id=1573 data-nosnippet>1573</a>                    super::r#type::WidthError::MissingCapability {
+<a href=#1573 id=1573 data-nosnippet>1573</a>                    <span class="kw">super</span>::r#type::WidthError::MissingCapability {
 <a href=#1574 id=1574 data-nosnippet>1574</a>                        name: <span class="string">"f64"</span>,
 <a href=#1575 id=1575 data-nosnippet>1575</a>                        flag: <span class="string">"FLOAT64"</span>,
 <a href=#1576 id=1576 data-nosnippet>1576</a>                    }
@@ -1600,7 +1600,7 @@
 <a href=#1600 id=1600 data-nosnippet>1600</a>        error,
 <a href=#1601 id=1601 data-nosnippet>1601</a>        <span class="kw">crate</span>::valid::ValidationError::ConstExpression {
 <a href=#1602 id=1602 data-nosnippet>1602</a>            source: ConstExpressionError::Literal(LiteralError::Width(
-<a href=#1603 id=1603 data-nosnippet>1603</a>                super::r#type::WidthError::MissingCapability {
+<a href=#1603 id=1603 data-nosnippet>1603</a>                <span class="kw">super</span>::r#type::WidthError::MissingCapability {
 <a href=#1604 id=1604 data-nosnippet>1604</a>                    name: <span class="string">"f64"</span>,
 <a href=#1605 id=1605 data-nosnippet>1605</a>                    flag: <span class="string">"FLOAT64"</span>,
 <a href=#1606 id=1606 data-nosnippet>1606</a>                }

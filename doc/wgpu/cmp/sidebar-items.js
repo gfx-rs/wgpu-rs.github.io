@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Ordering"],"macro":["impl_eq_ord_hash_arc_address","impl_eq_ord_hash_box_address","impl_eq_ord_hash_proxy"],"static":["NEXT_ID"],"struct":["Identifier"],"type":["AtomicU64"]};
+window.SIDEBAR_ITEMS = {"enum":["Ordering"],"macro":[["impl_eq_ord_hash_arc_address",1],["impl_eq_ord_hash_box_address",1],["impl_eq_ord_hash_proxy",1]],"static":["NEXT_ID"],"struct":["Identifier"],"type":["AtomicU64"]};

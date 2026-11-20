@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["doc_image","hal_type_dx12","hal_type_gles","hal_type_metal","hal_type_vulkan"]};
+window.SIDEBAR_ITEMS = {"macro":[["doc_image",1],["hal_type_dx12",1],["hal_type_gles",1],["hal_type_metal",1],["hal_type_vulkan",1]]};
