@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["ALLOCATION_GRANULARITY","DST_IMAGE_LAYOUT"]};
+window.SIDEBAR_ITEMS = {"constant":["ALLOCATION_GRANULARITY","DST_IMAGE_LAYOUT"],"fn":["barrier_image_layout","present_ownership_transfer"]};
